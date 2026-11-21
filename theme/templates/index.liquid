@@ -1,0 +1,110 @@
+{%- comment -%} Visually-hidden page heading keeps the homepage's h1 contract while its regions provide the visible composition. {%- endcomment -%}
+<h1 class="sr-only">{{ shop.name }}</h1>
+
+{%- assign hero_image = collections.all.products.first.featured_image -%}
+
+{%- comment -%} The known hero image source is mirrored by the index preload in layout/theme.liquid. {%- endcomment -%}
+{%
+  block 'container',
+  class: 'relative isolate min-h-hero overflow-hidden',
+  background_image: hero_image,
+  background_image_loading: 'eager',
+  background_image_fetchpriority: 'high',
+  background_image_sizes: '100vw',
+  attributes: 'aria-labelledby="home-hero-heading"'
+%}
+  {%- unless hero_image -%}
+    {% render 'placeholder-texture', kind: 'hero', seed: 1, class: 'absolute inset-0 aspect-auto -z-20' %}
+  {%- endunless -%}
+
+  <div class="pointer-events-none absolute inset-0 bg-linear-to-t from-overlay-strong via-overlay-subtle to-transparent"></div>
+
+  <div class="relative flex min-h-hero w-full max-w-page mx-auto flex-col items-start justify-end px-margin py-12 text-start text-interactive-text">
+    {% block 'heading', tag: 'h2', variant: '2xl', class: 'mb-3', attributes: 'id="home-hero-heading"' %}
+      {{- 'home.hero.title' | t -}}
+    {% endblock %}
+
+    {% block 'text', variant: 'lg', class: 'max-w-prose opacity-90' %}
+      {{- 'home.hero.subtitle' | t -}}
+    {% endblock %}
+  </div>
+{% endblock %}
+
+{%- comment -%} The caller owns this collection source: the shell's settings cannot reach its pre-rendered body. Change this expression to swap the whole region; the shell's collection setting binds to it so the editor picker rewrites the handle here. {%- endcomment -%}
+{%- liquid
+  assign featured_collection = collections.all
+  assign featured_product_count = featured_collection.all_products_count | at_most: 12
+  assign featured_show_view_all = true
+  assign featured_eager_count = featured_product_count | at_most: 4
+
+  assign featured_title = featured_collection.title
+  if featured_title == blank
+    assign featured_title = 'collections.placeholder_title' | t
+  endif
+  assign featured_url = featured_collection.url | default: routes.all_products_collection_url
+  assign featured_product_sizes = '(min-width: 1280px) 297px, (min-width: 1024px) calc((100vw - 92px) / 4), (min-width: 768px) calc((100vw - 84px) / 2), calc(100vw - 32px)'
+-%}
+
+{%- comment -%} This bespoke shell owns its section/background/padding; do not double-wrap it in container. {%- endcomment -%}
+{% block 'featured-collection', collection: featured_collection %}
+  <div class="flex items-center justify-between gap-4 mb-4 max-w-page mx-auto px-margin">
+    <div class="min-w-0">
+      {% block 'heading', tag: 'h2', variant: 'xl' %}{{ featured_title | escape }}{% endblock %}
+    </div>
+    {%- if featured_show_view_all and featured_url != blank -%}
+      {% block 'link', url: featured_url, class: 'shrink-0' %}{{ 'collections.view_all' | t }}{% endblock %}
+    {%- endif -%}
+  </div>
+
+  {%- comment -%} Match the collection page's cap, gutters, column gaps, and contained paint. {%- endcomment -%}
+  <div class="w-full max-w-page mx-auto px-margin contain-paint">
+    {%- if featured_collection != blank and featured_collection.all_products_count > 0 -%}
+      <ul role="list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-1 gap-y-10 stagger-fade-in">
+        {% for product in featured_collection.products limit: featured_product_count %}
+          <li>
+            {%- comment -%} Keep eager collection images lower priority than the preceding LCP hero. {%- endcomment -%}
+            {%- if forloop.index <= featured_eager_count -%}{%- assign lazy_load = false -%}{%- assign fetch_priority = 'low' -%}{%- else -%}{%- assign lazy_load = true -%}{%- assign fetch_priority = 'auto' -%}{%- endif -%}
+            <s-view-event class="block" view-event-trigger="intersect" view-event-payload="{{ product | standard_event_data: 'view', context: 'collection' | escape }}">
+              {%- liquid
+                assign card_variant = product.selected_or_first_available_variant
+                if lazy_load
+                  assign card_loading = 'lazy'
+                else
+                  assign card_loading = 'eager'
+                endif
+                assign card_image_attributes = 'loading="' | append: card_loading | append: '" fetchpriority="' | append: fetch_priority | append: '"'
+              -%}
+              {% block 'card', block.name: 't:blocks.product_card', url: product.url, aria_label: product.title, border_radius: 'rounded-card' %}
+                <a href="{{ product.url | escape }}" class="relative block overflow-hidden rounded-[inherit]" aria-label="{{ product.title | escape }}">
+                  {% block 'image', fallback_image: product.featured_image, aspect_ratio: 'aspect-square', sizes: featured_product_sizes, attributes: card_image_attributes, alt: product.title, seed: forloop.index %}{% endblock %}
+                </a>
+                <div class="flex flex-col gap-0.5">
+                  {% block 'text', variant: 'sm', tag: 'h3', class: 'font-medium text-on-surface line-clamp-2' %}{{ product.title | escape }}{% endblock %}
+                  {%- comment -%} Text alignment inherits from the shell; the flex price needs its own logical self alignment. {%- endcomment -%}
+                  {% block 'price', price: card_variant.price, compare_at_price: card_variant.compare_at_price, price_min: product.price_min, price_max: product.price_max, class: 'text-sm font-medium self-start group-[.text-center]/card:self-center group-[.text-end]/card:self-end' %}{% endblock %}
+                </div>
+              {% endblock %}
+            </s-view-event>
+          </li>
+        {% endfor %}
+      </ul>
+    {%- else -%}
+      {%- comment -%} Placeholder cards remain selectable even before the store has products. {%- endcomment -%}
+      <ul role="list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-1 gap-y-10 stagger-fade-in">
+        {% for placeholder_index in (1..4) %}
+          <li>
+            {%- assign placeholder_title = 'product.placeholder_title' | t -%}
+            {% block 'card', block.name: 't:blocks.product_card', url: routes.root_url, aria_label: placeholder_title, border_radius: 'rounded-card' %}
+              <a href="{{ routes.root_url | escape }}" class="relative block overflow-hidden rounded-[inherit]" aria-label="{{ placeholder_title | escape }}">
+                {% block 'image', aspect_ratio: 'aspect-square', sizes: featured_product_sizes, alt: placeholder_title, seed: placeholder_index %}{% endblock %}
+              </a>
+              <div class="flex flex-col gap-0.5">
+                {% block 'text', variant: 'sm', tag: 'h3', class: 'font-medium text-on-surface line-clamp-2' %}{{ placeholder_title | escape }}{% endblock %}
+              </div>
+            {% endblock %}
+          </li>
+        {% endfor %}
+      </ul>
+    {%- endif -%}
+  </div>
+{% endblock %}
