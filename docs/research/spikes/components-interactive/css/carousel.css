@@ -1,0 +1,206 @@
+/* carousel.css
+   Component: Carousel (id `carousel`). Contract: 10-components-interactive.md, "Carousel".
+   Root:      <rp-carousel>, class rp-carousel
+   Parts:     rp-carousel-control (<button>, previous and next)
+              rp-carousel-viewport (<ul>)
+              rp-carousel-item (<li>)
+   Props:     data-columns = 1 | 2 | 3 | 4 | 5 | 6, responsive token list   (no default: items keep their own width)
+   States:    :disabled, :hover, :focus-visible
+   Public:    --rp-carousel-gap, --rp-carousel-control-size */
+@layer rp.components {
+  /* 1. ROOT */
+  .rp-carousel {
+    /* 1a. public custom properties */
+    --rp-carousel-gap: calc(var(--spacing) * 4);
+    --rp-carousel-control-size: var(--spacing-control-sm);
+    /* 1b. colour slots */
+    --_bg: var(--color-background);
+    --_fg: var(--color-foreground);
+    --_border: var(--color-border);
+    /* 1c. other private custom properties */
+    --_item-size: auto;
+    /* 1d. declarations */
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: calc(var(--spacing) * 2);
+  }
+
+  /* 2. PARTS */
+  .rp-carousel-control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--rp-carousel-control-size);
+    block-size: var(--rp-carousel-control-size);
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--_border);
+    border-radius: 9999px;
+    background-color: var(--_bg);
+    color: var(--_fg);
+    scale: var(--rp-dir) 1;
+    cursor: pointer;
+  }
+  .rp-carousel-viewport {
+    display: flex;
+    gap: var(--rp-carousel-gap);
+    min-inline-size: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: inline mandatory;
+    scrollbar-width: none;
+  }
+  .rp-carousel-item {
+    flex: 0 0 var(--_item-size);
+    min-inline-size: 0;
+    scroll-snap-align: start;
+  }
+
+  /* 3. MODIFIERS */
+  .rp-carousel[data-columns~="1"] {
+    --_item-size: 100%;
+  }
+  .rp-carousel[data-columns~="2"] {
+    --_item-size: calc((100% - var(--rp-carousel-gap) * 1) / 2);
+  }
+  .rp-carousel[data-columns~="3"] {
+    --_item-size: calc((100% - var(--rp-carousel-gap) * 2) / 3);
+  }
+  .rp-carousel[data-columns~="4"] {
+    --_item-size: calc((100% - var(--rp-carousel-gap) * 3) / 4);
+  }
+  .rp-carousel[data-columns~="5"] {
+    --_item-size: calc((100% - var(--rp-carousel-gap) * 4) / 5);
+  }
+  .rp-carousel[data-columns~="6"] {
+    --_item-size: calc((100% - var(--rp-carousel-gap) * 5) / 6);
+  }
+  /* 4. STATES */
+  @media (hover: hover) {
+    .rp-carousel-control:hover {
+      background-color: var(--color-accent);
+    }
+  }
+  .rp-carousel-viewport:focus-visible {
+    outline-offset: calc(var(--rp-ring-width) * -1);
+  }
+  .rp-carousel-control:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  /* 5. MOTION */
+  @media (prefers-reduced-motion: no-preference) {
+    .rp-carousel-control {
+      transition-property: background-color, opacity;
+      transition-duration: var(--rp-duration-fast);
+      transition-timing-function: var(--ease-out);
+    }
+  }
+
+  /* 6. ENVIRONMENT */
+  @media (min-width: 40rem) {
+    .rp-carousel[data-columns~="sm:1"] {
+      --_item-size: 100%;
+    }
+    .rp-carousel[data-columns~="sm:2"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 1) / 2);
+    }
+    .rp-carousel[data-columns~="sm:3"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 2) / 3);
+    }
+    .rp-carousel[data-columns~="sm:4"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 3) / 4);
+    }
+    .rp-carousel[data-columns~="sm:5"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 4) / 5);
+    }
+    .rp-carousel[data-columns~="sm:6"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 5) / 6);
+    }
+  }
+  @media (min-width: 48rem) {
+    .rp-carousel[data-columns~="md:1"] {
+      --_item-size: 100%;
+    }
+    .rp-carousel[data-columns~="md:2"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 1) / 2);
+    }
+    .rp-carousel[data-columns~="md:3"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 2) / 3);
+    }
+    .rp-carousel[data-columns~="md:4"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 3) / 4);
+    }
+    .rp-carousel[data-columns~="md:5"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 4) / 5);
+    }
+    .rp-carousel[data-columns~="md:6"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 5) / 6);
+    }
+  }
+  @media (min-width: 64rem) {
+    .rp-carousel[data-columns~="lg:1"] {
+      --_item-size: 100%;
+    }
+    .rp-carousel[data-columns~="lg:2"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 1) / 2);
+    }
+    .rp-carousel[data-columns~="lg:3"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 2) / 3);
+    }
+    .rp-carousel[data-columns~="lg:4"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 3) / 4);
+    }
+    .rp-carousel[data-columns~="lg:5"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 4) / 5);
+    }
+    .rp-carousel[data-columns~="lg:6"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 5) / 6);
+    }
+  }
+  @media (min-width: 80rem) {
+    .rp-carousel[data-columns~="xl:1"] {
+      --_item-size: 100%;
+    }
+    .rp-carousel[data-columns~="xl:2"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 1) / 2);
+    }
+    .rp-carousel[data-columns~="xl:3"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 2) / 3);
+    }
+    .rp-carousel[data-columns~="xl:4"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 3) / 4);
+    }
+    .rp-carousel[data-columns~="xl:5"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 4) / 5);
+    }
+    .rp-carousel[data-columns~="xl:6"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 5) / 6);
+    }
+  }
+  @media (min-width: 96rem) {
+    .rp-carousel[data-columns~="2xl:1"] {
+      --_item-size: 100%;
+    }
+    .rp-carousel[data-columns~="2xl:2"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 1) / 2);
+    }
+    .rp-carousel[data-columns~="2xl:3"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 2) / 3);
+    }
+    .rp-carousel[data-columns~="2xl:4"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 3) / 4);
+    }
+    .rp-carousel[data-columns~="2xl:5"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 4) / 5);
+    }
+    .rp-carousel[data-columns~="2xl:6"] {
+      --_item-size: calc((100% - var(--rp-carousel-gap) * 5) / 6);
+    }
+  }
+}

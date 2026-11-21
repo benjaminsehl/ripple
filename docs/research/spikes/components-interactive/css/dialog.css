@@ -1,0 +1,153 @@
+/* dialog.css
+   Component: Dialog (id `dialog`). Contract: 10-components-interactive.md, "Dialog".
+   Root:      <rp-dialog>, class rp-dialog
+   Parts:     rp-dialog-panel (<dialog>)
+              rp-dialog-header (<div>)
+              rp-dialog-title (<h2>)
+              rp-dialog-description (<p>)
+              rp-dialog-body (<div>)
+              rp-dialog-footer (<div>)
+   Props:     data-size = sm | md | lg | full   (default md), on rp-dialog-panel
+   States:    [open], ::backdrop
+   Public:    --rp-dialog-width, --rp-dialog-padding, --rp-dialog-gap, --rp-dialog-radius */
+@layer rp.components {
+  /* 1. ROOT */
+  .rp-dialog {
+    /* 1a. public custom properties */
+    --rp-dialog-width: calc(var(--container-prose) * 0.8);
+    --rp-dialog-padding: calc(var(--spacing) * 6);
+    --rp-dialog-gap: calc(var(--spacing) * 4);
+    --rp-dialog-radius: var(--radius-surface);
+    /* 1b. colour slots */
+    --_bg: var(--color-popover);
+    --_fg: var(--color-popover-foreground);
+    --_border: var(--color-border);
+    /* 1c. other private custom properties */
+    --_inline-size: var(--rp-dialog-width);
+    --_block-size: fit-content;
+    --_max-inline-size: calc(100% - var(--spacing) * 8);
+    --_max-block-size: calc(100dvh - var(--spacing) * 8);
+    --_radius: var(--rp-dialog-radius);
+    /* 1d. declarations */
+  }
+
+  /* 2. PARTS */
+  .rp-dialog-panel {
+    box-sizing: border-box;
+    flex-direction: column;
+    gap: var(--rp-dialog-gap);
+    inline-size: var(--_inline-size);
+    block-size: var(--_block-size);
+    max-inline-size: var(--_max-inline-size);
+    max-block-size: var(--_max-block-size);
+    margin: auto;
+    padding: var(--rp-dialog-padding);
+    border: 1px solid var(--_border);
+    border-radius: var(--_radius);
+    background-color: var(--_bg);
+    color: var(--_fg);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+  }
+  .rp-dialog-header {
+    display: flex;
+    flex: none;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--rp-dialog-gap);
+  }
+  .rp-dialog-title {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: var(--text-lg);
+    line-height: var(--text-lg--line-height);
+    font-weight: var(--rp-heading-weight);
+  }
+  .rp-dialog-description {
+    flex: none;
+    margin: 0;
+    color: var(--color-muted-foreground);
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+  }
+  .rp-dialog-body {
+    flex: 1 1 auto;
+    min-block-size: 0;
+    overflow-y: auto;
+  }
+  .rp-dialog-footer {
+    display: flex;
+    flex: none;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: calc(var(--spacing) * 2);
+  }
+
+  /* 3. MODIFIERS */
+  .rp-dialog-panel[data-size="sm"] {
+    --_inline-size: calc(var(--rp-dialog-width) * 0.75);
+  }
+  .rp-dialog-panel[data-size="lg"] {
+    --_inline-size: calc(var(--rp-dialog-width) * 1.5);
+  }
+  .rp-dialog-panel[data-size="full"] {
+    --_inline-size: 100%;
+    --_block-size: 100dvh;
+    --_max-inline-size: 100%;
+    --_max-block-size: 100dvh;
+    --_radius: 0;
+  }
+
+  /* 4. STATES */
+  .rp-dialog-panel[open] {
+    display: flex;
+  }
+  .rp-dialog-panel::backdrop {
+    background-color: var(--color-overlay);
+  }
+
+  /* 5. MOTION */
+  @media (prefers-reduced-motion: no-preference) {
+    .rp-dialog-panel {
+      opacity: 0;
+      translate: 0 calc(var(--spacing) * 2);
+      transition-property: opacity, translate, display, overlay;
+      transition-duration: var(--rp-duration-base);
+      transition-timing-function: var(--ease-out);
+      transition-behavior: allow-discrete;
+    }
+    .rp-dialog-panel[open] {
+      opacity: 1;
+      translate: 0 0;
+      transition-duration: var(--rp-duration-slow);
+    }
+    .rp-dialog-panel::backdrop {
+      opacity: 0;
+      transition-property: opacity, display, overlay;
+      transition-duration: var(--rp-duration-base);
+      transition-timing-function: var(--ease-out);
+      transition-behavior: allow-discrete;
+    }
+    .rp-dialog-panel[open]::backdrop {
+      opacity: 1;
+    }
+    @starting-style {
+      .rp-dialog-panel[open] {
+        opacity: 0;
+        translate: 0 calc(var(--spacing) * 2);
+      }
+      .rp-dialog-panel[open]::backdrop {
+        opacity: 0;
+      }
+    }
+  }
+
+  /* 6. ENVIRONMENT */
+  @media (forced-colors: active) {
+    .rp-dialog-panel {
+      border-color: CanvasText;
+    }
+  }
+}

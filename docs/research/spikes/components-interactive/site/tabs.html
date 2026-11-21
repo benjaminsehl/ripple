@@ -1,0 +1,13 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>t</title>
+<style>[hidden]{display:none!important} ui-tabs,ui-tabs-list,ui-tabs-panel,ui-toast-region{display:block} ui-tabs-tab,ui-tooltip-trigger{display:contents}</style>
+<script>window.__m=[];new MutationObserver(function(r){for(var i=0;i<r.length;i++){var x=r[i];var t=x.target.nodeType===1?x.target:x.target.parentElement;var root=t&&t.closest("ui-tabs,ui-tooltip,ui-toast-region");if(!root)continue;window.__m.push({type:x.type,attr:x.attributeName,old:x.oldValue,now:x.type==="attributes"?x.target.getAttribute(x.attributeName):null,target:(x.target.localName||"#text")+(x.target.id?"#"+x.target.id:""),root:root.localName+"#"+root.id})}}).observe(document.documentElement,{attributes:true,attributeOldValue:true,childList:true,characterData:true,subtree:true});</script>
+<script type="module" src="/web.js"></script></head><body>
+<ui-tabs class="rp-tabs" id="t" default-value="account" data-activation-direction="none" data-orientation="horizontal" data-slot="tabs">
+  <ui-tabs-list class="rp-tabs-list" aria-label="Settings" role="tablist" data-activation-direction="none" data-orientation="horizontal" data-slot="tabs-list">
+    <ui-tabs-tab value="account" role="none"><button class="rp-tabs-tab" type="button" role="tab" id="t-tab-account" aria-controls="t-panel-account" aria-selected="true" tabindex="0" data-selected data-activation-direction="none" data-orientation="horizontal" data-slot="tabs-tab">Account</button></ui-tabs-tab>
+    <ui-tabs-tab value="password" role="none"><button class="rp-tabs-tab" type="button" role="tab" id="t-tab-password" aria-selected="false" tabindex="-1" data-activation-direction="none" data-orientation="horizontal" data-slot="tabs-tab">Password</button></ui-tabs-tab>
+  </ui-tabs-list>
+  <ui-tabs-panel class="rp-tabs-panel" value="account" role="tabpanel" id="t-panel-account" aria-labelledby="t-tab-account" tabindex="0" data-selected data-activation-direction="none" data-orientation="horizontal" data-slot="tabs-panel"><p>Manage your profile.</p></ui-tabs-panel>
+  <ui-tabs-panel class="rp-tabs-panel" value="password" hidden data-slot="tabs-panel"><p>Choose a new password.</p></ui-tabs-panel>
+</ui-tabs>
+</body></html>

@@ -1,0 +1,58 @@
+{% doc %}
+  Ripple Dialog root. Native <dialog> inside <rp-dialog>. Initial state is always closed.
+  Open it with a `button` block: `command_for: '<id>', command: 'show-modal'`.
+
+  `size` is a schema setting. Allowed: sm, md, lg, full. Default: md.
+
+  @param {string} id - Required. Printed on the <dialog>. The title id is '<id>-title'.
+  @param {boolean} [default_open] - Pass the boolean `true` to open the dialog when ripple.js loads.
+  @param {string} [class] - Extra classes appended after `rp-dialog`.
+  @param {string} [attributes] - RAW, unescaped HTML attributes appended to the root element. Never pass shopper or merchant input.
+  @param {string} content - A `dialog-title` block, then the dialog body. Required.
+
+  @example
+  {% block 'dialog', id: 'size-guide' %}{% block 'dialog-title', dialog: 'size-guide' %}Size guide{% endblock %}<p>S, M, L.</p>{% endblock %}
+{% enddoc %}
+
+{%- liquid
+  assign allowed_size = 'sm,md,lg,full' | split: ','
+  unless allowed_size contains size
+    assign size = 'md'
+  endunless
+-%}
+<rp-dialog
+  class="rp-dialog {{ class | escape }}"
+  data-slot="rp-dialog"
+  {{ attributes }}
+>
+  <dialog
+    class="rp-dialog-panel"
+    id="{{ id | escape }}"
+    data-size="{{ size }}"
+    aria-labelledby="{{ id | escape }}-title"
+    closedby="any"
+    {% if default_open == true %}data-default-open=""{% endif %}
+  >
+    {{ content }}
+  </dialog>
+</rp-dialog>
+
+{% schema %}
+{
+  "name": "t:ripple.dialog.name",
+  "settings": [
+    {
+      "type": "select",
+      "id": "size",
+      "label": "t:ripple.props.size",
+      "default": "md",
+      "options": [
+        { "value": "sm", "label": "t:ripple.props.sm" },
+        { "value": "md", "label": "t:ripple.props.md" },
+        { "value": "lg", "label": "t:ripple.props.lg" },
+        { "value": "full", "label": "t:ripple.props.full" }
+      ]
+    }
+  ]
+}
+{% endschema %}

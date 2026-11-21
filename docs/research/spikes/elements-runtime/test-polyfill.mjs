@@ -1,0 +1,18 @@
+import { createRequire } from "node:module"
+import { serve } from "./server.mjs"
+const { chromium } = createRequire(import.meta.url)("playwright")
+const { server, url } = await serve()
+const browser = await chromium.launch()
+const page = await browser.newPage()
+page.on("pageerror", (e) => console.log("PAGEERROR", e.message))
+await page.goto(url + "/site/polyfill.html")
+await page.waitForFunction(() => customElements.get("rp-dialog"))
+await page.evaluate(() => { window.__o = []; document.querySelector("rp-dialog").addEventListener("openchange", (e) => window.__o.push(e.detail.reason)) })
+await page.click("#o"); await page.waitForTimeout(50)
+const open = await page.evaluate(() => document.getElementById("d").open)
+await page.click("#c"); await page.waitForTimeout(50)
+const out = await page.evaluate(() => ({ closed: !document.getElementById("d").open, commands: window.__c, reasons: window.__o, flag: window.rpCommandsPolyfill }))
+console.log(JSON.stringify({ open, ...out }))
+const synthetic = out.commands.filter((c) => !c.trusted)
+console.log(open && out.closed && synthetic.length === 2 && synthetic[0].command === "show-modal" && synthetic[0].source === "o" && out.reasons.join() === "trigger-press,close-press" ? "PASS  inline polyfill (simulated: native support hidden, native activation still runs) opens, closes, dispatches command with source; module polyfill skipped by window.rpCommandsPolyfill" : "FAIL")
+await browser.close(); server.close()

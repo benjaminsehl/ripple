@@ -1,0 +1,80 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>spike</title><link rel="stylesheet" href="/site/pre.css"><script type="importmap">{"imports":{"ripple":"/out/liquid/ripple.js?v=1","ripple/tabs":"/out/liquid/ripple-tabs.js?v=1","ripple/tooltip":"/out/liquid/ripple-tooltip.js?v=1","ripple/toast":"/out/liquid/ripple-toast.js?v=1","ripple/shared":"/out/liquid/ripple-shared.js?v=1","ripple/agent":"/out/liquid/ripple-agent.js?v=1"}}</script><script type="module" src="/out/liquid/ripple.js?v=1"></script></head><body>
+<a id="cart-link" href="/site/cart.html" data-rp-open="cart">Cart</a>
+<button id="open-btn" type="button" commandfor="dlg" command="show-modal">Open dialog</button>
+
+<rp-dialog class="rp-dialog" data-slot="rp-dialog">
+  <dialog id="dlg" class="rp-dialog-panel" aria-labelledby="dlg-title" closedby="any">
+    <h2 id="dlg-title" class="rp-dialog-title">Size guide</h2>
+    <p>Body</p>
+    <button id="close-btn" type="button" commandfor="dlg" command="close" data-agent-confirm="Closes the size guide">Close</button>
+  </dialog>
+</rp-dialog>
+
+<rp-dialog class="rp-drawer" data-slot="rp-dialog" data-side="end">
+  <dialog id="cart" class="rp-drawer-panel" aria-labelledby="cart-title" closedby="any">
+    <h2 id="cart-title" class="rp-drawer-title">Cart</h2>
+    <div role="status" data-rp-part="status"></div>
+    <button type="button" commandfor="cart" command="close">Close</button>
+  </dialog>
+</rp-dialog>
+
+<rp-quantity class="rp-quantity" data-slot="rp-quantity" id="qty">
+  <button type="button" class="rp-quantity-button" data-rp-part="decrement" data-rp-js="inflow" aria-label="Decrease quantity" disabled>-</button>
+  <input class="rp-quantity-input" data-rp-part="input" type="number" inputmode="numeric" name="quantity" min="1" max="5" step="1" value="1" aria-label="Quantity">
+  <button type="button" class="rp-quantity-button" data-rp-part="increment" data-rp-js="inflow" aria-label="Increase quantity">+</button>
+</rp-quantity>
+
+<rp-carousel class="rp-carousel" data-slot="rp-carousel" id="car" role="group" aria-roledescription="carousel" aria-label="Featured products">
+  <button type="button" class="rp-carousel-button" data-rp-part="prev" data-rp-js="inflow" aria-controls="car-list" aria-label="Previous" disabled>&lt;</button>
+  <ul class="rp-carousel-viewport" id="car-list" data-rp-part="viewport" tabindex="0">
+    <li class="rp-carousel-item" data-rp-part="item">1</li>
+    <li class="rp-carousel-item" data-rp-part="item">2</li>
+    <li class="rp-carousel-item" data-rp-part="item">3</li>
+    <li class="rp-carousel-item" data-rp-part="item">4</li>
+    <li class="rp-carousel-item" data-rp-part="item">5</li>
+    <li class="rp-carousel-item" data-rp-part="item">6</li>
+  </ul>
+  <button type="button" class="rp-carousel-button" data-rp-part="next" data-rp-js="inflow" aria-controls="car-list" aria-label="Next">&gt;</button>
+</rp-carousel>
+
+<rp-navigation-menu class="rp-navigation-menu" data-slot="rp-navigation-menu" id="nav">
+  <nav aria-label="Main">
+    <ul class="rp-navigation-menu-list">
+      <li class="rp-navigation-menu-item" data-rp-part="item">
+        <a id="nav-shop" class="rp-navigation-menu-link" href="/collections/all">Shop</a>
+        <button id="nav-shop-btn" type="button" class="rp-navigation-menu-trigger" popovertarget="nav-panel-shop" aria-label="Shop submenu">v</button>
+        <div id="nav-panel-shop" popover class="rp-navigation-menu-content">
+          <a id="nav-shop-1" href="/collections/shirts">Shirts</a>
+          <a href="/collections/pants">Pants</a>
+        </div>
+      </li>
+      <li class="rp-navigation-menu-item" data-rp-part="item">
+        <a id="nav-about" class="rp-navigation-menu-link" href="/pages/about">About</a>
+      </li>
+      <li class="rp-navigation-menu-item" data-rp-part="item">
+        <a id="nav-help" class="rp-navigation-menu-link" href="/pages/help">Help</a>
+        <button type="button" class="rp-navigation-menu-trigger" popovertarget="nav-panel-help" aria-label="Help submenu">v</button>
+        <div id="nav-panel-help" popover class="rp-navigation-menu-content">
+          <a href="/pages/faq">FAQ</a>
+        </div>
+      </li>
+    </ul>
+  </nav>
+</rp-navigation-menu>
+
+<ui-tabs id="tabs" class="rp-tabs" default-value="details" data-activation-direction="none" data-orientation="horizontal" data-slot="tabs">
+  <ui-tabs-list class="rp-tabs-list" aria-label="Product information" role="tablist" data-activation-direction="none" data-orientation="horizontal" data-slot="tabs-list">
+    <ui-tabs-tab value="details" role="none"><button type="button" class="rp-tabs-tab" role="tab" id="tabs-tab-details" aria-controls="tabs-panel-details" aria-selected="true" tabindex="0" data-selected data-activation-direction="none" data-orientation="horizontal" data-slot="tabs-tab">Details</button></ui-tabs-tab>
+    <ui-tabs-tab value="shipping" role="none"><button type="button" class="rp-tabs-tab" role="tab" id="tabs-tab-shipping" aria-selected="false" tabindex="-1" data-activation-direction="none" data-orientation="horizontal" data-slot="tabs-tab">Shipping</button></ui-tabs-tab>
+  </ui-tabs-list>
+  <ui-tabs-panel class="rp-tabs-panel" value="details" role="tabpanel" id="tabs-panel-details" aria-labelledby="tabs-tab-details" tabindex="0" data-selected data-activation-direction="none" data-orientation="horizontal" data-slot="tabs-panel">Details content</ui-tabs-panel>
+  <ui-tabs-panel class="rp-tabs-panel" value="shipping" hidden data-slot="tabs-panel">Shipping content</ui-tabs-panel>
+</ui-tabs>
+
+<ui-tooltip id="tip" class="rp-tooltip">
+  <ui-tooltip-trigger><button type="button" class="rp-icon-button" aria-label="Sizing information" aria-describedby="tip-content" data-slot="tooltip-trigger">i</button></ui-tooltip-trigger>
+  <ui-tooltip-content class="rp-tooltip-content" hidden id="tip-content" role="tooltip" data-closed data-slot="tooltip-content">Runs small</ui-tooltip-content>
+</ui-tooltip>
+
+<ui-toast-region class="rp-toast-region" aria-label="Notifications" data-slot="toast-region" data-side="bottom" data-align="end" popover="manual"></ui-toast-region>
+</body></html>

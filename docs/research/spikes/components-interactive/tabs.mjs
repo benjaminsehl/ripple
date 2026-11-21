@@ -1,0 +1,22 @@
+// Tabs: upgrade mutations of the classed `default` fixture, then click and keyboard behaviour.
+import { createRequire } from 'module'; const require = createRequire(import.meta.url);
+const { chromium } = require('playwright'); import http from 'node:http'; import fs from 'node:fs'; import path from 'node:path';
+const root = path.resolve('site'); const types={".html":"text/html",".js":"text/javascript"};
+const s = http.createServer((q,res)=>{const f=path.join(root,new URL(q.url,'http://x').pathname); if(!fs.existsSync(f)||fs.statSync(f).isDirectory()){res.writeHead(404);return res.end()} res.writeHead(200,{"content-type":types[path.extname(f)]||"text/plain"}); fs.createReadStream(f).pipe(res)}).listen(4197);
+const b = await chromium.launch(); const p = await b.newPage({viewport:{width:1000,height:700}});
+p.on('pageerror', e=>console.log('PAGEERROR', e.message));
+await p.goto('http://localhost:4197/tabs.html');
+await p.waitForFunction(()=>customElements.get('ui-tabs')); await p.waitForTimeout(500);
+const m = (await p.evaluate(()=>window.__m)).filter(x=>x.type!=='childList');
+console.log('non-childList mutations at upgrade:', m.length); for (const x of m) console.log(' ', JSON.stringify(x));
+await p.evaluate(()=>{ window.__e=[]; document.getElementById('t').addEventListener('valuechange', e=>window.__e.push({value:e.detail.value, reason:e.detail.reason, cancelable:e.cancelable})); });
+await p.click('#t-tab-password'); await p.waitForTimeout(200);
+const at = sel => p.evaluate(s=>{const e=document.querySelector(s); return [...e.attributes].map(a=>a.name+'='+a.value).join(' ')}, sel);
+console.log('after click tab2:', await at('#t-tab-password')); console.log('tab1:', await at('#t-tab-account'));
+console.log('panel1:', await at('ui-tabs-panel[value=account]')); console.log('panel2:', await at('ui-tabs-panel[value=password]'));
+await p.keyboard.press('ArrowRight'); await p.waitForTimeout(150); console.log('ArrowRight -> selected', await p.evaluate(()=>document.querySelector('[role=tab][aria-selected=true]').id), 'focus', await p.evaluate(()=>document.activeElement.id));
+await p.keyboard.press('End'); await p.waitForTimeout(150); console.log('End -> selected', await p.evaluate(()=>document.querySelector('[role=tab][aria-selected=true]').id));
+await p.keyboard.press('Home'); await p.waitForTimeout(150); console.log('Home -> selected', await p.evaluate(()=>document.querySelector('[role=tab][aria-selected=true]').id));
+console.log('events', JSON.stringify(await p.evaluate(()=>window.__e)));
+console.log('root attrs', await at('#t'));
+await b.close(); s.close();

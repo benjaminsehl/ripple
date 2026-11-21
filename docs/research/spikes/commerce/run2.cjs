@@ -1,0 +1,10 @@
+const fs = require('fs'); let src = fs.readFileSync(__dirname + '/run.cjs', 'utf8');
+src = src.slice(0, src.indexOf('(async () => {\n  const page = LIQUID_PAGE'));
+src += `(async () => { const page = LIQUID_PAGE(scripts).replace('__LINES__', LINES(2));
+  await scenario('D1 add: state sequence', { html: page, pre: seeded, body: \`(async () => { \${H} await C().ready; const seq = []; C().cart.subscribe((s) => seq.push({ lines: [...s.pending.lines], cost: s.pending.cost, reval: s.revalidating, qty: s.data.totalQuantity, n: s.data.lines.nodes.map(l => l.id) }));
+    document.querySelector('[name=add]').click(); await sleep(300); return seq; })()\` });
+  await scenario('D2 buy-now submitter is not intercepted', { html: page, pre: seeded, routes: { 'POST /cart/add': { status: 200, contentType: 'text/html', body: '<html><body>NATIVE</body></html>' } }, body: \`(async () => { \${H} await C().ready; document.getElementById('buy').click(); await sleep(500); return 'no navigation'; })()\` });
+  await scenario('D3 checkout submitter is not intercepted', { html: page, pre: seeded, routes: { 'POST /cart': { status: 200, contentType: 'text/html', body: '<html><body>NATIVE</body></html>' } }, body: \`(async () => { \${H} await C().ready; document.querySelector('[name=checkout]').click(); await sleep(500); return 'no navigation'; })()\` });
+  await scenario('D4 note change', { html: page, pre: seeded, body: \`(async () => { \${H} await C().ready; const t = document.querySelector('textarea'); t.value = 'hello'; t.dispatchEvent(new Event('change', { bubbles: true })); await sleep(300); return { calls: calls(), log: __log.map(x => x[0]) }; })()\` });
+})();`;
+fs.writeFileSync(__dirname + '/run2.gen.cjs', src); require('./run2.gen.cjs');

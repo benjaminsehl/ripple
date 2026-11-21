@@ -1,0 +1,3 @@
+{"selected":"shipping","components":["rp-dialog","rp-dialog","rp-carousel","rp-quantity","rp-navigation-menu","tabs","tooltip"]}
+requests: ["ripple.js?v=1","ripple-tabs.js?v=1","ripple-tooltip.js?v=1","ripple-toast.js?v=1","ripple-shared.js?v=1","ripple-agent.js?v=1"]
+PASS  liquid import map: one instance of every file, agent sees ui-* and rp-*

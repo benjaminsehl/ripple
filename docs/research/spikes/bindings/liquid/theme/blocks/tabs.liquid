@@ -1,0 +1,27 @@
+{% doc %}
+  Ripple Tabs root (UI SDK `ui-tabs`). The markup is the post-upgrade DOM: every part prints its own state.
+
+  @param {string} id - Required. Part ids are '<id>-tab-<value>' and '<id>-panel-<value>'.
+  @param {string} default_value - Required. The `value` of the tab that is selected in the server HTML.
+  @param {string} [class] - Extra classes appended after `rp-tabs`.
+  @param {string} [attributes] - RAW, unescaped HTML attributes appended to the root element. Never pass shopper or merchant input.
+  @param {string} content - One `tabs-list` block, then one `tabs-panel` block per tab. Required.
+
+  @example
+  {% block 'tabs', id: 't', default_value: 'a' %}{% block 'tabs-list', aria_label: 'Details' %}{% block 'tabs-tab', tabs: 't', value: 'a', selected: true %}A{% endblock %}{% endblock %}{% block 'tabs-panel', tabs: 't', value: 'a', selected: true %}<p>A</p>{% endblock %}{% endblock %}
+{% enddoc %}
+
+<ui-tabs
+  class="rp-tabs {{ class | escape }}"
+  id="{{ id | escape }}"
+  default-value="{{ default_value | escape }}"
+  data-activation-direction="none"
+  data-orientation="horizontal"
+  data-slot="tabs"
+  {{ attributes }}
+>
+  {{ content }}
+</ui-tabs>
+{% schema %}
+{ "name": "t:ripple.tabs.name", "settings": [] }
+{% endschema %}

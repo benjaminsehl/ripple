@@ -1,0 +1,4 @@
+{ "ripple": {
+  "button": { "name": "Button" }, "stack": { "name": "Stack" }, "dialog": { "name": "Dialog", "title_name": "Dialog title" },
+  "tabs": { "name": "Tabs", "list_name": "Tab list", "tab_name": "Tab", "panel_name": "Tab panel" }, "product-form": { "name": "Product form" },
+  "props": { "variant": "Style", "size": "Size", "primary": "Primary", "secondary": "Secondary", "outline": "Outline", "ghost": "Ghost", "link": "Link", "destructive": "Destructive", "sm": "Small", "md": "Medium", "lg": "Large", "full": "Full" } } }

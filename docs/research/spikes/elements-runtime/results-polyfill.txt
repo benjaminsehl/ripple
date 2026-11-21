@@ -1,0 +1,2 @@
+{"open":true,"closed":true,"commands":[{"command":"show-modal","trusted":false,"source":"o"},{"command":"show-modal","trusted":true,"source":"o"},{"command":"close","trusted":false,"source":"c"},{"command":"close","trusted":true,"source":"c"}],"reasons":["trigger-press","close-press"],"flag":true}
+PASS  inline polyfill (simulated: native support hidden, native activation still runs) opens, closes, dispatches command with source; module polyfill skipped by window.rpCommandsPolyfill

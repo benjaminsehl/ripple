@@ -1,0 +1,147 @@
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@remix-run/cli@1.0.3',
+npm warn EBADENGINE   required: { node: '>=24.3.0' },
+npm warn EBADENGINE   current: { node: 'v22.23.5', npm: '10.9.9' }
+npm warn EBADENGINE }
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@remix-run/node-tsx@1.0.0',
+npm warn EBADENGINE   required: { node: '>=24.3.0' },
+npm warn EBADENGINE   current: { node: 'v22.23.5', npm: '10.9.9' }
+npm warn EBADENGINE }
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@remix-run/test@1.2.0',
+npm warn EBADENGINE   required: { node: '>=24.3.0' },
+npm warn EBADENGINE   current: { node: 'v22.23.5', npm: '10.9.9' }
+npm warn EBADENGINE }
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: 'remix@3.3.0',
+npm warn EBADENGINE   required: { node: '>=24.3.0' },
+npm warn EBADENGINE   current: { node: 'v22.23.5', npm: '10.9.9' }
+npm warn EBADENGINE }
+
+up to date in 379ms
+== typecheck (React 19 JSX, Remix 3 JSX)
+== React SSR conformance
+ok   button/default
+ok   button/link-disabled
+ok   button/invalid-enum-falls-back
+ok   button/escaping
+ok   button/opener
+ok   button/popover
+ok   stack/responsive
+ok   stack/as
+ok   dialog/default
+ok   dialog/default-open
+ok   tabs/default
+ok   product-form/default
+RAW button/opener: <button class="rp-button" type="button" commandfor="size-guide" command="show-modal" data-variant="secondary" data-size="md">Size guide</button>
+RAW dialog/default-open: <rp-dialog class="rp-dialog" data-slot="rp-dialog"><dialog class="rp-dialog-panel" id="promo" data-size="lg" aria-labelledby="promo-title" closedby="any" data-default-open=""><h2 class="rp-dialog-title" id="promo-title">Welcome</h2></dialog></rp-dialog>
+RAW rest-order: <button data-variant="primary" data-test="1" title="t" class="rp-button" type="submit" data-size="md">R</button>
+ALL OK
+== Remix SSR conformance
+ok   button/default
+ok   button/link-disabled
+ok   button/invalid-enum-falls-back
+ok   button/escaping
+ok   button/opener
+ok   button/popover
+ok   stack/responsive
+ok   stack/as
+ok   dialog/default
+ok   dialog/default-open
+ok   tabs/default
+ok   product-form/default
+RAW button/opener: <button type="button" commandfor="size-guide" command="show-modal" data-variant="secondary" data-size="md" class="rp-button">Size guide</button>
+RAW dialog/default-open: <rp-dialog data-slot="rp-dialog" data-rmx-key="promo" class="rp-dialog"><dialog id="promo" data-size="lg" aria-labelledby="promo-title" closedby="any" data-default-open="" data-rmx-preserve-attrs="open" class="rp-dialog-panel"><h2 id="promo-title" class="rp-dialog-title">Welcome</h2></dialog></rp-dialog>
+RAW product-form: <rp-product-form data-slot="rp-product-form" data-rmx-key="pf" class="rp-product-form"><form id="pf" method="post" action="/api/cart" data-rmx-document class="rp-product-form-fields"><input type="hidden" name="merchandiseId" value="gid://shopify/ProductVariant/43696932421654" data-rp-field="merchandise-id" /><button type="submit" data-variant="primary" data-size="md" class="rp-button">Add to cart</button><p data-rp-part="error" data-tone="destructive" role="alert" hidden data-rmx-preserve-attrs="hidden" class="rp-form-message"></p></form></rp-product-form>
+RAW rest-order: <button data-variant="primary" data-test="1" title="t" type="button" data-size="md" class="rp-button zz">R</button>
+ALL OK
+== Liquid shim conformance + Theme Check
+ok   button/default
+ok   button/link-disabled
+ok   button/invalid-enum-falls-back
+ok   button/escaping
+ok   button/opener
+ok   button/popover
+ok   stack/responsive
+ok   stack/as
+ok   dialog/default
+ok   dialog/default-open
+ok   tabs/default
+ok   product-form/default
+DEFAULT BODY: <rp-product-form class="rp-product-form " data-slot="rp-product-form" > <form method="post" action="/cart/add" id="buy" accept-charset="UTF-8" class="rp-product-form-fields" enctype="multipart/form-data"><input type="hidden" name="form_type" value="product" /><input type="hidden" name="utf8" value="✓" /> <input type="hidden" name="id" value="43696932421654" data-rp-field="merchandise-id"> <button class="rp-button " type="submit" name="add" data-variant="primary" data-size="md" >Add to cart</button> <p class="rp-form-message" data-rp-part="error" data-tone="destructive" role="alert" hidden></p> <input type="hidden" name="product-id" value="7" /></form> </rp-product-form> 
+ATTRIBUTES LAST: <button class="rp-button" data-size="md" data-variant="primary" data-x="1" type="button">
+  A
+</button>
+
+ALL OK
+offenses: 0
+== React hydration (both orders, 3 modes) and client render, Chromium, development build
+ok   [uncontrolled/elements-first] zero mutations outside the tolerated list at upgrade+hydration []
+     tolerated records: ["attributes:role:UI-TABS-TAB:same","attributes:type:INPUT[hidden]:same","attributes:value:INPUT[hidden]:same","attributes:name:INPUT[hidden]:same","attributes:type:INPUT[number]:same","attributes:value:INPUT[number]:same","attributes:name:INPUT[number]:same","attributes:type:INPUT[checkbox]:same","attributes:checked:INPUT[checkbox]:same","attributes:name:INPUT[checkbox]:same","childList::TEXTAREA[textarea]:CHANGED null->null"]
+ok   [uncontrolled/elements-first] textarea text unchanged 
+ok   [uncontrolled/elements-first] no console output []
+ok   [uncontrolled/elements-first] no recoverable errors 
+ok   [uncontrolled/elements-first] onValueChange fired on first click ["tab:password"]
+ok   [uncontrolled/elements-first] tab selection applied true
+ok   [uncontrolled/elements-first] dialog opens true
+ok   [uncontrolled/elements-first] onOpenChange(true) fired ["tab:password","open:true:trigger-press"]
+ok   [uncontrolled/elements-first] re-render keeps dialog open 
+ok   [uncontrolled/elements-first] closer closes 
+ok   [uncontrolled/elements-first] no console output after interaction []
+ok   [uncontrolled/hydrate-first] zero mutations outside the tolerated list at upgrade+hydration []
+     tolerated records: ["attributes:type:INPUT[hidden]:same","attributes:value:INPUT[hidden]:same","attributes:name:INPUT[hidden]:same","attributes:type:INPUT[number]:same","attributes:value:INPUT[number]:same","attributes:name:INPUT[number]:same","attributes:type:INPUT[checkbox]:same","attributes:checked:INPUT[checkbox]:same","attributes:name:INPUT[checkbox]:same","childList::TEXTAREA[textarea]:CHANGED null->null","attributes:role:UI-TABS-TAB:same"]
+ok   [uncontrolled/hydrate-first] textarea text unchanged 
+ok   [uncontrolled/hydrate-first] no console output []
+ok   [uncontrolled/hydrate-first] no recoverable errors 
+ok   [uncontrolled/hydrate-first] onValueChange fired on first click ["tab:password"]
+ok   [uncontrolled/hydrate-first] tab selection applied true
+ok   [uncontrolled/hydrate-first] dialog opens true
+ok   [uncontrolled/hydrate-first] onOpenChange(true) fired ["tab:password","open:true:trigger-press"]
+ok   [uncontrolled/hydrate-first] re-render keeps dialog open 
+ok   [uncontrolled/hydrate-first] closer closes 
+ok   [uncontrolled/hydrate-first] no console output after interaction []
+ok   [controlled/elements-first] zero mutations outside the tolerated list at upgrade+hydration []
+ok   [controlled/elements-first] textarea text unchanged 
+ok   [controlled/elements-first] no console output []
+ok   [controlled/elements-first] no recoverable errors 
+ok   [controlled/elements-first] onValueChange fired on first click ["tab:password"]
+ok   [controlled/elements-first] tab selection applied true
+ok   [controlled/elements-first] dialog opens true
+ok   [controlled/elements-first] onOpenChange(true) fired ["tab:password","open:true:trigger-press"]
+ok   [controlled/elements-first] re-render keeps dialog open 
+ok   [controlled/elements-first] closer closes 
+ok   [controlled/elements-first] parent state opens dialog 
+ok   [controlled/elements-first] no console output after interaction []
+ok   [controlled/hydrate-first] zero mutations outside the tolerated list at upgrade+hydration []
+ok   [controlled/hydrate-first] textarea text unchanged 
+ok   [controlled/hydrate-first] no console output []
+ok   [controlled/hydrate-first] no recoverable errors 
+ok   [controlled/hydrate-first] onValueChange fired on first click ["tab:password"]
+ok   [controlled/hydrate-first] tab selection applied true
+ok   [controlled/hydrate-first] dialog opens true
+ok   [controlled/hydrate-first] onOpenChange(true) fired ["tab:password","open:true:trigger-press"]
+ok   [controlled/hydrate-first] re-render keeps dialog open 
+ok   [controlled/hydrate-first] closer closes 
+ok   [controlled/hydrate-first] parent state opens dialog 
+ok   [controlled/hydrate-first] no console output after interaction []
+ok   [reject/elements-first] zero mutations outside the tolerated list at upgrade+hydration []
+ok   [reject/elements-first] textarea text unchanged 
+ok   [reject/elements-first] no console output []
+ok   [reject/elements-first] no recoverable errors 
+ok   [reject/elements-first] onValueChange fired on first click ["tab:password"]
+ok   [reject/elements-first] tab selection vetoed false
+ok   [reject/elements-first] dialog stays closed (veto) false
+ok   [reject/elements-first] onOpenChange(true) fired ["tab:password","open:true:trigger-press"]
+ok   [reject/elements-first] no console output after interaction []
+ok   [reject/hydrate-first] zero mutations outside the tolerated list at upgrade+hydration []
+ok   [reject/hydrate-first] textarea text unchanged 
+ok   [reject/hydrate-first] no console output []
+ok   [reject/hydrate-first] no recoverable errors 
+ok   [reject/hydrate-first] onValueChange fired on first click ["tab:password"]
+ok   [reject/hydrate-first] tab selection vetoed false
+ok   [reject/hydrate-first] dialog stays closed (veto) false
+ok   [reject/hydrate-first] onOpenChange(true) fired ["tab:password","open:true:trigger-press"]
+ok   [reject/hydrate-first] no console output after interaction []
+ALL OK
+client render equals SSR (canonical): true console: []

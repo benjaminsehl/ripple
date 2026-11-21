@@ -1,0 +1,26 @@
+{% doc %}
+  Ripple Tabs list. Holds the `tabs-tab` blocks.
+
+  @param {string} aria_label - Required. Accessible name of the tab list.
+  @param {string} [class] - Extra classes appended after `rp-tabs-list`.
+  @param {string} [attributes] - RAW, unescaped HTML attributes appended to the root element. Never pass shopper or merchant input.
+  @param {string} content - The `tabs-tab` blocks. Required.
+
+  @example
+  {% block 'tabs-list', aria_label: 'Details' %}{% block 'tabs-tab', tabs: 't', value: 'a', selected: true %}A{% endblock %}{% endblock %}
+{% enddoc %}
+
+<ui-tabs-list
+  class="rp-tabs-list {{ class | escape }}"
+  {% if aria_label != blank %}aria-label="{{ aria_label | escape }}"{% endif %}
+  role="tablist"
+  data-activation-direction="none"
+  data-orientation="horizontal"
+  data-slot="tabs-list"
+  {{ attributes }}
+>
+  {{ content }}
+</ui-tabs-list>
+{% schema %}
+{ "name": "t:ripple.tabs.list_name", "settings": [] }
+{% endschema %}

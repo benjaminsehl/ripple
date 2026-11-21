@@ -1,0 +1,92 @@
+{% doc %}
+  Ripple Button. Static component: no JavaScript.
+  Renders an <a> when `href` is set, otherwise a <button>.
+
+  `variant` and `size` are schema settings. Override them at the call site
+  with bare arguments: `variant: 'outline'`, `size: 'lg'`.
+  Allowed `variant`: primary, secondary, outline, ghost, link, destructive. Default: primary.
+  Allowed `size`: sm, md, lg. Default: md.
+
+  @param {'button' | 'submit' | 'reset'} [type] - Native button type. Ignored when `href` is set. Default: 'button'.
+  @param {string} [href] - When set, the root element is a link.
+  @param {string} [target] - Link target. Only with `href`.
+  @param {string} [rel] - Link rel. Only with `href`.
+  @param {string} [name] - Form field name. Button only.
+  @param {string} [value] - Form field value. Button only.
+  @param {boolean} [disabled] - Pass the boolean `true`. Any other value is ignored.
+  @param {boolean} [pending] - Pass the boolean `true` to print the busy state.
+  @param {boolean} [full_width] - Pass the boolean `true` to fill the inline size.
+  @param {string} [aria_label] - Accessible name. Required when the content is only an icon.
+  @param {string} [command_for] - Id of the element this button commands. Button only.
+  @param {string} [command] - Invoker command, for example 'show-modal' or 'close'. Button only.
+  @param {string} [popover_target] - Id of the popover this button toggles. Button only.
+  @param {string} [id] - Root element id.
+  @param {string} [span] - Grid column span token(s). Always a quoted string.
+  @param {string} [hidden] - Responsive visibility token(s), for example 'true md:false'. Always a quoted string.
+  @param {string} [class] - Extra classes appended after `rp-button`.
+  @param {string} [attributes] - RAW, unescaped HTML attributes appended to the root element. Never pass shopper or merchant input.
+  @param {string} content - The label. Required.
+
+  @example
+  {% block 'button', type: 'submit' %}Add to cart{% endblock %}
+
+  @example
+  {% block 'button', variant: 'outline', href: routes.cart_url %}View cart{% endblock %}
+{% enddoc %}
+
+{% render 'rp-button',
+  variant: variant,
+  size: size,
+  type: type,
+  href: href,
+  target: target,
+  rel: rel,
+  name: name,
+  value: value,
+  disabled: disabled,
+  pending: pending,
+  full_width: full_width,
+  aria_label: aria_label,
+  command_for: command_for,
+  command: command,
+  popover_target: popover_target,
+  id: id,
+  span: span,
+  hidden: hidden,
+  class: class,
+  attributes: attributes,
+  content: content
+%}
+
+{% schema %}
+{
+  "name": "t:ripple.button.name",
+  "settings": [
+    {
+      "type": "select",
+      "id": "variant",
+      "label": "t:ripple.props.variant",
+      "default": "primary",
+      "options": [
+        { "value": "primary", "label": "t:ripple.props.primary" },
+        { "value": "secondary", "label": "t:ripple.props.secondary" },
+        { "value": "outline", "label": "t:ripple.props.outline" },
+        { "value": "ghost", "label": "t:ripple.props.ghost" },
+        { "value": "link", "label": "t:ripple.props.link" },
+        { "value": "destructive", "label": "t:ripple.props.destructive" }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "size",
+      "label": "t:ripple.props.size",
+      "default": "md",
+      "options": [
+        { "value": "sm", "label": "t:ripple.props.sm" },
+        { "value": "md", "label": "t:ripple.props.md" },
+        { "value": "lg", "label": "t:ripple.props.lg" }
+      ]
+    }
+  ]
+}
+{% endschema %}

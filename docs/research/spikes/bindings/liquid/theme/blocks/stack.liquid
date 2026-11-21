@@ -1,0 +1,62 @@
+{% doc %}
+  Ripple Stack. Flex layout, vertical by default. Static component: no JavaScript.
+
+  Responsive params take one token, or several tokens separated by one space where
+  later tokens carry a breakpoint prefix (sm, md, lg, xl, 2xl). Example: '2 md:6'.
+  Always pass them as quoted strings.
+
+  @param {'div' | 'section' | 'ul' | 'ol' | 'nav' | 'header' | 'footer' | 'main' | 'aside' | 'article' | 'form'} [as] - Root element. Default: 'div'.
+  @param {string} [direction] - Token(s): row, column. Default: 'column'.
+  @param {string} [gap] - Space step token(s). Example: '4' or '2 md:6'.
+  @param {string} [p] - Padding token(s).
+  @param {string} [px] - Inline padding token(s).
+  @param {string} [py] - Block padding token(s).
+  @param {string} [pt] - Block-start padding token(s).
+  @param {string} [pb] - Block-end padding token(s).
+  @param {string} [align] - Cross-axis token(s): start, center, end, stretch, baseline.
+  @param {string} [justify] - Main-axis token(s): start, center, end, between.
+  @param {string} [id] - Root element id.
+  @param {string} [span] - Grid column span token(s).
+  @param {string} [hidden] - Responsive visibility token(s), for example 'true md:false'.
+  @param {string} [class] - Extra classes appended after `rp-stack`.
+  @param {string} [attributes] - RAW, unescaped HTML attributes appended to the root element. Never pass shopper or merchant input.
+  @param {string} [content] - Children.
+
+  @example
+  {% block 'stack', gap: '2 md:6', align: 'start' %}<p>One</p><p>Two</p>{% endblock %}
+{% enddoc %}
+
+{%- liquid
+  assign allowed_as = 'div,section,ul,ol,nav,header,footer,main,aside,article,form' | split: ','
+  unless allowed_as contains as
+    assign as = 'div'
+  endunless
+  if direction == blank
+    assign direction = 'column'
+  endif
+-%}
+<{{ as }}
+  class="rp-stack {{ class | escape }}"
+  {% if id != blank %}id="{{ id | escape }}"{% endif %}
+  data-direction="{{ direction | escape }}"
+  {% if gap != blank %}data-gap="{{ gap | escape }}"{% endif %}
+  {% if p != blank %}data-p="{{ p | escape }}"{% endif %}
+  {% if px != blank %}data-px="{{ px | escape }}"{% endif %}
+  {% if py != blank %}data-py="{{ py | escape }}"{% endif %}
+  {% if pt != blank %}data-pt="{{ pt | escape }}"{% endif %}
+  {% if pb != blank %}data-pb="{{ pb | escape }}"{% endif %}
+  {% if align != blank %}data-align="{{ align | escape }}"{% endif %}
+  {% if justify != blank %}data-justify="{{ justify | escape }}"{% endif %}
+  {% if span != blank %}data-span="{{ span | escape }}"{% endif %}
+  {% if hidden != blank %}data-hidden="{{ hidden | escape }}"{% endif %}
+  {{ attributes }}
+>
+  {{ content }}
+</{{ as }}>
+
+{% schema %}
+{
+  "name": "t:ripple.stack.name",
+  "settings": []
+}
+{% endschema %}

@@ -1,0 +1,12 @@
+non-childList mutations at upgrade: 2
+  {"type":"attributes","attr":"role","old":"none","now":"none","target":"ui-tabs-tab","root":"ui-tabs#t"}
+  {"type":"attributes","attr":"role","old":"none","now":"none","target":"ui-tabs-tab","root":"ui-tabs#t"}
+after click tab2: class=rp-tabs-tab type=button role=tab id=t-tab-password aria-selected=true tabindex=0 data-activation-direction=right data-orientation=horizontal data-slot=tabs-tab data-selected= aria-controls=t-panel-password
+tab1: class=rp-tabs-tab type=button role=tab id=t-tab-account aria-selected=false tabindex=-1 data-activation-direction=right data-orientation=horizontal data-slot=tabs-tab
+panel1: class=rp-tabs-panel value=account role=tabpanel id=t-panel-account aria-labelledby=t-tab-account tabindex=0 data-activation-direction=right data-orientation=horizontal data-slot=tabs-panel hidden=
+panel2: class=rp-tabs-panel value=password data-slot=tabs-panel role=tabpanel id=t-panel-password aria-labelledby=t-tab-password data-selected= data-orientation=horizontal data-activation-direction=right tabindex=0
+ArrowRight -> selected t-tab-account focus t-tab-account
+End -> selected t-tab-password
+Home -> selected t-tab-account
+events [{"value":"password","reason":"item-press","cancelable":true},{"value":"account","reason":"list-navigation","cancelable":true},{"value":"password","reason":"list-navigation","cancelable":true},{"value":"account","reason":"list-navigation","cancelable":true}]
+root attrs class=rp-tabs id=t default-value=account data-activation-direction=left data-orientation=horizontal data-slot=tabs

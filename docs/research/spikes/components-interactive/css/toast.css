@@ -1,0 +1,115 @@
+/* toast.css
+   Component: Toast (id `toast`). Contract: 10-components-interactive.md, "Toast".
+   Root:      <ui-toast-region>, class rp-toast
+   Parts:     none printed by the server. UI SDK creates <ol data-slot="toast-list"> and, per toast,
+              <ui-toast>, <ui-toast-title>, <ui-toast-description>, <ui-toast-action>, <ui-toast-close>.
+              They carry no class, so they are selected as .rp-toast :where(<tag>).
+   Props:     data-side  = top | bottom           (default bottom); positioned by UI SDK, not styled here
+              data-align = start | center | end   (default end); positioned by UI SDK, not styled here
+   States:    [data-type], [data-starting-style], [data-ending-style] on ui-toast
+   Public:    --rp-toast-width, --rp-toast-gap, --rp-toast-padding, --rp-toast-radius, --rp-toast-inset */
+@layer rp.components {
+  /* 1. ROOT */
+  .rp-toast {
+    /* 1a. public custom properties */
+    --rp-toast-width: calc(var(--spacing) * 90);
+    --rp-toast-gap: calc(var(--spacing) * 2);
+    --rp-toast-padding: calc(var(--spacing) * 4);
+    --rp-toast-radius: var(--radius-surface);
+    --rp-toast-inset: calc(var(--spacing) * 4);
+    /* 1b. colour slots */
+    --_bg: var(--color-popover);
+    --_fg: var(--color-popover-foreground);
+    --_border: var(--color-border);
+    /* 1c. other private custom properties */
+    /* 1d. declarations */
+    box-sizing: border-box;
+    inline-size: var(--rp-toast-width);
+    max-inline-size: 100%;
+    padding: var(--rp-toast-inset);
+    z-index: var(--rp-z-toast);
+    pointer-events: none;
+  }
+
+  /* 2. PARTS */
+  .rp-toast :where(ol) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--rp-toast-gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .rp-toast :where(ui-toast) {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--rp-toast-gap);
+    padding: var(--rp-toast-padding);
+    border: 1px solid var(--_border);
+    border-radius: var(--rp-toast-radius);
+    background-color: var(--_bg);
+    color: var(--_fg);
+    box-shadow: var(--shadow-lg);
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+    pointer-events: auto;
+  }
+  .rp-toast :where(ui-toast-title) {
+    font-weight: var(--font-weight-medium);
+  }
+  .rp-toast :where(ui-toast-description) {
+    color: var(--color-muted-foreground);
+  }
+  .rp-toast :where(ui-toast button) {
+    min-block-size: var(--spacing-target-min);
+    margin: 0;
+    padding-block: 0;
+    padding-inline: calc(var(--spacing) * 2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-control);
+    background-color: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  /* 3. MODIFIERS */
+
+  /* 4. STATES */
+  .rp-toast :where(ui-toast[data-type="success"]) {
+    border-color: var(--color-success);
+  }
+  .rp-toast :where(ui-toast[data-type="error"]) {
+    border-color: var(--color-destructive);
+  }
+  .rp-toast :where(ui-toast[data-type="warning"]) {
+    border-color: var(--color-warning);
+  }
+  .rp-toast :where(ui-toast[data-type="info"]) {
+    border-color: var(--color-info);
+  }
+
+  /* 5. MOTION */
+  @media (prefers-reduced-motion: no-preference) {
+    .rp-toast :where(ui-toast) {
+      transition-property: opacity, translate;
+      transition-duration: var(--rp-duration-base);
+      transition-timing-function: var(--ease-out);
+    }
+    .rp-toast :where(ui-toast[data-starting-style]) {
+      opacity: 0;
+      translate: 0 calc(var(--spacing) * 2);
+    }
+    .rp-toast :where(ui-toast[data-ending-style]) {
+      opacity: 0;
+    }
+  }
+
+  /* 6. ENVIRONMENT */
+  @media (forced-colors: active) {
+    .rp-toast :where(ui-toast) {
+      border-color: CanvasText;
+    }
+  }
+}

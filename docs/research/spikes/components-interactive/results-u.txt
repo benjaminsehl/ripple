@@ -1,0 +1,35 @@
+mutations at upgrade:
+  {"type":"childList","attr":null,"old":null,"now":null,"target":"ui-tooltip#t1","root":"ui-tooltip#t1"}
+  {"type":"childList","attr":null,"old":null,"now":null,"target":"ui-tooltip#t1","root":"ui-tooltip#t1"}
+  {"type":"childList","attr":null,"old":null,"now":null,"target":"ui-tooltip-trigger","root":"ui-tooltip#t1"}
+  {"type":"childList","attr":null,"old":null,"now":null,"target":"button","root":"ui-tooltip#t1"}
+  {"type":"childList","attr":null,"old":null,"now":null,"target":"ui-tooltip#t1","root":"ui-tooltip#t1"}
+  {"type":"childList","attr":null,"old":null,"now":null,"target":"ui-tooltip#t1","root":"ui-tooltip#t1"}
+  {"type":"childList","attr":null,"old":null,"now":null,"target":"ui-tooltip-content#t1-content","root":"ui-tooltip#t1"}
+  {"type":"childList","attr":null,"old":null,"now":null,"target":"ui-tooltip#t1","root":"ui-tooltip#t1"}
+  {"type":"childList","attr":null,"old":null,"now":null,"target":"ui-tooltip#t2","root":"ui-tooltip#t2"}
+  {"type":"childList","attr":null,"old":null,"now":null,"target":"ui-tooltip#t2","root":"ui-tooltip#t2"}
+  {"type":"childList","attr":null,"old":null,"now":null,"target":"ui-tooltip-trigger","root":"ui-tooltip#t2"}
+  {"type":"childList","attr":null,"old":null,"now":null,"target":"a","root":"ui-tooltip#t2"}
+  {"type":"childList","attr":null,"old":null,"now":null,"target":"ui-tooltip#t2","root":"ui-tooltip#t2"}
+  {"type":"childList","attr":null,"old":null,"now":null,"target":"ui-tooltip#t2","root":"ui-tooltip#t2"}
+  {"type":"childList","attr":null,"old":null,"now":null,"target":"ui-tooltip-content#t2-content","root":"ui-tooltip#t2"}
+  {"type":"childList","attr":null,"old":null,"now":null,"target":"ui-tooltip#t2","root":"ui-tooltip#t2"}
+  {"type":"attributes","attr":"type","old":null,"now":"button","target":"a","root":"ui-tooltip#t2"}
+  {"type":"childList","attr":null,"old":null,"now":null,"target":"ui-toast-region#r","root":"ui-toast-region#r"}
+  {"type":"attributes","attr":"popover","old":"manual","now":"manual","target":"ui-toast-region#r","root":"ui-toast-region#r"}
+  {"type":"attributes","attr":"style","old":null,"now":"--keyboard-inset: 0px; --visual-viewport-height: 700px; --toast-front-height: 0px; --toast-stack-height: 0px; --toast-count: 0;","target":"ui-toast-region#r","root":"ui-toast-region#r"}
+  {"type":"attributes","attr":"style","old":"--keyboard-inset: 0px;","now":"--keyboard-inset: 0px; --visual-viewport-height: 700px; --toast-front-height: 0px; --toast-stack-height: 0px; --toast-count: 0;","target":"ui-toast-region#r","root":"ui-toast-region#r"}
+  {"type":"attributes","attr":"style","old":"--keyboard-inset: 0px; --visual-viewport-height: 700px;","now":"--keyboard-inset: 0px; --visual-viewport-height: 700px; --toast-front-height: 0px; --toast-stack-height: 0px; --toast-count: 0;","target":"ui-toast-region#r","root":"ui-toast-region#r"}
+  {"type":"attributes","attr":"style","old":"--keyboard-inset: 0px; --visual-viewport-height: 700px; --toast-front-height: 0px;","now":"--keyboard-inset: 0px; --visual-viewport-height: 700px; --toast-front-height: 0px; --toast-stack-height: 0px; --toast-count: 0;","target":"ui-toast-region#r","root":"ui-toast-region#r"}
+  {"type":"attributes","attr":"style","old":"--keyboard-inset: 0px; --visual-viewport-height: 700px; --toast-front-height: 0px; --toast-stack-height: 0px;","now":"--keyboard-inset: 0px; --visual-viewport-height: 700px; --toast-front-height: 0px; --toast-stack-height: 0px; --toast-count: 0;","target":"ui-toast-region#r","root":"ui-toast-region#r"}
+t1 open: {
+  attrs: 'class=rp-tooltip-content side=bottom align=start id=t1-content role=tooltip data-slot=tooltip-content data-open= popover=manual data-side=bottom data-align=start',
+  below: true,
+  leftAligned: true
+}
+t2 focus-open: {
+  attrs: 'class=rp-tooltip-content side=end id=t2-content role=tooltip data-slot=tooltip-content data-open= data-instant= popover=manual data-side=right data-align=center',
+  toEnd: true
+}
+t2 after escape hidden: true

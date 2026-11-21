@@ -1,0 +1,28 @@
+--- 1000px ltr
+closed dialog display none rp-dialog box 0,26,0,0
+dialog md box 231,256,538,188 display flex opacity 1 backdrop oklch(0 0 0 / 0.5)
+header: title 256,281,447,28 close 719,281,25,26
+d2 0,0,1000,700 
+w1 616,0,384,700 body 641,69,334,564 footer 641,649,334,26
+w2 0,0,384,700 
+w3 0,622,1000,78 
+closed after transition display none
+popover btn 300,146,82,26 pop 300,176,290,82 opacity 1
+accordion trigger 0,173,1000,52 marker display none
+carousel root 0,347,1000,80 viewport 44,347,912,80 item1 44,347,216,80 item2 276,347,216,80 prev visibility hidden scrollW 1376/912
+quantity root 0,427,132,44 input 45,428,42,42 btn 1,428,44,42
+tabs list 0,471,1000,45 tab 0,471,42,44 selected border oklch(0.21 0.006 286)
+--- 600px rtl
+closed dialog display none rp-dialog box 600,26,0,0
+dialog md box 31,256,538,188 display flex opacity 1 backdrop oklch(0 0 0 / 0.5)
+header: title 97,281,447,28 close 56,281,25,26
+d2 0,0,600,700 
+w1 0,0,384,700 body 25,69,334,564 footer 25,649,334,26
+w2 216,0,384,700 
+w3 0,622,600,78 
+closed after transition display none
+popover btn 218,146,82,26 pop 16,176,284,102 opacity 1
+accordion trigger 0,173,600,52 marker display none
+carousel root 0,347,600,80 viewport 44,347,512,80 item1 308,347,248,80 item2 44,347,248,80 prev visibility hidden scrollW 1568/512
+quantity root 468,427,132,44 input 513,428,42,42 btn 555,428,44,42
+tabs list 0,471,600,45 tab 558,471,42,44 selected border oklch(0.21 0.006 286)

@@ -1,0 +1,8 @@
+<ui-tabs class="rp-tabs" id="t" default-value="account" data-activation-direction="none" data-orientation="horizontal" data-slot="tabs">
+  <ui-tabs-list class="rp-tabs-list" aria-label="Settings" role="tablist" data-activation-direction="none" data-orientation="horizontal" data-slot="tabs-list">
+    <ui-tabs-tab value="account" role="none"><button class="rp-tabs-tab" type="button" role="tab" id="t-tab-account" aria-controls="t-panel-account" aria-selected="true" tabindex="0" data-selected data-activation-direction="none" data-orientation="horizontal" data-slot="tabs-tab">Account</button></ui-tabs-tab>
+    <ui-tabs-tab value="password" role="none"><button class="rp-tabs-tab" type="button" role="tab" id="t-tab-password" aria-selected="false" tabindex="-1" data-activation-direction="none" data-orientation="horizontal" data-slot="tabs-tab">Password</button></ui-tabs-tab>
+  </ui-tabs-list>
+  <ui-tabs-panel class="rp-tabs-panel" value="account" role="tabpanel" id="t-panel-account" aria-labelledby="t-tab-account" tabindex="0" data-selected data-activation-direction="none" data-orientation="horizontal" data-slot="tabs-panel"><p>Manage your profile.</p></ui-tabs-panel>
+  <ui-tabs-panel class="rp-tabs-panel" value="password" hidden data-slot="tabs-panel"><p>Choose a new password.</p></ui-tabs-panel>
+</ui-tabs>

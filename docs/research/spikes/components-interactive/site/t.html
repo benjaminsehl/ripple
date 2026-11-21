@@ -1,0 +1,14 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>t</title>
+<style>[hidden]{display:none!important} ui-tabs,ui-tabs-list,ui-tabs-panel,ui-toast-region{display:block} ui-tabs-tab,ui-tooltip-trigger{display:contents}</style>
+<script>window.__m=[];new MutationObserver(function(r){for(var i=0;i<r.length;i++){var x=r[i];var t=x.target.nodeType===1?x.target:x.target.parentElement;var root=t&&t.closest("ui-tabs,ui-tooltip,ui-toast-region");if(!root)continue;window.__m.push({type:x.type,attr:x.attributeName,old:x.oldValue,now:x.type==="attributes"?x.target.getAttribute(x.attributeName):null,target:(x.target.localName||"#text")+(x.target.id?"#"+x.target.id:""),root:root.localName+"#"+root.id})}}).observe(document.documentElement,{attributes:true,attributeOldValue:true,childList:true,characterData:true,subtree:true});</script>
+<script type="module" src="/web.js"></script></head><body style="padding:200px">
+<ui-tooltip id="t1" class="rp-tooltip">
+  <ui-tooltip-trigger><button type="button" class="rp-icon-button" aria-label="Sizing" aria-describedby="t1-content" data-slot="tooltip-trigger">i</button></ui-tooltip-trigger>
+  <ui-tooltip-content class="rp-tooltip-content" side="bottom" align="start" hidden id="t1-content" role="tooltip" data-closed data-slot="tooltip-content">Runs small</ui-tooltip-content>
+</ui-tooltip>
+<ui-tooltip id="t2" class="rp-tooltip">
+  <ui-tooltip-trigger><a href="/x" class="rp-link" aria-describedby="t2-content" data-slot="tooltip-trigger">Shipping</a></ui-tooltip-trigger>
+  <ui-tooltip-content class="rp-tooltip-content" side="end" hidden id="t2-content" role="tooltip" data-closed data-slot="tooltip-content">Free over $50</ui-tooltip-content>
+</ui-tooltip>
+<ui-toast-region id="r" class="rp-toast" side="top" align="center" aria-label="Notifications" data-slot="toast-region" data-side="top" data-align="center" popover="manual"></ui-toast-region>
+</body></html>
