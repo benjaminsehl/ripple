@@ -1,0 +1,55 @@
+{% doc %}
+  The button that opens a `rp-dialog`. Prints a Ripple Button inside
+  <ui-dialog-trigger>, with the ARIA and state attributes of the closed state.
+
+  `variant` and `size` are schema settings with the same values as `rp-button`.
+
+  @param {string} dialog - The `id` passed to the parent `rp-dialog`. Required.
+  @param {string} [aria_label] - Accessible name. Required when the content is only an icon.
+  @param {string} [class] - Extra classes appended after `rp-button`.
+  @param {string} content - The button label. Required.
+
+  @example
+  {% block 'rp-dialog-trigger', dialog: 'size-guide', variant: 'link' %}Size guide{% endblock %}
+{% enddoc %}
+
+{%- liquid
+  assign trigger_id = dialog | append: '-trigger'
+  assign trigger_attributes = 'aria-haspopup="dialog" data-closed data-slot="dialog-trigger"'
+-%}
+<ui-dialog-trigger>
+  {%- render 'rp-button', variant: variant, size: size, type: 'button', id: trigger_id, aria_label: aria_label, class: class, attributes: trigger_attributes, content: content -%}
+</ui-dialog-trigger>
+
+{% schema %}
+{
+  "name": "t:ripple.blocks.dialog_trigger",
+  "settings": [
+    {
+      "type": "select",
+      "id": "variant",
+      "label": "t:ripple.props.variant",
+      "default": "primary",
+      "options": [
+        { "value": "primary", "label": "t:ripple.props.primary" },
+        { "value": "secondary", "label": "t:ripple.props.secondary" },
+        { "value": "outline", "label": "t:ripple.props.outline" },
+        { "value": "ghost", "label": "t:ripple.props.ghost" },
+        { "value": "link", "label": "t:ripple.props.link" },
+        { "value": "destructive", "label": "t:ripple.props.destructive" }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "size",
+      "label": "t:ripple.props.size",
+      "default": "md",
+      "options": [
+        { "value": "sm", "label": "t:ripple.props.sm" },
+        { "value": "md", "label": "t:ripple.props.md" },
+        { "value": "lg", "label": "t:ripple.props.lg" }
+      ]
+    }
+  ]
+}
+{% endschema %}

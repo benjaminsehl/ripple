@@ -1,0 +1,10 @@
+absent                       -> add 
+unmodified                   -> update 
+unmodified, CRLF checkout    -> update 
+user edit, disjoint          -> merged 
+user edit, same lines        -> merge-conflict (1 conflict)
+user edit equals upstream    -> restamp 
+trailer removed              -> conflict-unmanaged 
+user edit, base unavailable  -> needs-base
+user edit, upstream same     -> keep-local
+trailer removed, --force     -> overwrite

@@ -1,0 +1,24 @@
+/* base.css: minimal reset + scheme painting + pre-upgrade rules. */
+@layer rp.base {
+  :where(*, ::before, ::after) { box-sizing: border-box; }
+  :where(body) { margin: 0; }
+  :where(body, [data-scheme]) {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+  :where(body) { font-family: var(--font-sans); font-size: var(--text-base); line-height: var(--text-base--line-height); }
+  :where(button, input, select, textarea) { font: inherit; color: inherit; }
+  /* hidden must beat author display (see uisdk-web-elements.md section 6) */
+  :where([hidden]:not([hidden="until-found"])) { display: none !important; }
+
+  /* Pre-upgrade display for custom elements: GENERATED from the manifest.
+     Undefined custom elements are display:inline; these rules make the pre-upgrade box equal the
+     upgraded box. */
+  :where(ui-button, ui-dialog-trigger, ui-dialog-close, ui-accordion-trigger, rp-cart-form, rp-product-form) { display: contents; }
+  :where(ui-accordion, ui-accordion-item, ui-accordion-panel, rp-cart, rp-quantity, rp-carousel) { display: block; }
+
+  /* Controls that only work after upgrade. In-flow: keep the box, hide the paint (no shift).
+     Out-of-flow (absolutely positioned): remove. */
+  :where(rp-quantity, rp-carousel):not(:defined) [data-js="inflow"] { visibility: hidden; }
+  :where(rp-quantity, rp-carousel):not(:defined) [data-js="overlay"] { display: none; }
+}

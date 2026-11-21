@@ -1,0 +1,34 @@
+{% doc %}
+  One item of a Ripple Accordion. Renders a native <details>. The browser owns
+  the open state and the accessibility semantics, so this block prints no ARIA.
+  The body MUST contain exactly one `rp-accordion-summary` block followed by
+  exactly one `rp-accordion-panel` block.
+
+  @param {string} [name] - Group name. Items with the same name close each other (single-open accordion). A parent block cannot pass values to its body, so pass `name` to every item.
+  @param {boolean} [open] - Pass the boolean `true` to render the item open.
+  @param {string} [id] - Root element id.
+  @param {string} [class] - Extra classes appended after `rp-accordion-item`.
+  @param {string} content - The summary block, then the panel block. Required.
+
+  @example
+  {% block 'rp-accordion-item', name: 'faq', open: true %}
+    {% block 'rp-accordion-summary' %}Shipping{% endblock %}
+    {% block 'rp-accordion-panel' %}<p>Ships in 2 days.</p>{% endblock %}
+  {% endblock %}
+{% enddoc %}
+
+<details
+  class="rp-accordion-item {{ class | escape }}"
+  {% if id != blank %}id="{{ id | escape }}"{% endif %}
+  {% if name != blank %}name="{{ name | escape }}"{% endif %}
+  {% if open == true %}open{% endif %}
+>
+  {{ content }}
+</details>
+
+{% schema %}
+{
+  "name": "t:ripple.blocks.accordion_item",
+  "settings": []
+}
+{% endschema %}

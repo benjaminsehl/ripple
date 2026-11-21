@@ -1,0 +1,20 @@
+{% doc %}
+  Ripple Badge markup. Single source of the Badge HTML contract for Liquid.
+
+  @param {'neutral' | 'info' | 'success' | 'warning' | 'critical'} [tone] - Default: 'neutral'.
+  @param {string} [class] - Extra classes appended after `rp-badge`.
+  @param {string} content - Badge label, as HTML. Required.
+
+  @example
+  {% render 'rp-badge', tone: 'critical', content: label %}
+{% enddoc %}
+
+{%- liquid
+  assign allowed_tones = 'neutral,info,success,warning,critical' | split: ','
+  unless allowed_tones contains tone
+    assign tone = 'neutral'
+  endunless
+-%}
+<span class="rp-badge {{ class | escape }}" data-tone="{{ tone }}">
+  {{- content -}}
+</span>

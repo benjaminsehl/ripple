@@ -1,0 +1,21 @@
+const { chromium } = require('playwright'); const http=require('http'),fs=require('fs'),path=require('path');
+(async()=>{
+ const s=http.createServer((q,r)=>{const f=path.join(__dirname,q.url.split('?')[0]); if(!fs.existsSync(f)){r.writeHead(404);return r.end()} r.writeHead(200,{'content-type':f.endsWith('.js')?'text/javascript':'text/html'}); r.end(fs.readFileSync(f))}).listen(4611);
+ const b=await chromium.launch(); const p=await b.newPage(); const logs=[]; p.on('console',m=>logs.push(m.type()+': '+m.text())); p.on('pageerror',e=>logs.push('pageerror: '+e.message));
+ await p.goto('http://localhost:4611/page.html'); await p.waitForFunction(()=>window.agent);
+ const snap=await p.evaluate(()=>window.agent.snapshot());
+ console.log('SNAPSHOT'); for(const e of snap) console.log(JSON.stringify(e));
+ const r1=await p.evaluate(()=>window.agent.act({steps:[{ref:'Snowboard purchase',action:'setQuantity',args:[3]},{ref:'Snowboard purchase',action:'add'}]}));
+ console.log('ACT rp-product-form', JSON.stringify(r1).slice(0,600), 'added=', await p.evaluate(()=>window.__added));
+ const r2=await p.evaluate(()=>window.agent.act({steps:[{ref:'Check out',action:'press'}]}));
+ console.log('ACT confirm (not approved)', JSON.stringify(r2).slice(0,400));
+ const r3=await p.evaluate(()=>window.agent.act({steps:[{ref:'Search products',action:'setValue',args:['board']}]}));
+ console.log('ACT native input', JSON.stringify(r3).slice(0,500));
+ const r4=await p.evaluate(()=>window.agent.act({steps:[{ref:'Snowboard purchase',action:'press',args:['Buy now']}]}));
+ console.log('ACT press native button inside rp element w/ confirm', JSON.stringify(r4).slice(0,500));
+ const r5=await p.evaluate(()=>window.agent.act({steps:[{ref:'Snowboard purchase',action:'press',args:['Add to cart']}]}).catch(e=>String(e)));
+ console.log('ACT press native Add to cart inside rp element', JSON.stringify(r5).slice(0,500), 'url=',p.url());
+ console.log('TOOLS', await p.evaluate(()=>window.agentTools.map(t=>t.name)));
+ console.log('LOGS', logs.slice(0,10));
+ await b.close(); s.close();
+})().catch(e=>{console.error(e);process.exit(1)});

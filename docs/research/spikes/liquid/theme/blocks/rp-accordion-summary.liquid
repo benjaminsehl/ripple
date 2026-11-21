@@ -1,0 +1,20 @@
+{% doc %}
+  The always-visible heading of a `rp-accordion-item`. Renders <summary>.
+
+  @param {string} [class] - Extra classes appended after `rp-accordion-summary`.
+  @param {string} content - The heading text or markup. Required.
+
+  @example
+  {% block 'rp-accordion-summary' %}Shipping{% endblock %}
+{% enddoc %}
+
+<summary class="rp-accordion-summary {{ class | escape }}">
+  {{- content -}}
+</summary>
+
+{% schema %}
+{
+  "name": "t:ripple.blocks.accordion_summary",
+  "settings": []
+}
+{% endschema %}

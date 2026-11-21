@@ -1,0 +1,2 @@
+import * as t from "@ui-sdk/react/tabs"; import * as a from "@ui-sdk/react/accordion"; import * as d from "@ui-sdk/react/dialog"; import * as w from "@ui-sdk/react/drawer"
+globalThis.__x = [t.Tabs, t.TabsList, t.TabsTab, t.TabsPanel, a.Accordion, a.AccordionItem, a.AccordionHeader, a.AccordionTrigger, a.AccordionPanel, d.Dialog, d.DialogTrigger, d.DialogContent, d.DialogBackdrop, d.DialogTitle, d.DialogClose, w.Drawer, w.DrawerContent, w.DrawerTrigger, w.DrawerBackdrop, w.DrawerClose, w.DrawerTitle]

@@ -1,0 +1,94 @@
+# node render.mjs   (liquidjs 10.30.1 + shim.mjs; expected HTML compared after canon.mjs)
+ok   button-default
+ok   button-link-escaped
+ok   button-disabled-true
+ok   button-invalid-values-fall-back
+ok   button-class-cannot-break-out
+ok   stack-responsive
+ok   stack-bad-tag-falls-back
+ok   accordion
+ok   dialog
+ok   badge-block-wraps-snippet
+ok   slot-captured-in-caller
+ok   product-form
+ok   body-is-caller-scope
+page bytes: 3779; partials seen: [{"partial":"rp-product-buy"},{"partial":"rp-cart-count"}]
+ok   nested block rejected: 'block' tag used outside templates/ and layout/: <spike>/theme/blocks/zz-bad.liquid, file:<spike>/theme/blocks/zz-bad.liquid, line:1, col:1
+
+# node check.mjs theme   (@shopify/theme-check-node 4.0.2, theme-check:recommended)
+offenses: 0
+
+# node check.mjs <base theme>   (ripple/theme, no .theme-check.yml, recommended config)
+offenses: 0
+
+# ./neg.sh   (theme + negsrc/: deliberately wrong files)
+error BlockContentUsage blocks/rp-bad.liquid:6 Use the implicit 'content' parameter directly instead of 'block.content'.
+error LiquidHTMLSyntaxError blocks/rp-bad.liquid:8 Syntax is not supported
+error LiquidSyntaxError templates/page.liquid:12 Syntax error in 'block' tag
+error LiquidSyntaxError templates/page.liquid:7 Liquid syntax error: in 'block' - Use 'variant:' instead of 'block.settings.variant:' when calling a block.
+error ReservedDocParamNames blocks/rp-bad.liquid:4 The parameter name 'true' is reserved because Liquid parses it as a literal.
+error ValidBlockTagPlacement blocks/rp-bad.liquid:6 The 'block' tag can only be used in templates/**/*.liquid and layout/*.liquid.
+error ValidBlockTagPlacement snippets/rp-snip.liquid:1 The 'block' tag can only be used in templates/**/*.liquid and layout/*.liquid.
+offenses: 16
+warning MissingBlockArguments templates/page.liquid:5 Missing required argument 'content' in block tag for 'rp-button'.
+warning MissingBlockArguments templates/page.liquid:6 Missing required argument 'id' in block tag for 'rp-dialog'.
+warning OrphanedSnippet snippets/rp-snip.liquid:1 This snippet is not referenced by any other files
+warning UnrecognizedBlockArguments templates/page.liquid:1 Unknown argument 'colour' in block tag for 'rp-button'.
+warning UnusedDocParam blocks/rp-bad.liquid:2 The parameter 'content' is defined but not used in this file.
+warning UnusedDocParam blocks/rp-bad.liquid:3 The parameter 'unused_param' is defined but not used in this file.
+warning UnusedDocParam blocks/rp-bad.liquid:4 The parameter 'true' is defined but not used in this file.
+warning ValidBlockArgumentTypes templates/page.liquid:2 Invalid value for argument 'tone': expected 'neutral' | 'info' | 'success' | 'warning' | 'critical', got 'loud'
+warning ValidBlockArgumentTypes templates/page.liquid:4 Type mismatch for argument 'gap': expected string, got number
+
+# NOT reported by Theme Check in neg.sh (verified by absence above):
+#  - templates/page.liquid:1  variant: 'huge' for a schema select setting (schema type wins over any LiquidDoc union)
+#  - templates/page.liquid:3  disabled: 'false' (boolean accepts any scalar)
+#  - templates/page.liquid:8  {% block 'rp-nope' %} (missing block file)
+#  - templates/page.liquid:10 tone: v (variables are never type-checked)
+#  - templates/page.liquid:16-17 duplicate partial name 'dup'
+#  - templates/page.liquid:18-19 CSS classes defined nowhere
+#  - blocks/rp-partial-inside.liquid {% partial %} inside a block file
+
+# npm view @shopify/partial-rendering
+npm error code E404
+npm error 404 Not Found - GET https://registry.npmjs.org/@shopify%2fpartial-rendering - Not found
+
+# ruby sem.rb (liquid gem 5.14.0)
+5.14.0
+size_unset=[md]
+str_false_eq_true=[no]
+str_false_truthy=[yes]
+empty_str_truthy=[yes]
+nil_blank=[blank]
+empty_blank=[blank]
+zero_blank=[set]
+false_blank=[blank]
+contains_nil=[fallback]
+contains_ok=[ok]
+contains_substr=[ok]
+escape=[&lt;a href=&quot;x&quot;&gt;&amp;]
+num_escape=[0]
+default_false=[dflt]
+append_num=[p-7]
+
+# sem.rb template through liquidjs 10.30.1
+size_unset=[0]
+str_false_eq_true=[no]
+str_false_truthy=[yes]
+empty_str_truthy=[yes]
+nil_blank=[blank]
+empty_blank=[blank]
+zero_blank=[set]
+false_blank=[blank]
+contains_nil=[fallback]
+contains_ok=[ok]
+contains_substr=[ok]
+escape=[&lt;a href=&#34;x&#34;&gt;&amp;]
+num_escape=[0]
+default_false=[dflt]
+append_num=[p-7]
+
+# node upgrade.mjs <uisdk-web spike site dir>   (Liquid-rendered dialog loaded in Chromium with real @ui-sdk/web 0.1.0-beta.14)
+mutations on upgrade: []
+after click: {"contentHidden":false,"expanded":null,"labelledby":"sg-title","role":"dialog"}
+after Escape hidden: true errors: []

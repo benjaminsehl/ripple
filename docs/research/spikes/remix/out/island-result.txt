@@ -1,0 +1,60 @@
+listening
+SSR HTML:
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8" /><title>I</title><style>[hidden]{display:none!important}</style><script type="module" src="/entry.js?x=1"></script></head><body><main><!-- rmx:h:h7327d999 --><div id="island"><button id="inc" type="button">count 0</button><button id="toggle" type="button">toggle</button><ui-dialog id="idlg" data-rmx-key="idlg" class="rp-dialog-root"><ui-dialog-trigger><button type="button" data-variant="secondary" data-size="md" id="idlg-trigger" aria-haspopup="dialog" data-closed="" data-slot="dialog-trigger" data-rmx-preserve-attrs="aria-controls aria-expanded data-open data-closed" class="rp-button">Open island dialog</button></ui-dialog-trigger><ui-dialog-backdrop hidden data-slot="dialog-backdrop" data-rmx-preserve-attrs="hidden role data-open data-closed popover style" class="rp-dialog-backdrop"></ui-dialog-backdrop><ui-dialog-content data-size="md" hidden data-slot="dialog-content" data-rmx-preserve-attrs="hidden role id tabindex aria-modal aria-labelledby aria-describedby data-open data-closed data-presentation popover style" class="rp-dialog"><ui-dialog-title id="idlg-title" role="heading" aria-level="2" data-slot="dialog-title" class="rp-dialog-title">Island</ui-dialog-title><ui-dialog-description id="idlg-description" role="paragraph" data-slot="dialog-description" class="rp-dialog-description">count 0</ui-dialog-description><ui-dialog-close><button type="button" data-variant="ghost" data-size="md" data-slot="dialog-close" class="rp-button">Close</button></ui-dialog-close></ui-dialog-content></ui-dialog></div><!-- /rmx:h --></main><script type="application/json" id="rmx-data">{"h":{"h7327d999":{"exportName":"Island","moduleUrl":"/entry.js","props":{"label":"count"}}}}</script></body></html><!-- rmx:flush document -->
+1 hydration + upgrade mutations: [
+  'attributes:DIV#island:id',
+  'attributes:BUTTON#inc:id',
+  'attributes:BUTTON#inc:type',
+  'characterData:#text:',
+  'childList:BUTTON#inc: +1-0',
+  'characterData:#text:',
+  'childList:BUTTON#inc: +1-0',
+  'attributes:BUTTON#toggle:id',
+  'attributes:BUTTON#toggle:type',
+  'attributes:UI-DIALOG#idlg:class',
+  'attributes:UI-DIALOG#idlg:id',
+  'attributes:UI-DIALOG#idlg:data-rmx-key',
+  'attributes:BUTTON#idlg-trigger:class',
+  'attributes:BUTTON#idlg-trigger:type',
+  'attributes:BUTTON#idlg-trigger:data-variant',
+  'attributes:BUTTON#idlg-trigger:data-size',
+  'attributes:BUTTON#idlg-trigger:id',
+  'attributes:BUTTON#idlg-trigger:aria-haspopup',
+  'attributes:BUTTON#idlg-trigger:data-closed',
+  'attributes:BUTTON#idlg-trigger:data-slot',
+  'attributes:BUTTON#idlg-trigger:data-rmx-preserve-attrs',
+  'attributes:UI-DIALOG-BACKDROP:class',
+  'attributes:UI-DIALOG-BACKDROP:hidden',
+  'attributes:UI-DIALOG-BACKDROP:data-slot',
+  'attributes:UI-DIALOG-BACKDROP:data-rmx-preserve-attrs',
+  'attributes:UI-DIALOG-CONTENT:class',
+  'attributes:UI-DIALOG-CONTENT:data-size',
+  'attributes:UI-DIALOG-CONTENT:hidden',
+  'attributes:UI-DIALOG-CONTENT:data-slot',
+  'attributes:UI-DIALOG-CONTENT:data-rmx-preserve-attrs',
+  'attributes:UI-DIALOG-TITLE#idlg-title:class',
+  'attributes:UI-DIALOG-TITLE#idlg-title:id',
+  'attributes:UI-DIALOG-TITLE#idlg-title:role',
+  'attributes:UI-DIALOG-TITLE#idlg-title:aria-level',
+  'attributes:UI-DIALOG-TITLE#idlg-title:data-slot',
+  'attributes:UI-DIALOG-DESCRIPTION#idlg-description:class',
+  'attributes:UI-DIALOG-DESCRIPTION#idlg-description:id',
+  'attributes:UI-DIALOG-DESCRIPTION#idlg-description:role',
+  'attributes:UI-DIALOG-DESCRIPTION#idlg-description:data-slot',
+  'attributes:BUTTON:class',
+  'attributes:BUTTON:type',
+  'attributes:BUTTON:data-variant',
+  'attributes:BUTTON:data-size',
+  'attributes:BUTTON:data-slot'
+]
+2 after re-render (closed dialog): [ 'characterData:#text:', 'characterData:#text:' ] count 1
+3 re-render while dialog OPEN, mutations: [ 'characterData:#text:', 'characterData:#text:' ]
+  open prop: true popover-open: true desc: count 2
+  content tag: <ui-dialog-content data-size="md" data-slot="dialog-content" data-rmx-preserve-attrs="hidden role id tabindex aria-modal aria-labelledby aria-describedby data-open data-closed data-presentation popover style" class="rp-dialog" role="dialog" id="idlg-content" tabindex="-1" data-open="" aria-labelledby="idlg-title" aria-modal="true" aria-describedby="idlg-description" data-presentation="dialog" style="--dialog-stack: 0; --keyboard-inset: 0px; --visual-viewport-height: 720px;" popover="manual">
+4 client-rendered Tabs root: <ui-tabs class="rp-tabs" id="itabs" default-value="a" data-slot="tabs" data-orientation="horizontal" data-activation-direction="none" data-rmx-key="itabs" data-rmx-preserve-attrs="data-activation-direction">
+  tab wrapper: <ui-tabs-tab value="a" role="none"> | button: <button class="rp-tabs-tab" type="button" data-slot="tabs-tab" role="tab" id="itabs-tab-a" tabindex="0" aria-selected="true" data-selected="" data-orientation="horizontal" data-activation-direction="none" aria-controls="itabs-panel-a" data-rmx-preserve-attrs="tabindex aria-selected aria-controls data-selected data-activation-direction">
+  panel a: <ui-tabs-panel class="rp-tabs-panel" value="a" data-slot="tabs-panel" role="tabpanel" id="itabs-panel-a" aria-labelledby="itabs-tab-a" data-selected="" data-orientation="horizontal" data-activation-direction="none" tabindex="0" data-rmx-preserve-attrs="hidden role id aria-labelledby data-selected data-orientation data-activation-direction tabindex"> | panel b: <ui-tabs-panel class="rp-tabs-panel" value="b" hidden="" data-slot="tabs-panel" data-rmx-preserve-attrs="hidden role id aria-labelledby data-selected data-orientation data-activation-direction tabindex">
+  client dialog content: <ui-dialog-content class="rp-dialog" data-size="md" hidden="" data-slot="dialog-content" data-rmx-preserve-attrs="hidden role id tabindex aria-modal aria-labelledby aria-describedby data-open data-closed data-presentation popover style"> | root: <ui-dialog class="rp-dialog-root" id="cdlg" data-rmx-key="cdlg">
+  after click tab b: value= b [ true, false ]
+  client dialog opens: true <ui-dialog-content class="rp-dialog" data-size="md" data-slot="dialog-content" data-rmx-preserve-attrs="hidden role id tabindex aria-modal aria-labelledby aria-describedby data-open data-closed data-presentation popover style" role="dialog" id="cdlg-content" tabindex="-1" data-open="" aria-labelledby="cdlg-title" aria-modal="true" aria-describedby="cdlg-description" data-presentation="dialog" style="--dialog-stack: 0; --keyboard-inset: 0px; --visual-viewport-height: 720px;" popover="manual">
+5 removed again; log: []

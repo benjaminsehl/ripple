@@ -1,0 +1,19 @@
+{% block 'rp-button', variant: 'huge', colour: 'red' %}Schema-declared enum + unknown arg{% endblock %}
+{% block 'rp-badge', tone: 'loud' %}Doc-only enum{% endblock %}
+{% block 'rp-button', disabled: 'false' %}String for boolean{% endblock %}
+{% block 'rp-stack', gap: 4 %}Number for string{% endblock %}
+{% block 'rp-button' %}{% endblock %}
+{% block 'rp-dialog' %}Missing required id{% endblock %}
+{% block 'rp-button', block.settings.variant: 'primary' %}Dotted{% endblock %}
+{% block 'rp-nope' %}Missing block file{% endblock %}
+{% assign v = 'huge' %}
+{% block 'rp-badge', tone: v %}Variable arg{% endblock %}
+{% assign label = 'ripple.cart.title' | t %}
+{% block 'rp-button', aria_label: 'ripple.cart.title' | t %}Filter in argument{% endblock %}
+{% capture slot %}{% block 'rp-button' %}In capture{% endblock %}{% endcapture %}
+{{ slot }}{{ label }}
+{% for i in (1..2) %}{% block 'rp-button' %}In loop{% endblock %}{% endfor %}
+{% partial 'dup' %}a{% endpartial %}
+{% partial 'dup' %}b{% endpartial %}
+{% block 'rp-button', class: 'undefined-class-xyz' %}Unknown class{% endblock %}
+<div class="another-undefined-class"></div>

@@ -1,0 +1,294 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ripple.invalid/schema/manifest-1.json",
+  "title": "Ripple manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["manifestVersion", "package", "prefix", "pins", "scales", "hosts", "components"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "manifestVersion": { "const": 1 },
+    "package": {
+      "type": "object", "additionalProperties": false, "required": ["name", "version"],
+      "properties": { "name": { "type": "string" }, "version": { "type": "string" } }
+    },
+    "prefix": {
+      "description": "Single source of the element/class prefix and the Liquid file prefix.",
+      "type": "object", "additionalProperties": false, "required": ["css", "element", "liquidFile"],
+      "properties": {
+        "css": { "type": "string", "pattern": "^[a-z]+-$" },
+        "element": { "type": "string", "pattern": "^[a-z]+-$" },
+        "liquidFile": { "type": "string", "pattern": "^([a-z]+-)?$" }
+      }
+    },
+    "pins": {
+      "description": "Exact versions this release was built and tested against.",
+      "type": "object", "additionalProperties": { "type": "string", "pattern": "^[0-9][0-9A-Za-z.+-]*$" },
+      "required": ["@ui-sdk/core", "@ui-sdk/web", "@shopify/hydrogen"]
+    },
+    "scales": {
+      "description": "Named value sets that props reference with {\"scale\": \"<name>\"}.",
+      "type": "object",
+      "additionalProperties": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
+      "required": ["breakpoint"]
+    },
+    "hosts": { "type": "array", "items": { "$ref": "#/$defs/host" }, "uniqueItems": true },
+    "components": { "type": "object", "propertyNames": { "$ref": "#/$defs/kebab" }, "additionalProperties": { "$ref": "#/$defs/component" } },
+    "blueprints": { "type": "object", "propertyNames": { "$ref": "#/$defs/kebab" }, "additionalProperties": { "$ref": "#/$defs/blueprint" } }
+  },
+  "$defs": {
+    "kebab": { "type": "string", "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$" },
+    "camel": { "type": "string", "pattern": "^[a-z][A-Za-z0-9]*$" },
+    "host": { "enum": ["html", "react", "remix", "liquid"] },
+    "kind": {
+      "description": "static: native elements + CSS, zero JS. native: native interactive element (dialog/details/popover) plus optional enhancement. ui: wraps @ui-sdk/web elements. commerce: rp-* element bound to Hydrogen stores.",
+      "enum": ["static", "native", "ui", "commerce"]
+    },
+    "component": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "title", "category", "kind", "status", "since", "summary", "root", "props", "content", "parts", "fixtures", "noJs", "a11y", "agent", "dependencies", "files"],
+      "properties": {
+        "name": { "$ref": "#/$defs/kebab" },
+        "title": { "type": "string", "pattern": "^[A-Z][A-Za-z0-9]*$" },
+        "category": { "enum": ["layout", "typography", "media", "actions", "forms", "overlays", "navigation", "feedback", "product", "cart", "discovery", "chrome", "account", "content"] },
+        "kind": { "$ref": "#/$defs/kind" },
+        "status": { "enum": ["stable", "beta", "planned"] },
+        "since": { "type": "string" },
+        "summary": { "type": "string", "maxLength": 140, "description": "One sentence. Used in the index, llms.txt, the Liquid doc description and skills." },
+        "useWhen": { "type": "array", "items": { "type": "string" } },
+        "dontUseWhen": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["case", "use"], "properties": { "case": { "type": "string" }, "use": { "type": "string" } } } },
+        "partOf": { "$ref": "#/$defs/kebab", "description": "Set on a part that is its own entry (dialog-title -> dialog)." },
+        "root": {
+          "type": "object", "additionalProperties": false, "required": ["elements", "class"],
+          "properties": {
+            "elements": { "type": "array", "items": { "type": "string" }, "minItems": 1, "description": "Every tag name the root can be." },
+            "class": { "type": "string" },
+            "requiresId": { "type": "boolean", "default": false }
+          }
+        },
+        "props": { "type": "array", "items": { "$ref": "#/$defs/prop" } },
+        "content": {
+          "description": "What the default children are.",
+          "type": "object", "additionalProperties": false, "required": ["model"],
+          "properties": {
+            "model": { "enum": ["none", "text", "flow", "parts"] },
+            "required": { "type": "boolean" },
+            "description": { "type": "string" }
+          }
+        },
+        "parts": { "type": "array", "items": { "$ref": "#/$defs/part" } },
+        "template": { "$ref": "#/$defs/node", "description": "Contract template. Present for kind static/native/ui. Bindings and fixtures are generated from it." },
+        "state": { "type": "array", "items": { "$ref": "#/$defs/stateEntry" } },
+        "events": { "type": "array", "items": { "$ref": "#/$defs/eventEntry" } },
+        "commands": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["command", "description"], "properties": { "command": { "type": "string" }, "description": { "type": "string" }, "data": { "type": "array", "items": { "type": "string" } } } } },
+        "fixtures": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/fixture" } },
+        "noJs": {
+          "type": "object", "additionalProperties": false, "required": ["level", "behavior"],
+          "properties": {
+            "level": { "enum": ["full", "degraded", "none"], "description": "full: same function without JS. degraded: function reachable another way (state it). none: requires JS (overlays with no page equivalent)." },
+            "behavior": { "type": "string" },
+            "fallbackHref": { "type": "string", "description": "Route the opener links to when level is degraded." },
+            "hideUntilDefined": { "type": "array", "items": { "type": "string" }, "description": "Selectors of JS-only affordances hidden by :not(:defined) CSS." }
+          }
+        },
+        "a11y": {
+          "type": "object", "additionalProperties": false, "required": ["pattern", "name"],
+          "properties": {
+            "pattern": { "description": "WAI-ARIA APG pattern name, or 'native' when native semantics are the whole pattern, or 'none'.", "type": "string" },
+            "checkPattern": { "enum": ["listbox", "menu", "menubar", "tabs", "radio-group", "toolbar", "tree", "dialog", "alertdialog", "disclosure", "accordion", "combobox", "slider", "switch", "checkbox", null], "description": "Argument for checkPattern() from @ui-sdk/core/testing, or null." },
+            "name": {
+              "type": "object", "additionalProperties": false, "required": ["required", "sources"],
+              "properties": { "required": { "enum": ["always", "when-no-text", "never"] }, "sources": { "type": "array", "items": { "type": "string" } } }
+            },
+            "keyboard": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["keys", "does"], "properties": { "keys": { "type": "string" }, "does": { "type": "string" } } } },
+            "focus": { "type": "string" },
+            "announces": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "agent": {
+          "type": "object", "additionalProperties": false, "required": ["surface"],
+          "properties": {
+            "surface": { "enum": ["accessibility-tree", "bridge"], "description": "accessibility-tree: native element, found by role and name; invisible to @ui-sdk/core/agent snapshot(). bridge: listed by snapshot() with the actions below." },
+            "component": { "type": "string", "description": "The 'component' string snapshot() reports." },
+            "actions": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "description"], "properties": { "name": { "$ref": "#/$defs/camel" }, "args": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "type"], "properties": { "name": { "type": "string" }, "type": { "type": "string" } } } }, "description": { "type": "string" } } } },
+            "confirm": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["part", "sentence"], "properties": { "part": { "type": "string" }, "sentence": { "type": "string" } } }, "description": "Elements that carry data-agent-confirm and the sentence shown to the person." },
+            "secret": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "dependencies": {
+          "type": "object", "additionalProperties": false, "required": ["components", "elements"],
+          "properties": {
+            "components": { "type": "array", "items": { "$ref": "#/$defs/kebab" }, "description": "Other manifest components whose files must be installed." },
+            "embeds": { "type": "array", "items": { "$ref": "#/$defs/kebab" }, "description": "Components whose markup this one prints (Liquid: via snippet)." },
+            "elements": { "type": "array", "items": { "type": "string" }, "description": "Custom element tag names that appear in the contract." },
+            "uiSdk": { "type": "array", "items": { "type": "string" }, "description": "@ui-sdk/web entries to import." },
+            "hydrogen": { "type": "array", "items": { "type": "string" }, "description": "@shopify/hydrogen exports the element calls." },
+            "tokens": { "type": "array", "items": { "type": "string", "pattern": "^--" } },
+            "icons": { "type": "array", "items": { "type": "string" } },
+            "locale": { "type": "array", "items": { "type": "string" }, "description": "Locale keys (without the namespace) the component prints." }
+          }
+        },
+        "liquid": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "block": { "type": "string" },
+            "snippet": { "type": "string" },
+            "partials": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "refreshedBy", "on"], "properties": { "name": { "type": "string" }, "refreshedBy": { "type": "string" }, "on": { "type": "string" } } } },
+            "formDialect": { "type": "object", "additionalProperties": { "type": "string" }, "description": "meaning -> native Liquid field name" }
+          }
+        },
+        "hydrogenHost": {
+          "type": "object", "additionalProperties": false,
+          "properties": { "formDialect": { "type": "object", "additionalProperties": { "type": "string" } } }
+        },
+        "rules": { "type": "array", "items": { "$ref": "#/$defs/structureRule" } },
+        "files": {
+          "type": "object", "additionalProperties": false, "required": ["shared"],
+          "properties": {
+            "shared": { "type": "array", "items": { "$ref": "#/$defs/file" } },
+            "html": { "type": "array", "items": { "$ref": "#/$defs/file" } },
+            "react": { "type": "array", "items": { "$ref": "#/$defs/file" } },
+            "remix": { "type": "array", "items": { "$ref": "#/$defs/file" } },
+            "liquid": { "type": "array", "items": { "$ref": "#/$defs/file" } }
+          }
+        }
+      }
+    },
+    "prop": {
+      "type": "object", "additionalProperties": false, "required": ["name", "type", "description"],
+      "properties": {
+        "name": { "$ref": "#/$defs/camel" },
+        "type": { "enum": ["enum", "scale", "boolean", "string", "number", "id", "url", "object"] },
+        "values": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
+        "scale": { "type": "string", "description": "Key of manifest.scales." },
+        "objectType": { "type": "string", "description": "For type object: the per-host type, written as '<liquid drop> | <TS type>'." },
+        "default": { "type": ["string", "number", "boolean", "null"] },
+        "required": { "type": "boolean", "default": false },
+        "responsive": { "type": "boolean", "default": false },
+        "attribute": { "type": "string", "description": "Attribute the value is printed as on the root. Omitted when the template places it elsewhere." },
+        "liquid": {
+          "type": "object", "additionalProperties": false, "required": ["name", "surface"],
+          "properties": {
+            "name": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+            "surface": { "enum": ["param", "setting"] },
+            "settingType": { "enum": ["select", "checkbox", "text", "url", "range", "product", "collection", "image_picker", "video", "color"] }
+          }
+        },
+        "hosts": { "type": "array", "items": { "$ref": "#/$defs/host" }, "description": "Present only when the prop does not exist in every host." },
+        "description": { "type": "string" }
+      },
+      "allOf": [
+        { "if": { "properties": { "type": { "const": "enum" } } }, "then": { "required": ["values"] } },
+        { "if": { "properties": { "type": { "const": "scale" } } }, "then": { "required": ["scale"] } },
+        { "if": { "properties": { "responsive": { "const": true } }, "required": ["responsive"] }, "then": { "properties": { "type": { "enum": ["enum", "scale"] } } } }
+      ]
+    },
+    "part": {
+      "type": "object", "additionalProperties": false, "required": ["name", "elements", "class", "required", "authoredBy"],
+      "properties": {
+        "name": { "$ref": "#/$defs/kebab" },
+        "component": { "$ref": "#/$defs/kebab", "description": "Manifest entry of the part when it is author-callable." },
+        "elements": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "class": { "type": "string" },
+        "required": { "type": "boolean" },
+        "multiple": { "type": "boolean", "default": false },
+        "authoredBy": { "enum": ["author", "component"], "description": "author: the page author writes it (a part block/component). component: printed by the owning binding." },
+        "parent": { "type": "string", "description": "Part name or 'root'." },
+        "description": { "type": "string" }
+      }
+    },
+    "stateEntry": {
+      "type": "object", "additionalProperties": false, "required": ["name", "type", "attribute"],
+      "properties": {
+        "name": { "$ref": "#/$defs/camel" },
+        "type": { "type": "string" },
+        "attribute": { "type": "string", "description": "Attribute the server prints for the initial state." },
+        "defaultAttribute": { "type": "string" },
+        "property": { "type": "string", "description": "Live DOM property on the root element." },
+        "reflects": { "type": "array", "items": { "type": "string" }, "description": "data-/aria- attributes the element writes for this state." }
+      }
+    },
+    "eventEntry": {
+      "type": "object", "additionalProperties": false, "required": ["dom", "detail", "bubbles"],
+      "properties": { "dom": { "type": "string", "pattern": "^[a-z]+$" }, "react": { "type": "string", "pattern": "^on[A-Z]" }, "detail": { "type": "string" }, "bubbles": { "type": "boolean" }, "cancelable": { "type": "boolean" } }
+    },
+    "fixture": {
+      "type": "object", "additionalProperties": false, "required": ["name", "props", "html"],
+      "properties": {
+        "name": { "$ref": "#/$defs/kebab" },
+        "props": { "type": "object" },
+        "children": { "type": "string", "description": "HTML passed as default content." },
+        "parts": { "type": "object", "additionalProperties": { "type": "string" } },
+        "html": { "type": "string", "description": "Canonical expected HTML (see canonicalisation rules)." },
+        "hosts": { "type": "array", "items": { "$ref": "#/$defs/host" } },
+        "mask": { "type": "array", "items": { "type": "string" }, "description": "Selectors/attributes excluded from comparison (host-owned form internals, money text, image URLs)." },
+        "generated": { "enum": ["template", "upgrade-snapshot", "hand"], "description": "How html was produced." }
+      }
+    },
+    "structureRule": {
+      "type": "object", "additionalProperties": false, "required": ["id", "kind", "message"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z-]+$" },
+        "kind": { "enum": ["requires-ancestor", "forbids-ancestor", "requires-descendant", "requires-attribute", "max-count", "requires-sibling"] },
+        "selector": { "type": "string" },
+        "target": { "type": "string" },
+        "message": { "type": "string" },
+        "fix": { "type": "string" }
+      }
+    },
+    "file": {
+      "type": "object", "additionalProperties": false, "required": ["source", "target", "type"],
+      "properties": {
+        "source": { "type": "string", "description": "Path inside the package's registry/ directory." },
+        "target": { "type": "string", "description": "Path in the project. May start with an alias: @components, @styles, @theme." },
+        "type": { "enum": ["css", "binding", "block", "snippet", "asset", "types", "blueprint"] },
+        "mode": { "enum": ["owned", "patch"], "default": "owned", "description": "owned: whole file, provenance header, three-way merge. patch: keyed insertion into a file the project owns." },
+        "generated": { "type": "boolean", "description": "true: produced from this manifest at Ripple build time. false: hand-written in the Ripple repo." }
+      }
+    },
+    "node": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["slot"], "properties": { "slot": { "type": "string" } } },
+        { "type": "object", "additionalProperties": false, "required": ["text"], "properties": { "text": { "$ref": "#/$defs/value" } } },
+        { "type": "object", "additionalProperties": false, "required": ["host"], "properties": { "host": { "type": "string", "description": "Named host-owned region; each binding supplies it by hand (form internals, payment button)." } } },
+        { "type": "object", "additionalProperties": false, "required": ["embed"], "properties": { "embed": { "$ref": "#/$defs/kebab" }, "props": { "type": "object" }, "children": { "type": "array", "items": { "$ref": "#/$defs/node" } }, "when": { "$ref": "#/$defs/cond" } } },
+        {
+          "type": "object", "additionalProperties": false, "required": ["tag", "attrs", "children"],
+          "properties": {
+            "tag": { "oneOf": [ { "type": "string" }, { "type": "object", "additionalProperties": false, "required": ["prop"], "properties": { "prop": { "type": "string" } } }, { "type": "object", "additionalProperties": false, "required": ["if", "then", "else"], "properties": { "if": { "$ref": "#/$defs/cond" }, "then": { "type": "string" }, "else": { "type": "string" } } } ] },
+            "part": { "type": "string" },
+            "when": { "$ref": "#/$defs/cond" },
+            "attrs": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name"], "properties": { "name": { "type": "string" }, "value": { "$ref": "#/$defs/value" }, "when": { "$ref": "#/$defs/cond" } } } },
+            "children": { "type": "array", "items": { "$ref": "#/$defs/node" } }
+          }
+        }
+      ]
+    },
+    "value": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object", "additionalProperties": false, "required": ["prop"], "properties": { "prop": { "type": "string" }, "suffix": { "type": "string" } } },
+        { "type": "object", "additionalProperties": false, "required": ["t"], "properties": { "t": { "type": "string", "description": "Locale key" } } },
+        { "type": "array", "items": { "$ref": "#/$defs/value" } }
+      ]
+    },
+    "cond": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["set"], "properties": { "set": { "type": "string" } } },
+        { "type": "object", "additionalProperties": false, "required": ["true"], "properties": { "true": { "type": "string" } } },
+        { "type": "object", "additionalProperties": false, "required": ["eq"], "properties": { "eq": { "type": "array", "prefixItems": [ { "type": "string" }, { "type": "string" } ], "minItems": 2, "maxItems": 2 } } },
+        { "type": "object", "additionalProperties": false, "required": ["not"], "properties": { "not": { "$ref": "#/$defs/cond" } } },
+        { "type": "object", "additionalProperties": false, "required": ["all"], "properties": { "all": { "type": "array", "items": { "$ref": "#/$defs/cond" } } } }
+      ]
+    },
+    "blueprint": {
+      "type": "object", "additionalProperties": false, "required": ["title", "summary", "components", "files"],
+      "properties": {
+        "title": { "type": "string" }, "summary": { "type": "string" },
+        "route": { "type": "string" },
+        "components": { "type": "array", "items": { "$ref": "#/$defs/kebab" } },
+        "files": { "type": "object", "additionalProperties": { "type": "array", "items": { "$ref": "#/$defs/file" } } }
+      }
+    }
+  }
+}

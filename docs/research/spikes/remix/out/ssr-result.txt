@@ -1,0 +1,27 @@
+--- Button
+<button data-variant="secondary" data-size="lg" type="button" class="rp-button">Shop now</button>
+
+--- Button href
+<a data-variant="primary" data-size="md" href="/collections/all" class="rp-button extra">Shop all now</a>
+
+--- Button disabled
+<button data-variant="primary" data-size="md" type="submit" disabled class="rp-button">Go</button>
+
+--- Stack
+<section data-gap="2 md:6" data-p="4 lg:8" data-align="center" class="rp-stack"><p>a</p><p>b</p></section>
+
+--- Dialog
+<ui-dialog id="size-guide" data-rmx-key="size-guide" class="rp-dialog-root"><ui-dialog-trigger><button type="button" data-variant="secondary" data-size="md" id="size-guide-trigger" aria-haspopup="dialog" data-closed="" data-slot="dialog-trigger" data-rmx-preserve-attrs="aria-controls aria-expanded data-open data-closed" class="rp-button">Size guide</button></ui-dialog-trigger><ui-dialog-backdrop hidden data-slot="dialog-backdrop" data-rmx-preserve-attrs="hidden role data-open data-closed popover style" class="rp-dialog-backdrop"></ui-dialog-backdrop><ui-dialog-content data-size="md" hidden data-slot="dialog-content" data-rmx-preserve-attrs="hidden role id tabindex aria-modal aria-labelledby aria-describedby data-open data-closed data-presentation popover style" class="rp-dialog"><ui-dialog-title id="size-guide-title" role="heading" aria-level="2" data-slot="dialog-title" class="rp-dialog-title">Size guide</ui-dialog-title><ui-dialog-description id="size-guide-description" role="paragraph" data-slot="dialog-description" class="rp-dialog-description">Measurements in cm.</ui-dialog-description><p>Body</p><ui-dialog-close><button type="button" data-variant="ghost" data-size="md" data-slot="dialog-close" class="rp-button">Close</button></ui-dialog-close></ui-dialog-content></ui-dialog>
+
+--- AddToCart
+<rp-cart-form class="rp-add-to-cart"><form method="post" action="/api/cart" data-rmx-document><input type="hidden" name="merchandiseId" value="gid://shopify/ProductVariant/43695710371862" /><input type="hidden" name="quantity" value="1" /><button data-variant="primary" data-size="md" type="submit" name="intent" value="add" class="rp-button">Add to cart</button><span role="status" data-rp-cart-status="" class="rp-form-message"></span></form></rp-cart-form>
+
+--- AddToCart sold out
+<rp-cart-form class="rp-add-to-cart"><form method="post" action="/api/cart" data-rmx-document><input type="hidden" name="merchandiseId" value="gid://shopify/ProductVariant/1" /><input type="hidden" name="quantity" value="1" /><button data-variant="primary" data-size="md" type="submit" name="intent" value="add" disabled class="rp-button">Sold out</button><span role="status" data-rp-cart-status="" class="rp-form-message"></span></form></rp-cart-form>
+
+--- attr edge cases
+<div class="b a" hidden data-x="true" data-y="" data-z="false" aria-hidden="true" tabindex="-1" draggable="true" defaultvalue="q" default-open open foobar="Baz">a1&lt;b&gt;</div>
+
+--- custom el edge
+<ui-dialog open default-open="" modal="false"></ui-dialog>
+

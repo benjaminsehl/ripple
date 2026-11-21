@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="{{ request.locale.iso_code }}">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ page_title }}</title>
+    {% render 'rp-head' %}
+    {{ content_for_header }}
+  </head>
+  <body>
+    <header>
+      <a href="{{ routes.cart_url }}">
+        {{ 'ripple.cart.title' | t }}
+        {% partial 'rp-cart-count' %}
+          <rp-cart-count data-count="{{ cart.item_count }}">{{ cart.item_count }}</rp-cart-count>
+        {% endpartial %}
+      </a>
+    </header>
+    <main>
+      {{ content_for_layout }}
+    </main>
+  </body>
+</html>

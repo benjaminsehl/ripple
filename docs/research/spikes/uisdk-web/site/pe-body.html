@@ -1,0 +1,139 @@
+<section id="c-tabs-pre">
+  <ui-tabs id="t" default-value="account" data-activation-direction="none" data-orientation="horizontal" data-slot="tabs">
+    <ui-tabs-list aria-label="Settings" role="tablist" data-activation-direction="none" data-orientation="horizontal" data-slot="tabs-list">
+      <ui-tabs-tab value="account" role="none"><button type="button" role="tab" id="t-tab-account" aria-controls="t-panel-account" aria-selected="true" tabindex="0" data-selected data-activation-direction="none" data-orientation="horizontal" data-slot="tabs-tab">Account</button></ui-tabs-tab>
+      <ui-tabs-tab value="password" role="none"><button type="button" role="tab" id="t-tab-password" aria-selected="false" tabindex="-1" data-activation-direction="none" data-orientation="horizontal" data-slot="tabs-tab">Password</button></ui-tabs-tab>
+    </ui-tabs-list>
+    <ui-tabs-panel value="account" role="tabpanel" id="t-panel-account" aria-labelledby="t-tab-account" tabindex="0" data-selected data-activation-direction="none" data-orientation="horizontal" data-slot="tabs-panel">Manage your profile.</ui-tabs-panel>
+    <ui-tabs-panel value="password" hidden data-slot="tabs-panel">Choose a new password.</ui-tabs-panel>
+  </ui-tabs>
+</section>
+<section id="c-dialog-pre">
+  <ui-dialog id="d">
+    <ui-dialog-trigger><button type="button" id="d-trigger" aria-haspopup="dialog" data-closed data-slot="dialog-trigger">Open</button></ui-dialog-trigger>
+    <ui-dialog-backdrop hidden data-slot="dialog-backdrop"></ui-dialog-backdrop>
+    <ui-dialog-content hidden data-slot="dialog-content">
+      <ui-dialog-title id="d-title" role="heading" aria-level="2" data-slot="dialog-title">Project details</ui-dialog-title>
+      <ui-dialog-description id="d-description" role="paragraph" data-slot="dialog-description">Review.</ui-dialog-description>
+      <ui-dialog-close><button type="button" data-slot="dialog-close">Close</button></ui-dialog-close>
+    </ui-dialog-content>
+  </ui-dialog>
+</section>
+<section id="c-accordion-pre">
+  <ui-accordion id="a" default-value="shipping" data-slot="accordion">
+    <ui-accordion-item value="shipping" data-index="0" data-open data-slot="accordion-item">
+      <ui-accordion-header><h3 data-open data-slot="accordion-header"><ui-accordion-trigger><button type="button" id="a-trigger-shipping" aria-controls="a-panel-shipping" aria-expanded="true" data-open data-slot="accordion-trigger">Shipping</button></ui-accordion-trigger></h3></ui-accordion-header>
+      <ui-accordion-panel id="a-panel-shipping" role="region" aria-labelledby="a-trigger-shipping" data-open data-slot="accordion-panel">Orders arrive in five to seven days.</ui-accordion-panel>
+    </ui-accordion-item>
+    <ui-accordion-item value="returns" data-index="1" data-closed data-slot="accordion-item">
+      <ui-accordion-header><h3 data-closed data-slot="accordion-header"><ui-accordion-trigger><button type="button" id="a-trigger-returns" aria-expanded="false" data-closed data-slot="accordion-trigger">Returns</button></ui-accordion-trigger></h3></ui-accordion-header>
+      <ui-accordion-panel hidden data-slot="accordion-panel">Thirty days.</ui-accordion-panel>
+    </ui-accordion-item>
+  </ui-accordion>
+</section>
+<section id="c-drawer-pre">
+  <ui-drawer id="dr">
+    <ui-drawer-trigger><a href="/submit?fallback=cart-page" id="drawer-link">Cart</a></ui-drawer-trigger>
+    <ui-drawer-backdrop hidden></ui-drawer-backdrop>
+    <ui-drawer-viewport hidden>
+      <ui-drawer-content hidden>
+        <ui-drawer-title>Cart</ui-drawer-title>
+        <ui-drawer-close><button>Done</button></ui-drawer-close>
+      </ui-drawer-content>
+    </ui-drawer-viewport>
+  </ui-drawer>
+</section>
+<section id="c-dialog-link">
+  <ui-dialog id="dl">
+    <ui-dialog-trigger><a href="/submit?fallback=dialog-page" id="dialog-link">Size guide</a></ui-dialog-trigger>
+    <ui-dialog-content hidden><ui-dialog-title>Size guide</ui-dialog-title><ui-dialog-close><button>Close</button></ui-dialog-close></ui-dialog-content>
+  </ui-dialog>
+</section>
+<section id="c-popover-hidden">
+  <ui-popover id="p">
+    <ui-popover-trigger><button type="button">Share</button></ui-popover-trigger>
+    <ui-popover-content hidden><ui-popover-title>Share</ui-popover-title><ui-popover-close><button>Done</button></ui-popover-close></ui-popover-content>
+  </ui-popover>
+  <ui-menu id="m">
+    <ui-menu-trigger><button type="button">Actions</button></ui-menu-trigger>
+    <ui-menu-content hidden><ui-menu-item value="rename">Rename</ui-menu-item></ui-menu-content>
+  </ui-menu>
+  <ui-tooltip id="tt">
+    <ui-tooltip-trigger><button type="button">Info</button></ui-tooltip-trigger>
+    <ui-tooltip-content hidden>Helpful</ui-tooltip-content>
+  </ui-tooltip>
+</section>
+<section id="c-tabs-links">
+  <ui-tabs id="tl" default-value="a">
+    <ui-tabs-list aria-label="Sections">
+      <ui-tabs-tab value="a"><a href="#tl-panel-a">A</a></ui-tabs-tab>
+      <ui-tabs-tab value="b"><a href="#tl-panel-b">B</a></ui-tabs-tab>
+    </ui-tabs-list>
+    <ui-tabs-panel value="a" id="tl-panel-a">Panel A</ui-tabs-panel>
+    <ui-tabs-panel value="b" id="tl-panel-b">Panel B</ui-tabs-panel>
+  </ui-tabs>
+</section>
+<section id="c-forms">
+  <form id="f-checkbox" action="/submit" method="get">
+    <label><ui-checkbox name="terms" value="yes" default-checked></ui-checkbox> terms</label>
+    <label><input type="checkbox" name="native" value="yes" checked> native</label>
+    <button type="submit">Go</button>
+  </form>
+  <form id="f-select" action="/submit" method="get">
+    <ui-select name="role" default-value="editor">
+      <ui-select-trigger><button type="button" aria-label="Role"><ui-select-value></ui-select-value></button></ui-select-trigger>
+      <ui-select-content hidden><ui-select-item value="viewer">Viewer</ui-select-item><ui-select-item value="editor">Editor</ui-select-item></ui-select-content>
+    </ui-select>
+    <select name="nativerole"><option value="viewer">Viewer</option><option value="editor" selected>Editor</option></select>
+    <button type="submit">Go</button>
+  </form>
+  <form id="f-number-host" action="/submit" method="get">
+    <ui-number-input name="quantity" default-value="2" min="1">
+      <ui-number-input-group>
+        <ui-number-input-decrement><button type="button" aria-label="Decrease">-</button></ui-number-input-decrement>
+        <ui-number-input-control><input aria-label="Quantity" /></ui-number-input-control>
+        <ui-number-input-increment><button type="button" aria-label="Increase">+</button></ui-number-input-increment>
+      </ui-number-input-group>
+    </ui-number-input>
+    <button type="submit">Go</button>
+  </form>
+  <form id="f-number-native" action="/submit" method="get">
+    <ui-number-input default-value="2" min="1">
+      <ui-number-input-group>
+        <ui-number-input-decrement><button type="button" aria-label="Decrease">-</button></ui-number-input-decrement>
+        <ui-number-input-control><input type="number" name="quantity" value="2" min="1" aria-label="Quantity" /></ui-number-input-control>
+        <ui-number-input-increment><button type="button" aria-label="Increase">+</button></ui-number-input-increment>
+      </ui-number-input-group>
+    </ui-number-input>
+    <button type="submit">Go</button>
+  </form>
+  <form id="f-number-both" action="/submit" method="get">
+    <ui-number-input name="quantity" default-value="2" min="1">
+      <ui-number-input-group>
+        <ui-number-input-control><input type="number" name="quantity" value="2" min="1" aria-label="Quantity" /></ui-number-input-control>
+        <ui-number-input-increment><button type="button" aria-label="Increase">+</button></ui-number-input-increment>
+      </ui-number-input-group>
+    </ui-number-input>
+    <button type="submit">Go</button>
+  </form>
+  <form id="f-field-native" action="/submit" method="get">
+    <ui-field id="fn">
+      <ui-field-label>Email</ui-field-label>
+      <input type="email" name="email" value="a@b.co" required />
+      <ui-field-description>We never share it.</ui-field-description>
+      <ui-field-error></ui-field-error>
+    </ui-field>
+    <ui-field id="fs">
+      <ui-field-label>Country</ui-field-label>
+      <select name="country"><option value="ca" selected>Canada</option><option value="us">US</option></select>
+    </ui-field>
+    <button type="submit">Go</button>
+  </form>
+  <form id="f-button" action="/submit" method="get">
+    <input type="hidden" name="id" value="42">
+    <ui-button><button type="submit" name="add" value="1">Add to cart</button></ui-button>
+  </form>
+</section>
+<section id="c-custom">
+  <rp-cart-count id="cc" count="3" data-count="3"><a href="/cart">Cart (<rp-cart-count-value>3</rp-cart-count-value>)</a></rp-cart-count>
+</section>

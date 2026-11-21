@@ -1,0 +1,50 @@
+{% doc %}
+  Ripple Accordion. Static component built on native <details>: works with no JavaScript.
+  The body MUST contain only `rp-accordion-item` blocks.
+
+  `variant` is a schema setting. Allowed: default, bordered.
+
+  @param {string} [id] - Root element id.
+  @param {string} [class] - Extra classes appended after `rp-accordion`.
+  @param {string} content - One or more `rp-accordion-item` blocks. Required.
+
+  @example
+  {% block 'rp-accordion' %}
+    {% block 'rp-accordion-item', name: 'faq', open: true %}
+      {% block 'rp-accordion-summary' %}Shipping{% endblock %}
+      {% block 'rp-accordion-panel' %}<p>Ships in 2 days.</p>{% endblock %}
+    {% endblock %}
+  {% endblock %}
+{% enddoc %}
+
+{%- liquid
+  assign allowed_variants = 'default,bordered' | split: ','
+  unless allowed_variants contains variant
+    assign variant = 'default'
+  endunless
+-%}
+<div
+  class="rp-accordion {{ class | escape }}"
+  {% if id != blank %}id="{{ id | escape }}"{% endif %}
+  data-variant="{{ variant }}"
+>
+  {{ content }}
+</div>
+
+{% schema %}
+{
+  "name": "t:ripple.blocks.accordion",
+  "settings": [
+    {
+      "type": "select",
+      "id": "variant",
+      "label": "t:ripple.props.variant",
+      "default": "default",
+      "options": [
+        { "value": "default", "label": "t:ripple.props.default" },
+        { "value": "bordered", "label": "t:ripple.props.bordered" }
+      ]
+    }
+  ]
+}
+{% endschema %}

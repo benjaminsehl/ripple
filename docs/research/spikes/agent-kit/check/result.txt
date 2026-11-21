@@ -1,0 +1,77 @@
+RP101 error  sample/out/page.html:4:1  button: unknown value "xl" for prop "size"
+  found:   data-size="xl"
+  allowed: sm | md | lg
+  fix:     data-size="sm"
+  why:     Prop values are enumerated. An unknown value matches no CSS rule, so the component silently renders its default.
+  docs:    npx ripple-kit docs button
+
+RP201 error  sample/out/page.html:5:1  button: Button has no accessible name
+  found:   <button class="rp-button" type="button" data-variant="ghost" data-size="md">
+  allowed: text content | aria-label
+  fix:     add ariaLabel (Liquid: aria_label), or visible text
+  why:     Screen readers and agents find a control by its accessible name.
+  docs:    npx ripple-kit docs button
+
+RP110 error  sample/out/page.html:6:1  button: class "rp-button" is on <div>
+  found:   <div class="rp-button" data-variant="primary" data-size="md">
+  allowed: <button> | <a>
+  fix:     render Button with its binding
+  why:     Hand-written component markup drifts from the contract. Use the binding so upgrades keep working.
+  docs:    npx ripple-kit docs button
+
+RP210 error  sample/out/page.html:7:29  button: A Button is inside another link or button.
+  found:   <button class="rp-button" type="button" data-variant="primary" data-size="sm">
+  fix:     Move the Button out, or make the outer element a non-interactive container.
+  why:     The component contract requires this structure; CSS and behavior select on it.
+  docs:    npx ripple-kit docs button
+
+RP101 error  sample/templates/index.liquid:2:3  button: unknown value "huge" for prop "size"
+  found:   size: 'huge'
+  allowed: sm | md | lg
+  fix:     size: 'md'
+  why:     Prop values are enumerated. An unknown value matches no CSS rule, so the component silently renders its default.
+  docs:    npx ripple-kit docs button
+
+RP102 error  sample/templates/index.liquid:2:3  button: unknown prop "colour"
+  found:   colour: 'red'
+  allowed: variant | size | type | href | disabled | full_width | name | value | aria_label | id
+  fix:     remove colour
+  why:     Unknown props are ignored. In Liquid an unknown argument never reaches the markup.
+  docs:    npx ripple-kit docs button
+
+RP101 error  sample/templates/index.liquid:3:3  button: unknown value "outlined" for prop "variant"
+  found:   variant: 'outlined'
+  allowed: primary | secondary | outline | ghost | link | destructive
+  fix:     variant: 'outline'
+  why:     Prop values are enumerated. An unknown value matches no CSS rule, so the component silently renders its default.
+  docs:    npx ripple-kit docs button
+
+RP103 error  sample/templates/index.liquid:4:3  stack: prop "gap" must be a quoted string
+  found:   gap: 4
+  allowed: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 | 20 | 24
+  fix:     gap: '4'
+  why:     Responsive values are space-separated tokens: one unprefixed base value, then at most one value per breakpoint prefix.
+  docs:    npx ripple-kit docs stack
+
+RP101 error  sample/templates/index.liquid:5:3  stack: unknown value "99" in "2 md:99" for prop "gap"
+  found:   gap: '2 md:99'
+  allowed: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 | 20 | 24
+  fix:     gap: '2 md:0'
+  why:     Prop values are enumerated. An unknown value matches no CSS rule, so the component silently renders its default.
+  docs:    npx ripple-kit docs stack
+
+RP101 error  sample/templates/index.liquid:5:3  stack: unknown value "middle" in "middle" for prop "align"
+  found:   align: 'middle'
+  allowed: start | center | end | stretch | baseline
+  fix:     align: 'start'
+  why:     Prop values are enumerated. An unknown value matches no CSS rule, so the component silently renders its default.
+  docs:    npx ripple-kit docs stack
+
+RP103 error  sample/templates/index.liquid:6:3  stack: two values for the same breakpoint (base) in "2 4 tablet:6" for prop "gap"
+  found:   gap: '2 4 tablet:6'
+  allowed: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 | 20 | 24
+  fix:     gap: '2 4'
+  why:     Responsive values are space-separated tokens: one unprefixed base value, then at most one value per breakpoint prefix.
+  docs:    npx ripple-kit docs stack
+
+11 problems in 2 files. Fix the first one and run `npx ripple-kit check` again.

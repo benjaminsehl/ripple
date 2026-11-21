@@ -1,0 +1,8 @@
+{% block 'stack', gap: '2 md:6' %}
+  {% block 'button', size: 'huge', colour: 'red' %}Bad{% endblock %}
+  {% block 'button', variant: 'outlined' %}Typo{% endblock %}
+  {% block 'stack', gap: 4 %}<p>x</p>{% endblock %}
+  {% block 'stack', gap: '2 md:99', align: 'middle' %}<p>x</p>{% endblock %}
+  {% block 'stack', gap: '2 4 tablet:6' %}<p>x</p>{% endblock %}
+  {% block 'button', variant: 'primary', size: button_size %}Fine (variable){% endblock %}
+{% endblock %}

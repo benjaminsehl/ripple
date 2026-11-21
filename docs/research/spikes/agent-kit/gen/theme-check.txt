@@ -1,0 +1,5 @@
+warning UnrecognizedBlockArguments templates/product.liquid:9 Unknown argument 'py' in block tag for 'stack'.
+warning UnrecognizedBlockArguments templates/index.liquid:4 Unknown argument 'colour' in block tag for 'button'.
+warning ValidBlockArgumentTypes templates/index.liquid:5 Invalid value for argument 'type': expected 'button' | 'submit' | 'reset', got 'sumbit'
+warning ValidBlockArgumentTypes templates/index.liquid:6 Type mismatch for argument 'gap': expected string, got number
+offenses: 4

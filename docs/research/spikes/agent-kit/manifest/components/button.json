@@ -1,0 +1,472 @@
+{
+  "name": "button",
+  "title": "Button",
+  "category": "actions",
+  "kind": "static",
+  "status": "beta",
+  "since": "0.1.0",
+  "summary": "A button or a link that looks like a button. Zero JavaScript.",
+  "useWhen": [
+    "Submitting a form",
+    "Navigating to a route with button styling (pass href)",
+    "Triggering a command on another element (commandfor/command via attributes)"
+  ],
+  "dontUseWhen": [
+    {
+      "case": "The control shows only an icon",
+      "use": "icon-button"
+    },
+    {
+      "case": "Inline text link inside a paragraph",
+      "use": "link"
+    },
+    {
+      "case": "Going to checkout",
+      "use": "checkout-button"
+    }
+  ],
+  "root": {
+    "elements": [
+      "button",
+      "a"
+    ],
+    "class": "rp-button"
+  },
+  "props": [
+    {
+      "name": "variant",
+      "type": "enum",
+      "values": [
+        "primary",
+        "secondary",
+        "outline",
+        "ghost",
+        "link",
+        "destructive"
+      ],
+      "default": "primary",
+      "attribute": "data-variant",
+      "liquid": {
+        "name": "variant",
+        "surface": "setting",
+        "settingType": "select"
+      },
+      "description": "Visual treatment."
+    },
+    {
+      "name": "size",
+      "type": "enum",
+      "values": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "default": "md",
+      "attribute": "data-size",
+      "liquid": {
+        "name": "size",
+        "surface": "setting",
+        "settingType": "select"
+      },
+      "description": "Control height and padding."
+    },
+    {
+      "name": "type",
+      "type": "enum",
+      "values": [
+        "button",
+        "submit",
+        "reset"
+      ],
+      "default": "button",
+      "attribute": "type",
+      "liquid": {
+        "name": "type",
+        "surface": "param"
+      },
+      "description": "Native button type. Ignored when href is set."
+    },
+    {
+      "name": "href",
+      "type": "url",
+      "attribute": "href",
+      "liquid": {
+        "name": "href",
+        "surface": "param"
+      },
+      "description": "When set, the root element is <a>."
+    },
+    {
+      "name": "disabled",
+      "type": "boolean",
+      "default": false,
+      "liquid": {
+        "name": "disabled",
+        "surface": "param"
+      },
+      "description": "Native disabled on <button>; aria-disabled=\"true\" and tabindex=\"-1\" on <a>."
+    },
+    {
+      "name": "fullWidth",
+      "type": "boolean",
+      "default": false,
+      "attribute": "data-full-width",
+      "liquid": {
+        "name": "full_width",
+        "surface": "param"
+      },
+      "description": "Stretch to the container width."
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "attribute": "name",
+      "liquid": {
+        "name": "name",
+        "surface": "param"
+      },
+      "description": "Form field name (button only)."
+    },
+    {
+      "name": "value",
+      "type": "string",
+      "attribute": "value",
+      "liquid": {
+        "name": "value",
+        "surface": "param"
+      },
+      "description": "Form field value (button only)."
+    },
+    {
+      "name": "ariaLabel",
+      "type": "string",
+      "attribute": "aria-label",
+      "liquid": {
+        "name": "aria_label",
+        "surface": "param"
+      },
+      "description": "Accessible name. Required when the content has no text."
+    },
+    {
+      "name": "id",
+      "type": "id",
+      "attribute": "id",
+      "liquid": {
+        "name": "id",
+        "surface": "param"
+      },
+      "description": "Root element id."
+    }
+  ],
+  "content": {
+    "model": "text",
+    "required": true,
+    "description": "The label. May include an icon."
+  },
+  "parts": [],
+  "template": {
+    "tag": {
+      "if": {
+        "set": "href"
+      },
+      "then": "a",
+      "else": "button"
+    },
+    "attrs": [
+      {
+        "name": "class",
+        "value": [
+          "rp-button",
+          {
+            "prop": "class"
+          }
+        ]
+      },
+      {
+        "name": "id",
+        "value": {
+          "prop": "id"
+        },
+        "when": {
+          "set": "id"
+        }
+      },
+      {
+        "name": "href",
+        "value": {
+          "prop": "href"
+        },
+        "when": {
+          "set": "href"
+        }
+      },
+      {
+        "name": "type",
+        "value": {
+          "prop": "type"
+        },
+        "when": {
+          "not": {
+            "set": "href"
+          }
+        }
+      },
+      {
+        "name": "name",
+        "value": {
+          "prop": "name"
+        },
+        "when": {
+          "all": [
+            {
+              "set": "name"
+            },
+            {
+              "not": {
+                "set": "href"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "value",
+        "value": {
+          "prop": "value"
+        },
+        "when": {
+          "all": [
+            {
+              "set": "value"
+            },
+            {
+              "not": {
+                "set": "href"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "disabled",
+        "when": {
+          "all": [
+            {
+              "true": "disabled"
+            },
+            {
+              "not": {
+                "set": "href"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "aria-disabled",
+        "value": "true",
+        "when": {
+          "all": [
+            {
+              "true": "disabled"
+            },
+            {
+              "set": "href"
+            }
+          ]
+        }
+      },
+      {
+        "name": "tabindex",
+        "value": "-1",
+        "when": {
+          "all": [
+            {
+              "true": "disabled"
+            },
+            {
+              "set": "href"
+            }
+          ]
+        }
+      },
+      {
+        "name": "data-variant",
+        "value": {
+          "prop": "variant"
+        }
+      },
+      {
+        "name": "data-size",
+        "value": {
+          "prop": "size"
+        }
+      },
+      {
+        "name": "data-full-width",
+        "when": {
+          "true": "fullWidth"
+        }
+      },
+      {
+        "name": "aria-label",
+        "value": {
+          "prop": "ariaLabel"
+        },
+        "when": {
+          "set": "ariaLabel"
+        }
+      }
+    ],
+    "children": [
+      {
+        "slot": "children"
+      }
+    ]
+  },
+  "noJs": {
+    "level": "full",
+    "behavior": "Native <button> or <a>. Nothing to enhance."
+  },
+  "a11y": {
+    "pattern": "native",
+    "checkPattern": null,
+    "name": {
+      "required": "when-no-text",
+      "sources": [
+        "text content",
+        "aria-label"
+      ]
+    },
+    "keyboard": [
+      {
+        "keys": "Enter, Space",
+        "does": "Activates (native)."
+      }
+    ],
+    "focus": "Focus ring from :focus-visible using --color-ring."
+  },
+  "agent": {
+    "surface": "accessibility-tree"
+  },
+  "dependencies": {
+    "components": [],
+    "elements": [],
+    "tokens": [
+      "--color-primary",
+      "--color-primary-foreground",
+      "--radius-button",
+      "--color-ring"
+    ]
+  },
+  "liquid": {
+    "block": "button",
+    "snippet": "rp-button"
+  },
+  "rules": [
+    {
+      "id": "no-interactive-descendant",
+      "kind": "forbids-ancestor",
+      "selector": ".rp-button",
+      "target": "a, button",
+      "message": "A Button is inside another link or button.",
+      "fix": "Move the Button out, or make the outer element a non-interactive container."
+    }
+  ],
+  "files": {
+    "shared": [
+      {
+        "source": "css/components/button.css",
+        "target": "@styles/components/button.css",
+        "type": "css",
+        "generated": false
+      }
+    ],
+    "react": [
+      {
+        "source": "react/button.tsx",
+        "target": "@components/button.tsx",
+        "type": "binding",
+        "generated": true
+      }
+    ],
+    "remix": [
+      {
+        "source": "remix/button.tsx",
+        "target": "@components/button.tsx",
+        "type": "binding",
+        "generated": true
+      }
+    ],
+    "liquid": [
+      {
+        "source": "liquid/snippets/rp-button.liquid",
+        "target": "snippets/rp-button.liquid",
+        "type": "snippet",
+        "generated": true
+      },
+      {
+        "source": "liquid/blocks/button.liquid",
+        "target": "blocks/button.liquid",
+        "type": "block",
+        "generated": true
+      },
+      {
+        "source": "liquid/locales/button.json",
+        "target": "locales/*.schema.json",
+        "type": "asset",
+        "mode": "patch",
+        "generated": true
+      }
+    ]
+  },
+  "fixtures": [
+    {
+      "name": "default",
+      "props": {},
+      "children": "Add to cart",
+      "html": "<button class=\"rp-button\" type=\"button\" data-variant=\"primary\" data-size=\"md\">Add to cart</button>",
+      "generated": "template"
+    },
+    {
+      "name": "submit-outline-lg",
+      "props": {
+        "variant": "outline",
+        "size": "lg",
+        "type": "submit",
+        "name": "add"
+      },
+      "children": "Add to cart",
+      "html": "<button class=\"rp-button\" type=\"submit\" name=\"add\" data-variant=\"outline\" data-size=\"lg\">Add to cart</button>",
+      "generated": "template"
+    },
+    {
+      "name": "link",
+      "props": {
+        "href": "/cart"
+      },
+      "children": "View cart",
+      "html": "<a class=\"rp-button\" href=\"/cart\" data-variant=\"primary\" data-size=\"md\">View cart</a>",
+      "generated": "template"
+    },
+    {
+      "name": "link-disabled",
+      "props": {
+        "href": "/cart",
+        "disabled": true
+      },
+      "children": "View cart",
+      "html": "<a class=\"rp-button\" href=\"/cart\" aria-disabled=\"true\" tabindex=\"-1\" data-variant=\"primary\" data-size=\"md\">View cart</a>",
+      "generated": "template"
+    },
+    {
+      "name": "invalid-enum-falls-back",
+      "props": {
+        "variant": "loud"
+      },
+      "children": "Buy",
+      "html": "<button class=\"rp-button\" type=\"button\" data-variant=\"primary\" data-size=\"md\">Buy</button>",
+      "generated": "template"
+    }
+  ]
+}

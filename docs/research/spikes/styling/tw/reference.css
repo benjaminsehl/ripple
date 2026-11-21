@@ -1,0 +1,4 @@
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@source "./probe.html";
+@theme reference { --color-primary: #000; --color-primary-foreground: #fff; --radius-md: 1px; --radius-control: 1px; --spacing-control-md: 1px; --container-page: 1px; --font-heading: serif; --text-lg: 1px; --text-lg--line-height: 1; --transition-duration-fast: 1ms; --duration-fast: 1ms; --z-index-sticky: 1; --z-sticky: 1; --color-border: #000; --color-muted-foreground: #000; --color-ring: #000; }

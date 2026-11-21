@@ -1,0 +1,32 @@
+{% doc %}
+  Ripple Dialog root. Interactive component: requires ripple.js to open.
+  Prints the closed initial state of the UI SDK <ui-dialog> element.
+
+  `id` is required and MUST be unique on the page. A parent block cannot pass
+  values to its body, so pass the same value as `dialog` to the
+  `rp-dialog-trigger` and the `rp-dialog-title` in the body.
+
+  @param {string} id - Unique id of the dialog. Required.
+  @param {string} [class] - Extra classes appended after `rp-dialog`.
+  @param {string} content - One `rp-dialog-trigger` block and one `rp-dialog-content` block. Required.
+
+  @example
+  {% block 'rp-dialog', id: 'size-guide' %}
+    {% block 'rp-dialog-trigger', dialog: 'size-guide', variant: 'link' %}Size guide{% endblock %}
+    {% block 'rp-dialog-content' %}
+      {% block 'rp-dialog-title', dialog: 'size-guide' %}Size guide{% endblock %}
+      <p>Measure your chest.</p>
+    {% endblock %}
+  {% endblock %}
+{% enddoc %}
+
+<ui-dialog id="{{ id | escape }}" class="rp-dialog {{ class | escape }}">
+  {{ content }}
+</ui-dialog>
+
+{% schema %}
+{
+  "name": "t:ripple.blocks.dialog",
+  "settings": []
+}
+{% endschema %}

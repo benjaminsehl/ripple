@@ -1,0 +1,23 @@
+<!doctype html><html lang="en"><body>
+<main>
+<h1>Snowboard</h1>
+<!-- native-first static contract -->
+<form action="/search"><input name="q" aria-label="Search products"><button class="rp-button" type="submit">Search</button></form>
+<label>Size <select name="Size"><option>S</option><option>M</option></select></label>
+<details class="rp-accordion-item"><summary>Shipping</summary><p>Free over $50</p></details>
+<a class="rp-button" href="/cart">View cart</a>
+<!-- commerce element wrapping a native form -->
+<rp-product-form id="pf" aria-label="Snowboard purchase">
+  <form method="post" action="/cart/add">
+    <input type="hidden" name="id" value="123">
+    <label>Quantity <input type="number" name="quantity" value="1" min="1"></label>
+    <button class="rp-button" type="submit">Add to cart</button>
+    <button class="rp-button" type="submit" name="checkout" data-agent-confirm="Goes to checkout with this cart">Buy now</button>
+  </form>
+</rp-product-form>
+<!-- ui-sdk wrapped controls -->
+<ui-button><button data-agent-confirm="Goes to Shopify checkout">Check out</button></ui-button>
+<ui-field><ui-field-label>Email</ui-field-label><ui-input><input name="email" type="email"></ui-input></ui-field>
+</main>
+<script type="module" src="out.js"></script>
+</body></html>

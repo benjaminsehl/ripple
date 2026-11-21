@@ -1,0 +1,11 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>t3</title>
+<style id="page">
+@layer ui-sdk, base, components, utilities;
+@layer components { ui-dialog-content { display: flex } .panel { display: grid } }
+@layer utilities { .flex { display: flex } }
+</style>
+<script type="module" src="/web.js"></script></head><body>
+<ui-dialog id="d"><ui-dialog-trigger><button>Open</button></ui-dialog-trigger>
+<ui-dialog-content hidden id="c1">A: styled by tag in components layer</ui-dialog-content></ui-dialog>
+<ui-collapsible id="col"><ui-collapsible-trigger><button>T</button></ui-collapsible-trigger><ui-collapsible-panel hidden class="flex" id="c2">B: utility class flex on hidden panel</ui-collapsible-panel></ui-collapsible>
+</body></html>

@@ -1,0 +1,52 @@
+{% liquid
+  assign current_variant = product.selected_or_first_available_variant
+  assign sold_out = true
+  if current_variant.available
+    assign sold_out = false
+  endif
+%}
+
+{% block 'rp-stack', tag: 'section', gap: '4 md:8', py: '6' %}
+  <h1>{{ product.title | escape }}</h1>
+
+  {% comment %} ripple.js refreshes this partial after a variant change. Keep the name. {% endcomment %}
+  {% partial 'rp-product-buy' %}
+    <p>{{ current_variant.price | money }}</p>
+    {% unless sold_out %}
+      {% block 'rp-badge', tone: 'success' %}{{ 'ripple.product.in_stock' | t }}{% endblock %}
+    {% endunless %}
+
+    {% block 'rp-product-form', product: product, variant: current_variant, accelerated_checkout: true %}
+      {% block 'rp-stack', gap: '3' %}
+        <label for="rp-quantity">{{ 'ripple.product.quantity' | t }}</label>
+        <input id="rp-quantity" class="rp-input" type="number" name="quantity" value="1" min="1" inputmode="numeric">
+        {% block 'rp-button', type: 'submit', name: 'add', size: 'lg', full_width: true, disabled: sold_out %}
+          {% if sold_out %}
+            {{ 'ripple.product.sold_out' | t }}
+          {% else %}
+            {{ 'ripple.product.add_to_cart' | t }}
+          {% endif %}
+        {% endblock %}
+      {% endblock %}
+    {% endblock %}
+  {% endpartial %}
+
+  {% block 'rp-dialog', id: 'size-guide' %}
+    {% block 'rp-dialog-trigger', dialog: 'size-guide', variant: 'link' %}{{ 'ripple.product.size_guide' | t }}{% endblock %}
+    {% block 'rp-dialog-content' %}
+      {% block 'rp-dialog-title', dialog: 'size-guide' %}{{ 'ripple.product.size_guide' | t }}{% endblock %}
+      <p>S, M, L.</p>
+    {% endblock %}
+  {% endblock %}
+
+  {% block 'rp-accordion', variant: 'bordered' %}
+    {% block 'rp-accordion-item', name: 'product-details', open: true %}
+      {% block 'rp-accordion-summary' %}{{ 'ripple.product.shipping' | t }}{% endblock %}
+      {% block 'rp-accordion-panel' %}<p>Ships in 2 days.</p>{% endblock %}
+    {% endblock %}
+    {% block 'rp-accordion-item', name: 'product-details' %}
+      {% block 'rp-accordion-summary' %}{{ 'ripple.product.materials' | t }}{% endblock %}
+      {% block 'rp-accordion-panel' %}{{ product.description }}{% endblock %}
+    {% endblock %}
+  {% endblock %}
+{% endblock %}

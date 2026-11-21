@@ -1,0 +1,15 @@
+listening
+R1 before hydration (dialog opened): <ui-dialog-content data-size="md" data-slot="dialog-content" data-rmx-preserve-attrs="hidden role id tabindex aria-modal aria-labelledby aria-describedby data-open data-closed data-presentation popover style" class="rp-dialog" role="dialog" id="idlg-content" tabindex="-1" data-open="" aria-labelledby="idlg-title" aria-modal="true" data-presentation="dialog" style="--dialog-stack: 0; --keyboard-inset: 0px; --visual-viewport-height: 720px;" popover="manual" aria-describedby="idlg-description"
+R1 after hydration: open prop true | content: <ui-dialog-content data-size="md" data-slot="dialog-content" data-rmx-preserve-attrs="hidden role id tabindex aria-modal aria-labelledby aria-describedby data-open data-closed data-presentation popover style" class="rp-dialog" role="dialog" id="idlg-content" tabindex="-1" data-open="" aria-labelledby="idlg-title" aria-modal="true" data-presentation="dialog" style="--dialog-stack: 0; --keyboard-inset: 0px; --visual-viewport-height: 720px;" popover="manual" aria-describedby="idlg-description" hidden="" | trigger: <button type="button" data-variant="secondary" data-size="md" id="idlg-trigger" aria-haspopup="dialog" data-closed="" data-slot="dialog-trigger" data-rmx-preserve-attrs="aria-controls aria-expanded data-open data-closed" class="rp-button" aria-controls="idlg-content" data-open=""
+R2 keyed=0 A->B node identity: {
+  layoutDialogSameNode: true,
+  mainDialogSameNode: true,
+  stackSameNode: true,
+  stackGap: '4'
+}
+R2 keyed=1 A->B node identity: {
+  layoutDialogSameNode: true,
+  mainDialogSameNode: false,
+  stackSameNode: true,
+  stackGap: '4'
+}

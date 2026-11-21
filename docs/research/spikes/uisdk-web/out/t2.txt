@@ -1,0 +1,30 @@
+ZERO-DIFF c-acc: 0 elements differ in attributes/text
+  c-field /section#c-field/form#f-field/ui-field#fe/ui-field-error|7: data-message: undefined -> ""; text ->Please fill out this field.
+ZERO-DIFF c-field: 1 elements differ in attributes/text
+LAYOUT nojs: c-acc 19:60 | c-field 78:60 | c-number 138:84 | c-link 222:18 | c-tabs 240:39 | c-details 279:86
+LAYOUT js:   c-acc 19:60 | c-field 78:60 | c-number 138:84 | c-link 222:18 | c-tabs 240:39 | c-details 279:86
+warnings: []
+FIELD nojs: label.control -> fe-control
+FIELD js: label.control -> fe-control | label: <label for="fe-control" id="fe-label" data-required="" data-slot="field-label"></label> | input: <input type="email" name="email" id="fe-control" required="" aria-labelledby="fe-label" data-required="" aria-describedby="fe-description">
+FIELD js submit empty required: url /t2.html | error: <ui-field-error data-slot="field-error" data-message="" id="auto-3" data-required="" data-invalid="" data-focused="">Please fill out this field.</ui-field-error> | input: <input type="email" name="email" id="fe-control" required="" aria-labelledby="fe-label" data-required="" aria-describedby="fe-description auto-3" aria-invalid="true" data-invalid="" data-focused="">
+NUMBER f-num: input after upgrade: <input type="text" name="quantity" value="1,234" min="1" aria-label="Quantity" data-slot="number-input-control" id="q-control" inputmode="numeric" autocomplete="off" autocorrect="off" spellcheck="false"> .value="1,234"
+  after increment .value= 1,235 host.value= 1235
+  submit -> /submit?quantity=1%2C235
+NUMBER f-num2: input after upgrade: <input type="text" value="1,234" min="1" aria-label="Quantity" data-slot="number-input-control" id="q2-control" inputmode="numeric" autocomplete="off" autocorrect="off" spellcheck="false"> .value="1,234"
+  after increment .value= 1,235 host.value= 1235
+  submit -> /submit?quantity=1235
+NUMBER f-num nojs submit -> /submit?quantity=1234
+LINK default: navigated= true url= /submit?fallback=cart-page
+LINK + page preventDefault (bubble listener on <a>): navigated= false open= true events= true:trigger-press
+LINK + page preventDefault (capture listener on <a>): navigated= false open= false events= 
+PLAIN LINK + preventDefault + api.open(): navigated= false open= true events= true:imperative
+   after Escape: open= false events= true:imperative,false:escape-key focus= plain-link
+MORPH: tab button before: <button type="button" data-slot="tabs-tab" role="tab" id="t-tab-account" tabindex="0" aria-selected="true" data-selected="" data-orientation="horizontal" data-activation-direction="none" aria-controls="t-panel-account"></button>
+  after stripping all attrs (simulated morph to bare server HTML), immediately: <button type="button">Account</button>
+  after clicking other tab: stripped tab: <button type="button" data-slot="tabs-tab" role="tab" id="t-tab-account" tabindex="-1" aria-selected="false" data-orientation="horizontal" data-activation-direction="right">Account</button>
+  panel password hidden? false
+  after replacing the <button> node: <button type="button" data-slot="tabs-tab" role="tab" id="t-tab-account" tabindex="-1" aria-selected="false" data-orientation="horizontal" data-activation-direction="right">Account (new node)</button>
+  dynamically added tab: <button type="button" data-slot="tabs-tab" role="tab" id="t-tab-new" tabindex="-1" aria-selected="false" data-orientation="horizontal" data-activation-direction="right">New</button>
+  after replacing the whole <ui-tabs> via innerHTML (state?): Account (new node):true, Password:false, New:false
+  warnings: []
+DETAILS nojs exclusive: open states = false,true

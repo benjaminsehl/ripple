@@ -1,0 +1,127 @@
+/* button.css
+   Contract: <button|a class="rp-button" data-variant? data-tone? data-size? data-full?>
+   variant: solid (default) | soft | outline | ghost | link
+   tone:    primary (default) | neutral | destructive
+   size:    sm | md (default) | lg
+   States:  :hover, :active, :focus-visible, :disabled | [aria-disabled="true"] | [data-disabled],
+            [data-pending] | [aria-busy="true"]
+   API:     --rp-button-height, --rp-button-px, --rp-button-gap, --rp-button-radius,
+            --rp-button-font-size, --rp-button-font-weight */
+@layer rp.components {
+  /* 1. BASE: declares the custom-property API with defaults, then consumes it. */
+  .rp-button {
+    /* 1a. public API */
+    --rp-button-height: var(--spacing-control-md);
+    --rp-button-px: calc(var(--spacing) * 5);
+    --rp-button-gap: calc(var(--spacing) * 2);
+    --rp-button-radius: var(--radius-control);
+    --rp-button-font-size: var(--text-sm);
+    --rp-button-font-weight: 500;
+    /* 1b. tone slots (set by [data-tone]) */
+    --_tone: var(--color-primary);            /* fill color */
+    --_on-tone: var(--color-primary-foreground); /* text on the fill */
+    --_tone-text: var(--color-foreground);    /* tone used as text on the page background */
+    /* 1c. paint slots (set by [data-variant]) */
+    --_bg: var(--_tone);
+    --_fg: var(--_on-tone);
+    --_border: transparent;
+    --_bg-hover: color-mix(in oklab, var(--_tone) 88%, var(--_on-tone));
+    --_bg-active: color-mix(in oklab, var(--_tone) 80%, var(--_on-tone));
+
+    /* 1d. declarations: only var() of the slots above and global tokens */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--rp-button-gap);
+    min-block-size: var(--rp-button-height);
+    padding: 0 var(--rp-button-px);
+    border: 1px solid var(--_border);
+    border-radius: var(--rp-button-radius);
+    background-color: var(--_bg);
+    color: var(--_fg);
+    font-family: inherit;
+    font-size: var(--rp-button-font-size);
+    font-weight: var(--rp-button-font-weight);
+    line-height: 1.25;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    transition:
+      background-color var(--rp-duration-fast) var(--ease-out),
+      border-color var(--rp-duration-fast) var(--ease-out),
+      color var(--rp-duration-fast) var(--ease-out),
+      opacity var(--rp-duration-fast) var(--ease-out),
+      scale var(--rp-duration-fast) var(--ease-out);
+  }
+
+  /* 2. MODIFIERS: one rule per value; custom properties ONLY. */
+  .rp-button[data-tone="neutral"] { --_tone: var(--color-foreground); --_on-tone: var(--color-background); --_tone-text: var(--color-foreground); }
+  .rp-button[data-tone="destructive"] { --_tone: var(--color-destructive); --_on-tone: var(--color-destructive-foreground); --_tone-text: var(--color-destructive); }
+
+  .rp-button[data-variant="soft"] {
+    --_bg: color-mix(in oklab, var(--_tone-text) 10%, var(--color-background));
+    --_fg: var(--_tone-text);
+    --_bg-hover: color-mix(in oklab, var(--_tone-text) 16%, var(--color-background));
+    --_bg-active: color-mix(in oklab, var(--_tone-text) 22%, var(--color-background));
+  }
+  .rp-button[data-variant="outline"] {
+    --_bg: transparent;
+    --_fg: var(--_tone-text);
+    --_border: color-mix(in oklab, var(--_tone-text) 45%, var(--color-background));
+    --_bg-hover: color-mix(in oklab, var(--_tone-text) 8%, transparent);
+    --_bg-active: color-mix(in oklab, var(--_tone-text) 14%, transparent);
+  }
+  .rp-button[data-variant="ghost"] {
+    --_bg: transparent;
+    --_fg: var(--_tone-text);
+    --_bg-hover: color-mix(in oklab, var(--_tone-text) 8%, transparent);
+    --_bg-active: color-mix(in oklab, var(--_tone-text) 14%, transparent);
+  }
+  .rp-button[data-variant="link"] {
+    --_bg: transparent;
+    --_fg: var(--_tone-text);
+    --_bg-hover: transparent;
+    --_bg-active: transparent;
+    --rp-button-height: auto;
+    --rp-button-px: 0;
+    --rp-button-radius: var(--radius-xs);
+  }
+
+  .rp-button[data-size="sm"] { --rp-button-height: var(--spacing-control-sm); --rp-button-px: calc(var(--spacing) * 3.5); --rp-button-font-size: var(--text-sm); }
+  .rp-button[data-size="lg"] { --rp-button-height: var(--spacing-control-lg); --rp-button-px: calc(var(--spacing) * 7); --rp-button-font-size: var(--text-base); }
+
+  /* 3. STRUCTURAL MODIFIERS: the only modifiers allowed to set real properties. */
+  .rp-button[data-full] { display: flex; inline-size: 100%; }
+  .rp-button[data-variant="link"] { text-decoration: underline; text-underline-offset: 0.2em; }
+
+  /* 4. STATES: real properties, always from slots. Order: hover, active, focus-visible, disabled, pending. */
+  @media (hover: hover) {
+    .rp-button:hover { background-color: var(--_bg-hover); }
+  }
+  .rp-button:active { background-color: var(--_bg-active); }
+  @media (prefers-reduced-motion: no-preference) {
+    .rp-button:active { scale: 0.97; }
+  }
+  .rp-button:focus-visible { outline: 2px solid var(--color-ring); outline-offset: 2px; }
+  .rp-button:is(:disabled, [aria-disabled="true"], [data-disabled]) { opacity: 0.5; pointer-events: none; }
+  .rp-button:is([data-pending], [aria-busy="true"]) { color: transparent; pointer-events: none; }
+  .rp-button:is([data-pending], [aria-busy="true"])::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    inline-size: 1em;
+    block-size: 1em;
+    border: 2px solid var(--_fg);
+    border-inline-end-color: transparent;
+    border-radius: 50%;
+    animation: rp-spin 0.6s linear infinite;
+  }
+  @keyframes rp-spin { to { rotate: 1turn; } }
+
+  /* 5. PARTS: children addressed by data-slot. */
+  .rp-button > :where(svg, [data-slot="icon"]) { inline-size: 1.25em; block-size: 1.25em; flex: none; }
+}

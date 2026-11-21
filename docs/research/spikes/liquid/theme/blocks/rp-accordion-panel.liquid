@@ -1,0 +1,20 @@
+{% doc %}
+  The collapsible content of a `rp-accordion-item`.
+
+  @param {string} [class] - Extra classes appended after `rp-accordion-panel`.
+  @param {string} content - Panel content. Required.
+
+  @example
+  {% block 'rp-accordion-panel' %}<p>Ships in 2 days.</p>{% endblock %}
+{% enddoc %}
+
+<div class="rp-accordion-panel {{ class | escape }}">
+  {{ content }}
+</div>
+
+{% schema %}
+{
+  "name": "t:ripple.blocks.accordion_panel",
+  "settings": []
+}
+{% endschema %}

@@ -1,0 +1,53 @@
+{% doc %}
+  Ripple Stack. Vertical flex layout. Static component: no JavaScript.
+
+  Scale props (`gap`, `p`, `px`, `py`) and alignment props (`align`, `justify`)
+  take one token, or a responsive list: tokens separated by one space, where
+  every token after the first has a Tailwind breakpoint prefix.
+  Example: '2 md:6 lg:8'. Always pass these props as quoted strings.
+
+  @param {'div' | 'section' | 'article' | 'aside' | 'header' | 'footer' | 'nav' | 'main' | 'ul' | 'ol'} [tag] - Root element. Default: 'div'.
+  @param {string} [gap] - Spacing scale token(s). Example: '4' or '2 md:6'.
+  @param {string} [align] - Cross-axis alignment token(s): start, center, end, stretch, baseline.
+  @param {string} [justify] - Main-axis alignment token(s): start, center, end, between.
+  @param {string} [p] - Padding token(s).
+  @param {string} [px] - Inline padding token(s).
+  @param {string} [py] - Block padding token(s).
+  @param {string} [id] - Root element id.
+  @param {string} [class] - Extra classes appended after `rp-stack`.
+  @param {string} [attributes] - RAW, unescaped HTML attributes appended to the root element. Never pass shopper or merchant input.
+  @param {string} [content] - Children.
+
+  @example
+  {% block 'rp-stack', gap: '2 md:6', align: 'start' %}
+    <p>One</p>
+    <p>Two</p>
+  {% endblock %}
+{% enddoc %}
+
+{%- liquid
+  assign allowed_tags = 'div,section,article,aside,header,footer,nav,main,ul,ol' | split: ','
+  unless allowed_tags contains tag
+    assign tag = 'div'
+  endunless
+-%}
+<{{ tag }}
+  class="rp-stack {{ class | escape }}"
+  {% if id != blank %}id="{{ id | escape }}"{% endif %}
+  {% if gap != blank %}data-gap="{{ gap | escape }}"{% endif %}
+  {% if align != blank %}data-align="{{ align | escape }}"{% endif %}
+  {% if justify != blank %}data-justify="{{ justify | escape }}"{% endif %}
+  {% if p != blank %}data-p="{{ p | escape }}"{% endif %}
+  {% if px != blank %}data-px="{{ px | escape }}"{% endif %}
+  {% if py != blank %}data-py="{{ py | escape }}"{% endif %}
+  {{ attributes }}
+>
+  {{ content }}
+</{{ tag }}>
+
+{% schema %}
+{
+  "name": "t:ripple.blocks.stack",
+  "settings": []
+}
+{% endschema %}

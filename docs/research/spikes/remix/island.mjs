@@ -1,0 +1,40 @@
+import { createRequire } from 'node:module'
+const { chromium } = createRequire(import.meta.url)('playwright')
+import './server.mjs'
+const B = 'http://localhost:4173'
+console.log('SSR HTML:\n' + (await (await fetch(B + '/island')).text()).replace(/<script type="application\/json"[^]*?<\/script>/, (m) => m.slice(0, 300)))
+const browser = await chromium.launch(); const page = await browser.newPage()
+page.on('console', (m) => console.log('  [console]', m.type(), m.text().slice(0, 300)))
+page.on('pageerror', (e) => console.log('  [pageerror]', String(e).slice(0, 300)))
+await page.addInitScript(() => {
+  window.__muts = []
+  document.addEventListener('readystatechange', () => {
+    if (document.readyState !== 'interactive') return
+    new MutationObserver((rs) => { for (let r of rs) window.__muts.push(r.type + ':' + r.target.nodeName + (r.target.id ? '#' + r.target.id : '') + ':' + (r.attributeName ?? '') + (r.type === 'childList' ? ` +${r.addedNodes.length}-${r.removedNodes.length}` : '')) }).observe(document.querySelector('main'), { attributes: true, childList: true, characterData: true, subtree: true })
+  })
+})
+await page.goto(B + '/island'); await page.waitForFunction(() => window.__ready)
+const muts = () => page.evaluate(() => window.__muts.splice(0))
+const attrs = (sel) => page.evaluate((sel) => { let el = document.querySelector(sel); return el ? el.outerHTML.slice(0, el.outerHTML.indexOf('>') + 1) : null }, sel)
+console.log('1 hydration + upgrade mutations:', await muts())
+await page.click('#inc'); await page.waitForTimeout(100)
+console.log('2 after re-render (closed dialog):', await muts(), await page.textContent('#idlg ui-dialog-description'))
+await page.click('#idlg-trigger'); await page.waitForTimeout(200); await muts()
+await page.evaluate(() => document.querySelector('#inc').click()); await page.waitForTimeout(100)
+console.log('3 re-render while dialog OPEN, mutations:', await muts())
+console.log('  open prop:', await page.evaluate(() => document.querySelector('#idlg').open), 'popover-open:', await page.evaluate(() => document.querySelector('#idlg ui-dialog-content').matches(':popover-open')), 'desc:', await page.textContent('#idlg ui-dialog-description'))
+console.log('  content tag:', await attrs('#idlg ui-dialog-content'))
+await page.keyboard.press('Escape'); await page.waitForTimeout(200); await muts()
+await page.click('#toggle'); await page.waitForTimeout(300)
+console.log('4 client-rendered Tabs root:', await attrs('#itabs'))
+console.log('  tab wrapper:', await attrs('#itabs ui-tabs-tab'), '| button:', await attrs('#itabs-tab-a'))
+console.log('  panel a:', await attrs('#itabs ui-tabs-panel'), '| panel b:', await attrs('#itabs ui-tabs-panel + ui-tabs-panel'))
+console.log('  client dialog content:', await attrs('#cdlg ui-dialog-content'), '| root:', await attrs('#cdlg'))
+await page.click('#itabs-tab-b'); await page.waitForTimeout(100)
+console.log('  after click tab b: value=', await page.evaluate(() => document.querySelector('#itabs').value), await page.evaluate(() => [...document.querySelectorAll('#itabs ui-tabs-panel')].map((p) => p.hidden)))
+await page.click('#cdlg-trigger'); await page.waitForTimeout(200)
+console.log('  client dialog opens:', await page.evaluate(() => document.querySelector('#cdlg').open), await attrs('#cdlg ui-dialog-content'))
+await page.keyboard.press('Escape'); await page.waitForTimeout(200)
+await page.click('#toggle'); await page.waitForTimeout(200)
+console.log('5 removed again; log:', await page.evaluate(() => window.__log))
+await browser.close(); process.exit(0)

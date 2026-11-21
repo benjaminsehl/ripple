@@ -1,0 +1,4 @@
+[
+  { "name": "theme_info", "theme_name": "Ripple spike", "theme_version": "0.0.0", "theme_author": "spike", "theme_documentation_url": "https://example.com", "theme_support_url": "https://example.com" },
+  { "name": "Ripple", "settings": [ { "type": "range", "id": "rp_radius", "label": "Corner radius", "min": 0, "max": 2, "step": 0.5, "default": 1 } ] }
+]

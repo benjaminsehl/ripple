@@ -1,0 +1,10 @@
+/* The same button authored with @apply (Tailwind required to compile). */
+@layer rp.components {
+  .tw-button {
+    @apply inline-flex items-center justify-center gap-2 min-h-control-md px-5 border border-transparent rounded-control bg-primary text-primary-foreground text-sm font-medium whitespace-nowrap cursor-pointer select-none relative transition-colors duration-fast ease-out;
+    @apply hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring;
+    @apply disabled:opacity-50 disabled:pointer-events-none aria-disabled:opacity-50 aria-disabled:pointer-events-none data-pending:text-transparent;
+  }
+  .tw-button-outline { @apply bg-transparent text-primary border-primary/45 hover:bg-primary/8; }
+  .tw-button-lg { @apply min-h-control-lg px-7 text-base; }
+}

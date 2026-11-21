@@ -1,0 +1,129 @@
+FORM f-checkbox js=false -> /submit?native=yes
+FORM f-select js=false -> /submit?nativerole=editor
+FORM f-number-host js=false -> /submit
+FORM f-number-native js=false -> /submit?quantity=2
+FORM f-number-both js=false -> /submit?quantity=2
+FORM f-field-native js=false -> /submit?email=a%40b.co&country=ca
+FORM f-button js=false -> /submit?id=42&add=1
+LINK-TRIGGER drawer-link js=false -> url=/submit?fallback=cart-page
+LINK-TRIGGER dialog-link js=false -> url=/submit?fallback=dialog-page
+TABS-LINKS js=false url=/pe-pre.html#tl-panel-b panelBVisible=true panelAVisible=true
+FORM f-checkbox js=true -> /submit?terms=yes&native=yes
+FORM f-select js=true -> /submit?role=editor&nativerole=editor
+FORM f-number-host js=true -> /submit?quantity=2
+FORM f-number-native js=true -> /submit?quantity=2
+FORM f-number-both js=true -> /submit?quantity=2&quantity=2
+FORM f-field-native js=true -> /submit?email=a%40b.co&country=ca
+FORM f-button js=true -> /submit?id=42&add=1
+LINK-TRIGGER drawer-link js=true -> url=/submit?fallback=cart-page
+LINK-TRIGGER dialog-link js=true -> url=/submit?fallback=dialog-page
+TABS-LINKS js=true url=/pe-pre.html#tl-panel-b panelBVisible=true panelAVisible=false
+
+OPEN STATES
+dialog closed content: <ui-dialog-content hidden data-slot="dialog-content"> display=none parent=ui-dialog topLayer=false
+dialog open trigger: <button type="button" id="d-trigger" aria-haspopup="dialog" data-slot="dialog-trigger" aria-controls="d-content" data-open> display=inline-block parent=ui-dialog-trigger topLayer=false
+dialog open content: <ui-dialog-content data-slot="dialog-content" role="dialog" id="d-content" tabindex="-1" data-open aria-labelledby="d-title" aria-modal="true" aria-describedby="d-description" data-presentation="dialog" style="--dialog-stack: 0; --keyboard-inset: 0px; --visual-viewport-height: 720px;" popover="manual"> display=block parent=ui-dialog topLayer=true
+dialog open backdrop: <ui-dialog-backdrop data-slot="dialog-backdrop" role="presentation" data-open popover="manual"> display=block parent=ui-dialog topLayer=true
+dialog open: html attrs: <html lang="en" style="overflow: hidden; scroll-behavior: auto;"> display=block parent=undefined topLayer=false | body: <body > display=block parent=html topLayer=false
+dialog open: inert elements: section#c-tabs-pre, ui-dialog-trigger, section#c-accordion-pre, section#c-drawer-pre, section#c-dialog-link, section#c-popover-hidden, section#c-tabs-links, section#c-forms, section#c-custom
+dialog open: body-level extra children: 
+dialog open: activeElement: <button type="button" data-slot="dialog-close">Close</button>
+dialog after Escape content: <ui-dialog-content data-slot="dialog-content" role="dialog" id="d-content" tabindex="-1" aria-labelledby="d-title" aria-modal="true" aria-describedby="d-description" data-presentation="dialog" style popover="manual" data-closed hidden> display=none parent=ui-dialog topLayer=false
+dialog after Escape trigger: <button type="button" id="d-trigger" aria-haspopup="dialog" data-slot="dialog-trigger" data-closed> display=inline-block parent=ui-dialog-trigger topLayer=false
+tabs after click tab2: <button type="button" role="tab" id="t-tab-password" aria-selected="true" tabindex="0" data-activation-direction="right" data-orientation="horizontal" data-slot="tabs-tab" data-selected aria-controls="t-panel-password"> display=inline-block parent=ui-tabs-tab topLayer=false
+  tab1: <button type="button" role="tab" id="t-tab-account" aria-selected="false" tabindex="-1" data-activation-direction="right" data-orientation="horizontal" data-slot="tabs-tab"> display=inline-block parent=ui-tabs-tab topLayer=false
+  panel1: <ui-tabs-panel value="account" role="tabpanel" id="t-panel-account" aria-labelledby="t-tab-account" tabindex="0" data-activation-direction="right" data-orientation="horizontal" data-slot="tabs-panel" hidden> display=none parent=ui-tabs topLayer=false
+  panel2: <ui-tabs-panel value="password" data-slot="tabs-panel" role="tabpanel" id="t-panel-password" aria-labelledby="t-tab-password" data-selected data-orientation="horizontal" data-activation-direction="right" tabindex="0"> display=block parent=ui-tabs topLayer=false
+  root: <ui-tabs id="t" default-value="account" data-activation-direction="right" data-orientation="horizontal" data-slot="tabs"> display=block parent=section topLayer=false
+accordion after open returns: trigger: <button type="button" id="a-trigger-returns" aria-expanded="true" data-slot="accordion-trigger" data-open aria-controls="a-panel-returns"> display=inline-block parent=ui-accordion-trigger topLayer=false
+  panel: <ui-accordion-panel data-slot="accordion-panel" role="region" id="a-panel-returns" aria-labelledby="a-trigger-returns" data-open style="--accordion-panel-height: auto; --accordion-panel-width: auto;"> display=block parent=ui-accordion-item topLayer=false
+  item: <ui-accordion-item value="returns" data-index="1" data-slot="accordion-item" data-open> display=block parent=ui-accordion topLayer=false
+  root: <ui-accordion id="a" default-value="shipping" data-slot="accordion"> display=block parent=section topLayer=false
+  shipping item (multiple default?): <ui-accordion-item value="shipping" data-index="0" data-slot="accordion-item" data-closed> display=block parent=ui-accordion topLayer=false
+popover open content: <ui-popover-content data-slot="popover-content" role="dialog" id="p-content" tabindex="-1" data-open aria-labelledby="p-title" data-presentation="popover" popover="manual" data-side="bottom" data-align="center" style="position: fixed; inset: round(anchor(bottom), 1px) auto auto round(min(max(-23.9375px + anchor(center), min(8px, anchor(right))), max(100% - 55.875px, -47.875px + anchor(left))), 1px); margin: 4px 0px 8px; position-anchor: --ui-anchor-1; position-try-fallbacks: flip-y; position-visibility: always; --available-height: 462.84375px; --available-width: 1264px; --anchor-width: 51.578125px; --anchor-height: 21px; --transform-origin: 24px 0px; --arrow-offset: 24px;"> display=block parent=ui-popover topLayer=true
+  trigger: <button type="button" data-slot="popover-trigger" id="p-trigger" aria-haspopup="dialog" aria-expanded="true" aria-controls="p-content" data-open style="anchor-name: --ui-anchor-1;"> display=inline-block parent=ui-popover-trigger topLayer=false
+menu open content: <ui-menu-content data-slot="menu-content" role="menu" id="m-content" tabindex="-1" data-open aria-labelledby="m-trigger" data-presentation="popover" popover="manual" data-side="bottom" data-align="start" style="position: fixed; inset: round(anchor(bottom), 1px) auto auto round(min(max(0px + anchor(left), min(8px, anchor(right))), max(100% - 74.4219px, -66.4219px + anchor(left))), 1px); margin: 4px 0px 8px; position-anchor: --ui-anchor-2; position-try-fallbacks: flip-y; position-visibility: always; --available-height: 462.84375px; --available-width: 1264px; --anchor-width: 59.71875px; --anchor-height: 21px; --transform-origin: 0px 0px; --arrow-offset: 27px;"> display=block parent=ui-menu topLayer=true
+  item: <ui-menu-item value="rename" data-slot="menu-item" role="menuitem" id="m-item-auto-30" tabindex="-1"> display=block parent=ui-menu-content topLayer=false
+tooltip focused content: <ui-tooltip-content data-slot="tooltip-content" role="tooltip" id="tt-content" popover="manual" data-side="top" data-align="center" style="position: fixed; inset: auto auto round(anchor(top), 1px) round(min(max(-24.4375px + anchor(center), min(8px, anchor(right))), max(100% - 56.875px, -48.875px + anchor(left))), 1px); margin: 8px 0px 4px; position-anchor: --ui-anchor-3; position-try-fallbacks: flip-y; position-visibility: always; --available-height: 212.15625px; --available-width: 1264px; --anchor-width: 38.234375px; --anchor-height: 21px; --transform-origin: 24px 18px; --arrow-offset: 24px;" data-open data-instant> display=block parent=ui-tooltip topLayer=true
+drawer open viewport: <ui-drawer-viewport data-slot="drawer-viewport" data-side="bottom" data-open style="position: fixed; inset: 0 0 var(--keyboard-inset, 0px) 0; width: auto; height: auto; max-width: none; max-height: none; margin: 0px; padding: 0px; border: 0px; background: transparent; color: inherit; overflow: visible; display: flex; flex-direction: column; justify-content: flex-end; pointer-events: none; --keyboard-inset: 0px; --visual-viewport-height: 720px;" popover="manual"> display=flex parent=ui-drawer topLayer=true
+  content: <ui-drawer-content data-slot="drawer-content" role="dialog" id="dr-content" tabindex="-1" data-open aria-labelledby="dr-title" aria-modal="true" data-side="bottom" data-snap-point="content" data-driver="pointer" style="pointer-events: auto; overscroll-behavior: contain; will-change: translate; --drawer-progress: 1; --drawer-dim: 1; --drawer-expand: 1; translate: 0px;" data-expanded> display=block parent=ui-drawer-viewport topLayer=false
+  backdrop: <ui-drawer-backdrop data-slot="drawer-backdrop" role="presentation" data-open popover="manual" style="opacity: 1; will-change: opacity;"> display=block parent=ui-drawer topLayer=true
+  link trigger: <a href="/submit?fallback=cart-page" id="drawer-link" data-slot="drawer-trigger" aria-haspopup="dialog" type="button" aria-controls="dr-content" data-open> display=inline parent=ui-drawer-trigger topLayer=false
+select open content: <ui-select-content data-slot="select-content" role="listbox" id="ui-sdk-select-49-content" tabindex="-1" data-presentation="popover" data-open aria-label="Role" popover="manual" data-side="bottom" data-align="start" data-modality="pointer" style="position: fixed; inset: round(anchor(bottom), 1px) auto auto round(min(max(0px + anchor(left), min(8px, anchor(right))), max(100% - 68.125px, -60.125px + anchor(left))), 1px); margin: 4px 0px 8px; position-anchor: --ui-anchor-4; position-try-fallbacks: flip-y; position-visibility: always; --available-height: 383.84375px; --available-width: 1264px; --anchor-width: 50.828125px; --anchor-height: 21px; --transform-origin: 0px 0px; --arrow-offset: 22px;"> display=block parent=ui-select topLayer=true
+  trigger: <button type="button" aria-label="Role" data-slot="select-trigger" role="combobox" id="ui-sdk-select-49-trigger" aria-haspopup="listbox" aria-expanded="true" aria-controls="ui-sdk-select-49-content" data-open style="anchor-name: --ui-anchor-4;"> display=inline-block parent=ui-select-trigger topLayer=false
+
+CUSTOM ELEMENT
+rp-cart-count after upgrade: <rp-cart-count id="cc" count="3" data-count="3" data-slot="rp-cart-count"> display=contents parent=section topLayer=false | text: Cart (3)
+{
+ "apiKeys": [
+  "getCount",
+  "setCount",
+  "setPending"
+ ],
+ "r1": true,
+ "t1": "Cart (5)",
+ "t2": "Cart (7)",
+ "t3": "Cart (9)",
+ "prop": 9,
+ "events": [
+  {
+   "value": 5,
+   "reason": "programmatic",
+   "source": "programmatic",
+   "bubbles": false,
+   "cancelable": true
+  }
+ ],
+ "html": "<rp-cart-count id=\"cc\" count=\"9\" data-count=\"9\" data-slot=\"rp-cart-count\" data-pending=\"\" aria-busy=\"true\"><a href=\"/cart\">Cart (<rp-cart-count-value data-slot=\"rp-cart-count-value\">9</rp-cart-count-value>)</a></rp-cart-count>",
+ "parts": [
+  "Root",
+  "Value"
+ ],
+ "isCls": true
+}
+
+page errors/warnings: []
+
+LAYOUT SHIFT all-bare.html: 18 of 25 sections moved/resized (top:height)
+  c-tabs 155:21->155:39
+  c-accordion 195:101->213:101
+  c-collapsible 315:21->333:21
+  c-carousel 336:21->354:39
+  c-select 357:21->393:39
+  c-combobox 378:21->432:39
+  c-checkbox 399:21->471:21
+  c-radio 420:18->492:18
+  c-switch 438:18->510:18
+  c-slider 456:0->528:18
+  c-number-input 456:21->546:42
+  c-navigation-menu 477:21->588:39
+  c-pagination 498:21->627:186
+  c-pagination-links 519:18->813:90
+  c-rating 537:0->903:18
+  c-progress 537:0->921:18
+  c-field 537:21->939:78
+  c-label 558:18->1017:36
+
+LAYOUT SHIFT all-pre.html: 22 of 25 sections moved/resized (top:height)
+  c-popover 92:78->92:21
+  c-tooltip 170:21->113:21
+  c-menu 191:57->134:21
+  c-toast 248:0->155:0
+  c-tabs 248:57->155:39
+  c-accordion 324:101->213:101
+  c-collapsible 444:21->333:21
+  c-carousel 465:57->354:39
+  c-select 522:93->393:39
+  c-combobox 615:39->432:39
+  c-checkbox 654:21->471:21
+  c-radio 675:18->492:18
+  c-switch 693:18->510:18
+  c-slider 711:0->528:18
+  c-number-input 711:42->546:42
+  c-navigation-menu 753:57->588:39
+  c-pagination 810:42->627:186
+  c-pagination-links 852:90->813:90
+  c-rating 942:0->903:18
+  c-progress 942:0->921:18
+  c-field 942:78->939:78
+  c-label 1020:36->1017:36

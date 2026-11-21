@@ -1,0 +1,10 @@
+@layer rp-tokens, rp-components;
+@layer rp-components {
+  .rp-button { display: inline-flex; }
+  .rp-stack { display: flex; flex-direction: column; }
+  .rp-accordion, .rp-accordion-item, .rp-accordion-summary, .rp-accordion-panel { display: block; }
+  .rp-dialog, .rp-dialog-backdrop, .rp-dialog-content, .rp-dialog-title, .rp-dialog-close { display: block; }
+  .rp-product-form, .rp-product-form-fields, .rp-product-form-accelerated, .rp-form-message, .rp-input { display: block; }
+  rp-cart-count { display: inline-block; }
+  .rp-badge { display: inline-flex; }
+}

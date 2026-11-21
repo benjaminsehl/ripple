@@ -1,0 +1,27 @@
+{% doc %}
+  The accessible title of a `rp-dialog`. Every dialog MUST have one.
+
+  @param {string} dialog - The `id` passed to the parent `rp-dialog`. Required.
+  @param {string} [class] - Extra classes appended after `rp-dialog-title`.
+  @param {string} content - The title text. Required.
+
+  @example
+  {% block 'rp-dialog-title', dialog: 'size-guide' %}Size guide{% endblock %}
+{% enddoc %}
+
+<ui-dialog-title
+  class="rp-dialog-title {{ class | escape }}"
+  id="{{ dialog | escape }}-title"
+  role="heading"
+  aria-level="2"
+  data-slot="dialog-title"
+>
+  {{- content -}}
+</ui-dialog-title>
+
+{% schema %}
+{
+  "name": "t:ripple.blocks.dialog_title",
+  "settings": []
+}
+{% endschema %}

@@ -1,0 +1,55 @@
+{% doc %}
+  Ripple ProductForm. Commerce component.
+
+  Server HTML is a native Shopify product form. It posts `id` (the variant id)
+  and every named control in the body (`quantity`, `selling_plan`,
+  `properties[...]`) to the cart, so add to cart works when JavaScript never loads.
+  When ripple.js loads, <rp-product-form> handles the submit: it adds the line
+  through the Hydrogen cart store and reflects state on itself
+  (`data-pending`, the error part).
+
+  The body is rendered before this block runs. It cannot read `form`.
+  To show accelerated checkout buttons, pass `accelerated_checkout: true`;
+  this block prints them after the body.
+
+  @param {product} product - The product to sell. Required.
+  @param {variant} [variant] - Selected variant. Default: product.selected_or_first_available_variant.
+  @param {boolean} [accelerated_checkout] - Pass the boolean `true` to print Shopify accelerated checkout buttons after the body.
+  @param {string} [id] - Id of the <form> element. Default: 'rp-product-form-' followed by the product id.
+  @param {string} [class] - Extra classes appended after `rp-product-form`.
+  @param {string} content - Form controls and one submit `rp-button` with `name: 'add'`. Required.
+
+  @example
+  {% block 'rp-product-form', product: product %}
+    {% block 'rp-button', type: 'submit', name: 'add' %}Add to cart{% endblock %}
+  {% endblock %}
+{% enddoc %}
+
+{%- liquid
+  assign variant = variant | default: product.selected_or_first_available_variant
+  assign form_id = id
+  if form_id == blank
+    assign form_id = 'rp-product-form-' | append: product.id
+  endif
+-%}
+<rp-product-form
+  class="rp-product-form {{ class | escape }}"
+  data-product-id="gid://shopify/Product/{{ product.id }}"
+  {% unless variant.available %}data-unavailable{% endunless %}
+>
+  {% form 'product', product, id: form_id, class: 'rp-product-form-fields' %}
+    <input type="hidden" name="id" value="{{ variant.id }}" data-rp-field="merchandise-id">
+    {{ content }}
+    <p class="rp-form-message" data-rp-part="error" data-tone="critical" role="alert" hidden></p>
+    {% if accelerated_checkout == true %}
+      <div class="rp-product-form-accelerated">{{ form | payment_button }}</div>
+    {% endif %}
+  {% endform %}
+</rp-product-form>
+
+{% schema %}
+{
+  "name": "t:ripple.blocks.product_form",
+  "settings": []
+}
+{% endschema %}

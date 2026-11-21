@@ -1,0 +1,11 @@
+SNAPSHOT
+{"ref":"c1","component":"button","actions":["press"],"label":"Check out","confirm":"Goes to Shopify checkout"}
+{"ref":"c3","component":"input","actions":["setValue","clear"],"label":"Email","value":""}
+{"ref":"c4","component":"rp-product-form","actions":["setQuantity","add"],"label":"Snowboard purchase"}
+ACT rp-product-form {"ok":true,"steps":[{"step":0,"ref":"c4"},{"step":1,"ref":"c4"}],"appeared":[],"values":{"c3 Email":""}} added= 3
+ACT confirm (not approved) {"ok":false,"error":{"step":0,"message":"The person said no to \"Goes to Shopify checkout\"."},"steps":[],"appeared":[],"values":{"c3 Email":""}}
+ACT native input {"ok":false,"error":{"step":0,"message":"No component \"Search products\" on the page. Its labels: Check out, Email, Snowboard purchase."},"steps":[],"appeared":[],"values":{"c3 Email":""}}
+ACT press native button inside rp element w/ confirm {"ok":false,"error":{"step":0,"message":"rp-product-form c4 has nothing to press now."},"steps":[],"appeared":[],"values":{"c3 Email":""}}
+ACT press native Add to cart inside rp element {"ok":false,"error":{"step":0,"message":"rp-product-form c4 has nothing to press now."},"steps":[],"appeared":[],"values":{"c3 Email":""}} url= http://localhost:4611/page.html
+TOOLS [ 'snapshot', 'act', 'query' ]
+LOGS []
