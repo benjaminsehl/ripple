@@ -2089,9 +2089,6 @@ UNVERIFIED:
 
 ## Ledger issues
 
-None open. See `00-decisions.md` section 13.2: all 18 items this document reported are settled there.
+None open. See `00-decisions.md` sections 13.2 and 13.3: all 18 items this document reported are settled there.
 
-Two choices were made while applying the reconciliation decisions, because the ledger names the need but not the mechanism. Both are implemented above and reported to the arbiter:
-
-1. **`header.css` and the linter.** D-085 and D-105 require a sticky Header to set `--rp-header-block-size` "on `:root` scope", and `12-components-chrome-and-blueprints.md` does so with the rule `:root:has(.rp-header[data-sticky])`. That selector does not begin with an own class (CSS-02), and the acceptance list of D-105 item 2 does not name it. This document accepts exactly that one rule in `header.css` (row L-15 of section 7.9) and lists `:has()` in section 12.
-2. **`:dir(rtl)` is newer than the floor in Chrome** (first version 120 from compatibility tables, UNVERIFIED; the floor is 111). D-105 item 2 accepts `:dir(rtl)` and D-032 does not list it among the features above the floor. This document treats it as a capability tier: the rule is dropped where unsupported and the value keeps its left-to-right form (section 12).
+The two choices this document made while applying the reconciliation (the one accepted `:root:has(.rp-header[data-sticky])` rule in `header.css`, row L-15; `:dir(rtl)` as a capability tier) are now ledger text: D-105 as amended and D-081 as amended (D-110).

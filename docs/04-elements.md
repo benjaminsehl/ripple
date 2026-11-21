@@ -2048,7 +2048,7 @@ Component document: `10-components-interactive.md`. No custom element, no JavaSc
 Source: `10-components-interactive.md`, Popover, fixture `default` (`id="shipping-info"`; one paragraph):
 
 ```html
-<div class="rp-popover" id="shipping-info" popover data-side="bottom" data-align="start">
+<div class="rp-popover" id="shipping-info" popover="" data-side="bottom" data-align="start">
   <p>Free shipping on orders over $50.</p>
 </div>
 ```
@@ -2086,7 +2086,7 @@ Rules:
 2. The trigger is the caller's Button or IconButton, a native `<button type="button">`, inside `ui-tooltip-trigger`. A link (`<a href>`, or a Button or IconButton with `href`) MUST NOT be a tooltip trigger: UI SDK writes `type="button"` on it (D-082).
 3. The trigger's `aria-describedby="<id>-content"` and `data-slot="tooltip-trigger"` are printed by the Button / IconButton prop `tooltip="<tooltip id>"` (D-082). Passing those two attributes through rest props or `attributes` is prohibited.
 4. The trigger has its own accessible name; the tooltip is never the only label (D-013).
-5. `ui-tooltip` itself carries no `data-slot`. `side` and `align` are printed on `ui-tooltip` as the attribute names UI SDK reads (`side`, `align`) and are omitted at the default (ledger section 4.3).
+5. `ui-tooltip` itself carries no `data-slot`. `side` and `align` are printed on `ui-tooltip-content` as the attribute names UI SDK reads (`side`, `align`) and are omitted at the default (ledger section 4.3).
 6. The content is printed with `hidden` and `data-closed`.
 7. With markup that follows rules 1 to 6 the upgrade writes nothing. Verified in the spike (line "upgrade: zero mutations") on a trigger button without the `rp-icon-button` class and `data-variant` / `data-size` attributes; the fixture above adds only those and an Icon, none of which UI SDK reads. Test E-01 re-checks the fixture as printed.
 
@@ -2103,7 +2103,7 @@ There is no `role="menu"` component (D-018). An action list is a Popover (10.3) 
 The panel. Source: `10-components-interactive.md`, Popover, fixture `placement` (`id="order-actions"`, `side="top"`, `align="end"`):
 
 ```html
-<div class="rp-popover" id="order-actions" popover data-side="top" data-align="end">
+<div class="rp-popover" id="order-actions" popover="" data-side="top" data-align="end">
   <p>Actions</p>
 </div>
 ```
@@ -2796,4 +2796,4 @@ Owned by `12-components-chrome-and-blueprints.md`. If `popover` panels are not u
 
 ## Ledger issues
 
-None open. See `00-decisions.md` section 13.2.
+None open. See `00-decisions.md` sections 13.2 and 13.3 (D-109 to D-113).

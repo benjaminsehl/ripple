@@ -1,6 +1,6 @@
 # 06 Bindings: React, Remix 3, Liquid blocks, plain HTML
 
-Status: normative. Owner of: the React rules and `useElement`, the Remix rules, the TSX conventions, the Liquid tiers and rules L-1 to L-11, the `html` host (`00-decisions.md` section 9, row `06-bindings.md`; D-033 to D-040).
+Status: normative. Owner of: the React rules and `useElement`, the Remix rules, the TSX conventions, the Liquid tiers and rules L-1 to L-21, the `html` host (`00-decisions.md` section 9, row `06-bindings.md`; D-033 to D-040).
 
 ## 0. Scope and how to read this document
 
@@ -403,7 +403,7 @@ export function useElement<E extends HTMLElement>(ref: RefObject<E | null>, opti
 
 ```ts
 // src/react/hooks.ts
-import { useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import type { CartState, CartStore } from "@shopify/hydrogen";
 import { getCommerce } from "../commerce/adapter.ts";
 
@@ -447,15 +447,12 @@ const noRegionHtml = (): string | null => null;
  * Used only by the region parts of PredictiveSearch (`results`) and ProductRecommendations (`list`).
  */
 export function useRegionHtml(name: string): string | null {
-  return useSyncExternalStore(
-    subscribeRegionHtml,
-    () => getRegionHtml(name),
-    noRegionHtml,
-  );
+  const subscribe = useCallback((listener: () => void) => subscribeRegionHtml(name, listener), [name]);
+  return useSyncExternalStore(subscribe, () => getRegionHtml(name), noRegionHtml);
 }
 ```
 
-The region-HTML store is owned by `05-commerce.md`: `subscribeRegionHtml(listener: () => void): () => void` and `getRegionHtml(name: string): string | null`, written by the React refresh strategy for the reasons `predictive` and `recommendations` (D-090). `getRegionHtml` MUST return the same string reference until a new document is published for that name. The module path `src/commerce/refresh-react.ts` is this document's reading of the ledger tree (section 5.1); when `05-commerce.md` names another module, that module wins.
+The region-HTML store is owned by `05-commerce.md` (section 8.3): `subscribeRegionHtml(name: string, listener: () => void): () => void` and `getRegionHtml(name: string): string | null`, written by the React refresh strategy for the reasons `predictive` and `recommendations` (D-090). `getRegionHtml` MUST return the same string reference until a new document is published for that name. The module is `src/commerce/refresh-react.ts` (ledger tree 5.1; `05-commerce.md` section 8.3).
 
 Usage rule (the only allowed use; D-090). A React region part renders its server children while the value is `null`, and `dangerouslySetInnerHTML` on the SAME element once the value is a string:
 
@@ -1569,7 +1566,7 @@ Two fixed assignments (ledger section 8.1): Icon is tier `snippet` (`snippets/rp
 
 ### 8.2 Rules
 
-L-1 to L-11 are the rules of `ripple/docs/research/liquid-blocks-partials.md` with the choices of D-038 applied. L-12 to L-18 are added by this document.
+L-1 to L-11 are the rules of `ripple/docs/research/liquid-blocks-partials.md` with the choices of D-038 applied. L-12 to L-21 are added by this document.
 
 - **L-1 File per component or part.** Every component a template author calls is `blocks/<id>.liquid`. A component of tier `parts` has one block file per author-placed part, named `<id>-<part>`, matching the contract class `rp-<id>-<part>`.
 - **L-2 Prefix.** Block file names are unprefixed. The CLI flag `--prefix` (D-038 item 1) changes block FILE names only. Snippet names are always `rp-<id>`; partial names are always `rp-<region>`.
@@ -1577,7 +1574,7 @@ L-1 to L-11 are the rules of `ripple/docs/research/liquid-blocks-partials.md` wi
 - **L-4 Budget.** Ripple-owned block files MUST NOT exceed 150, parts included (D-038 item 7). `pnpm gen --check` counts `components/*/liquid/blocks/*.liquid` and fails above 150.
 - **L-5 Names.** A Liquid param name is the manifest `prop.liquid.name`; its default is the prop name in snake_case (`fullWidth` gives `full_width`). The generator MUST reject these names: `true`, `false`, `nil`, `blank`, `empty`, `content`, `block`, `section`, `form`, `settings`, `for`, and the name of any Shopify global object the same file reads (for example `product` may be a param of ProductForm because the block reads only the param).
 - **L-6 One outlet.** A block file prints `{{ content }}` at most once (tier `resource`: once, inside the `{% if content != blank %}` branch).
-- **L-7 No captured slots.** `{% capture %}` MUST NOT be used to pass markup from one file to another. Exception: a named slot param on a tier `resource` block that the manifest lists; it is documented as HTML and printed without `escape`. V1 has no such param in the examples of this document.
+- **L-7 No captured slots.** `{% capture %}` MUST NOT be used to pass markup from one file to another. Exception: a named slot param on a tier `resource` block that the manifest lists; it is documented as HTML and printed without `escape`. V1 has no such param in the examples of this document. A file MAY also capture markup it renders ITSELF (an Icon, an Icon plus text) into a variable and pass it as the `content` argument of an embedded component's snippet in the same file (`{% render 'rp-button', content: opener_content %}`), or print that variable more than once: that is how a snippet embeds a component whose content is not plain text (LocaleSelector's opener, MobileNav's chevron; D-110). What stays prohibited is a capture in a template or layout that is passed to a block as a slot.
 - **L-8 Explicit ids.** When the contract links elements by id, the root takes a required `id` param and each linked part takes a required param named after the root component (`dialog: 'size-guide'`). `block.id` MUST NOT be used.
 - **L-9 Initial state.** A block prints every attribute of the initial state. State that is a prop is printed by each part from its OWN params (`selected: true` on both `tabs-tab` and `tabs-panel`).
 - **L-10 Locale keys.** A string the block prints itself is `{{ 'ripple.<component id>.<key>' | t }}`, assigned to a variable when passed to a snippet. Schema labels are `t:` keys (L-17).
@@ -1588,10 +1585,10 @@ L-1 to L-11 are the rules of `ripple/docs/research/liquid-blocks-partials.md` wi
   | Scope | Files | Tags | Filters and objects |
   |---|---|---|---|
   | Component | `blocks/*.liquid`, `snippets/rp-<id>*.liquid` of components | `doc`, `schema`, `liquid`, `assign`, `if`, `unless`, `elsif`, `else`, `case`, `when`, `for`, `capture`, `render`, `form`, `comment`, `echo` | `escape`, `split`, `t`, `default`, `append`, `prepend`, `strip`, `plus`, `minus`, `times`, `size`, `money`, `image_url`, `json`, `divided_by`, `modulo`, `round`, `remove`, `date`, `url_encode`, `payment_button`; objects `content_for_additional_checkout_buttons`, `additional_checkout_buttons` |
-  | Blueprint | `layout/*.liquid`, `templates/*.liquid` | the component tags plus `block`, `partial`, `paginate`, `layout` | the component filters plus `standard_event_data`; the globals listed by `12-chrome-and-blueprints.md` (rule L-D) |
-  | Infrastructure | `rp-head`, `rp-tokens`, `rp-import-map-entries`, `rp-icon`, and the theme-owned `import-map` and `meta-tags` snippets | the component tags | the component filters plus `asset_url`, `stylesheet_tag`, `font_face`, and the font object members used by `14-liquid-theme.md` section 6 |
+  | Blueprint | `layout/*.liquid`, `templates/*.liquid` | the component tags plus `block`, `partial`, `paginate`, `layout` | the component filters plus `standard_event_data`, `asset_url`, `stylesheet_tag`; the globals listed by `12-components-chrome-and-blueprints.md` (rule L-D) |
+  | Infrastructure | `rp-head`, `rp-tokens`, `rp-import-map-entries`, `rp-icon`, and the theme-owned `import-map` and `meta-tags` snippets | the component tags | the component filters plus `asset_url`, `stylesheet_tag`, `font_face`, `first`, `join`, `remove_first`, `slice`, `strip_html`, `money_without_currency`, `structured_data` (the last seven are used only by `snippets/meta-tags.liquid`, D-109), and the font object members used by `14-liquid-theme.md` section 6 |
 
-  `{% capture %}` is in the subset only for building attribute strings and for the named slot params of L-7 (D-037); never to pass markup between files. `as` as a param name: UNVERIFIED on a store (SPIKE-02); fallback name `tag` (D-038).
+  `{% capture %}` is in the subset only for building attribute strings, for the named slot params of L-7 (D-037) and for the `content` argument of an embedded snippet built in the same file (L-7, D-110); never to pass markup from a template to a block. `as` as a param name: UNVERIFIED on a store (SPIKE-02); fallback name `tag` (D-038).
 - **L-14 Booleans.** A boolean param is true only for the Liquid boolean `true`: `{% if disabled == true %}`. The string `'false'` and the string `'true'` are both not true.
 - **L-15 Enumerations.** Each non-responsive enumeration param, including schema settings, is guarded before first use and falls back to the manifest default (M-6):
 
@@ -2306,7 +2303,10 @@ Each line is pass or fail. The tier of D-063 is given in brackets.
 9. [4] React hydration passes Q-10 items 1 to 6 for both script orders in uncontrolled, controlled and rejecting modes.
 10. [4] Remix morph passes Q-15.
 11. [1] For every component, the React and Remix files export the same set of names, and the Liquid block names equal `<id>` plus `<id>-<part>` for exactly the manifest parts with `authoredBy: "author"` (checked by `pnpm gen --check`).
-12. [1] No React binding file without a hook starts with `"use client";` and every one with a hook does (R-14; checked by `pnpm gen --check` with the pattern `\buse(Ref|State|Element|Cart)\(`).
+12. [1] No React binding file without a hook starts with `"use client";` and every one with a hook does (R-14; checked by `pnpm gen --check` with the pattern `\buse(Ref|State|Callback|Element|Cart|RegionHtml)\(`).
+13. [1] `bindings-lint` rejects `dangerouslySetInnerHTML` in every React file except `predictive-search.tsx`, `product-recommendations.tsx` and `rich-text.tsx` (section 1.2; D-110 row 30).
+14. [4] `useRegionHtml(name)` returns `null` on the server and during hydration, and the published string afterwards; a region part renders its server children until then (`13-testing.md` section 8.1, the `useRegionHtml` test; UNVERIFIED until SPIKE-10).
+15. [1] `pnpm gen --check` fails for a Liquid file whose `{% form %}` root takes a param other than `id` and `class` (L-19), for a param named `for` or `form` that carries another component's root id (L-20), and for a region component without its `rp-<id>-<part>` snippet (L-21).
 
 ## 13. Evidence and UNVERIFIED
 
@@ -2377,4 +2377,4 @@ Applies only if root-only `definePrimitive` fails and `rp-*` elements become `Ri
 
 ## Ledger issues
 
-None open. See `00-decisions.md` section 13.2.
+None open. See `00-decisions.md` sections 13.2 and 13.3 (D-109 to D-113).

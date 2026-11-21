@@ -230,6 +230,7 @@ fragment RippleProductDetail on Product {
   selectedOrFirstAvailableVariant(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) { ...RippleVariant }
   adjacentVariants(selectedOptions: $selectedOptions) { ...RippleVariant }
   media(first: 20) { nodes { __typename id ... on MediaImage { image { ...RippleImage } } } }
+  descriptionHtml
 }
 
 # CollectionCard
@@ -1341,7 +1342,7 @@ Fixture `accelerated` adds `{ "select": ".rp-product-form-accelerated", "op": "c
 | text | error part | element | the error message | empty |
 | `disabled` | AddToCartButton | server | variant missing or not available | per variant |
 
-Upgrade allow-list (mutations permitted when the element upgrades): None. (The element writes nothing at upgrade; the error part changes only after a submit.)
+Upgrade allow-list (mutations permitted when the element upgrades): `{ "select": "rp-product-form [data-rp-part=\"error\"]", "attrs": ["hidden"], "text": true, "reason": "The element fills the error text and removes hidden when an add fails (D-045, D-071 item 3)." }` (the commerce error-part entry fixed by D-071 item 3; the manifest entry in `07-manifest-registry-cli.md` is equal). The element writes nothing at upgrade; the entry covers an add that fails while the element upgrades.
 
 ### Behaviour with JavaScript
 
@@ -1495,7 +1496,7 @@ Nesting rules: options are the only children of root. A VariantPicker MUST be a 
 | Prop (TSX) | Liquid param | Type | Values | Default | Required | Responsive | Renders as |
 |---|---|---|---|---|---|---|---|
 | `id` | `id` | id | any id | none | yes | no | `id` on root; derives value ids |
-| `product` | `product` | object | `VariantPickerProduct` (below) / Liquid `product` drop | none | yes | no | options and values |
+| `product` | `product` | object | `RippleProductDetail` ([05-commerce.md](05-commerce.md) 11.1; the fields `url`, `options`, `selectedOrFirstAvailableVariant`, `adjacentVariants` are read) / Liquid `product` drop | none | yes | no | options and values |
 | `layout` | `layout` | enum | `auto buttons dropdown` | `auto` | no | no | `data-layout` on root |
 | `refresh` | `refresh` | string | region names | `rp-product-buy rp-product-media` | no | no | `data-rp-refresh` on root |
 | `search` | none | string | the current query string without `?` | empty string | no | no | base of value URLs (keeps unrelated params); TSX hosts only |
@@ -1639,50 +1640,20 @@ Required rules: `base.css` carries `rp-live { display: block }` (generated). Eve
 ### Host notes
 
 - HTML: None.
-- React: `VariantPicker(props: { id: string; product: VariantPickerProduct; layout?: "auto" | "buttons" | "dropdown"; refresh?: string; search?: string; className?: string })`. No hook. The component calls the pure function `variantPickerOptions`, which lives with its types in `variant-picker.data.ts` (CV-10; the binding imports `./variant-picker.data`, blueprints import `@components/variant-picker.data`); the app passes the Storefront API product (fragment `RippleProductDetail`) plus `url`.
+- React: `VariantPicker(props: { id: string; product: VariantPickerProduct; layout?: "auto" | "buttons" | "dropdown"; refresh?: string; search?: string; className?: string })`. No hook. The component calls the pure function `variantPickerOptions`, which lives with its types in `variant-picker.data.ts` (CV-10; the binding imports `./variant-picker.data`, blueprints import `@components/variant-picker.data`); the app passes a `RippleProductDetail` (mapped from the fragment `RippleProductDetail`; its `url` is computed by the host).
 - Remix: `data-rmx-key="<id>"` on the root; `data-rmx-preserve-attrs="data-pending aria-busy"` on the root.
 - Liquid: loop `product.options_with_values`; per value: `exists` is `value.variant != blank`; sold out is `value.variant.available == false`; URL is `value.product_url` when not blank, otherwise `value.variant.url`; selected is `value.selected`; swatch is `value.swatch`. `auto` test per option: every value has `value.swatch != blank`. Layout `dropdown`: `action="{{ product.url }}"`, `<option value="{{ value.variant.id }}">`. One schema setting: `layout` (`select`). Locale keys: `ripple.variant-picker.sold_out` = `(Sold out)`; `ripple.variant-picker.unavailable` = `(Unavailable)`; `ripple.variant-picker.apply` = `Apply`. In layout `dropdown` the option text is `<name> <string>`.
 
-`components/variant-picker/react/variant-picker.data.ts` and `components/variant-picker/remix/variant-picker.data.ts` MUST contain exactly this code (manifest file key `data`; no `"use client"`). `buildProductSelectionSearchParams` is one of the seven value imports of D-094. The four `VariantPicker*` interfaces are the option shapes of VariantPicker that D-094 assigns to [05-commerce.md](05-commerce.md) section 11.1; when doc 05 exports them from `<pkg>` under these names, the `export interface` declarations below are replaced by one `import type` line and nothing else changes:
+`components/variant-picker/react/variant-picker.data.ts` and `components/variant-picker/remix/variant-picker.data.ts` MUST contain exactly this code (manifest file key `data`; no `"use client"`). `buildProductSelectionSearchParams` is one of the seven value imports of D-094. The option shapes are defined once, in [05-commerce.md](05-commerce.md) section 11.1, and imported from `<pkg>` (D-094): the input is the four fields of `RippleProductDetail` that the alias `VariantPickerProduct` picks (`RippleProductOption`, `RippleProductOptionValue` and `RippleVariant` are their member types), and the output is `RippleVariantOption[]` (values `RippleVariantOptionValue`). This file declares no interface of its own.
 
 ```ts
 import { buildProductSelectionSearchParams } from "@shopify/hydrogen";
-import type { RippleImage } from "__PKG__";
+import type { RippleProductDetail, RippleVariantOption } from "__PKG__";
 
-export interface VariantPickerVariant {
-  id: string;
-  availableForSale: boolean;
-  selectedOptions: Array<{ name: string; value: string }>;
-}
-export interface VariantPickerProduct {
-  /** Path of the product page, for example "/products/linen-shirt". */
-  url: string;
-  options: Array<{
-    name: string;
-    optionValues: Array<{
-      name: string;
-      swatch?: { color?: string | null; image?: { previewImage?: RippleImage | null } | null } | null;
-    }>;
-  }>;
-  selectedOrFirstAvailableVariant: VariantPickerVariant | null;
-  adjacentVariants: VariantPickerVariant[];
-}
-export interface VariantPickerValue {
-  name: string;
-  selected: boolean;
-  exists: boolean;
-  available: boolean;
-  url: string | null;
-  variantId: string | null;
-  swatch: { color: string | null; image: RippleImage | null } | null;
-}
-export interface VariantPickerOption {
-  name: string;
-  selectedValue: string | null;
-  values: VariantPickerValue[];
-}
+/** The fields of RippleProductDetail that the picker reads (05-commerce.md section 11.1). */
+export type VariantPickerProduct = Pick<RippleProductDetail, "url" | "options" | "selectedOrFirstAvailableVariant" | "adjacentVariants">;
 
-export function variantPickerOptions(product: VariantPickerProduct, search = ""): VariantPickerOption[] {
+export function variantPickerOptions(product: VariantPickerProduct, search = ""): RippleVariantOption[] {
   const selected = product.selectedOrFirstAvailableVariant;
   const current = selected ? selected.selectedOptions : [];
   const candidates = selected ? [selected, ...product.adjacentVariants] : product.adjacentVariants;
@@ -1728,7 +1699,7 @@ export function variantPickerOptions(product: VariantPickerProduct, search = "")
 The component prints nothing when `product.options.every((option) => option.optionValues.length <= 1)`.
 
 ```tsx
-<VariantPicker id="options" product={{ ...product, url: `/products/${product.handle}` }} search={url.searchParams.toString()} />
+<VariantPicker id="options" product={product} search={url.searchParams.toString()} />
 ```
 
 ```liquid
@@ -2363,7 +2334,7 @@ SPIKE-09 procedure (preview store): call `partials.fetch("rp-product-recommendat
 
 If it fails, the liquid backend changes as follows and nothing changes on the hydrogen backend:
 
-1. The Liquid product blueprint MUST NOT call `product-recommendations`. It calls FeaturedCollection ([12-components-chrome-and-blueprints.md](12-components-chrome-and-blueprints.md)) with a merchant-chosen collection instead (theme setting `rp_related_collection`, type `collection`, owned by doc 14), titled with locale key `ripple.product-recommendations.title`.
+1. The Liquid product blueprint MUST NOT call `product-recommendations`. It calls FeaturedCollection ([12-components-chrome-and-blueprints.md](12-components-chrome-and-blueprints.md)) with a merchant-chosen collection instead (theme setting `rp_related_collection`, type `collection`, owned by doc 14). The section title is the collection's own title, which FeaturedCollection prints; the block is called with `limit: 4` and no children (doc 12 owns the call, section "product" blueprint).
 2. `blocks/product-recommendations.liquid` and `snippets/rp-product-recommendations-list.liquid` stay in the registry (they still serve a template that passes `products` explicitly, for example from a metafield list of products); the `url` param is documented as "not supported on Liquid".
 3. Fixture `lazy` gets `"hosts": ["html", "react", "remix"]`.
 
@@ -2607,7 +2578,7 @@ Nesting rules: root contains only the panel. The panel contains, in order: title
 | Prop (TSX) | Liquid param | Type | Values | Default | Required | Responsive | Renders as |
 |---|---|---|---|---|---|---|---|
 | `id` | `id` | id | any id | `cart-drawer` | yes | no | `id` on the panel; `<id>-title`; `<id>-list` on the embedded CartLines |
-| `cart` | `cart` | object | `RippleCart` / Liquid `cart` drop | Liquid: the global `cart` | yes (TSX) | no | passed to CartLines and CartSummary |
+| `cart` | `cart` | object | `RippleCart` or `null` / Liquid `cart` drop | Liquid: the global `cart`; TSX: `null` | no | no | passed to CartLines and CartSummary. TSX: `null` or unset (the buyer has no cart yet) renders the empty cart, the same output as a cart with zero lines (D-110) |
 | `side` | `side` | enum | `start end` | `end` | no | no | `data-side` on the panel |
 | `acceleratedCheckout` | `accelerated_checkout` | boolean | `true false` | `false` | no | no | passed to CartSummary |
 | `locale` | none | string | BCP 47 tag | `en-US` | no | no | passed on (CV-1) |
@@ -2707,7 +2678,7 @@ Required rules: `.rp-cart-drawer .rp-drawer-body { display: flex; flex-direction
 ### Host notes
 
 - HTML: copy the contract once per page, as the last child of `<body>`.
-- React: `CartDrawer(props: { id?: string; cart: RippleCart; side?: "start" | "end"; acceleratedCheckout?: boolean; locale?: string; onOpenChange?: (value: boolean, detail: object) => void; strings?: { title?: string; close?: string }; className?: string; children?: ReactNode })`. `"use client";` (it uses `useElement` for `onOpenChange`). Compose by contract (D-070): the binding prints `<rp-dialog class="rp-drawer rp-cart-drawer">`, the `<dialog class="rp-drawer-panel">`, the title and the body itself with Drawer's attributes; it does NOT render `<Drawer>`. The close button is the embedded IconButton. It renders `<CartLines id={id + "-list"} cart={cart} />` and `<CartSummary cart={cart} cartLines={id + "-list"} />`, which read the store themselves.
+- React: `CartDrawer(props: { id?: string; cart?: RippleCart | null; side?: "start" | "end"; acceleratedCheckout?: boolean; locale?: string; onOpenChange?: (value: boolean, detail: object) => void; strings?: { title?: string; close?: string }; className?: string; children?: ReactNode })`. `"use client";` (it uses `useElement` for `onOpenChange`). Compose by contract (D-070): the binding prints `<rp-dialog class="rp-drawer rp-cart-drawer">`, the `<dialog class="rp-drawer-panel">`, the title and the body itself with Drawer's attributes; it does NOT render `<Drawer>`. The close button is the embedded IconButton. It renders `<CartLines id={id + "-list"} cart={cart} />` and `<CartSummary cart={cart} cartLines={id + "-list"} />`, which read the store themselves.
 - Remix: `data-rmx-key="<id>"` on root. The default body renders the two region parts inline as plain elements (D-090 item 5). Frames are opt-in: an app that configures `reloadFrames` passes children, CartLines and CartSummary each with a `<Frame>` child (RS-5; SPIKE-11).
 - Liquid: `blocks/cart-drawer.liquid` renders `{% render 'rp-cart-lines', id: <id>-list, cart: cart %}` and `{% render 'rp-cart-summary', cart: cart, cart_lines: <id>-list %}` as its default body. For in-place refresh the LAYOUT MUST pass the body with partial-wrapped region parts (RS-3), exactly as in the usage below; without it `ripple check` reports RP403. The layout MUST NOT render the block when `template.name == 'cart'` (RS-4, D-091 item 5). The root is not printed by `{% form %}`; it prints `{{ attributes }}` last (D-035). No schema settings. Locale keys: `ripple.cart-drawer.title` = `Cart`; `ripple.cart-drawer.close` = `Close`.
 
@@ -2809,7 +2780,7 @@ Nesting rules, hydrogen backend: root children in order: list, error, status. Li
 | Prop (TSX) | Liquid param | Type | Values | Default | Required | Responsive | Renders as |
 |---|---|---|---|---|---|---|---|
 | `id` | `id` | id | any id | none | yes | no | `id` on root; `<id>-form` on the Liquid form |
-| `cart` | `cart` | object | `RippleCart` / Liquid `cart` drop | Liquid: the global `cart` | yes (TSX) | no | the lines, or the empty text |
+| `cart` | `cart` | object | `RippleCart` or `null` / Liquid `cart` drop | Liquid: the global `cart`; TSX: `null` | no | no | the lines, or the empty text. TSX: `null` or unset (the buyer has no cart yet) prints the empty text, the same output as a cart with zero lines (D-110) |
 | `refresh` | `refresh` | string | region names | `rp-cart-lines rp-cart-summary` | no | no | `data-rp-refresh` on root |
 | `locale` | none | string | BCP 47 tag | `en-US` | no | no | passed to CartLine (CV-1) |
 
@@ -2938,7 +2909,7 @@ Required rules: root `display: block`; `.rp-cart-lines-items { list-style: none;
 ### Host notes
 
 - HTML: copy the `default` contract; per-line forms post to `/api/cart`.
-- React: file `cart-lines.tsx`, first line `"use client";`. Exports `CartLines(props: { id: string; cart: RippleCart; refresh?: string; locale?: string; className?: string; children?: ReactNode })`, `CartLinesList(props: { cart: RippleCart; locale?: string })`, The pure helpers `toRippleCart(cart: HydrogenCart): RippleCart` and `toRippleLine(line: HydrogenCartLine): RippleLine` (`import type` of the cart types from `@shopify/hydrogen`) are NOT in this file: a `"use client"` file exports components only (D-094). They live in `cart-lines.data.ts` (file key `data`, no directive; CV-10), imported here as `./cart-lines.data` and by blueprints as `@components/cart-lines.data`. `CartLinesList` reads the live cart with `useCart` ([06-bindings.md](06-bindings.md) rule R-12; the exact selector signature is owned by doc 06), using the `cart` prop as the server value, and maps it with `toRippleCart`. Each `<li>` uses `key={line.id}`. Error and status parts carry `suppressHydrationWarning`.
+- React: file `cart-lines.tsx`, first line `"use client";`. Exports `CartLines(props: { id: string; cart?: RippleCart | null; refresh?: string; locale?: string; className?: string; children?: ReactNode })`, `CartLinesList(props: { cart?: RippleCart | null; locale?: string })` (`null` or unset is the empty cart, D-110), The pure helpers `toRippleCart(cart: HydrogenCart): RippleCart` and `toRippleLine(line: HydrogenCartLine): RippleLine` (`import type` of the cart types from `@shopify/hydrogen`) are NOT in this file: a `"use client"` file exports components only (D-094). They live in `cart-lines.data.ts` (file key `data`, no directive; CV-10), imported here as `./cart-lines.data` and by blueprints as `@components/cart-lines.data`. `CartLinesList` reads the live cart with `useCart` ([06-bindings.md](06-bindings.md) rule R-12; the exact selector signature is owned by doc 06), using the `cart` prop as the server value, and maps it with `toRippleCart`. Each `<li>` uses `key={line.id}`. Error and status parts carry `suppressHydrationWarning`.
 - Remix: `data-rmx-key="<id>"` on root; default body renders `CartLinesList` inline (RS-5).
 - Liquid: root, form, update button, error and status are in `snippets/rp-cart-lines.liquid`; the list in `snippets/rp-cart-lines-list.liquid`, which loops `cart.items` and renders `rp-cart-line` with `line: item`. The update button composes Button by contract (D-070; class pair `rp-button rp-cart-lines-update`): the snippet prints the `<button>` itself with `data-rp-part="submit" data-rp-js="fallback"`; it is the FIRST submit button of the cart form (D-092). The cart form is a plain `<form class="rp-cart-lines-form" id="{{ id }}-form" method="post" action="{{ routes.cart_url }}">` (not `{% form %}`); it is the ONE Liquid cart form (D-092). The block's `{{ attributes }}` go on the `rp-cart` root, printed last (D-035). The region-part snippet is always called as `{% render 'rp-cart-lines-list', cart: cart %}` (D-091 item 4). No schema settings. Locale keys: `ripple.cart-lines.empty` = `Your cart is empty.`; `ripple.cart-lines.update` = `Update cart`; `ripple.cart-lines.updated`, `ripple.cart-lines.removed`, `ripple.cart-lines.error` as in [05-commerce.md](05-commerce.md) section 4.3.
 
@@ -2982,7 +2953,7 @@ Required rules: root `display: block`; `.rp-cart-lines-items { list-style: none;
 
 ### Agent surface
 
-`bridge`; component `rp-cart`. The manifest `agent.actions` of every `rp-cart` component is `["setQuantity", "remove"]` ([08-agent-kit-and-evals.md](08-agent-kit-and-evals.md) section 7.2, D-095): `setQuantity(line: string, quantity: number): void` and `remove(line: string): void`, where `line` is the value of a `data-rp-line` attribute, and `items: (api) => api.lines()` returns `Array<{ value: string; label: string }>`. Each label is the line title. There is no `checkout` action and no discount, note or locale action (D-050; doc 08 rule A-5). Confirm: none. Secret: none.
+`bridge`; component `rp-cart`. The manifest `agent.actions` of every `rp-cart` component is `["setQuantity", "remove"]` ([08-agent-kit-and-evals.md](08-agent-kit-and-evals.md) section 7.2, D-095): `setQuantity(line: string, quantity: number): void` and `remove(line: string): void`, where `line` is the value of a `data-rp-line` attribute, and `items: (api) => api.lines()` returns `RippleSortOption[]`. Each label is the line title. There is no `checkout` action and no discount, note or locale action (D-050; doc 08 rule A-5). Confirm: none. Secret: none.
 
 ### Checker rules
 
@@ -3134,7 +3105,7 @@ Host-owned regions and masks: the actions part is dialect-owned (D-043, D-044), 
 | `hidden` | error | `rp-cart` | no error for this line | present |
 | `disabled` | decrement button | `rp-quantity` | value equals `min` | absent (value is at least 1) |
 
-Upgrade allow-list (mutations permitted when the element upgrades): covered by the allow-list of CartLines (line root flags, error part) and of QuantityInput (stepper `disabled`). None of its own.
+Upgrade allow-list (mutations permitted when the element upgrades): None of its own. The line root flags and the error part are covered by the allow-list of CartLines. The embedded QuantityInput has an empty allow-list ([10-components-interactive.md](10-components-interactive.md), QuantityInput): the server prints `disabled` on a stepper button that is at its limit, so the upgrade writes nothing.
 
 ### Behaviour with JavaScript
 
@@ -3418,7 +3389,7 @@ Required rules: root `display: block`; totals `display: flex; flex-direction: co
 
 ### Agent surface
 
-`bridge`; component `rp-cart`. The manifest `agent.actions` of every `rp-cart` component is `["setQuantity", "remove"]` ([08-agent-kit-and-evals.md](08-agent-kit-and-evals.md) section 7.2, D-095): `setQuantity(line: string, quantity: number): void` and `remove(line: string): void`, where `line` is the value of a `data-rp-line` attribute, and `items: (api) => api.lines()` returns `Array<{ value: string; label: string }>`. This root prints no line, so both actions throw `"rp-cart: nothing to setQuantity here"` / `"rp-cart: nothing to remove here"` and `items` is empty. Discount removal has no bridge action (doc 08 rule A-5); an agent uses the remove button through the accessibility tree. Confirm: the CheckoutButton inside (`data-agent-confirm`, REQUIRED); in fixture `accelerated` the wrapper `.rp-cart-summary-accelerated` carries `data-agent-confirm="Pays for this cart now with an express checkout"` (doc 08 section 7.3; locale key `ripple.cart-summary.agent_confirm_accelerated`). The attribute is never on the `rp-cart` root. Secret: none.
+`bridge`; component `rp-cart`. The manifest `agent.actions` of every `rp-cart` component is `["setQuantity", "remove"]` ([08-agent-kit-and-evals.md](08-agent-kit-and-evals.md) section 7.2, D-095): `setQuantity(line: string, quantity: number): void` and `remove(line: string): void`, where `line` is the value of a `data-rp-line` attribute, and `items: (api) => api.lines()` returns `RippleSortOption[]`. This root prints no line, so both actions throw `"rp-cart: nothing to setQuantity here"` / `"rp-cart: nothing to remove here"` and `items` is empty. Discount removal has no bridge action (doc 08 rule A-5); an agent uses the remove button through the accessibility tree. Confirm: the CheckoutButton inside (`data-agent-confirm`, REQUIRED); in fixture `accelerated` the wrapper `.rp-cart-summary-accelerated` carries `data-agent-confirm="Pays for this cart now with an express checkout"` (doc 08 section 7.3; locale key `ripple.cart-summary.agent_confirm_accelerated`). The attribute is never on the `rp-cart` root. Secret: none.
 
 ### Checker rules
 
@@ -3797,7 +3768,7 @@ Required rules: root `display: block`; `.rp-discount-code-form { display: flex; 
 
 ### Agent surface
 
-`bridge`; component `rp-cart`. The manifest `agent.actions` of every `rp-cart` component is `["setQuantity", "remove"]` ([08-agent-kit-and-evals.md](08-agent-kit-and-evals.md) section 7.2, D-095): `setQuantity(line: string, quantity: number): void` and `remove(line: string): void`, where `line` is the value of a `data-rp-line` attribute, and `items: (api) => api.lines()` returns `Array<{ value: string; label: string }>`. This root prints no line, so both actions throw `"rp-cart: nothing to setQuantity here"` / `"rp-cart: nothing to remove here"` and `items` is empty. Applying a code has no bridge action (doc 08 rule A-5); an agent fills the field and presses Apply through the accessibility tree. Confirm: none. Secret: none.
+`bridge`; component `rp-cart`. The manifest `agent.actions` of every `rp-cart` component is `["setQuantity", "remove"]` ([08-agent-kit-and-evals.md](08-agent-kit-and-evals.md) section 7.2, D-095): `setQuantity(line: string, quantity: number): void` and `remove(line: string): void`, where `line` is the value of a `data-rp-line` attribute, and `items: (api) => api.lines()` returns `RippleSortOption[]`. This root prints no line, so both actions throw `"rp-cart: nothing to setQuantity here"` / `"rp-cart: nothing to remove here"` and `items` is empty. Applying a code has no bridge action (doc 08 rule A-5); an agent fills the field and presses Apply through the accessibility tree. Confirm: none. Secret: none.
 
 ### Checker rules
 
@@ -4477,13 +4448,13 @@ Nesting rules: when no filter is active the root is printed with NO children. Ot
 
 | Prop (TSX) | Liquid param | Type | Values | Default | Required | Responsive | Renders as |
 |---|---|---|---|---|---|---|---|
-| `chips` | none | object | `Array<{ label: string; url: string }>` | none | yes (TSX) | no | one chip each |
+| `chips` | none | object | `RippleFilterChip[]` | none | yes (TSX) | no | one chip each |
 | `clearUrl` | none | url | URL without any filter parameter | none | yes (TSX) | no | `href` of clear |
 | none | `collection` | object | Liquid `collection` drop | the global `collection` | no | no | chips and clear URL |
 | none | `search` | object | Liquid `search` drop | none | no | no | replaces `collection` as the source |
 | `refresh` | `refresh` | string | region names | `rp-collection-results rp-collection-filters rp-collection-toolbar` | no | no | `data-rp-refresh` (CV-3) |
 
-`toFilterChips(filters: RippleFilter[], options: { pathname: string; searchParams: URLSearchParams; formatPrice: (amount: string) => string }): { chips: Array<{ label: string; url: string }>; clearUrl: string }` is exported from `filter-chips.data.ts` (CV-10). The chip shape `{ label: string; url: string }` is the chip shape of [05-commerce.md](05-commerce.md) section 11.1 (D-094). Per active list value: `label` = the value label, `url` = `pathname` + `getFilterRemovalUrl(searchParams, JSON.parse(<the value's input>))`; because `RippleFilterValue` does not keep `input`, the helper rebuilds the URL by deleting the pair `(name, value)` and the `before` / `after` params from a copy of `searchParams`. For an active price range: one chip with the label of the rule below and `url` = `filter.removeUrl`. `clearUrl` = `pathname` plus only the `sort_by` and `q` params.
+`toFilterChips(filters: RippleFilter[], options: { pathname: string; searchParams: URLSearchParams; formatPrice: (amount: string) => string }): { chips: RippleFilterChip[]; clearUrl: string }` is exported from `filter-chips.data.ts` (CV-10). `RippleFilterChip` (`{ label: string; url: string }`) is defined in [05-commerce.md](05-commerce.md) section 11.1 and imported from `<pkg>` (D-094). Per active list value: `label` = the value label, `url` = `pathname` + `getFilterRemovalUrl(searchParams, JSON.parse(<the value's input>))`; because `RippleFilterValue` does not keep `input`, the helper rebuilds the URL by deleting the pair `(name, value)` and the `before` / `after` params from a copy of `searchParams`. For an active price range: one chip with the label of the rule below and `url` = `filter.removeUrl`. `clearUrl` = `pathname` plus only the `sort_by` and `q` params.
 
 Price chip label rule (both backends): both bounds set: `<min> - <max>`; only max: `Up to <max>`; only min: `From <min>`; where `<min>` and `<max>` are money text (TSX: `formatPrice`; Liquid: `filter.min_value.value | money`, `filter.max_value.value | money`).
 
@@ -4572,7 +4543,7 @@ Required rules: root `display: flex; flex-wrap: wrap; align-items: center; gap: 
 ### Host notes
 
 - HTML: copy the contract; compute each URL by removing the parameter.
-- React: `FilterChips(props: { chips: Array<{ label: string; url: string }>; clearUrl: string; refresh?: string; strings?: { remove?: string; clear?: string }; className?: string })` plus `toFilterChips`. No hook. `key={chip.url}`.
+- React: `FilterChips(props: { chips: RippleFilterChip[]; clearUrl: string; refresh?: string; strings?: { remove?: string; clear?: string }; className?: string })` plus `toFilterChips`. No hook. `key={chip.url}`.
 - Remix: prop `rmxKey?: string` prints `data-rmx-key` on root (omitted when unset; CV-5, D-034); links carry no `data-rmx-*` attribute.
 - Liquid: source `search.filters` or `collection.filters`. For each `filter`: for each `value` in `filter.active_values`: chip with `value.label` and `value.url_to_remove`; for `price_range` with a set bound: one chip with `filter.url_to_remove`. Clear URL: collection: `collection.url`, plus `?sort_by=<value>` when the sort is not the default; search: `routes.search_url` + `?q=` + `search.terms | url_encode`, plus `&sort_by=<value>` when not the default. No schema settings. Locale keys: `ripple.filter-chips.remove` = `Remove filter: `; `ripple.filter-chips.clear` = `Clear all`; `ripple.filter-chips.up_to` = `Up to {{ max }}`; `ripple.filter-chips.from` = `From {{ min }}`.
 
@@ -4666,7 +4637,7 @@ Nesting rules: root contains exactly two fields: minimum first, maximum second. 
 | none | `filter` | object | Liquid `filter` drop of type `price_range` | none | yes (Liquid) | no | all of the above |
 | `size` | `size` | enum | `sm md lg` | `md` | no | no | `data-size` on both inputs |
 
-Number text rule: the value is the amount in major currency units with `.` as decimal separator and no grouping. TSX hosts print the string they were given (it comes from the URL). Liquid computes it from the drop's value in cents `c`: `whole = c | divided_by: 100`, `cents = c | modulo: 100`; the text is `whole` when `cents` is 0, otherwise `whole`, `.`, and `cents` left-padded to two digits. (`5000` gives `50`; `5005` gives `50.05`.)
+Number text rule: the value is the amount in major currency units with `.` as decimal separator and no grouping. TSX hosts print the string they were given (it comes from the URL). Liquid computes it from the drop's value in cents `c`: `cents = c | modulo: 100`, then `whole = c | minus: cents | divided_by: 100` (the subtraction makes the division exact, so Shopify's integer division and the shim's floating-point division print the same digits; `13-testing.md` section 20 item 7); the text is `whole` when `cents` is 0, otherwise `whole`, `.`, and `cents` left-padded to two digits. (`5000` gives `50`; `5005` gives `50.05`.)
 
 ### Content model
 
@@ -4832,7 +4803,7 @@ Nesting rules: root contains only the form. Form children in order: the carried 
 | Prop (TSX) | Liquid param | Type | Values | Default | Required | Responsive | Renders as |
 |---|---|---|---|---|---|---|---|
 | `id` | `id` | id | any id | none | yes | no | `id` on the select; `for` on the label |
-| `options` | none | object | `Array<{ value: string; label: string }>` | none | yes (TSX) | no | one `<option>` each |
+| `options` | none | object | `RippleSortOption[]` | none | yes (TSX) | no | one `<option>` each |
 | `value` | none | string | one of the option values | the first option's value | no | no | `selected` on that option |
 | `action` | none | url | the page path without query | none | yes (TSX) | no | `action` on the form |
 | `params` | none | object | `Array<[name: string, value: string]>`: the active filter parameters and `q` | empty | no | no | hidden inputs, in the given order |
@@ -4931,7 +4902,7 @@ Required rules: root `display: inline-block`; form `display: inline-flex; align-
 ### Host notes
 
 - HTML: copy the contract.
-- React: `SortSelect(props: { id: string; options: Array<{ value: string; label: string }>; value?: string; action: string; params?: Array<[string, string]>; refresh?: string; size?: "sm" | "md" | "lg"; strings?: { submit?: string }; className?: string; children?: ReactNode })`. `sortParams` is in `sort-select.data.ts` (CV-10). The fallback submit button is printed by the binding itself (section 0.2). No hook. Uncontrolled select: `defaultValue={value}` with `key={value}`.
+- React: `SortSelect(props: { id: string; options: RippleSortOption[]; value?: string; action: string; params?: Array<[string, string]>; refresh?: string; size?: "sm" | "md" | "lg"; strings?: { submit?: string }; className?: string; children?: ReactNode })`. `sortParams` is in `sort-select.data.ts` (CV-10). The fallback submit button is printed by the binding itself (section 0.2). No hook. Uncontrolled select: `defaultValue={value}` with `key={value}`.
 - Remix: `data-rmx-key="<id>"` on root.
 - Liquid: options `source.sort_options` (`option.value`, `option.name`); current value `source.sort_by | default: source.default_sort_by`; action `collection.url` or `routes.search_url`; hidden inputs: for each `filter` in `source.filters`, each `value` in `filter.active_values` gives `value.param_name` / `value.value`; a `price_range` filter gives `filter.min_value.param_name` and `filter.max_value.param_name` with the number text of PriceRange when set; on search also `q` = `search.terms`. Schema settings: `size`. Locale keys: `ripple.sort-select.label` = `Sort by`; `ripple.sort-select.submit` = `Sort`.
 
@@ -5637,4 +5608,4 @@ None.
 
 ## Ledger issues
 
-None open. See `00-decisions.md` section 13.2.
+None open. See `00-decisions.md` sections 13.2 and 13.3 (D-109 to D-113).

@@ -133,7 +133,7 @@ Format of each entry: Decision / Rationale / Evidence / Rejected.
 
 #### D-010 Popover: native `popover`
 
-- Decision: Popover contract: opener is a Button or IconButton with `popovertarget="<id>"`; panel is `<div id="<id>" popover class="rp-popover" data-side="<side>" data-align="<align>">`. Position uses CSS anchor positioning inside `@supports`; without support the panel uses the user-agent default (centred). Kind `static`. Props `side` (`top | bottom | start | end`, default `bottom`), `align` (`start | center | end`, default `start`).
+- Decision: Popover contract: opener is a Button or IconButton with `popovertarget="<id>"`; panel is `<div id="<id>" popover="" class="rp-popover" data-side="<side>" data-align="<align>">`. Position uses CSS anchor positioning inside `@supports`; without support the panel uses the user-agent default (centred). Kind `static`. Props `side` (`top | bottom | start | end`, default `bottom`), `align` (`start | center | end`, default `start`).
 - Evidence: `ripple/docs/research/base-theme.md` (Popover native); anchor positioning support is UNVERIFIED (`ripple/docs/research/uisdk-web-elements.md` open questions) and is covered by SPIKE-06.
 - Rejected: `ui-popover` (34.8 kB gzip, dead without JS); a Ripple positioning element (deferred to the SPIKE-06 fallback).
 - Amended: (a) The only part is an optional `title` (class `rp-popover-title`, no id); the derived id `<id>-title` is not used by Popover. (b) The panel prints `popover=""` in every host. Whether React 19 and Remix 3 print the empty value is UNVERIFIED (SPIKE-05); the fallback is `popover="auto"` in all four hosts. (c) The `popover` attribute needs Chrome 114, Safari 17.0, Firefox 125, which is above the D-032 floor for Chrome and Safari. Below it the behaviour is D-081 (panel is in-flow content, opener inert). (d) Popover and Carousel CSS select their own props (`data-side`, `data-align`, `data-columns`) with the component class in the same selector; doc 03 rule 7.7 gets that exemption (D-105).
@@ -420,7 +420,7 @@ Format of each entry: Decision / Rationale / Evidence / Rejected.
   3. **resource** (a component that renders a Shopify resource or a fixed commerce structure: ProductCard, CollectionCard, ArticleCard, CartLines, CartLine, CartSummary, CartDrawer, DiscountCode, CartNote, Filters, FilterGroup, FilterChips, SortSelect, PriceRange, VariantPicker, ProductGallery, ProductForm, LocaleSelector, NavigationMenu, MobileNav, FeaturedCollection, Header, Footer, PredictiveSearch): ONE self-contained block that takes the resource as a param, renders a complete default body through `rp-*` snippets, and renders `{{ content }}` instead of the default body when the caller supplies one (`{% if content != blank %}`).
   - A fourth tier value, `snippet`, is used by Icon only (D-068): the component is a snippet with no block file.
   - `{% block %}` appears only in templates and layouts (platform rule). A Ripple block or snippet never contains `{% block %}`; internal reuse is `{% render 'rp-<id>' %}`.
-  - No `{% capture %}` may be used to pass markup from one file to another, with one exception: named slot params on tier-3 blocks listed in the manifest.
+  - No `{% capture %}` may be used to pass markup from one file to another, with one exception: named slot params on tier-3 blocks listed in the manifest. (The `content` argument of an embedded snippet, built in the embedding file, is allowed: D-097 as amended, D-110.)
 - Rationale: The base theme writes the product card six times and threads about 85 captures because composition is template-owned everywhere. Tier 3 removes that. It deliberately changes the base theme rule "block-first, template-owned composition" for resource patterns (section 10, Q1).
 - Evidence: `ripple/docs/research/liquid-blocks-partials.md` (L-1, L-3, L-6, L-7; `ValidBlockTagPlacement`); `ripple/docs/research/base-theme.md` (weaknesses; composition mapping); `ripple/theme/AGENTS.md`.
 - Rejected: template-owned composition for everything (the base theme model); snippets-only components (no `{{ content }}` outlet, no schema); captured slots as the general mechanism.
@@ -578,7 +578,7 @@ Format of each entry: Decision / Rationale / Evidence / Rejected.
 - Decision: CheckoutButton is `<button type="submit" name="checkout">` inside the cart form on Liquid, and `<a href="<checkoutUrl>" data-rmx-document>` on the hydrogen backend. Both carry `data-agent-confirm="<sentence>"`. Accelerated checkout (Shop Pay and wallet buttons) is a boolean prop `acceleratedCheckout` on ProductForm and CartSummary that prints platform markup (opaque, D-004). There is no ShopPayButton or BuyButtons component. `rp-cart` exposes NO `checkout` action to the agent bridge on the default path: the UI SDK `agent` key has no per-action confirmation option (`uisdk/packages/core/src/primitive.ts`), so confirmation rests on `data-agent-confirm` on the control. The action is added only when SPIKE-08 shows that the bridge refuses it without approval.
 - Evidence: `ripple/docs/research/agent-kit-and-distribution.md` 8.3 (options a and b); `ripple/docs/research/liquid-blocks-partials.md` (`accelerated_checkout` prop because `payment_button` needs `form`); `ripple/docs/research/hydrogen-core.md` S18.
 - Rejected: wrapping the checkout control in `ui-button` (option a of the agent-kit report): adds a `ui-*` family for one attribute and its behaviour on `<a>` is UNVERIFIED.
-- Amended: (a) The last sentence was corrected in place: no `checkout` bridge action on the default path (doc 08, read in `uisdk/packages/core/src/primitive.ts`). SPIKE-08 decides whether it is added. (b) CheckoutButton is printed inside region `rp-cart-summary`; accelerated checkout markup is printed outside the region (doc 11). (c) On Liquid the button joins the cart form with `form="<cart lines id>-form"` (D-092). (d) With an empty cart the control is inert: `disabled` on the button, `aria-disabled="true"` and no `href` on the link.
+- Amended: (a) The last sentence was corrected in place: no `checkout` bridge action on the default path (doc 08, read in `uisdk/packages/core/src/foundation/kernel/primitive.ts`). SPIKE-08 decides whether it is added. (b) CheckoutButton is printed inside region `rp-cart-summary`; accelerated checkout markup is printed outside the region (doc 11). (c) On Liquid the button joins the cart form with `form="<cart lines id>-form"` (D-092). (d) With an empty cart the control is inert: `disabled` on the button, `aria-disabled="true"` and no `href` on the link.
 
 #### D-051 Accounts and consent are links, not components
 
@@ -757,7 +757,7 @@ A spike never blocks spec writing or implementation: writers specify the DEFAULT
 | Id | Name | Question | DEFAULT path (specified and built first) | FALLBACK path | Needs | Owner doc |
 |---|---|---|---|---|---|---|
 | SPIKE-01 | `liquid-standard-actions-runtime` | Does Hydrogen's default cart handler work against the real Standard Actions runtime on a preview store (add, set, remove, note, discount, `getCart`, `openCart`)? Does the platform publish the Standard Events page view on a theme by itself (the base theme dispatches it in `ripple/theme/assets/page-view-event.js`)? | D-041: Hydrogen cart store with no `configureCartEndpoint`. The Liquid adapter dispatches the page view (D-089). | The Liquid adapter implements `cart` as a thin object with the same `getState` / `subscribe` / `handleFormSubmit` surface that calls `Shopify.actions.updateCart` / `getCart` directly. Needs Ben's sign-off (weakens decision 4). Elements do not change. Page view: when the platform publishes it, the adapter's dispatch is removed. | Preview store | 05 |
-| SPIKE-02 | `liquid-preview-store-rendering` | Does the platform wrap block or partial output in an element? Do `partials.fetch` / `apply` behave as the local shim assumes? Is `as` a legal block argument? Is a bare schema setting accepted? What is the `type` value of a discount-code `discount_application`? (Doc 14 lists the full set, V-1 to V-16.) | No wrapper; contracts identical to other hosts; region root carries `data-rp-region`; param `as`. | The canonicaliser unwraps the platform wrapper; `base.css` gives the wrapper `display: contents`; region lookup uses the wrapper. Param `as` becomes `tag` (D-038). | Preview store | 14 |
+| SPIKE-02 | `liquid-preview-store-rendering` | Does the platform wrap block or partial output in an element? Do `partials.fetch` / `apply` behave as the local shim assumes? Is `as` a legal block argument? Is a bare schema setting accepted? What is the `type` value of a discount-code `discount_application`? (Doc 14 lists the full set, V-1 to V-20.) | No wrapper; contracts identical to other hosts; region root carries `data-rp-region`; param `as`. | The canonicaliser unwraps the platform wrapper; `base.css` gives the wrapper `display: contents`; region lookup uses the wrapper. Param `as` becomes `tag` (D-038). | Preview store | 14 |
 | SPIKE-03 | `canvas-theme-reference` | Does the Canvas / Sidekick compiler accept the layer statement and an `@theme reference` block in `config/styles.css`? | D-055: marker region with `@theme reference`. | Omit the region. Utilities name Ripple tokens with arbitrary values (`bg-(--color-primary)`); documented in the `ripple-liquid` skill. | Preview store with Canvas | 03, 14 |
 | SPIKE-04 | `rp-root-only-primitive` | Does `definePrimitive` + `createParts` with only a `root` part behave correctly at runtime (upgrade, destroy and recreate, agent bridge)? | D-019 item 1. | A base class `RippleElement extends HTMLElement` in `src/runtime/element.ts` with the same public surface (events, `api` methods, attribute reflection) and manual bridge registration. | Local | 04 |
 | SPIKE-05 | `invoker-commands-hosts` | Do React 19 and Remix 3 print `commandfor` / `command` / `popovertarget` unchanged on `<button>` and `popover=""` on a `<div>`, and does the polyfill work in WebKit and Gecko? | D-008: attributes printed by the binding; polyfill in `ripple.js`. D-010: `popover=""`. | Bindings also print `data-rp-open="<id>"` / `data-rp-close="<id>"` on the same buttons and the runtime's opener listener handles them (`data-rp-close` is listed in section 4.4 for this path only). Popover prints `popover="auto"` in all four hosts. | Local | 04, 06 |
@@ -816,7 +816,7 @@ The mapping is mechanical; no component may define an exception. The only cross-
 - A prop that IS a native attribute renders that attribute, not `data-`: `id`, `href`, `target`, `rel`, `type`, `name`, `value`, `checked`, `disabled`, `required`, `placeholder`, `min`, `max`, `step`, `pattern`, `autocomplete`, `rows`, `alt`, `width`, `height`, `loading`, `fetchpriority`, `sizes`, `poster`, `autoplay`, `muted`, `loop`, `for`, `form` (prop `formId`), `commandfor`, `command`, `popovertarget`, `open`, `aria-label`, `aria-describedby`, `aria-current` (prop `current`), `aria-invalid`.
 - A prop that selects the element prints no attribute: `as` and `level`.
 - An unset prop prints nothing. An empty string counts as unset. An enumerated prop with an invalid value prints its default, in every host (D-073).
-- UI SDK option attributes: Tooltip `side` and `align` are printed as the attribute names UI SDK reads (`side`, `align`) on `ui-tooltip`, and are omitted at the default, because `data-side` / `data-align` are UI SDK state attributes there (D-082). This is the only exception to the first bullet.
+- UI SDK option attributes: Tooltip `side` and `align` are printed as the attribute names UI SDK reads (`side`, `align`) on `ui-tooltip-content` (the element UI SDK reads them from; doc 10, measured snapshot), and are omitted at the default, because `data-side` / `data-align` are UI SDK state attributes there (D-082). The Toast region (`ui-toast-region`) prints `data-side` / `data-align` with the default printed, as the first bullet says, and ADDITIONALLY the option attributes `side` / `align` when the value is not the default (`bottom`, `end`), because UI SDK reads its options from them (doc 10). These two are the only exceptions to the first bullet. (Amended by the closing pass: the text said `ui-tooltip` and did not mention Toast.)
 - A component MAY select its own prop attribute in CSS even when the name is on the reserved list below, always together with its own class (D-024).
 - Reserved attribute names written by UI SDK, which Ripple CSS MUST NOT select without a component class in the same selector: `data-align`, `data-side`, `data-orientation`, `data-type`, `data-value`, `data-count`, `data-index`, `data-open`, `data-closed`, `data-disabled`, `data-pending`, `data-selected`, `data-checked`, `data-active`, `data-current`, `data-slot`.
 
@@ -831,7 +831,7 @@ Hook attributes are read by JavaScript and tests. CSS does not select them (exce
 | `data-rp-part` | native descendants of an `rp-*` root | part name (kebab-case) | Identifies a part to the element. Shared names: `count`, `error`, `status`, `input`, `increment`, `decrement`, `prev`, `next`, `viewport`, `item`, `results`, `submit`, `remove`, `trigger` |
 | `data-rp-field` | form controls in commerce forms | `merchandise-id`, `quantity`, `line-id`, `selling-plan`, `note`, `discount-code` | Dialect-independent field identity (D-043). Printed by the prop `rpField` (Liquid `rp_field`) on Input, Textarea and Select; always printed as `quantity` by QuantityInput |
 | `data-rp-line` | cart line root | line id (hydrogen) or line key (liquid) | Identifies a cart line |
-| `data-rp-open` | `<a href>` openers | dialog id | Opener pattern (D-009). Printed only by the prop `dialog` of Link, Button and IconButton. On the SPIKE-05 fallback path also on `<button>` openers |
+| `data-rp-open` | `<a href>` openers | dialog id | Opener pattern (D-009). Printed only by the prop `dialog` of Link, Button and IconButton, and by a component whose own contract prints an opener link: CartLink (prop `drawer`), the ProductGallery zoom link, and the Header default body through the components it embeds (D-110 row 9). On the SPIKE-05 fallback path also on `<button>` openers |
 | `data-rp-close` | `<button>` closers | dialog id | SPIKE-05 fallback path ONLY; never printed on the default path |
 | `data-rp-refresh` | forms and links inside an `rp-live` or `rp-cart` root; `rp-live`, `rp-cart`, `rp-predictive-search`, `rp-recommendations` roots. NOT on `rp-product-form` | space-separated region names | Regions to refresh after the action (D-046) |
 | `data-rp-region` | region root element | region name | Marks a refreshable region (D-046, D-091) |
@@ -840,7 +840,7 @@ Hook attributes are read by JavaScript and tests. CSS does not select them (exce
 | `data-url` | `rp-recommendations` root | URL | The document to fetch the recommendations region from (D-046) |
 | `view-event-trigger`, `view-event-payload` | `rp-view-event` | `connect` (the only trigger blueprints use in V1) or `intersect`; JSON text | View analytics (D-089). Not `data-` attributes: the names are fixed by `@shopify/standard-events` |
 | `data-view-event-payload` | `<script type="application/json">` child of `rp-view-event` | empty | The child form of the payload, used for the cart view (D-089) |
-| `data-template` | `<main>` in the layout | page type | Read by the Liquid page-view dispatch (D-089) |
+| `data-template` | `<main>` in the Liquid layout only | page type | Read by the Liquid page-view dispatch (D-089) |
 | `data-agent-confirm`, `data-agent-secret`, `data-agent-hidden` | controls | sentence / empty | Agent bridge (D-065) |
 | `data-rmx-*` | Remix only | see D-034 | Host extras; removed by the canonicaliser |
 | `data-rp-case`, `data-rp-fixture`, `data-rp-test-raw` | test pages built by doc 13's harness | harness-defined | Test harness only; MUST NOT appear in a component, blueprint or registry file |
@@ -893,7 +893,7 @@ Upgrade allow-list entry (`upgradeAllow[]`, D-071; type `UpgradeAllowEntry` of d
 
 Fixture: `name`, `props`, `children`, `parts`, `html` (present only in the built `manifest.json`; the source is `fixtures/<fixture>.html`), `hosts`, `mask[]` (`select`, `op`, `name`), `generated` (`template | upgrade-snapshot | hand`; REQUIRED).
 
-Rule (`rules[]`, D-059): `id` (kebab-case), `kind` (`requires-ancestor | forbids-ancestor | requires-descendant | forbids-descendant | requires-attribute | max-count`), `selector`, `target`, `count`, `message`, `fix`.
+Rule (`rules[]`, D-059): `id` (kebab-case), `kind` (`requires-ancestor | forbids-ancestor | requires-descendant | forbids-descendant | requires-attribute | max-count | custom`), `selector`, `target`, `count`, `message`, `fix`. Kind `custom` has no `selector`, `target` or `count`: its detection is the function stored under the rule id in `CUSTOM_RULES` of `src/check/rules/RP113.ts` (D-111).
 
 Agent action (`agent.actions[]`): `name`, `description`, `confirm` (sentence, optional).
 
@@ -912,7 +912,7 @@ The sub-key lists above were read from doc 07's schema (`part`, `stateEntry`, `s
 ```text
 ripple/
   package.json  pnpm-lock.yaml  tsconfig.json  size-budget.json   # package.json is private, name "ripple-repo" (D-052)
-  README.md  PLAN.md  AGENTS.md  LICENSE
+  README.md  PLAN.md  AGENTS.md  CHANGELOG.md  LICENSE   # CHANGELOG.md: one section per version (doc 07 section 11)
   .github/
     workflows/ci.yml  workflows/nightly.yml    # doc 13
   bin/
@@ -1120,7 +1120,7 @@ A component MUST use these names and values for these meanings and MUST NOT inve
 | `autoComplete`, `pattern`, `rows` | `auto_complete`, `pattern`, `rows` | `autocomplete`, `pattern`, `rows` | Input; Textarea (`rows`) |
 | `previousLabel`, `nextLabel` | `previous_label`, `next_label` | accessible names of previous / next controls | Carousel, Pagination |
 | `decreaseLabel`, `increaseLabel` | `decrease_label`, `increase_label` | accessible names of the stepper buttons | QuantityInput |
-| `poster`, `autoplay`, `muted`, `loop` | same | same | Video (`controls`, `playsinline`, `preload="metadata"` are always printed) |
+| `poster`, `autoplay` | same | same | Video (`controls`, `playsinline`, `preload="metadata"` are always printed; `autoplay` prints the three attributes `autoplay muted loop`; there is no `muted` or `loop` prop, D-110 row 14) |
 | `describedBy` | `described_by` | `aria-describedby` | form controls |
 | `commandFor` | `command_for` | `commandfor` | Button, IconButton |
 | `popoverTarget` | `popover_target` | `popovertarget` | Button, IconButton |
@@ -1415,7 +1415,7 @@ Rules for filling the template:
 
 ### 8.5 Blueprints (doc 12)
 
-`layout` (document shell: SkipLink, AnnouncementBar, Header, `<main id="main" data-template>`, Footer, CartDrawer (omitted on the cart page), MobileNav, the search Dialog holding PredictiveSearch, toast region; NO Announcer, D-079), `home`, `collection`, `collections-list`, `product`, `search`, `cart`, `blog`, `article`, `page`, `contact`, `not-found`, `password`, `gift-card`. Each blueprint exists for all four hosts. On Liquid the blueprint files ARE the theme's `layout/*.liquid` and `templates/*.liquid`; doc 12 owns them (D-099). The `product`, `collection`, `search` and `cart` blueprints print `rp-view-event` (D-089). `password` and `gift-card` are presentational on the hydrogen backend (D-107).
+`layout` (document shell: SkipLink, AnnouncementBar, Header, `<main id="main" tabindex="-1">` (Liquid adds `data-template`, D-089), Footer, CartDrawer (omitted on the cart page), MobileNav, the search Dialog holding PredictiveSearch, toast region; NO Announcer, D-079), `home`, `collection`, `collections-list`, `product`, `search`, `cart`, `blog`, `article`, `page`, `contact`, `not-found`, `password`, `gift-card`. Each blueprint exists for all four hosts. On Liquid the blueprint files ARE the theme's `layout/*.liquid` and `templates/*.liquid`; doc 12 owns them (D-099). The `product`, `collection`, `search` and `cart` blueprints print `rp-view-event` (D-089). `password` and `gift-card` are presentational on the hydrogen backend (D-107).
 
 ### 8.6 Base theme blocks to Ripple components
 
@@ -1547,6 +1547,9 @@ Only items that evidence cannot settle. Work proceeds on the default; none of th
 | Q20 | The Node-only entries (`<pkg>/check`, `<pkg>/testing`, the CLI) contain bundled copies of `parse5` and `liquidjs`. They never reach a browser and are not `dependencies`. Acceptable under your decision 3 (no runtime dependency beyond UI SDK, Tailwind, Hydrogen)? | Yes (D-052). | 01, 13 |
 | Q21 | Tooltip: the trigger is the caller's own Button or IconButton, wired with one prop (`tooltip="<id>"`). The alternative is a Tooltip that owns and prints its trigger button, which removes the wiring step but stops any Button from being a trigger. Which? | The `tooltip` prop (D-082). | 09, 10 |
 | Q22 | On the hydrogen backend `password` and `gift-card` have no data source, and newsletter and contact have no server operation. The blueprints are presentational there and call project-supplied `subscribe` / `send` functions. Acceptable? | Yes (D-107). | 12 |
+| Q23 | The Liquid theme keeps the base theme's whole `snippets/meta-tags.liquid` (JSON-LD, `og:price`, `hreflang` links, title suffixes), which widens the Liquid subset for infrastructure snippets by seven filters. The alternative is a reduced file that stays in the old subset and loses that SEO output. Which? | Keep the base file with two locale-key renames (D-109). | 12, 13, 14 |
+| Q24 | Tier 7 runs against mock.shop, whose data for menus, blogs, pages, localization and the `frontpage` collection is unverified. When mock.shop lacks one of them the test is skipped, and a skip fails the nightly run under `--no-skips`. Should that also block merges? | No: tier 7 is nightly only and never a merge gate; the nightly failure is the report (D-110 row 27). | 13 |
+| Q25 | Tokens plus base CSS measure 2,174 bytes of the 2,200 byte budget (D-064). Any further base rule needs the budget raised. Raise it now? | No: keep 2,200; a change that exceeds it must amend D-064 in the same commit (D-110 row 28). | 03 |
 
 ---
 
@@ -1586,7 +1589,7 @@ Each fact has one owning document. Other documents link to it (`NN-name.md`, sec
 | `03-styling-and-tokens.md` | Layers, tokens, dials, schemes, scales, props.css generation, component CSS rules and the CSS linter, pre-upgrade CSS, display rules, Tailwind integration, browser floor for CSS, CSS size measurement | D-024 to D-032, D-080, D-081, D-105, sections 4.5, 6.2 |
 | `04-elements.md` | Runtime, `rp-*` authoring rules, non-commerce elements, UI SDK usage, lazy loading, the browser-bundle build, Invoker Commands polyfill, opener listener, `announce`, events. Its per-pattern markup is a copy of docs 09 to 12 (D-069) | D-007 to D-023, D-054, D-077 to D-083 |
 | `05-commerce.md` | Adapter, `CommerceOptions`, cart store, dialects, regions and refresh strategies, commerce elements, `rp-view-event`, page views, resource types, money, images | D-041 to D-050, D-087 to D-095 |
-| `06-bindings.md` | React rules, `useElement`, `useCart`, `useRegionHtml`, Remix rules, TSX conventions, Liquid tiers, rules L-1 to L-13 and the Liquid subset, schema label keys, `html` host. Its example bindings are copies of docs 09 to 11 (D-069) | D-033 to D-040, D-072, D-096, D-097 |
+| `06-bindings.md` | React rules, `useElement`, `useCart`, `useRegionHtml`, Remix rules, TSX conventions, Liquid tiers, rules L-1 to L-21 and the Liquid subset (L-13), schema label keys, `html` host. Its example bindings are copies of docs 09 to 11 (D-069) | D-033 to D-040, D-072, D-096, D-097 |
 | `07-manifest-registry-cli.md` | Manifest schema, contract template language, generator, registry, trailers, CLI, upgrade merge. Checker: rule ids, severity, layer, detection, `fix` computation, text and JSON output format | D-003, D-056 to D-059, D-100 to D-102, section 4.8 |
 | `08-agent-kit-and-evals.md` | Package docs, guides, skills, `AGENTS.md` section, agent bridge surface and actions, eval suite. Checker: the `problem` / `fix` / `why` text of every rule and the rule pages (it MUST NOT restate the output format) | D-059 to D-061, D-065, D-095, D-106 |
 | `09-components-foundation.md` | The 37 components of 8.1 (contracts, fixtures, CSS), the common foundation rules, the icon path data | section 7 template, D-069, D-086 |
@@ -1662,18 +1665,18 @@ Evidence rule used throughout: a result that was RUN beats a source reading; a s
   4. The default value of an enumerated prop IS printed (section 4.3), unless the component spec lists the attribute as "omitted at default".
   5. Responsive values: D-028 as amended.
   6. Caller attributes: D-035 item 4. A hook attribute that has a prop MUST be set through the prop (section 6.1).
-- Every component with an enumerated prop has the fixture `invalid-enum-falls-back` (D-074), which is how item 1 is tested in four hosts.
+- Every component with an enumerated prop that has a default has the fixture `invalid-enum-falls-back` (D-074), which is how item 1 is tested in four hosts.
 
 #### D-074 Fixtures
 
 - Decision (doc 02 section 11 owns the JSON Schema `fixture.schema.json`):
   1. The fixture source is the file `components/<id>/fixtures/<name>.html` plus a record in the manifest entry (`name`, `props`, `children`, `parts`, `hosts`, `mask`, `generated`). The key `html` exists only in the built `manifest.json`.
   2. `generated` is REQUIRED (`template | upgrade-snapshot | hand`). The first fixture is named `default`.
-  3. Reserved fixture names and when they are required: `default` (always); `class` (always; passes two classes); `invalid-enum-falls-back` (any enumerated prop); `responsive` (any responsive prop); `escaping` (any string prop or text content; it targets a string prop; for Tabs the list's `ariaLabel`).
+  3. Reserved fixture names and when they are required: `default` (always); `class` (always; passes two classes); `invalid-enum-falls-back` (any enumerated prop that has a default; doc 02 F-13); `responsive` (any responsive prop); `escaping` (any prop of type `string`, `id` or `url` that is printed as an attribute; it targets one such prop; for Tabs the list's `ariaLabel`; doc 02 F-15). Children are passed raw and are not an escaping target. (Narrowed by D-110 row 12.)
   4. A mask is `{ select, op, name }` with `op` one of `attr`, `drop-attr`, `srcset`, `text`, `children`, `remove`, and the selector subset of doc 02. A mask MUST NOT target a Ripple-owned attribute or class (build guard).
   5. A mask MUST match something in the reference HTML (doc 02 rule F-19), EXCEPT ops `drop-attr` and `remove`, which exist to delete platform-only markup that the reference never has.
   6. A resource prop value in a fixture is `{ "$resource": "<type>.<name>" }`. The resource set lives in `src/testing/resources.ts` (doc 13), with shapes from doc 05 and values from the owning component document. Doc 13 MUST supply at least `image.basic`, `image.no-alt` and every resource doc 11 section 0 and doc 12 section 1 name.
-  7. Backend-scoped fixtures: where the form dialect forces different tags per backend, a state has two fixtures: `<name>` with `hosts: ["html", "react", "remix"]` and `liquid-<name>` with `hosts: ["liquid"]`. Used by CartLines, CartLine, CartSummary, CartNote, CheckoutButton, CartDrawer and DiscountCode. No other component may scope a fixture by host to hide a difference.
+  7. Backend-scoped fixtures: where the form dialect forces different tags per backend, a state has two fixtures: `<name>` with `hosts: ["html", "react", "remix"]` and `liquid-<name>` with `hosts: ["liquid"]`. Used by CartLines, CartLine, CartSummary, CartNote, CheckoutButton, CartDrawer and DiscountCode. No other component may scope a fixture by host to hide a difference. One further exception (D-110 row 13): Select has `sort` (`hosts: ["html", "remix", "liquid"]`) and `sort-react` (`hosts: ["react"]`), because React needs `defaultValue` where the others print `selected` (D-086).
   8. Fixture lint check `pe-2` of doc 02 is skipped on the root element of Button and IconButton fixtures.
   9. The `html` host reference file: D-040 as amended.
 
@@ -1728,6 +1731,7 @@ Evidence rule used throughout: a result that was RUN beats a source reading; a s
 | Navigation API | `rp-dialog` does not close on navigation (D-008). |
 
   - Tests for a feature above the floor MUST feature-detect and skip, not fail, on an engine without it.
+  - Amended (closing pass): further rows, owned by doc 03 section 12 (all version numbers UNVERIFIED, SPIKE-06): `:dir(rtl)` (the rule is dropped; the left-to-right form stays); `:has()` (the one `header.css` rule is dropped; `scroll-padding` stays `0px`); unprefixed `mask-image` and `::backdrop` custom-property inheritance (fallbacks in docs 09 and 10); exclusive `<details name>` also on Firefox below 130 (behaves as `multiple`).
   - Raising the floor instead is Ben's choice (Q15).
 
 #### D-082 Tooltip
@@ -1792,7 +1796,7 @@ Doc 09 is normative. Points that other documents must follow, and points doc 09 
 | Button, IconButton | ADD props `dialog` (only with `href`; D-009), `tooltip` (D-082), `formId`. IconButton requires `icon`. |
 | Input, Textarea, Select | ADD props `rpField` and `formId`. Input `type`, `autoComplete`, `pattern`; Textarea `rows`, `defaultValue` as text content; Select `defaultValue` (React). |
 | Image | D-049 as amended. |
-| Video | `poster`, `autoplay`, `muted`, `loop`; `controls`, `playsinline`, `preload="metadata"` always printed. |
+| Video | `poster`, `autoplay` (prints `autoplay muted loop`); `controls`, `playsinline`, `preload="metadata"` always printed. |
 | Field, RadioGroup, Checkbox, Switch | D-014 as amended. |
 | FormMessage, Banner | `role` from `tone` (D-066). Badge and Banner `variant`: `solid soft outline`. |
 | Rating | `value` in half steps printed as `data-value`, default `0`; `ariaLabel` REQUIRED. |
@@ -1808,7 +1812,7 @@ Doc 09 is normative. Points that other documents must follow, and points doc 09 
 
 - Decision (doc 05 owns the `CommerceOptions` type):
   1. Options: `host`, `cartEndpoint`, `cartUrl`, `cartAddUrl`, `cartDrawer` (default `"cart-drawer"`), `initialCart`, `analytics` (default `true`), `consent`, `strings`, `navigate`, `reloadFrames`.
-  2. They arrive through `configureCommerce(options)` or through the config element `<script type="application/json" id="rp-commerce">`, which carries the JSON-serialisable options. The runtime starts lazily one microtask after the first element connects; after start only `navigate`, `reloadFrames` and `strings` may change.
+  2. They arrive through `configureCommerce(options)` or through the config element `<script type="application/json" id="rp-commerce">`, which carries the JSON-serialisable options. The runtime starts lazily one microtask after the commerce module (`ripple.js`, or `<pkg>/commerce`) is evaluated, so that a `configureCommerce` call in the same task still applies; after start only `navigate`, `reloadFrames` and `strings` may change. (Amended by the closing pass: the text said "after the first element connects"; the spike and doc 05 section 4.5 start after module evaluation. The observable rule is unchanged: options are read once, before any commerce element upgrades.)
   3. Placement of the config element: Liquid: inside `snippets/rp-head.liquid` (D-054 item 7), NOT in the layout file. hydrogen backend: in `<head>` before the module script, printed by the `layout` blueprint. Checker RP309 reports commerce elements on a page with no config element and no `configureCommerce` call.
   4. `strings` carries the texts JavaScript announces. It has exactly seven keys, each sourced from one locale key: `added` (`ripple.product-form.added`), `updated` (`ripple.cart-lines.updated`), `removed` (`ripple.cart-lines.removed`), `discountApplied` (`ripple.discount-code.applied`), `discountRemoved` (`ripple.discount-code.removed`), `noteSaved` (`ripple.cart-note.saved`), `error` (`ripple.cart-lines.error`). Source: `locales/en.default.json`. Liquid prints them into the config element with `| t`; TSX hosts pass them or rely on the English defaults built into the adapter.
   5. The CartDrawer `<dialog>` id MUST equal `cartDrawer`; every blueprint uses `cart-drawer`.
@@ -1936,11 +1940,12 @@ Doc 11 is normative. Points that other documents must follow, and points doc 11 
 | Scope | Files | Tags | Filters and objects |
 |---|---|---|---|
 | Component | `blocks/*.liquid`, `snippets/rp-<id>*.liquid` of components | `doc schema liquid assign if unless elsif else case when for capture render form comment echo` | `escape split t default append prepend strip plus minus times size money image_url json divided_by modulo round remove date url_encode payment_button`; objects `content_for_additional_checkout_buttons`, `additional_checkout_buttons` |
-| Blueprint | `layout/*.liquid`, `templates/*.liquid` | the component tags plus `block partial paginate layout` | the component filters plus `standard_event_data`; the globals doc 12 lists (rule L-D) |
-| Infrastructure | `rp-head`, `rp-tokens`, `rp-import-map-entries`, `rp-icon`, and the theme-owned `import-map` and `meta-tags` snippets | the component tags | the component filters plus `asset_url stylesheet_tag font_face`, and the font object members doc 14 section 6 uses |
+| Blueprint | `layout/*.liquid`, `templates/*.liquid` | the component tags plus `block partial paginate layout` | the component filters plus `standard_event_data asset_url stylesheet_tag`; the globals doc 12 lists (rule L-D) |
+| Infrastructure | `rp-head`, `rp-tokens`, `rp-import-map-entries`, `rp-icon`, and the theme-owned `import-map` and `meta-tags` snippets | the component tags | the component filters plus `asset_url stylesheet_tag font_face first join remove_first slice strip_html money_without_currency structured_data`, and the font object members doc 14 section 6 uses |
 
-  - `{% capture %}` is in the subset only for building attribute strings and for the named slot params of D-037; never to pass markup between files.
+  - `{% capture %}` is in the subset only for building attribute strings and for the named slot params of D-037; never to pass markup between files. A file MAY also capture markup it renders ITSELF (an Icon, an Icon plus text) into a variable and pass it as the `content` argument of an embedded component's snippet in the same file (`{% render 'rp-button', content: opener_content %}`), or print that variable more than once: that is how a snippet embeds a component whose content is not plain text (LocaleSelector's opener, MobileNav's chevron; D-110). What stays prohibited is a capture in a template or layout that is passed to a block as a slot.
   - `as` as a param name: D-038 item (d).
+  - Amended: (a) The Blueprint scope gained `asset_url` and `stylesheet_tag`: D-099 item 3 requires the `{{ 'styles.min.css' | asset_url | stylesheet_tag }}` line in both layout files and the scope did not allow it. (b) The Infrastructure scope gained `first join remove_first slice strip_html money_without_currency structured_data`: these are exactly the filters that `theme/snippets/meta-tags.liquid` uses beyond the old list, and `snippets/meta-tags.liquid` is that file (D-109), so that SEO markup (JSON-LD, `og:price`, `hreflang`) does not regress against the base theme. No component or blueprint file may use them. The shim implements them (doc 13).
 
 #### D-098 Liquid theme settings, fonts and locales
 
@@ -1956,7 +1961,7 @@ Doc 11 is normative. Points that other documents must follow, and points doc 11 
 - Decision:
   1. Every `layout/*.liquid` and `templates/*.liquid` file of the Ripple theme is the Liquid file of a blueprint of section 8.5. Doc 12 owns their complete text. `examples/liquid/` is those files plus the registry files, installed.
   2. Doc 14 owns the theme's infrastructure: theme rules, file tree, `snippets/rp-head.liquid`, `snippets/rp-tokens.liquid`, `snippets/rp-import-map-entries.liquid`, the theme-owned `snippets/import-map.liquid` and `snippets/meta-tags.liquid` (which are files of the `layout` blueprint's Liquid list, keys `import-map` and `meta-tags`), settings, `config/`, locales, the partial declaration rules, and the base-theme replacement map. Doc 14 MUST NOT print a second version of a layout or template; where it needs an excerpt it copies from doc 12 (D-069).
-  3. Constraints doc 12's `layout/theme.liquid` MUST satisfy: the import map is printed before `{% render 'rp-head' %}`; `rp-head` is before the `styles.min.css` stylesheet tag and before `{{ content_for_header }}`; `<main id="main" data-template="{{ request.page_type }}">`; the body is the 8.5 list (SkipLink, AnnouncementBar, Header with its default body, main, Footer, CartDrawer unless the cart template, MobileNav, search Dialog with PredictiveSearch, Toast region); no Announcer; strings from `ripple.blueprints.layout.*` keys (the announcement text is `ripple.blueprints.layout.announcement`); overlay openers through the `dialog` prop.
+  3. Constraints doc 12's `layout/theme.liquid` MUST satisfy: the import map is printed before `{% render 'rp-head' %}`; `rp-head` is before the `styles.min.css` stylesheet tag and before `{{ content_for_header }}`; `<main id="main" tabindex="-1" data-template="{{ request.page_type }}">` (`tabindex="-1"` makes the SkipLink target focusable in every host; `data-template` is Liquid-only and blueprint comparison compares the children of `<main>`, D-110); the body is the 8.5 list (SkipLink, AnnouncementBar, Header with its default body, main, Footer, CartDrawer unless the cart template, MobileNav, search Dialog with PredictiveSearch, Toast region); no Announcer; strings from `ripple.blueprints.layout.*` keys (the announcement text is `ripple.blueprints.layout.announcement`); overlay openers through the `dialog` prop.
   4. `rp-head` prints exactly what D-054 item 7 lists. It does not print the title, meta tags, the import map or `{{ content_for_header }}`.
 - Rationale: docs 12 and 14 each wrote a complete, different `layout/theme.liquid` (one composes the header by hand, omits AnnouncementBar, prints an Announcer block and uses `theme.*` keys).
 
@@ -1981,9 +1986,9 @@ Doc 11 is normative. Points that other documents must follow, and points doc 11 
   1. Ids: the 55 of D-059. Doc 08's table gains RP308, RP309, RP507, RP508 and its "51" becomes 55.
   2. Output format (doc 07 section 9.4): first line `<RULE> <severity>  <location>  <component>: <problem>`, with `<component>: ` omitted when the finding has no component; then `found`, `allowed`, `fix`, `why`, `docs` lines; `docs` is `<command form> docs <RULE>` (command form: doc 07 section 7.1 rule 12). Doc 08 deletes its restatement.
   3. Component-specific structure rules are manifest `rules[]` and are reported by RP113 with the rule id in brackets.
-  4. RP308: `data-rp-refresh` names a region that is not on the page (every host); the containment check (a root inside the region it refreshes) applies only to `rp-cart`.
+  4. RP308: `data-rp-refresh` names a region that is not on the page (every host, warning); the containment check (a root inside the region it refreshes) applies only to `rp-cart`; a `<dialog>` that is, or is inside, a region (D-046 item 5); two regions with the same name on one page (D-091 item 5).
   5. RP309: commerce elements without commerce configuration (D-087). RP502: file state `outdated`. RP507: more than one Ripple runtime on a page. RP508: `props.css` or `theme.css` older than `tokens.css`. RP607: narrowed (D-095). RP609 includes doc 03's gamut warning.
-  6. The rule that guards `@shopify/hydrogen` value imports allows the D-094 list.
+  6. The rule that guards `@shopify/hydrogen` value imports allows the D-094 list. It is RP117 case (b) (warning); RP117 case (c) reports `<pkg>/elements` or `<pkg>/commerce` imported by a binding file (D-096). The Liquid subset rule of D-097 is RP401 case (b), applied to files that carry a Ripple trailer. RP320 is data-driven from `agent.confirm[]`: the CheckoutButton control and the two accelerated-checkout wrappers `div.rp-product-form-accelerated` and `div.rp-cart-summary-accelerated` (docs 08 section 7.3 and 11). No new rule id was needed (closing pass).
   7. `check()` takes `host` and an optional computed lock from the CLI command; `src/check` does not import `src/cli`.
   8. No suppression mechanism.
 
@@ -1991,10 +1996,10 @@ Doc 11 is normative. Points that other documents must follow, and points doc 11 
 
 - Decision:
   1. One package, no pnpm workspace; the root `package.json` is private; `pkg/package.json` is generated.
-  2. Root scripts include `gen`, `build`, `test`, `eval`, `release:check`.
+  2. Root scripts include `gen`, `build`, `test`, `eval`, `release:check`. `release:check` is `pnpm gen --release-check`: `src/gen/index.ts` runs the checklist of doc 07 section 11 on that flag (D-110).
   3. Pinned devDependencies added to doc 01's table: `rollup` 4.24.0, `@rollup/plugin-node-resolve` 15.3.0, `@rollup/plugin-terser` 0.4.4, `lightningcss` 1.33.0, `axe-core` 4.14.1, `@types/node` 22.20.5, `@types/react` 19.3.0.
   4. Node: repository `>=22.18`; the main CI job runs Node 24; Remix tests skip below 24.3; a separate job runs Node 22.18; a job installs the packed package on Node 20.18.
-  5. Doc 01 test A-01 (closed root file list) includes `.github/`.
+  5. Doc 01 test A-01 (closed root file list) includes `.github/` and `CHANGELOG.md`.
   6. `pkg/` additionally contains `fixture.schema.json` and `registry/liquid/settings.json`.
 
 #### D-104 Testing: settled points
@@ -2017,6 +2022,7 @@ Doc 11 is normative. Points that other documents must follow, and points doc 11 
   6. Private variables: section 4.5. Tokens: D-026 as amended. One global focus ring: D-066.
   7. Tailwind's `--z-index-*` and `--transition-duration-*` aliases are kept and pinned by doc 03 test A-10; removal is the fallback.
   8. No height animation for Accordion.
+  9. Amended (closing pass): the linter also accepts exactly ONE selector that does not begin with an own class: `:root:has(.rp-header[data-sticky])` in `header.css`, declaring only `--rp-header-block-size` (doc 03 row L-15). `.rp-header[data-sticky]` itself sets custom properties only (`--_position`, `--_z`), as D-024 item 2 requires. `:has()`, `:dir(rtl)`, unprefixed `mask-image`, `::backdrop` custom-property inheritance and (Firefox) `<details name>` are features above the floor whose capability tiers are in doc 03 section 12 (D-081 as amended).
 
 #### D-106 Agent kit and evals: settled points
 
@@ -2034,7 +2040,7 @@ Doc 11 is normative. Points that other documents must follow, and points doc 11 
 
 #### D-108 Spikes
 
-- Decision: Section 3 was updated: SPIKE-01 gained the page-view question; SPIKE-02 gained `as`, bare schema settings and the discount type; SPIKE-05 gained `popover=""`; SPIKE-06 gained `popover` and `::backdrop`; SPIKE-08's default is now the attribute alone; SPIKE-10 covers the `remix` default strategy and `useRegionHtml`; SPIKE-11 `remix-opt-in-refresh` is new. Items the writers left UNVERIFIED and that gate tests, not contracts (doc 10 item 18): `checkPattern("dialog")` on a native `<dialog>`; Escape on a tooltip inside a modal dialog; the accessible name of UI SDK's toast close button; the DOM of a live toast. Each stays UNVERIFIED in its document with the test that settles it.
+- Decision: Section 3 was updated: SPIKE-01 gained the page-view question; SPIKE-02 gained `as`, bare schema settings and the discount type (doc 14's question list is V-1 to V-20: the closing pass added V-17 `as`, V-18 `request.page_type`, V-19 `font.system?`, V-20 `standard_event_data` in both forms); SPIKE-05 gained `popover=""`; SPIKE-06 gained `popover` and `::backdrop`; SPIKE-08's default is now the attribute alone; SPIKE-10 covers the `remix` default strategy and `useRegionHtml`; SPIKE-11 `remix-opt-in-refresh` is new. Items the writers left UNVERIFIED and that gate tests, not contracts (doc 10 item 18): `checkPattern("dialog")` on a native `<dialog>`; Escape on a tooltip inside a modal dialog; the accessible name of UI SDK's toast close button; the DOM of a live toast. Each stays UNVERIFIED in its document with the test that settles it.
 
 ### 13.2 Disposition of every reported gap
 
@@ -2377,3 +2383,89 @@ One row per item of each writer's gap list (261 numbered items and 7 un-numbered
 | 13 | Budgets for `shared` and the Liquid `ripple.js` | Accepted | D-064 |
 | 14 | kB unit | Accepted | D-064 |
 | 15 | Acceptance-test id scheme | Accepted | D-104 |
+
+### 13.3 Closing decisions
+
+These decisions were made by the closing pass, after the per-document worklists were applied, from the "Remaining issues" the 14 appliers reported. They have the same force as sections 1 and 13.1. Each one was applied to every affected document in the same pass.
+
+#### D-109 `snippets/meta-tags.liquid` is the base theme file
+
+- Decision: `snippets/meta-tags.liquid` (file key `meta-tags` of the `layout` blueprint) is `theme/snippets/meta-tags.liquid` with exactly two replacements: the locale key `general.meta.tagged` becomes `ripple.blueprints.layout.meta_tagged` and `general.meta.page` becomes `ripple.blueprints.layout.meta_page` (same English text). Nothing else changes. Doc 14 section 7.6 owns this rule; neither doc 12 nor doc 14 reprints the 253 lines. The Infrastructure scope of D-097 is widened by the seven filters the file needs (`first join remove_first slice strip_html money_without_currency structured_data`), and the shim implements them and the globals the file reads (doc 13). Test: doc 12 LT-12.
+- Rationale: doc 14 had written a reduced file to stay inside the old scope, which dropped JSON-LD, `og:price`, `hreflang` links and title suffixes (an SEO regression); doc 12 required a byte copy, which reads two `general.*` keys a Ripple theme does not have. A copy with two key renames keeps the SEO output and keeps the rule that a Ripple theme's storefront locale has only the key `ripple`.
+- Rejected: the reduced file (SEO regression); an unmodified byte copy (missing translations).
+
+#### D-110 Closing: settled small points
+
+- Decision: the rows below settle every point the appliers reported as "ledger silent" or as a difference between two documents, where no larger decision was needed. Each row names the owning document; that document carries the full text.
+
+| # | Point | Decision | Owner |
+|---|---|---|---|
+| 1 | `<command form>` in static files (skills, guides, `INDEX.md`, `AGENTS.md`, `DESIGN.md`, generated pages) | Always `npx <pkg>` with the real package name and NO version. CLI output keeps the form of doc 07 section 7.1 rule 12. | 08, 14 |
+| 2 | `<main>` | `<main id="main" tabindex="-1">` in every host. `data-template` is printed by the Liquid layout only (D-089). Test BT-3 compares the children of `<main>`. | 12, 13 |
+| 3 | `cart` on CartDrawer, CartLines and Header (TSX) | Optional, `RippleCart \| null`; `null` or unset renders the empty cart. Callers pass `cart={cart}`. | 11, 12 |
+| 4 | `{% capture %}` | A file may capture markup it renders ITSELF and pass it as the `content` argument of a snippet it embeds (LocaleSelector to `rp-button`). Passing captured markup to another author's file stays forbidden (D-037, D-097, L-7). | 06 |
+| 5 | Resource types | `RippleVariantOption`, `RippleVariantOptionValue`, `RippleFilterChip`, `RippleSortOption` are exported by `<pkg>` (doc 05 section 11.1); `RippleProductDetail` has `descriptionHtml: string`. `variant-picker.data.ts` imports them; no local copies. | 05, 11 |
+| 6 | Repository | `CHANGELOG.md` is a root file. `release:check` is `pnpm gen --release-check`. `theme:css` builds `examples/liquid/assets/styles.min.css`. `src/cli/**` may import `src/gen/{props-css,theme-css,tokens-source}.ts`; `src/gen/**` may import `src/cli/**`. Relative imports may be written `./x` or `./x.ts`. `tsconfig.json` type-checks `blueprints/**/*.test.ts` and `css/**/*.test.ts`. `.ripple-conformance/` is ignored by per-example `.gitignore` files. | 01, 07, 13 |
+| 7 | Sticky Header | `header.css` has the one accepted rule `:root:has(.rp-header[data-sticky])` (linter row L-15) and the modifier `.rp-header[data-sticky]` sets only `--_position` and `--_z` (D-105 item 9, D-024). | 03, 12 |
+| 8 | Inline Invoker Commands polyfill | The exported constant is `INLINE_COMMANDS_POLYFILL` in `src/runtime/commands-polyfill.ts`. `rp-head.liquid` prints its text; test E-28 compares them. | 04, 14 |
+| 9 | `data-rp-open` | Also printed by components whose own contract prints an opener link (section 4.4 as amended). Hook attributes that have NO prop (`data-rp-js`, `data-rp-part`) are printed by a component binding on markup it prints itself; a caller may pass `data-rp-js="fallback"` through rest props or `attributes` (LiveForm's submit button). The four plain hook buttons of VariantPicker, SortSelect, CartNote and DiscountCode are printed by those bindings with the single class `rp-button` (D-070 composition by contract). | 11 |
+| 10 | Checker placements | Out-of-scope Liquid tag or filter: RP401 case (b). Hydrogen value import outside the D-094 list: RP117 case (b), warning. `<pkg>/elements` or `<pkg>/commerce` imported by a binding: RP117 case (c). RP320 reads `agent.confirm[]`, which includes the two accelerated-checkout wrappers. RP308 has the four cases of D-102 item 4. No rule id covers a hook attribute passed through rest props, nor `dialog` without `href` at source level: both are stated normatively (doc 09) and are not checked in V1; the 55 ids stay fixed. | 07, 08 |
+| 11 | Checker text | `FIX_SYNONYMS` (doc 08 section 5.3) is applied first by doc 07 section 9.5.1. A rule file exports `meta` and `text: RuleText`. The agents section is produced by `renderAgentsSection(input)`. Doc 08 owns every `fix` text; doc 07's "Fix given" column is a summary. | 07, 08 |
+| 12 | Fixture requirements | `invalid-enum-falls-back` only for an enum with a default; `escaping` only for a string, id or url prop printed as an attribute (D-074 item 3 as amended). An invalid token in a responsive value is printed unchanged (L-16) and matches no CSS rule, which is the fallback D-028 means. A component with no qualifying prop has no such fixture (Carousel; Header names its case `unknown-scheme`). | 02 |
+| 13 | Select fixtures `sort` and `sort-react` | Allowed host-scoped pair (D-074 item 7 as amended). | 09 |
+| 14 | Video | One prop `autoplay` prints `autoplay muted loop`. No `muted` or `loop` prop (section 6.4 rows corrected). | 09 |
+| 15 | Toast and Tooltip | Tooltip `side` and `align` are on `ui-tooltip-content`. Toast prints `data-side` / `data-align` and, at non-default values, the option attributes (section 4.3). The Toast allow-list entry of doc 02 section 7.3 stands as written; entries fixed by D-071 item 3 and `subtree` entries are exempt from doc 02 U-7, and doc 07's generator check applies the same exemption. The four Tooltip fixtures stay `upgrade-snapshot` until SPIKE re-capture with the Button trigger. | 02, 10 |
+| 16 | ProductForm allow-list | The error-part entry of D-071 item 3, equal in docs 07 and 11. | 11 |
+| 17 | `indexchange` | "Not cancelable" means cancelling has no effect. The kernel sets `event.cancelable` to `true`; no test asserts the flag. Carousel's kernel option `default-index` exists and is never printed by a server. | 04 |
+| 18 | Upgrade measurement | Zero mutations for `ui-toast-region` holds until the first `toast()` call (test E-01). Same-value writes are not mutations in every document (D-002). Page P of doc 04 composes fixtures by inserting one fixture's HTML into another's content part; only doc 04 uses that. A composed fixture may contain a plain native `<button commandfor command>` as caller content. | 04, 10 |
+| 19 | Name clashes in section 4.3 | The manifest key `prop.attribute` is authoritative (doc 02 M-4a): Container `width`, Accordion `type` and Rating `value` print `data-*`. `parseResponsive` is not a `<pkg>` export. `selected` on `<option>` is a native state attribute. Pagination's current page is `<span class="rp-pagination-current" aria-current="page">`. | 02, 09 |
+| 20 | Morph keys | Toast and QuantityInput print `data-rmx-key` only when `rmxKey` is passed (D-034). Docs 11 and 12 do not pass it; position-based morph is enough for the cart and the toast region. | 10 |
+| 21 | Template fields | A component with no spike keeps the literal heading `### Fallback (SPIKE-nn)` with the body "None." Accordion's "Requires id" reads "no (yes when `type="single"`)". Opener attributes written by the runtime listener have writer `element` in the manifest (D-100 has no other value). | 09 to 12 |
+| 22 | Blueprint details | IconButton embeds pass `icon: '<name>'`. The cart blueprint has no CheckoutButton of its own (CartSummary prints it). CartSummary prints no CheckoutButton for an empty cart; an inert CheckoutButton (D-050 item d) has no `href` and no `tabindex`, unlike Button `link-disabled`. The SPIKE-09 Liquid fallback is `{% block 'featured-collection', collection: settings.rp_related_collection, limit: 4 %}{% endblock %}`, titled by the collection's own title. `toRippleMenu` lives in the layout blueprint's `lib/menu.ts`. `lib/locale-route.ts` is project route code and may import `getLocalizedHref`, `getSupportedLocales`, `matchLocale` from `@shopify/hydrogen` (added to the D-094 list for that file only; UNVERIFIED until tier 2 type-checks it). HTML blueprints are written unchanged by step G10 (no pretty-printer). | 11, 12, 14 |
+| 23 | Fixture resources | `{ "$resource": "<type>.<name>" }` names a whole resource. A prop whose value is PART of a resource ("the media of `product.basic`") is written as literal JSON in the fixture record, copied from the resource. `product.basic` and `product.options` share an identity on purpose; `serveTheme` serves `product.options` at `/products/linen-shirt`, and `line.basic` is built from it. A prop that exists in some hosts only declares manifest `prop.hosts` (section 4.8); the fixture loader skips it elsewhere (FX-4) and binds Liquid globals (RS-3). | 11, 13 |
+| 24 | Shim | `default_errors` appears only in a caller example of doc 09 and is not a Ripple file; it is outside the subset and the shim does not implement it. `liquidjs` always divides as floating point and Shopify divides integers when both operands are integers, so a Ripple file MUST either write a float divisor (Rating, doc 14) or make the division exact first: PriceRange computes `cents = c | modulo: 100`, then `whole = c | minus: cents | divided_by: 100`. The shim accepts `return_to` on `{% form %}`; no Ripple file passes it. `current_page`, `current_query`, `form_state` and `ShimOptions.pageSize` are shim-only and unreadable by Ripple files (SH-5). | 13 |
+| 25 | Commerce | The adapter starts one microtask after the commerce module is evaluated (D-087 item 2 as amended). `rp-cart` announces through its own status part when present, otherwise `announce(text, { from: root })`. `rp:refreshed` MUST NOT be relied on in the `react` host. The page view is dispatched by `startStandardEvents()` whenever `options.analytics` is true, independent of `usable`. Server import of `<pkg>/elements` and `<pkg>/commerce` is gated by test E-30. | 05 |
+| 26 | Manifest and CLI | MB-8 enforces `full` for the 12 ids D-005 names; other components state their level in their own document. The `__PKG__` install transform is a no-op on a built registry. `generateBlueprintHtml` (G10) is a function in `src/gen/index.ts`; `installTransform` is in `src/cli/plan.ts`. `rp-icon` is installed as `core/snippet:icon`. RP309 detection is the text search of doc 07. `agent.actions[]` entries are objects with `name`, `description`, `confirm` (doc 11 names them; doc 08 owns descriptions). `settingType` is `select`. `:scope` is doc 07's extension for `rules[]` and means the root. The `.data` specifier is written with `.ts` on Remix. RP118 accepts the three test attributes only under `test/` or `.ripple-conformance/`. A locale patch creates `locales/en.default.json` or `en.default.schema.json` when absent; the storefront file has the single top-level key `ripple`. `span` and `hidden` are listed in manifest `props[]` (doc 09 FC-4); doc 07 adds them at emission when a component file omits them. The fixture theme `test/fixtures/theme-min/layout/theme.liquid` contains a `{{ content_for_header }}` line, the anchor that `core/patch:head` needs. | 07 |
+| 27 | Tier 7 skips | A `mock.shop has no <thing>` skip fails the nightly run under `--no-skips` and is never a merge gate (Q24). | 13 |
+| 28 | CSS | Tokens plus base stay within 2,200 bytes (Q25). A class token is owned by the component whose manifest lists it; `rp-visually-hidden` is owned by `base.css`. `rp-view-event` stays in the generated script-state selector lists (no effect). The spike files under `research/spikes/styling-doc03/` are historical and MUST NOT be copied. | 03 |
+| 29 | Evals | Start states use the overlays of doc 08 that remove the pre-solved pieces of the layout blueprint. Reference solutions exist for the npm hosts by M4 and for Liquid by M5 (D-067). T16 "payment icons" is an escape-hatch task (no component). The nightly `evals` job of doc 08 section 8.14 is part of `nightly.yml`; its secret is `RIPPLE_EVAL_API_KEY`. | 08, 13 |
+| 30 | Bindings lint | `dangerouslySetInnerHTML` is allowed in exactly three React files: `predictive-search.tsx`, `product-recommendations.tsx`, `rich-text.tsx`. | 06 |
+
+- Rationale: each row is the simplest rule that matches what was run or read in source, or the text of the owning document under D-069.
+- Rejected: leaving any of these to the implementer.
+- Evidence: the appliers' reports; the documents named in the Owner column.
+
+#### D-111 Rule kind `custom`
+
+- Decision: manifest `rules[].kind` gains a seventh value, `custom`. Such an entry has only `id`, `kind`, `message`, `fix`. Its detection is a function stored under the rule id in `CUSTOM_RULES`, exported by `src/check/rules/RP113.ts`, with the signature `(root: Element) => Element[]` (the violating elements). RP113 reports it like any other structure rule. The detection sentence in the component document is normative. `pnpm gen --check` fails when a `custom` rule has no function or a function has no rule. The first nine are in doc 09: `field-one-control`, `field-label-for`, `field-describedby`, `field-invalid`, `radio-group-legend`, `radio-group-one-name`, `radio-group-one-checked`, `rich-text-plain-html`, `video-needs-source`.
+- Rationale: these rules compare attribute values or count across parts, which the six selector kinds cannot express; the component documents already state them as sentences and Field's acceptance test expects one RP113 finding per rule.
+- Rejected: a richer declarative rule language (larger than the nine functions); new `RPnnn` ids (D-059 forbids component-specific ids).
+- Owner: doc 07 section 9.5.3 (schema and evaluation); the component documents (sentences).
+
+#### D-112 Delta fixtures of doc 12 are written with the component
+
+- Decision: in doc 12, a fixture printed as one complete fenced HTML block is a reference file as written. Every other fixture is a DELTA fixture: the document gives its props and one sentence stating what its HTML shows. The file `components/<id>/fixtures/<name>.html` of a delta fixture is written by the implementation task of that component, from the component's HTML contract and the stated props, and MUST satisfy the sentence. It is then held to the same gates as every fixture (contract lint tier 1, four-host conformance tier 2). Where the sentence says "equal to `default`" or "the empty string", the file is exactly that. The 34 delta fixtures are:
+  - Header: `default-body-plain`, `class`, `unknown-scheme`.
+  - Footer: `policies`, `scheme`, `class`.
+  - AnnouncementBar: `class`.
+  - NavigationMenu: `escaping`, `class`.
+  - MobileNav: `deep`, `empty`, `invalid-enum-falls-back`, `class`.
+  - LinkList: `invalid-enum-falls-back`, `escaping`, `class`.
+  - Logo: `invalid-enum-falls-back`, `class`.
+  - LocaleSelector: `countries-only`, `single-locale`, `invalid-enum-falls-back`, `class`.
+  - AccountLink: `class`.
+  - NewsletterForm: `success`, `error`, `class`.
+  - Hero: `invalid-enum-falls-back`, `escaping`, `class`.
+  - FeaturedCollection: `carousel`, `empty`, `invalid-enum-falls-back`, `responsive`, `class`.
+- Rationale: each delta differs from a printed fixture by one attribute or one part; printing 34 more blocks by hand, unrendered, would add copies that nothing has checked, while the conformance tier checks the written files in four hosts.
+- Rejected: converting them in the document without rendering them.
+- Owner: doc 12 section 0 (rule and list).
+
+#### D-113 Status of code that was not run, and of doc 06's example bindings
+
+- Decision:
+  1. Doc 13 code marked NOT RUN is the required starting text of that file. The behaviour tables and the named gate tests next to it are normative. When the printed code fails its gate, the code is changed and the gate is not weakened; such a change needs no ledger entry. The blocks concerned: `fixtures.ts` (`hostHasProp`, `resolveSample`, `loadBlueprintSample`), `liquid-shim.ts`, `serve-theme.ts`, `server.ts`, `collect.ts`, `conformance.test.ts`, `hosts/index.ts`, `hosts/html.ts`, the FX-4 and RS-3 additions of `hosts/liquid.ts` and `hosts/tsx.ts`, `createLiquidRenderer`, `hosts/react.ts`, `hosts/remix.ts`, `upgrade.test.ts`, `axe.test.ts`, `render.test.ts`, and tier 7 (E-1).
+  2. Doc 06 sections 6.4 to 6.7, 7.4 to 7.7 and 8.4 to 8.7 illustrate the binding PATTERN of each host. They are not the binding files. Each opens with a "Copy rule" notice that lists how the code differs from the owning component document. The binding file of a component is written (or generated) from its component document, and the conformance tier is the gate.
+- Rationale: the code could not be executed in the writing environment (no browsers for every tier, no mock.shop access); naming the gate and the direction of repair removes the ambiguity. Rewriting twelve example bindings by hand would create unchecked copies of docs 09 to 11.
+- Rejected: marking the code as illustrative only (the harness would then have no starting text).
+- Owner: doc 13 section 0; doc 06 sections named above.

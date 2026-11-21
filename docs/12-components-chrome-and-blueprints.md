@@ -25,7 +25,24 @@ What this document does NOT own (link, do not restate):
 | Test harness and tiers | `13-testing.md` |
 | The assembled Liquid theme (settings bridge, tokens, `rp-head`, `rp-import-map-entries`, theme rules) | `14-liquid-theme.md` |
 
-This document DOES own the complete text of every Liquid layout and template file (`layout/*.liquid`, `templates/*.liquid`) and of the two theme-owned snippets `import-map` and `meta-tags` (D-099, D-107 item 5); `14-liquid-theme.md` refers to them.
+This document DOES own the complete text of every Liquid layout and template file (`layout/*.liquid`, `templates/*.liquid`) (D-099). The two theme-owned snippets `import-map` and `meta-tags` are files of the `layout` blueprint (D-107 item 5) whose text is owned by `14-liquid-theme.md` (sections 7.2 and 7.6, D-099 item 2, D-109); this document copies `import-map` and refers to `meta-tags`.
+
+Fixtures in this document (D-112). A fixture printed as one complete fenced HTML block is the reference file as written. Every other fixture is a DELTA fixture: its line gives the props and one sentence stating what its HTML shows (for example "root class is `rp-logo custom-a custom-b`", "equal to `default`", "the reference HTML is the empty string", or a fenced block that shows only the part that differs). The file `components/<id>/fixtures/<name>.html` of a delta fixture is written by the implementation task of that component, from the component's HTML contract and the stated props; it MUST satisfy the sentence, and it is held to the same gates as every fixture (contract lint, tier 1; four-host conformance, tier 2). The 34 delta fixtures, by component:
+
+| Component | Delta fixtures |
+|---|---|
+| Header | `default-body-plain`, `class`, `unknown-scheme` |
+| Footer | `policies`, `scheme`, `class` |
+| AnnouncementBar | `class` |
+| NavigationMenu | `escaping`, `class` |
+| MobileNav | `deep`, `empty`, `invalid-enum-falls-back`, `class` |
+| LinkList | `invalid-enum-falls-back`, `escaping`, `class` |
+| Logo | `invalid-enum-falls-back`, `class` |
+| LocaleSelector | `countries-only`, `single-locale`, `invalid-enum-falls-back`, `class` |
+| AccountLink | `class` |
+| NewsletterForm | `success`, `error`, `class` |
+| Hero | `invalid-enum-falls-back`, `escaping`, `class` |
+| FeaturedCollection | `carousel`, `empty`, `invalid-enum-falls-back`, `responsive`, `class` |
 
 Normative words: MUST, MUST NOT, SHOULD, MAY. "UNVERIFIED" marks a fact nobody ran or read in source. Evidence paths are relative to the directory that holds the local clones.
 
@@ -339,7 +356,7 @@ Nesting rules: `inner` is the only child of root. Children (or the default body)
 | `sticky` | `sticky` | boolean | `true`, `false` | `false` | no | no | `data-sticky=""` on root |
 | `menu` | `menu` | object | `RippleMenu` (1.2); Liquid: a linklist drop | TSX: none. Liquid: `linklists['main-menu']` | no | no | default body: passed to NavigationMenu |
 | `shop` | none (reads `shop`, `routes`) | object | `RippleShop` (1.3) | none | TSX: yes when there are no children | no | default body: Logo |
-| `cart` | none (reads `cart`) | object | `RippleCart` (`05-commerce.md` 11.1) | none | no | no | default body: passed to CartLink |
+| `cart` | none (reads `cart`) | object | `RippleCart` or `null` (`05-commerce.md` 11.1) | `null` | no | no | default body: `count={cart?.totalQuantity ?? 0}` on CartLink |
 | `navigationMenu` | `navigation_menu` | id | any id | `main-nav` | no | no | default body: `id` of the NavigationMenu |
 | `linkList` | `link_list` | id | any id | `footer-menu` | no | no | default body: `href="#<value>"` on the menu opener |
 | `mobileNav` | `mobile_nav` | id | id of a MobileNav | none | no | no | default body: passed to the menu opener's IconButton prop `dialog`, which prints `data-rp-open` (D-009); omitted when unset |
@@ -470,7 +487,7 @@ Everything works. The menu opener is a link to `#<linkList>`: it scrolls to the 
 
 | Modifier selector | Sets |
 |---|---|
-| `.rp-header[data-sticky]` | `position: sticky; inset-block-start: 0; z-index: var(--rp-z-sticky)` (the one modifier that sets properties directly, because position cannot be driven by a custom property) |
+| `.rp-header[data-sticky]` | `--_position: sticky; --_z: var(--rp-z-sticky)` (custom properties only, D-024 item 2; the base rule consumes them) |
 
 Required rules (complete list of declarations the file MUST contain; values MAY be tuned):
 
@@ -485,11 +502,13 @@ Required rules (complete list of declarations the file MUST contain; values MAY 
     background: var(--color-background);
     color: var(--color-foreground);
     border-block-end: var(--rp-header-border);
+    position: var(--_position, static);
+    inset-block-start: 0;
+    z-index: var(--_z, auto);
   }
   .rp-header[data-sticky] {
-    position: sticky;
-    inset-block-start: 0;
-    z-index: var(--rp-z-sticky);
+    --_position: sticky;
+    --_z: var(--rp-z-sticky);
   }
   .rp-header-inner {
     display: flex;
@@ -3179,7 +3198,7 @@ Complete `blueprints/product/blueprint.json` (every other blueprint follows this
 
 ### 2.2 Rules for every blueprint
 
-- **BP-1** A blueprint file contains only: Ripple component calls; the raw elements `html`, `head`, `body`, `main`, `form`, `input type="hidden"`, `rp-view-event`, `script type="application/json"`; and elements carrying `data-rp-region`. It contains no `class` attribute with a value that does not start with `rp-`, no `style` attribute, and no `<style>` element. `data-rp-region` is the only Ripple hook attribute a blueprint passes through rest props or `attributes` (D-091 item 2). Overlay openers are written with the `dialog` prop; a tooltip trigger with the `tooltip` prop (D-009, D-082).
+- **BP-1** A blueprint file contains only: Ripple component calls; the raw elements `html`, `head`, `body`, `main`, `li` (child of a Grid or Stack with `as` `ul` or `ol`), `bdi`, `rp-view-event`, `script type="application/json"`; in TSX and html files only, also the raw elements `form` and `input type="hidden"`; and elements carrying `data-rp-region`. A Liquid blueprint file never writes a raw `<form>` or `<input>`: it uses the Liquid tag `{% form %}`, which prints the form and its hidden inputs (`14-liquid-theme.md` rule T-23 is the Liquid statement of this rule). It contains no `class` attribute with a value that does not start with `rp-`, no `style` attribute, and no `<style>` element. `data-rp-region` is the only Ripple hook attribute a blueprint passes through rest props or `attributes` (D-091 item 2). Overlay openers are written with the `dialog` prop; a tooltip trigger with the `tooltip` prop (D-009, D-082).
 - **BP-2** Exactly one `<main>` exists per document. It is printed by `layout`: TSX hosts print `<main id="main" tabindex="-1">`; Liquid prints `<main id="main" tabindex="-1" data-template="{{ request.page_type }}">` (D-089 item 6; `data-template` is read only by the Liquid adapter and is removed before the hosts are compared, see `layout`). Page blueprints MUST NOT print `<main>`.
 - **BP-3** Each page blueprint prints exactly one Heading with `level` 1. Heading levels never skip (after `1` comes `2`).
 - **BP-4** Spacing uses only the four values of D-106: a page band is `Container` with `py="12 md:20"`; the gap between areas in a band is `gap="8 md:12"`; the gap inside a group is `gap="2"` to `gap="4"`; a card grid uses `gap="4 md:6"`.
@@ -3206,7 +3225,7 @@ The **Remix file** is derived from the React file by these rules, applied in ord
 
 The **html file** is generated:
 
-- **H-1** `blueprints/<id>/html/<id>.html` is the output of rendering the React file with the sample data of 2.5 through `renderDocument` (2.6), pretty-printed by the fixture printer of `02-html-contract.md`. `pnpm gen` writes it (the generating step is owned by `07-manifest-registry-cli.md`, D-101 item 4); a hand edit fails the generation check (`07-manifest-registry-cli.md`, G-rules). Page files contain the full document, so each one opens in a browser by itself.
+- **H-1** `blueprints/<id>/html/<id>.html` is the output of rendering the React file with the sample data of 2.5 through `renderDocument` (2.6), written unchanged with one trailing newline (no re-formatting; step G10 of `07-manifest-registry-cli.md`). `pnpm gen` writes it (the generating step is owned by `07-manifest-registry-cli.md`, D-101 item 4); a hand edit fails the generation check (`07-manifest-registry-cli.md`, G-rules). Page files contain the full document, so each one opens in a browser by itself.
 - **H-2** In the html file, `initialCart` is omitted from the config element and the cart count part is printed as `hidden` with text `0` (`05-commerce.md` section 10.1 rule 4).
 
 The **Liquid file** is hand-written and is given in full in each blueprint. Rules:
@@ -3214,7 +3233,7 @@ The **Liquid file** is hand-written and is given in full in each blueprint. Rule
 - **L-A** Blueprint Liquid files are templates and layouts, so they MAY use `{% block %}` and `{% partial %}` (`06-bindings.md`; `ripple/docs/research/liquid-blocks-partials.md` section 2.2). They MUST NOT use `{% section %}`, `{% sections %}`, `{% content_for %}`, `{% include %}` or JSON templates.
 - **L-B** Partial names are exactly the region names (`06-bindings.md` rule L-2). A partial name is declared at most once per rendered page. Because `layout/theme.liquid` declares `rp-cart-lines` and `rp-cart-summary` inside the CartDrawer and `templates/cart.liquid` declares the same two names, the layout MUST NOT render the CartDrawer when `template.name == 'cart'` (see `layout`, Structure; D-091 item 5). The same rule is applied on TSX hosts through the `cartPage` prop so that all hosts print the same page. The CartLink on the cart page has no `drawer`, and `openCart()` there navigates to `cartUrl` (`05-commerce.md`).
 - **L-C** Liquid objects are passed to blocks unchanged. A block param that takes text receives it already translated: `{% block 'heading', level: 1 %}{{ 'ripple.blueprints.cart.title' | t }}{% endblock %}`.
-- **L-D** Blueprint files use the Blueprint scope of `06-bindings.md` rule L-13 (D-097): the component tags plus `block partial paginate layout`; the component filters plus `standard_event_data`; and exactly these globals: `content_for_header`, `content_for_layout`, `template` (`name`), `request` (`locale.iso_code`, `locale.direction`, `page_type`), `routes` (`root_url`, `cart_url`, `search_url`, `all_products_collection_url`, `product_recommendations_url`, `account_url`, `account_login_url`), `shop` (`name`, `policies`, `brand.logo`, `password_message`), `linklists`, `localization`, `customer`, `collections`, `collection`, `product`, `cart`, `search`, `blog`, `article`, `page`, `paginate` (`previous`, `next`), `form`, `gift_card`, `recommendations`, and `settings` (only in the SPIKE-09 fallback of `product`). The two layout files additionally use `asset_url` and `stylesheet_tag` for the one `styles.min.css` line that D-099 item 3 requires. The shim (`13-testing.md`) implements all of them, including `standard_event_data` (it returns a fixed JSON) and `request.page_type` (D-104 item 4).
+- **L-D** Blueprint files use the Blueprint scope of `06-bindings.md` rule L-13 (D-097): the component tags plus `block partial paginate layout`; the component filters plus `standard_event_data`, `asset_url` and `stylesheet_tag`; and exactly these globals: `content_for_header`, `content_for_layout`, `template` (`name`), `request` (`locale.iso_code`, `locale.direction`, `page_type`), `routes` (`root_url`, `cart_url`, `search_url`, `all_products_collection_url`, `product_recommendations_url`, `account_url`, `account_login_url`), `shop` (`name`, `policies`, `brand.logo`, `password_message`), `linklists`, `localization`, `customer`, `collections`, `collection`, `product`, `cart`, `search`, `blog`, `article`, `page`, `paginate` (`previous`, `next`), `form`, `gift_card`, `recommendations`, and `settings` (only in the SPIKE-09 fallback of `product`). `asset_url` and `stylesheet_tag` are used only by the two layout files, for the one `styles.min.css` line that D-099 item 3 requires. The shim (`13-testing.md`) implements all of them, including `standard_event_data` (it returns a fixed JSON) and `request.page_type` (D-104 item 4).
 
 ### 2.4 Calls into documents 09, 10 and 11
 
@@ -3238,7 +3257,7 @@ Blueprints call components with the forms below. Each form is a copy of the owni
 | CartNote | `<CartNote id="cart-note" cart={cart} />` | `{% block 'cart-note', id: 'cart-note', cart_lines: 'cart' %}{% endblock %}` |
 | DiscountCode | `<DiscountCode id="cart-discount" />` | `{% block 'discount-code', id: 'cart-discount' %}{% endblock %}` |
 | CheckoutButton | `<CheckoutButton href={cart.checkoutUrl} />` | `{% block 'checkout-button', cart_lines: 'cart' %}{% endblock %}` |
-| CartLink | `<CartLink drawer="cart-drawer" count={cart.totalQuantity} />` | `{% block 'cart-link', drawer: 'cart-drawer' %}{% endblock %}` |
+| CartLink | `<CartLink drawer="cart-drawer" count={cart?.totalQuantity ?? 0} />` | `{% block 'cart-link', drawer: 'cart-drawer' %}{% endblock %}` |
 | Filters | `<Filters id="collection-filters" filters={filters} action={pathname} sortBy={sortBy} />` | `{% block 'filters', id: 'collection-filters' %}{% partial 'rp-collection-filters' %}{% render 'rp-filters-groups', collection: collection %}{% endpartial %}{% endblock %}` |
 | FilterChips | `<FilterChips {...chips} />` with `chips` from `toFilterChips` (`@components/filter-chips.data`) | `{% block 'filter-chips' %}{% endblock %}` |
 | SortSelect | `<SortSelect id="collection-sort" action={pathname} options={sortOptions} value={sort} params={params} />` | `{% block 'sort-select', id: 'collection-sort' %}{% endblock %}` |
@@ -3262,7 +3281,7 @@ Blueprints call components with the forms below. Each form is a copy of the owni
 
 The snippet names `rp-<component id>-region` do not exist (D-091 item 3). A region-part snippet is rendered with the same params everywhere (D-091 item 4): `rp-cart-summary-totals` always receives `cart_lines`. A blueprint-owned region is a layout component that receives `data-rp-region="<name>"` through rest props (TSX) or `attributes: 'data-rp-region="<name>"'` (Liquid) (D-091 item 2).
 
-**Types (D-094).** Blueprints import resource types from `__PKG__`; they are defined in `05-commerce.md` section 11.1: `RippleProduct`, `RippleProductDetail`, `RippleProductCard`, `RippleCollection`, `RippleCollectionCard`, `RippleArticle`, `RippleArticleCard`, `RippleMedia`, `RippleVariant`, `RippleFilter`, `RippleFilterValue`, `RippleMenu`, `RippleShop`, `RippleCart`, `RippleImage`. A page prop that is passed to a component has exactly the type that component's Props table names (ProductCard: `RippleProduct`; CollectionCard: `RippleCollection`; ArticleCard: `RippleArticle`; Filters: `RippleFilter[]`; the product page: `RippleProductDetail`). A blueprint MUST NOT declare its own copy of one of them; the former local types `ProductDetail` and `FilterData` do not exist. The sort-option, sort-param and chip shapes are written inline in the page props, exactly as the Props tables of `11-components-commerce.md` give them (`Array<{ value: string; label: string }>`, `Array<[string, string]>`, `{ chips: Array<{ label: string; url: string }>; clearUrl: string }`); D-094 item 1 assigns their names to `05-commerce.md` section 11.1, and a blueprint MAY import the named types instead once that section names them.
+**Types (D-094).** Blueprints import resource types from `__PKG__`; they are defined in `05-commerce.md` section 11.1: `RippleProduct`, `RippleProductDetail`, `RippleProductCard`, `RippleCollection`, `RippleCollectionCard`, `RippleArticle`, `RippleArticleCard`, `RippleMedia`, `RippleVariant`, `RippleFilter`, `RippleFilterValue`, `RippleFilterChip`, `RippleSortOption`, `RippleMenu`, `RippleShop`, `RippleCart`, `RippleImage`. A page prop that is passed to a component has exactly the type that component's Props table names (ProductCard: `RippleProduct`; CollectionCard: `RippleCollection`; ArticleCard: `RippleArticle`; Filters: `RippleFilter[]`; the product page: `RippleProductDetail`). A blueprint MUST NOT declare its own copy of one of them; the former local types `ProductDetail` and `FilterData` do not exist. The sort-option and chip types are `RippleSortOption` and `RippleFilterChip` (`05-commerce.md` section 11.1, imported from `__PKG__`); page props use `RippleSortOption[]` and `{ chips: RippleFilterChip[]; clearUrl: string }`. The sort-param shape `Array<[string, string]>` has no name and is written inline (`05-commerce.md` 11.1 note 4).
 
 `<blueprint dir>/types.ts` (file key `types`, `layout` blueprint; complete) holds only the page-data types that no component takes as a prop:
 
@@ -3283,7 +3302,7 @@ Per-page props (`<Name>PageProps`) and `LayoutProps` are declared in the page fi
 - `url` fields of resources are computed by the route code from its route templates (`05-commerce.md` section 11.1). With no locale prefix: `/products/<handle>`, `/collections/<handle>`, `/blogs/<blog handle>/<article handle>`, `/pages/<handle>`.
 - A root field that returns `null` (unknown handle) MUST produce a 404 response that renders the `not-found` blueprint inside `layout`.
 - UNVERIFIED: that mock.shop serves `menu`, `blog`, `articles`, `page`, `localization` and `predictiveSearch`. Each blueprint states what it prints when its data is empty, and every TSX blueprint MUST render without throwing when a list is empty.
-- Sample data for H-1 and for tests is `blueprints/_sample/<id>.json` (one object per blueprint: the props of the page function) and `blueprints/_sample/layout.json`. `13-testing.md` owns the loader. The sample MUST use the fixture resources of section 1.6 and the product, collection and cart fixtures of `11-components-commerce.md`. `13-testing.md` also owns the Liquid-drop form of each sample (D-074, D-104).
+- Sample data for H-1 and for tests is `blueprints/_sample/<id>.json` (one object per blueprint: the props of the page function) and `blueprints/_sample/layout.json`. `13-testing.md` owns the loader. The sample MUST use the fixture resources of section 1.6 and the product, collection and cart fixtures of `11-components-commerce.md`. `13-testing.md` also owns the Liquid-drop form of each sample (D-074, D-104). File form (read by `loadBlueprintSample`, `13-testing.md` 4.1): one JSON object; every top-level key other than `"$liquid"` is a prop of the TSX page function; a value `{ "$resource": "<type>.<name>" }` anywhere inside is replaced by that resource (hydrogen side for TSX, Liquid side for the Liquid scope); the optional top-level key `"$liquid"` holds an object that is merged over the Liquid render scope only (for globals a template reads that have no TSX prop) and never reaches the TSX props.
 
 ### 2.6 Document shell and locale route (hydrogen backend)
 
@@ -3610,7 +3629,7 @@ export function Layout(props: LayoutProps) {
         sticky
         menu={menu}
         shop={shop}
-        cart={cart ?? undefined}
+        cart={cart}
         linkList={hasFooterMenu ? "footer-menu" : "main"}
         mobileNav="mobile-nav"
         searchDialog="search-dialog"
@@ -3636,7 +3655,7 @@ export function Layout(props: LayoutProps) {
           <PredictiveSearch id="predictive-search" results={searchResults} />
         </DialogBody>
       </Dialog>
-      {cartPage ? null : <CartDrawer cart={cart ?? undefined} />}
+      {cartPage ? null : <CartDrawer cart={cart} />}
       <Toast />
     </>
   );
@@ -3764,7 +3783,7 @@ Normative points of this file (D-099 item 3):
 </script>
 ```
 
-`blueprints/layout/liquid/snippets/meta-tags.liquid` (theme-owned, file key `meta-tags`): a byte-for-byte copy of `ripple/theme/snippets/meta-tags.liquid` (253 lines: charset and viewport metas, favicon links, Open Graph and Twitter metas, `<title>`, canonical and `hreflang` links, the description meta, the robots meta, and the JSON-LD scripts). It is not reprinted here because it is copied, never edited. Check: `cmp blueprints/layout/liquid/snippets/meta-tags.liquid theme/snippets/meta-tags.liquid` exits 0 (test LT-12). The two locale keys it reads (`general.meta.tagged`, `general.meta.page`) are theme-owned keys of `14-liquid-theme.md` section 11.1.
+`blueprints/layout/liquid/snippets/meta-tags.liquid` (theme-owned, file key `meta-tags`): the file `ripple/theme/snippets/meta-tags.liquid` (253 lines: charset and viewport metas, favicon links, Open Graph and Twitter metas, `<title>`, canonical and `hreflang` links, the description meta, the robots meta, and the JSON-LD scripts) with exactly two replacements: `'general.meta.tagged'` becomes `'ripple.blueprints.layout.meta_tagged'` and `'general.meta.page'` becomes `'ripple.blueprints.layout.meta_page'` (D-109; `14-liquid-theme.md` section 7.6 owns this rule and gives the `sed` command). It is not reprinted here. Check: test LT-12.
 
 `core/patch:head` and `core/patch:import-map` report `patch-skipped` when their target file is missing or already contains the line (D-107 item 5); with this blueprint installed both lines are already present.
 
@@ -3776,7 +3795,7 @@ Notes on the Liquid file:
 - The Liquid footer menu fallback implements rule LY-1.
 - The Header block is called with no body, so its default body renders the two `dialog`-based openers and the CartLink (Header, Host notes).
 
-Locale keys (`ripple.blueprints.layout.*`): `skip` "Skip to content"; `announcement` ""; `search` "Search"; `close` "Close".
+Locale keys (`ripple.blueprints.layout.*`): `skip` "Skip to content"; `announcement` ""; `search` "Search"; `close` "Close"; `meta_tagged` "tagged \"{{ tags }}\""; `meta_page` "Page {{ number }}" (the last two are read only by `snippets/meta-tags.liquid`, D-109).
 
 ### Data requirements per backend
 
@@ -3855,7 +3874,7 @@ BT-1 to BT-9, plus:
 - **LT-9** (tier 5, Remix) After a client navigation between two pages, the header, the open state of no dialog, and `html[style]` are unchanged, and no element is defined twice (`06-bindings.md` Q-15).
 - **LT-10** (tier 5, React) Hydrating `document.body` with the sample layout logs no hydration error, with the Hydrogen script tags present in `<head>`.
 - **LT-11** (tier 5) On the cart page, `getCommerce().openCart()` navigates to `cartUrl`, because no dialog with the id `cart-drawer` is on the page. The behaviour and its test are owned by `05-commerce.md` (D-042 amendment b); this entry is a reference, not a second test.
-- **LT-12** (tier 1) `snippets/meta-tags.liquid` is byte-equal to `theme/snippets/meta-tags.liquid`; `snippets/import-map.liquid` renders a `<script type="importmap">` whose text parses as JSON in the shim; the rendered `<head>` of `layout/theme.liquid` has the import map before every `script[type="module"]`, and contains no `page-view.js` reference.
+- **LT-12** (tier 1) `snippets/meta-tags.liquid` (without its trailer line) is byte-equal to `theme/snippets/meta-tags.liquid` after the two key replacements of D-109 (`general.meta.tagged` to `ripple.blueprints.layout.meta_tagged`, `general.meta.page` to `ripple.blueprints.layout.meta_page`), and contains no other `general.` key; `snippets/import-map.liquid` renders a `<script type="importmap">` whose text parses as JSON in the shim; the rendered `<head>` of `layout/theme.liquid` has the import map before every `script[type="module"]`, and contains no `page-view.js` reference.
 
 ---
 
@@ -4091,10 +4110,10 @@ export interface CollectionPageProps {
   /** From `toRippleFilters` (`@components/filters.data`). */
   filters: RippleFilter[];
   /** From `toFilterChips` (`@components/filter-chips.data`). */
-  chips: { chips: Array<{ label: string; url: string }>; clearUrl: string };
+  chips: { chips: RippleFilterChip[]; clearUrl: string };
   /** Pathname of the request: the `action` of the filter and sort forms. */
   pathname: string;
-  sortOptions: Array<{ value: string; label: string }>;
+  sortOptions: RippleSortOption[];
   /** The selected sort value, for example "manual". */
   sort: string;
   /** The `sort_by` URL param, or "" when the URL has none. */
@@ -4851,7 +4870,7 @@ export function CartPage(props: CartPageProps) {
         <Stack gap="8 md:12">
           <Heading level={1}>Cart</Heading>
           <Grid columns="1 lg:3" gap="8 md:12">
-            <CartLines id="cart" cart={cart ?? undefined} span="1 lg:2" />
+            <CartLines id="cart" cart={cart} span="1 lg:2" />
             {cart !== null && cart.lines.length > 0 ? (
               <Stack gap="4">
                 <CartSummary cart={cart} cartLines="cart" />
@@ -5969,7 +5988,7 @@ Decided; kept as an index. Each row names where the point is now settled.
 | X-9 | `06` | Decided (D-096 item 2): the generated intrinsic-element declarations include `rp-view-event` with `view-event-trigger` and `view-event-payload`. |
 | X-10 | `06` | Kept, narrowed. Rule X-9 of `06-bindings.md` ("no other binding uses `innerHTML`") applies to bindings. Only the `cart` blueprint uses `dangerouslySetInnerHTML` (React) / `innerHTML={unsafeHTML(...)}` (Remix), for exactly one purpose: the JSON body of the one `<script type="application/json" data-view-event-payload>` element, with `<` escaped as `\u003c`. No other blueprint file uses either. |
 | X-11 | `13` | Decided (D-074, D-104): sample data files `blueprints/_sample/<id>.json` and the fixture resources of section 1.6 exist in both forms (JSON, Liquid drops). Tests BT-1 to BT-9 run for every blueprint in every host. |
-| X-12 | `14` | `rp-head`: D-099 item 4. Locale keys: `14-liquid-theme.md` section 11 prints every `ripple.blueprints.*` key of this document. `templates/page.contact.liquid` is an alternate template the merchant assigns. |
+| X-12 | `14` | `rp-head`: D-099 item 4. Locale keys: this document lists every `ripple.blueprints.<id>.*` key in the "Locale keys" line of its blueprint; the CLI writes them from the blueprint's locale patch (D-107 item 5). `14-liquid-theme.md` section 11.1 prints none of them and points here. `templates/page.contact.liquid` is an alternate template the merchant assigns. |
 | X-13 | `08` | Decided (D-106): the agent kit's blueprint index lists the 14 blueprints with the `route` values of 2.1 and states rule BP-9; the four spacing values of BP-4 are the ones of the `ripple-compose-page` skill. |
 
 ---
@@ -6023,4 +6042,4 @@ UNVERIFIED (nobody ran or read these; each has a stated default):
 
 ## Ledger issues
 
-None open. See `00-decisions.md` section 13.2.
+None open. See `00-decisions.md` sections 13.2 and 13.3 (D-109 to D-113).

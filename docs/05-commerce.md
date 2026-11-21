@@ -986,7 +986,7 @@ Store contract:
 
 ```ts
 import { useCallback, useSyncExternalStore } from "react";
-import { getRegionHtml, subscribeRegionHtml } from "../commerce/refresh-react";
+import { getRegionHtml, subscribeRegionHtml } from "../commerce/refresh-react.ts";
 
 const noRegionHtml = (): string | null => null;
 
@@ -1340,6 +1340,8 @@ export interface RippleProductDetail extends RippleProduct {
   adjacentVariants: RippleVariant[];
   /** Nodes without an image are dropped by the host. */
   media: RippleMedia[];
+  /** The product description as HTML (`descriptionHtml`; Liquid `product.description`); `""` when empty. Read by the `product` blueprint, printed with RichText. */
+  descriptionHtml: string;
 }
 
 /** One value of a picker option: the OUTPUT of `variantPickerOptions` (doc 11, VariantPicker). */
@@ -1401,7 +1403,7 @@ Notes on names:
 
 1. `RippleProductCard`, `RippleCollectionCard` and `RippleArticleCard` are aliases of `RippleProduct`, `RippleCollection` and `RippleArticle`. The GraphQL fragments with the same names in doc 11 section 0.6 are the Storefront API selections that a host MAPS to these types (`price` from `priceRange.minVariantPrice`, `url` from the route templates); the fragment result itself does not satisfy the type.
 2. There is no type named `RippleFilters`. `toRippleFilters` (doc 11, `filters.data.ts`) is a function that returns `RippleFilter[]`.
-3. `RippleProductDetail` is structurally assignable to the two prop shapes doc 11 names locally: ProductForm's `RippleProduct & { selectedOrFirstAvailableVariant?: RippleVariant | null }` and VariantPicker's `VariantPickerProduct` (`url`, `options`, `selectedOrFirstAvailableVariant`, `adjacentVariants`).
+3. `RippleProductDetail` is the `product` prop type of VariantPicker (doc 11 reads `url`, `options`, `selectedOrFirstAvailableVariant`, `adjacentVariants` through the alias `VariantPickerProduct = Pick<RippleProductDetail, ...>` in `variant-picker.data.ts`) and is structurally assignable to ProductForm's `RippleProduct & { selectedOrFirstAvailableVariant?: RippleVariant | null }`.
 4. The sort-param shape `Array<[string, string]>` (SortSelect prop `params`) has no name.
 
 Which component reads which type, and the Liquid expression each Liquid binding reads:
@@ -1409,7 +1411,7 @@ Which component reads which type, and the Liquid expression each Liquid binding 
 | Prop | Read by | TSX type | Storefront API source | Liquid |
 |---|---|---|---|---|
 | `product` | ProductCard, ProductRecommendations (`products`), PredictiveSearch results | `RippleProduct` | `Product`: `id`, `title`, `handle`, `vendor`, `availableForSale`, `featuredImage`, `priceRange.minVariantPrice`, `compareAtPriceRange.minVariantPrice` | `product.id`, `.title`, `.handle`, `.url`, `.vendor`, `.available`, `.featured_image`, `.price`, `.compare_at_price` |
-| `product` | ProductForm, VariantPicker; `product.media` for ProductGallery | `RippleProductDetail` | the fields above plus `options { name optionValues { name swatch { color image { previewImage } } } }`, `selectedOrFirstAvailableVariant`, `adjacentVariants`, `media.nodes` of type `MediaImage` (`id`, `image`) | `product.options_with_values` (`option.name`, `.position`, `.selected_value`, `.values`; value: `.name`, `.selected`, `.available`, `.variant`, `.swatch`, `.product_url`), `product.selected_or_first_available_variant`, `product.has_only_default_variant`, `product.media` |
+| `product` | ProductForm, VariantPicker; `product.media` for ProductGallery | `RippleProductDetail` | the fields above plus `options { name optionValues { name swatch { color image { previewImage } } } }`, `selectedOrFirstAvailableVariant`, `adjacentVariants`, `media.nodes` of type `MediaImage` (`id`, `image`), `descriptionHtml` | `product.options_with_values` (`option.name`, `.position`, `.selected_value`, `.values`; value: `.name`, `.selected`, `.available`, `.variant`, `.swatch`, `.product_url`), `product.selected_or_first_available_variant`, `product.has_only_default_variant`, `product.media` |
 | `variant` | ProductForm, Price, AddToCartButton, ProductGallery | `RippleVariant` | `ProductVariant`: `id`, `title`, `availableForSale`, `price`, `compareAtPrice`, `image`, `selectedOptions` | `variant.id`, `.title`, `.available`, `.price`, `.compare_at_price`, `.image`; default `product.selected_or_first_available_variant` |
 | `collection` | CollectionCard, FeaturedCollection | `RippleCollection` | `Collection`: `id`, `title`, `handle`, `image` | `collection.id`, `.title`, `.handle`, `.url`, `.image` |
 | `article` | ArticleCard | `RippleArticle` | `Article`: `id`, `title`, `handle`, `excerpt`, `publishedAt`, `image`, `blog.handle` | `article.id`, `.title`, `.url`, `.excerpt`, `.published_at`, `.image` |
@@ -1703,14 +1705,14 @@ UNVERIFIED:
 13. Exact required members of `ShopifyScriptTagsOptions` beyond `shop`, `i18n`, `consent`.
 14. The size of the complete `ripple.js` against the 45 kB budget (C-20).
 
-Differences with sibling documents, for their fix pass. This document is the definition (D-094); the other document MUST change:
+Differences with sibling documents that the closing pass settled (kept as a record; none is open):
 
 | Document | Difference | Resolution |
 |---|---|---|
-| `11-components-commerce.md` | Declares local types `VariantPickerProduct`, `VariantPickerOption`, `VariantPickerValue`, `VariantPickerVariant` with the fields of `RippleVariantOption` and `RippleVariantOptionValue`; uses the name `RippleFilters` in places. | Import `RippleProductDetail`, `RippleVariantOption`, `RippleVariantOptionValue`, `RippleVariant` from `<pkg>`; replace `RippleFilters` with `RippleFilter[]`. There is no `RippleFilters` type. |
-| `12-components-chrome-and-blueprints.md` | The product blueprint reads `product.descriptionHtml` on a `RippleProductDetail`; the type of 11.1 has no such field. | The blueprint's page-data type (local `types.ts`) carries `descriptionHtml` next to `product`; `RippleProductDetail` is not extended. |
-| `06-bindings.md` | Section 6.2 calls `subscribeRegionHtml(listener)` with one argument. | The signature is `subscribeRegionHtml(name, listener)` (8.3); the hook is the one printed in 8.3. |
-| `00-decisions.md` D-087 item 2 | Says the adapter starts "one microtask after the first commerce element connects". | The spike and section 4.4 start it one microtask after `ripple.js` is evaluated, so that `configureCommerce` in the same task still applies. The observable rule (options are read once, before any element upgrades) is the same. |
+| `11-components-commerce.md` | None open. `variant-picker.data.ts` imports `RippleProductDetail` and `RippleVariantOption` from `<pkg>`; chips and sort options are `RippleFilterChip[]` and `RippleSortOption[]`; there is no `RippleFilters` type. | Closed (D-110). |
+| `12-components-chrome-and-blueprints.md` | None open. The product blueprint reads `product.descriptionHtml`; `RippleProductDetail` (11.1) has the field. | Closed (D-110). |
+| `06-bindings.md` | None open. Section 6.2 prints the same `useRegionHtml` as 8.3 (`subscribeRegionHtml(name, listener)`). | Closed (D-110). |
+| `00-decisions.md` D-087 item 2 | None open. The ledger now says the start is one microtask after the commerce module is evaluated (section 4.5). | Closed (D-087 as amended). |
 
 ## 16. Spikes owned by this document
 
@@ -1810,4 +1812,4 @@ Fallback (SPIKE-11): the two options are removed from the Remix documentation an
 
 ## Ledger issues
 
-None open. See `00-decisions.md` section 13.2.
+None open. See `00-decisions.md` sections 13.2 and 13.3 (D-109 to D-113).

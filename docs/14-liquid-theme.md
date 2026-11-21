@@ -6,7 +6,7 @@ Status: specification. Date: 2026-11-21. Law: [00-decisions.md](00-decisions.md)
 
 This document specifies the **Ripple base theme**: the Shopify Liquid theme at `examples/liquid/` in the Ripple repository, built only from Ripple components. It replaces the component layer of the base theme in `ripple/theme/` and keeps that theme's platform rules (D-039). `ripple/theme/` is reference material: it MUST NOT be edited, copied wholesale, or shipped.
 
-Owned here (the theme's infrastructure, D-099 item 2): the theme rules; the theme file tree; the infrastructure snippets `rp-head`, `rp-tokens`, `rp-import-map-entries` in full; the theme-owned snippets `snippets/import-map.liquid` and `snippets/meta-tags.liquid` in full; `config/settings_schema.json`; `config/styles.css`; the settings group the CLI patches into other themes; the locale files; which partial is declared where; the replacement of every base theme block, snippet, custom element and asset; the no-JS gaps closed; acceptance criteria; SPIKE-02.
+Owned here (the theme's infrastructure, D-099 item 2): the theme rules; the theme file tree; the infrastructure snippets `rp-head`, `rp-tokens`, `rp-import-map-entries` in full; the theme-owned snippets `snippets/import-map.liquid` (in full) and `snippets/meta-tags.liquid` (the base theme file with two key renames, D-109); `config/settings_schema.json`; `config/styles.css`; the settings group the CLI patches into other themes; the locale files; which partial is declared where; the replacement of every base theme block, snippet, custom element and asset; the no-JS gaps closed; acceptance criteria; SPIKE-02.
 
 `snippets/import-map.liquid` and `snippets/meta-tags.liquid` are specified here and are files of the `layout` blueprint's Liquid list (keys `import-map`, `meta-tags`).
 
@@ -16,7 +16,7 @@ Not owned here (linked, never restated in full):
 
 | Topic | Owner |
 |---|---|
-| Liquid block file rules L-1 to L-18, tiers, generated block code | [06-bindings.md](06-bindings.md) section 8 |
+| Liquid block file rules L-1 to L-21, tiers, generated block code | [06-bindings.md](06-bindings.md) section 8 |
 | Component contracts, params, locale keys, region parts | [09-components-foundation.md](09-components-foundation.md), [10-components-interactive.md](10-components-interactive.md), [11-components-commerce.md](11-components-commerce.md), [12-components-chrome-and-blueprints.md](12-components-chrome-and-blueprints.md) |
 | Tokens, dials, layers, `theme.css`, component CSS | [03-styling-and-tokens.md](03-styling-and-tokens.md) |
 | `ripple.js`, lazy chunks, Invoker Commands polyfill, opener listener | [04-elements.md](04-elements.md) |
@@ -109,7 +109,7 @@ Rules are numbered T-n. "Template" below means a file in `templates/` or `layout
 - **T-21 No captures.** The templates of the Ripple theme MUST NOT contain `{% capture %}`.
 - **T-22 `attributes` use.** In the templates of the Ripple theme the `attributes` param is used only with this ONE literal form: `'data-rp-region="<region name>"'`. `data-rp-region` is the only Ripple hook attribute that may be passed through `attributes` (D-091 item 2). An overlay opener is written with the `dialog` param of `link`, `button` or `icon-button` (or the `drawer` param of `cart-link`), never with `attributes: 'data-rp-open=...'` (D-009 as amended).
 - **T-23 Raw HTML in templates.** The only HTML tags a template of the Ripple theme may write itself are: the document shell in `layout/*.liquid` (`html`, `head`, `body`, `main`), `li` (child of a `grid` or `stack` with `as: 'ul'` or `as: 'ol'`), `bdi`, `rp-view-event`, and `script type="application/json"` with the attribute `data-view-event-payload` as the only child of an `rp-view-event` (the cart view, D-089 item 3). Everything else is a block or a snippet. The Liquid tag `{% form %}` is not raw HTML and is allowed. A template writes no other `<script>` tag.
-- **T-24 Fixed ids.** These ids are fixed in every host's blueprint files and are referenced by other files exactly as written. The table is a copy of [12-components-chrome-and-blueprints.md](12-components-chrome-and-blueprints.md) section 1.5, which owns the list (D-107 item 4); when the two differ, doc 12 wins.
+- **T-24 Fixed ids.** These ids are fixed in every host's blueprint files and are referenced by other files exactly as written. The table is a copy of [12-components-chrome-and-blueprints.md](12-components-chrome-and-blueprints.md) section 1.5, which owns the list (D-107 item 4); the table below is byte-equal to it.
 
 | Id | Element | Referenced by |
 |---|---|---|
@@ -117,16 +117,16 @@ Rules are numbered T-n. "Template" below means a file in `templates/` or `layout
 | `main-nav` | NavigationMenu root | Header prop `navigationMenu` |
 | `mobile-nav` | MobileNav `<dialog>` | Header prop `mobileNav` |
 | `footer-menu` | the Footer's LinkList `<nav>` | Header prop `linkList` (the no-JS target of the menu opener, D-009) |
-| `cart-drawer` | CartDrawer `<dialog>` (CartDrawer's `id` defaults to it) | Header prop `cartDrawer` (which passes it to CartLink's `drawer`); MUST equal `CommerceOptions.cartDrawer` (D-087) |
 | `search-dialog` | the search Dialog `<dialog>` | Header prop `searchDialog` |
 | `predictive-search` | PredictiveSearch root | none |
 | `footer-locale` | LocaleSelector popover panel in the footer | none |
 | `newsletter` | NewsletterForm `<form>` | none |
-| `cart-drawer-list` | CartLines inside the drawer (form id `cart-drawer-list-form`) | `cart-summary` param `cart_lines` |
-| `cart` | CartLines on the cart page (form id `cart-form`) | `cart-summary`, `cart-note`, `checkout-button` param `cart_lines` |
+| `cart-drawer` | CartDrawer `<dialog>`. MUST equal `CommerceOptions.cartDrawer` (D-087); CartDrawer's `id` defaults to it | Header prop `cartDrawer` (which passes it to CartLink's `drawer`); `CommerceOptions.cartDrawer` |
+| `cart-drawer-list` | CartLines inside the drawer; its Liquid form id is `cart-drawer-list-form` | CartSummary `cartLines` / `cart_lines` in the drawer |
+| `cart` | CartLines on the cart page; its Liquid form id is `cart-form` (D-092) | `cartLines` / `cart_lines` of CartSummary, CartNote and CheckoutButton on the cart page |
 | `cart-discount` | DiscountCode on the cart page | none |
 | `cart-note` | CartNote on the cart page | none |
-| `product-gallery` | ProductGallery | the region-part snippet `rp-product-gallery-media` param `id` |
+| `product-gallery` | ProductGallery | none |
 | `product-options` | VariantPicker | none |
 | `product-form` | ProductForm | none |
 | `collection-filters` | Filters | none |
@@ -158,7 +158,7 @@ The binding rules are owned by [06-bindings.md](06-bindings.md) section 8. This 
 | Only the tags and filters of the Component scope of the Ripple Liquid subset | L-13, D-097 |
 | No `{% block %}`, no `{% partial %}`, no `{% capture %}` slot | L-12, L-7, T-2 |
 
-Infrastructure snippets (`rp-head`, `rp-tokens`, `rp-import-map-entries`, `rp-icon`, and the theme-owned `import-map` and `meta-tags`) use the Infrastructure scope of [06-bindings.md](06-bindings.md) rule L-13 (D-097): the component tags; the component filters plus `asset_url`, `stylesheet_tag`, `font_face`; and the font object members section 6.3 uses (`family`, `fallback_families`, `weight`, `style`, `system?`). The shim of [13-testing.md](13-testing.md) implements them. They have a `{% doc %}` and no `{% schema %}` (they are snippets).
+Infrastructure snippets (`rp-head`, `rp-tokens`, `rp-import-map-entries`, `rp-icon`, and the theme-owned `import-map` and `meta-tags`) use the Infrastructure scope of [06-bindings.md](06-bindings.md) rule L-13 (D-097): the component tags; the component filters plus `asset_url`, `stylesheet_tag`, `font_face`, and for `meta-tags` only `first`, `join`, `remove_first`, `slice`, `strip_html`, `money_without_currency`, `structured_data` (D-097 as amended, D-109); and the font object members section 6.3 uses (`family`, `fallback_families`, `weight`, `style`, `system?`). The shim of [13-testing.md](13-testing.md) implements them. They have a `{% doc %}` and no `{% schema %}` (they are snippets).
 
 Call-site rules for templates (the blueprint files of doc 12 follow them):
 
@@ -202,7 +202,7 @@ examples/liquid/
     en.default.schema.json                T  by hand: {} ; key "ripple" merged by the CLI (section 11)
   snippets/
     import-map.liquid                     T  blueprint layout (text: this document, section 7.1)
-    meta-tags.liquid                      T  blueprint layout (text: this document, section 7.6)
+    meta-tags.liquid                      T  blueprint layout (text: section 7.6, D-109)
     rp-head.liquid                        R  (section 7.3)
     rp-tokens.liquid                      R  (section 6.3)
     rp-import-map-entries.liquid          R  (section 7.2)
@@ -275,7 +275,7 @@ This theme is built only from Ripple components. Read the Ripple section below b
 12. Open an overlay from a link with the `dialog` param of `link`, `button` or `icon-button`; never write `data-rp-open` by hand.
 ```
 
-`<command form>` is not printed literally: when the file is created it is replaced by the Liquid command form of [07-manifest-registry-cli.md](07-manifest-registry-cli.md) section 7.1 rule 12, `npx <pkg>@<version>`, with the real package name (D-052) and the version being built.
+`<command form>` is not printed literally: when the file is created it is written `npx <pkg>` with the real package name (D-052) and NO version, which is the spelling for static files ([08-agent-kit-and-evals.md](08-agent-kit-and-evals.md) section 0; D-110). The two hand-made files therefore do not change when the package version changes, and the reproducibility test A-2 is version-independent.
 
 ### 4.3 `DESIGN.md`
 
@@ -355,7 +355,7 @@ Rules:
 ### 5.3 `assets/styles.min.css`
 
 1. It is the compiled output of `config/styles.css`. On a store it is regenerated by Canvas / Sidekick after theme changes (F-6). Ripple never writes it on a store.
-2. In the Ripple repository it is produced by the root `package.json` script `theme:css`, exactly: `tailwindcss -i examples/liquid/config/styles.css -o examples/liquid/assets/styles.min.css --minify` (package `@tailwindcss/cli`, a devDependency of the repository, major version 4). The result is committed.
+2. In the Ripple repository it is produced by the root `package.json` script `theme:css`, exactly: `tailwindcss -i examples/liquid/config/styles.css -o examples/liquid/assets/styles.min.css --minify` (package `@tailwindcss/cli`, a devDependency of the repository pinned at `4.3.5`, `01-architecture.md` section 9). The result is committed.
 3. Because of T-20 the shipped templates contain no utility, so this file contains only Tailwind's theme and preflight layers. Both sit below layer `rp` in the layer order, so Ripple rules win.
 4. The layout loads it AFTER `ripple.css` with `{{ 'styles.min.css' | asset_url | stylesheet_tag }}`.
 5. A stale or missing `styles.min.css` MUST NOT change the rendering of any Ripple component (acceptance A-12).
@@ -681,66 +681,31 @@ The base theme ships 15 element files and 7 helper modules and prints a module t
 
 The Liquid adapter inside `ripple.js` dispatches one `PageViewEvent` (from `@shopify/standard-events`) per document load when `options.analytics` is true (D-089 item 6). It reads the template name from `main[data-template]`, which the layout prints from `request.page_type`. The theme contains no page-view asset and no module tag for one ([05-commerce.md](05-commerce.md) section 12).
 
-### 7.6 `snippets/meta-tags.liquid` (complete, theme-owned)
+### 7.6 `snippets/meta-tags.liquid` (theme-owned; the base theme file with two key renames)
 
-This file is a file of the `layout` blueprint (key `meta-tags`); `ripple add --blueprint layout` writes it and appends the blueprint trailer. Both layouts render it directly after the import map. It prints the document metadata that `rp-head` does not print (D-099 item 4). It uses only the Infrastructure scope of the Ripple Liquid subset (D-097).
+This file is a file of the `layout` blueprint (key `meta-tags`, repository source `blueprints/layout/liquid/snippets/meta-tags.liquid`); `ripple add --blueprint layout` writes it and appends the blueprint trailer. Both layouts render it directly after the import map. It prints the document metadata that `rp-head` does not print (D-099 item 4).
 
-```liquid
-{% doc %}
-  Document metadata: charset, viewport, favicon, title, description,
-  canonical link, robots rule, Open Graph and Twitter tags.
-  Render it once in <head>, directly after the import map.
+Its text is decided by D-109: it is `theme/snippets/meta-tags.liquid` (253 lines, in this repository) with exactly these two replacements and no other change. The text is therefore not reprinted here; the base theme file is the source.
 
-  @example
-  {% render 'meta-tags' %}
-{% enddoc %}
-{%- liquid
-  assign meta_title = page_title | default: shop.name
-  assign meta_description = page_description | default: shop.description | default: shop.name
-  assign meta_url = canonical_url | default: request.origin
-  assign meta_type = 'website'
-  if request.page_type == 'product'
-    assign meta_type = 'product'
-  elsif request.page_type == 'article'
-    assign meta_type = 'article'
-  endif
-  assign meta_noindex = false
-  if request.page_type == 'search' or request.page_type == 'cart' or request.page_type == '404'
-    assign meta_noindex = true
-  endif
--%}
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-{%- if shop.brand.favicon != blank %}
-<link rel="icon" type="image/png" href="{{ shop.brand.favicon | image_url: width: 32, height: 32 }}">
-<link rel="apple-touch-icon" href="{{ shop.brand.favicon | image_url: width: 180, height: 180 }}">
-{%- endif %}
-<title>{{ meta_title | escape }}{% unless meta_title contains shop.name %} &ndash; {{ shop.name | escape }}{% endunless %}</title>
-<meta name="description" content="{{ meta_description | escape }}">
-<link rel="canonical" href="{{ meta_url | escape }}">
-{%- if meta_noindex == true %}
-<meta name="robots" content="noindex, follow">
-{%- endif %}
-<meta property="og:site_name" content="{{ shop.name | escape }}">
-<meta property="og:url" content="{{ meta_url | escape }}">
-<meta property="og:title" content="{{ meta_title | escape }}">
-<meta property="og:type" content="{{ meta_type }}">
-<meta property="og:description" content="{{ meta_description | escape }}">
-{%- if page_image != blank %}
-<meta property="og:image" content="https:{{ page_image | image_url: width: 1200 }}">
-<meta name="twitter:image" content="https:{{ page_image | image_url: width: 1200 }}">
-{%- endif %}
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="{{ meta_title | escape }}">
-<meta name="twitter:description" content="{{ meta_description | escape }}">
+| In `theme/snippets/meta-tags.liquid` | In `snippets/meta-tags.liquid` |
+|---|---|
+| `'general.meta.tagged'` | `'ripple.blueprints.layout.meta_tagged'` |
+| `'general.meta.page'` | `'ripple.blueprints.layout.meta_page'` |
+
+Build command for the source file (run once, output committed):
+
+```sh
+sed -e "s/'general\.meta\.tagged'/'ripple.blueprints.layout.meta_tagged'/" -e "s/'general\.meta\.page'/'ripple.blueprints.layout.meta_page'/" theme/snippets/meta-tags.liquid > blueprints/layout/liquid/snippets/meta-tags.liquid
 ```
 
 Rules:
 
-1. Globals read (the shim of [13-testing.md](13-testing.md) MUST supply them): `page_title`, `page_description`, `page_image`, `canonical_url`, `request.origin`, `request.page_type`, `shop.name`, `shop.description`, `shop.brand.favicon`. Evidence: every one is read by `theme/snippets/meta-tags.liquid`.
-2. The file prints no `<script>` element and no user-visible string that needs a locale key (the title is the platform's `page_title` and the shop name).
-3. The file is NOT a copy of `theme/snippets/meta-tags.liquid`. These parts of the base theme file are not carried over, because they need filters outside the Infrastructure scope (`structured_data`, `money_without_currency`, `strip_html`, `join`, `first`, `remove_first`, `slice`) or locale keys the Ripple theme does not have (`general.meta.tagged`, `general.meta.page`): the JSON-LD scripts (product, WebSite, Organization), the `og:price:*` tags, the `og:image` size and alt tags, the `hreflang` alternate links, and the "tagged" and "page N" suffixes of the title. A project MAY add them; SEO markup is a host concern outside Ripple.
-4. The values of `request.page_type` used here (`product`, `article`, `search`, `cart`, `404`) are those the base theme file tests; they are UNVERIFIED on a store (SPIKE-02 question V-18).
+1. What it prints (all carried over from the base theme, so SEO does not regress): charset and viewport metas, favicon links, Open Graph and Twitter metas including `og:price:*` and the image size and alt tags, `<title>` with the "tagged" and "page N" suffixes, canonical and `hreflang` alternate links, the description meta, the robots meta, and the JSON-LD scripts (product through `structured_data`, WebSite, Organization).
+2. Scope: the Infrastructure scope of [06-bindings.md](06-bindings.md) rule L-13 (D-097 as amended). The seven filters `first`, `join`, `remove_first`, `slice`, `strip_html`, `money_without_currency`, `structured_data` are in that scope only for this file.
+3. Locale keys: the two keys above. They are keys of the `layout` blueprint ([12-components-chrome-and-blueprints.md](12-components-chrome-and-blueprints.md), blueprint `layout`, "Locale keys"); English text `meta_tagged`: `tagged "{{ tags }}"`, `meta_page`: `Page {{ number }}` (the base theme's text). The theme has no `general.*` key.
+4. Globals read (the shim of [13-testing.md](13-testing.md) supplies them): `page_title`, `page_description`, `page_image`, `canonical_url`, `current_tags`, `current_page`, `request.origin`, `request.page_type`, `request.locale` (`root_url`), `shop` (`name`, `description`, `published_locales`, `brand.favicon`, `brand.logo`), `product` (on the product page), `routes.search_url`.
+5. The `<script type="application/ld+json">` elements it prints are data blocks, not JavaScript; rules T-23 and T-25 (no theme-owned script) do not apply to them.
+6. The values of `request.page_type` it tests (`product`, `article`, `password`, `search`, `cart`, `404`, `index`) are those of the base theme file; they are UNVERIFIED on a store (SPIKE-02 question V-18).
 
 ---
 
@@ -968,7 +933,7 @@ Ledger section 8.6, with the call that replaces the most common use. In the call
 | `import-map` | kept, rewritten | `snippets/import-map.liquid` (section 7.1) |
 | `lcp-preload` | removed | Image props `loading: 'eager'` and `fetch_priority: 'high'` on the first image; no preload link (dropped feature, Q19) |
 | `localization-form` | removed | LocaleSelector: `{% block 'locale-selector', id: 'footer-locale', side: 'top' %}{% endblock %}` |
-| `meta-tags` | kept, rewritten | `snippets/meta-tags.liquid` (section 7.6; theme-owned; a reduced file inside the Liquid subset) |
+| `meta-tags` | kept; two locale keys renamed | `snippets/meta-tags.liquid` (section 7.6; theme-owned; D-109) |
 | `mobile-nav-drawer` | removed | MobileNav block |
 | `notification-host` | removed | Toast: `{% block 'toast' %}{% endblock %}` |
 | `placeholder-texture` | removed | Placeholder: `{% block 'placeholder', ratio: '4/5' %}{% endblock %}` |
@@ -1142,7 +1107,7 @@ Needs: a development store with the feature preview `liquid_july_26_changes`, th
 | V-15 | Do `font_picker` defaults `system_ui_n4` and the `color_palette` id `rp_palette` validate on upload? | Yes | Correct section 6.1 and report to the ledger (D-098) |
 | V-16 | Are `additional_checkout_buttons` and `content_for_additional_checkout_buttons` readable inside a block file? | Yes | Move the accelerated part to the template through a named slot param (D-037 exception) and record it in doc 11 |
 | V-17 | Is `as` accepted as a `{% block %}` argument name and readable as a variable inside the block file (D-038 amendment (d), D-108)? | Yes | The Liquid param becomes `tag` through `prop.liquid.name` in every manifest entry that has `as`; every `as:` in blocks, templates and docs becomes `tag:`. Report to docs 06, 09 and 12 |
-| V-18 | Which values does `request.page_type` return for the 13 templates (the layout prints it as `data-template`; `meta-tags` tests `product`, `article`, `search`, `cart`, `404`)? | The values the base theme tests in `theme/snippets/meta-tags.liquid` | Correct section 7.6; report the list to doc 05 (page-view `template`) |
+| V-18 | Which values does `request.page_type` return for the 13 templates (the layout prints it as `data-template`; `meta-tags` tests `product`, `article`, `password`, `search`, `cart`, `404`, `index`)? | The values the base theme tests in `theme/snippets/meta-tags.liquid` | Correct section 7.6; report the list to doc 05 (page-view `template`) |
 | V-19 | Does a `font` object returned by a `font_picker` setting have the member `system?`, true for `system_ui_n4`, and does `font_face` print nothing harmful for it? | `system?` exists and is true for system fonts | Replace the four conditions of section 6.3 by a comparison of `font_body.family` and `font_heading.family` with the family name the store returns for `system_ui_n4`, recorded here |
 | V-20 | Does `standard_event_data: 'view', context: 'page'` produce a payload that the element defined by `createViewEventElement()` under the tag `rp-view-event` accepts, for `product` and `collection` (attribute form), `search` (attribute form) and `cart` (child form)? | Yes for all four | For an object the filter rejects (`search` is the one not seen in the base theme): doc 12 omits the element on that template. If the tag name matters: report to doc 05 |
 
@@ -1163,7 +1128,7 @@ When recommendations cannot be fetched as a partial ([11-components-commerce.md]
 
    ```liquid
    {% if settings.rp_related_collection != blank %}
-     {% block 'featured-collection', collection: settings.rp_related_collection %}{{ 'ripple.product-recommendations.title' | t }}{% endblock %}
+     {% block 'featured-collection', collection: settings.rp_related_collection, limit: 4 %}{% endblock %}
    {% endif %}
    ```
 
@@ -1204,4 +1169,4 @@ UNVERIFIED items and their spike:
 
 ## Ledger issues
 
-None open. See `00-decisions.md` section 13.2.
+None open. See `00-decisions.md` sections 13.2 and 13.3 (D-109 to D-113).

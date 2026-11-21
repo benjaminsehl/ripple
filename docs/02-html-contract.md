@@ -193,7 +193,7 @@ Hook attributes are read by JavaScript and by tests. CSS MUST NOT select them; t
 | `data-url` | `rp-recommendations` root | URL | The document to fetch the recommendations region from (D-046) |
 | `view-event-trigger`, `view-event-payload` | `rp-view-event` | `view-event-trigger`: `connect` (the only trigger blueprints use in V1) or `intersect`. `view-event-payload`: JSON text | View analytics (D-089, C-20). Not `data-` attributes: the names are fixed by `@shopify/standard-events` |
 | `data-view-event-payload` | the `<script type="application/json">` child of `rp-view-event` | empty | The child form of the payload, used for the cart view (D-089, C-20) |
-| `data-template` | `<main>` in the layout | page type | Read by the Liquid page-view dispatch (D-089) |
+| `data-template` | `<main>` in the Liquid layout only | page type | Read by the Liquid page-view dispatch (D-089) |
 | `data-agent-confirm` | controls | one sentence | Agent bridge: needs confirmation (D-065). REQUIRED on CheckoutButton (D-095) |
 | `data-agent-secret`, `data-agent-hidden` | controls | empty | Agent bridge (D-065) |
 | `data-rmx-*` | Remix output only | see `06-bindings.md` | Host extras; never in a contract; removed by canonicalisation (K-4) |
@@ -758,7 +758,7 @@ Target: WCAG 2.2 AA (D-066). Each rule has a test. The component spec's "Accessi
 - **A-9 Headings and titles.** Heading `level` selects `h1` to `h6` and is independent of visual `size`. Dialog and Drawer REQUIRE a title part with `id="<id>-title"`, referenced by `aria-labelledby` on the `<dialog>`.
   - Test: RP113 structure rule `dialog-needs-title`; lint check `a-3`.
 
-- **A-10 Landmarks.** A component that prints `<nav>` prints an `aria-label` on it from a locale key (Breadcrumb, Pagination, NavigationMenu, LinkList, MobileNav). SkipLink targets the `id` of `<main>`: its `href` defaults to `#main`, and the layout prints `<main id="main" data-template="<page type>">` (D-086, D-099).
+- **A-10 Landmarks.** A component that prints `<nav>` prints an `aria-label` on it from a locale key (Breadcrumb, Pagination, NavigationMenu, LinkList, MobileNav). SkipLink targets the `id` of `<main>`: its `href` defaults to `#main`, and the layout prints `<main id="main" tabindex="-1">`; on Liquid only, additionally `data-template="<page type>"` (D-086, D-089 item 6, D-099).
   - Test: lint check `a-10` (every `<nav>` in a fixture has `aria-label` or `aria-labelledby`).
 
 - **A-11 Live regions exist before they are used.** An element that will receive announced text (`role="status"`, `role="alert"`, the Announcer component, the `data-rp-part="error"` and `data-rp-part="status"` parts) is printed by the server, empty. The Announcer component (`<div class="rp-announcer" role="status" data-rp-part="status">`) MUST be placed inside a `<dialog>` or inside an `rp-*` root, and nowhere else; the `layout` blueprint prints NO Announcer, because the page-level live regions are created by the runtime (D-079). CartLines, CartSummary, CartNote and DiscountCode each always print one status part, because each can sit inside the modal CartDrawer. Cart changes MUST be announced (D-066 item 5; `04-elements.md`, `05-commerce.md`).
@@ -1706,4 +1706,4 @@ Part B, the Popover panel:
 
 ## Ledger issues
 
-None open. See `00-decisions.md` section 13.2.
+None open. See `00-decisions.md` sections 13.2 and 13.3 (D-109 to D-113).

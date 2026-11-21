@@ -522,19 +522,21 @@ JSON Schema draft 2020-12. Validated with `jsonschema` 4.26 (with `fixture.schem
     "structureRule": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "kind", "selector", "message", "fix"],
+      "required": ["id", "kind", "message", "fix"],
       "properties": {
         "id": {"$ref": "#/$defs/kebab"},
-        "kind": {"enum": ["requires-ancestor", "forbids-ancestor", "requires-descendant", "forbids-descendant", "requires-attribute", "max-count"]},
+        "kind": {"enum": ["requires-ancestor", "forbids-ancestor", "requires-descendant", "forbids-descendant", "requires-attribute", "max-count", "custom"]},
         "selector": {"type": "string", "minLength": 1},
         "target": {"type": "string", "minLength": 1},
         "count": {"type": "integer", "minimum": 0},
         "message": {"type": "string", "minLength": 1},
         "fix": {"type": "string", "minLength": 1}
       },
-      "if": {"properties": {"kind": {"const": "max-count"}}},
-      "then": {"required": ["count"]},
-      "else": {"required": ["target"]}
+      "allOf": [
+        {"if": {"properties": {"kind": {"const": "custom"}}}, "then": {"not": {"anyOf": [{"required": ["selector"]}, {"required": ["target"]}, {"required": ["count"]}]}}, "else": {"required": ["selector"]}},
+        {"if": {"properties": {"kind": {"const": "max-count"}}}, "then": {"required": ["count"]}},
+        {"if": {"properties": {"kind": {"enum": ["max-count", "custom"]}}}, "else": {"required": ["target"]}}
+      ]
     },
     "file": {
       "type": "object",
@@ -2224,7 +2226,7 @@ Rules for every generated file: UTF-8; LF; exactly one trailing newline; no time
 | G7 Types | `src/gen/types.ts` | `src/types.generated.ts` (exported from `src/index.ts`): `Breakpoint`, `SpaceStep`, `Responsive<T>`, `ComponentId`, `IconName`, `RegionName`, `RuleId`. `src/react/jsx.generated.ts` and `src/remix/jsx.generated.ts`: `IntrinsicElements` entries for every key of `elements` (including `rp-view-event`, whose attributes are `view-event-trigger` and `view-event-payload`, D-089), with attributes typed from the manifest; the exact declaration text is owned by `06-bindings.md` sections 6.3 and 7.2. | manifest, `icons/`, ledger D-046 |
 | G8 Checks | `src/gen/index.ts`, `src/gen/css-lint.ts` | none | Build checks MB-1 to MB-24 (1.6), fixture lint (`02-html-contract.md` 11.8), CSS lint (`03-styling-and-tokens.md` 7.9) |
 | G9 Registry map | `src/gen/registry.ts` | none (in-memory `RegistryIndex`, 4.2; written to `pkg/` only by `pnpm build`) | manifest |
-| G10 HTML blueprints | `src/gen/index.ts` (function `generateBlueprintHtml`; ledger tree 5.1 has no separate module for it) | `blueprints/<id>/html/<id>.html` for each of the 14 blueprints (D-101 item 4; `12-components-chrome-and-blueprints.md` rules H-1 and H-2) | Procedure: (1) bundle `blueprints/<id>/react/<id>.tsx` and `blueprints/layout/react/layout.tsx` in memory with esbuild, with the alias `@components/<c>` resolved to `components/<c>/react/<c>.tsx` and `__PKG__` resolved to `src/`; (2) read the props object from `blueprints/_sample/<id>.json` and `blueprints/_sample/layout.json`; (3) call `renderDocument` (`12-components-chrome-and-blueprints.md` 2.6) to get the document string; (4) apply H-2; (5) write the string unchanged, followed by one trailing newline. (`12-components-chrome-and-blueprints.md` H-1 says "pretty-printed by the fixture printer of `02-html-contract.md`"; that document defines no printer, so no re-formatting is applied. The tier 2 comparison uses canonical forms, which do not depend on whitespace between tags.) The step needs `react` and `react-dom/server` (dev dependencies of the repository). A sample file that is missing fails with `gen: blueprints/_sample/<id>.json: missing`. |
+| G10 HTML blueprints | `src/gen/index.ts` (function `generateBlueprintHtml`; ledger tree 5.1 has no separate module for it) | `blueprints/<id>/html/<id>.html` for each of the 14 blueprints (D-101 item 4; `12-components-chrome-and-blueprints.md` rules H-1 and H-2) | Procedure: (1) bundle `blueprints/<id>/react/<id>.tsx` and `blueprints/layout/react/layout.tsx` in memory with esbuild, with the alias `@components/<c>` resolved to `components/<c>/react/<c>.tsx` and `__PKG__` resolved to `src/`; (2) read the props object from `blueprints/_sample/<id>.json` and `blueprints/_sample/layout.json`; (3) call `renderDocument` (`12-components-chrome-and-blueprints.md` 2.6) to get the document string; (4) apply H-2; (5) write the string unchanged, followed by one trailing newline. (No re-formatting is applied, as `12-components-chrome-and-blueprints.md` H-1 says. The tier 2 comparison uses canonical forms, which do not depend on whitespace between tags.) The step needs `react` and `react-dom/server` (dev dependencies of the repository). A sample file that is missing fails with `gen: blueprints/_sample/<id>.json: missing`. |
 
 Build-only outputs (never committed; written under `pkg/` by `pnpm build` step 8 of `01-architecture.md` section 7, using the same modules):
 
@@ -2232,7 +2234,7 @@ Build-only outputs (never committed; written under `pkg/` by `pnpm build` step 8
 |---|---|---|
 | `manifest.json`, `manifest.schema.json`, `fixture.schema.json`, `config.schema.json` | `src/gen/registry.ts` | 1.1 |
 | `registry/**` | `src/gen/registry.ts` | section 4 |
-| `docs/components/<id>.md`, `docs/INDEX.md`, `docs/llms.txt`, `docs/rules/<RULE>.md` | `src/gen/docs.ts` | page formats owned by `08-agent-kit-and-evals.md`; `docs/rules/<RULE>.md` is generated from the rule table of 9.6 (fields: id, severity, layers, hosts, detects, how to fix) |
+| `docs/components/<id>.md`, `docs/INDEX.md`, `docs/llms.txt`, `docs/rules/<RULE>.md` | `src/gen/docs.ts` | page formats owned by `08-agent-kit-and-evals.md`; `docs/rules/<RULE>.md` is generated from each rule file's two exports: `meta` (9.3) and `text` (the `RuleText` of `08-agent-kit-and-evals.md` section 5.5) |
 | `custom-elements.json`, `html-custom-data.json` | `src/gen/registry.ts` | 3.4 |
 
 The generated `AGENTS.md` section is produced at CLI run time by `src/gen/agents-md.ts` (bundled into the CLI) from the manifest and the installed component list; its content is owned by `08-agent-kit-and-evals.md`.
@@ -3278,7 +3280,7 @@ Sources: `registry/liquid/locales/core.json`, `registry/liquid/locales/<id>.json
 
 #### 7.6.5 `core/patch:agents`
 
-Target: `AGENTS.md` at the project root (theme root on Liquid). Marker region `<!-- ripple:start agents -->` ... `<!-- ripple:end agents -->`. The body is `generateAgentsSection(manifest, host, installedComponentIds)` from `src/gen/agents-md.ts` (content and the 12,000-byte limit: `08-agent-kit-and-evals.md`, D-060). The file is created when absent; the region is appended after one blank line when the markers are absent, and replaced in place when present. On Liquid, if the resulting file would exceed 50,000 bytes (`ripple/theme/AGENTS.md` rule; RP406) the patch is `patch-failed` and nothing is written to that file.
+Target: `AGENTS.md` at the project root (theme root on Liquid). Marker region `<!-- ripple:start agents -->` ... `<!-- ripple:end agents -->`. The body is `renderAgentsSection(input)` from `src/gen/agents-md.ts`, where `input` is the `AgentsSectionInput` built from the manifest, the detected host, the installed component and blueprint ids and the command form of 7.1 rule 12 (signature, content and the 12,000-byte limit: `08-agent-kit-and-evals.md` section 3, D-060). The file is created when absent; the region is appended after one blank line when the markers are absent, and replaced in place when present. On Liquid, if the resulting file would exceed 50,000 bytes (`ripple/theme/AGENTS.md` rule; RP406) the patch is `patch-failed` and nothing is written to that file.
 
 #### 7.6.6 `core/patch:package-json` (npm hosts)
 
@@ -3959,6 +3961,8 @@ export interface HtmlDocument {
   text: string
 }
 
+// Besides its Rule object, each rule file exports `text: RuleText` ({ problem, fix, bad, good }; type declared in
+// src/check/report.ts; wording owned by 08-agent-kit-and-evals.md section 5.5). The engine fills diagnostics from it.
 export interface Rule {
   meta: RuleMeta
   source?(file: SourceFile, context: RuleContext): void
@@ -4015,7 +4019,7 @@ RP101 error  templates/index.liquid:3:22  button: unknown value "outlined" for p
   allowed: primary | secondary | outline | ghost | link | destructive
   fix:     variant: 'outline'
   why:     Prop values are enumerated. An unknown value matches no CSS rule, so the component renders its default.
-  docs:    npx ripple-kit@0.1.0 docs button
+  docs:    npx ripple-kit@0.1.0 docs RP101
 
 1 problem in 14 files. Fix the first one and run `npx ripple-kit@0.1.0 check` again.
 ```
@@ -4030,6 +4034,7 @@ Standard output is `JSON.stringify(report, null, 2)` plus one newline, where `re
 
 `fix` MUST be text that can replace `found` whenever one of these rules applies; otherwise it is one imperative sentence.
 
+0. Synonyms first: when the found value is a key of `FIX_SYNONYMS` and the mapped value is allowed for the prop, the fix is the mapped value. `FIX_SYNONYMS` is a constant in `src/check/report.ts`; its content (word data) is owned by `08-agent-kit-and-evals.md` section 5.3.
 1. Enumeration: the allowed value with the smallest Levenshtein distance to the found value when that distance is at most 2 (ties: the earlier value in the manifest list); otherwise the prop's default; when there is no default, the first allowed value.
 2. Numeric scale: the scale step numerically nearest to the found number (ties: the smaller).
 3. Size words: when the found value is one of `xs`, `xl`, `2xl`, `3xl` and the enumeration is a subset of `sm`, `md`, `lg`: `sm` for `xs`, `lg` for the others.
@@ -4266,6 +4271,9 @@ For every root R of component C and every entry `rule` of `C.rules`: let `subjec
 | `forbids-descendant` | Some descendant of S matches a selector of `rule.target` |
 | `requires-attribute` | S lacks the attribute named `rule.target` (present with an empty value counts as present) |
 | `max-count` | Evaluated once per R, not per subject: `subjects.length > rule.count` |
+| `custom` | Evaluated once per R: `CUSTOM_RULES[rule.id](R)` returns a non-empty array of elements; one diagnostic per returned element, with `found:` its opening tag |
+
+Kind `custom` (D-111) is for a structure rule the six selector kinds cannot express. The entry has only `id`, `kind`, `message`, `fix`. `src/check/rules/RP113.ts` exports `CUSTOM_RULES: Record<string, (root: Element) => Element[]>` (the elements that violate the rule; an empty array passes). The keys are exactly the ids of the manifest rules of kind `custom`, and `pnpm gen --check` fails when a manifest `custom` rule has no function or a function has no manifest rule. The detection of each is the sentence in its component's "Checker rules" section of `09-components-foundation.md`: `field-one-control`, `field-label-for`, `field-describedby`, `field-invalid`, `radio-group-legend`, `radio-group-one-name`, `radio-group-one-checked`, `rich-text-plain-html`, `video-needs-source` are the nine of doc 09. A rule that `10-components-interactive.md`, `11-components-commerce.md` or `12-components-chrome-and-blueprints.md` states as a sentence without naming one of the six selector kinds is a `custom` rule in the same way; its sentence is its detection.
 
 `rule.target` for the first four kinds is a comma-separated list; the checker splits on `,`, trims, and parses each item with `parseSelector`. The diagnostic uses `problem: rule.message`, `fix: rule.fix`, `found:` the opening tag of S (or of R for `max-count`), and appends ` [<rule.id>]` to `problem`.
 
@@ -4292,7 +4300,7 @@ The `MutationObserver` records are filtered by the component's `upgradeAllow` en
 
 The V1 set is exactly 55 rule ids (D-059, D-102 item 1): RP101 to RP105, RP110 to RP118, RP201 to RP204, RP301 to RP309, RP320, RP321, RP401 to RP406, RP501 to RP508, RP510 to RP512, RP601 to RP609. Ownership (ledger section 12): this document owns each rule's id, severity, layer, hosts, detection and `fix` computation, and the output format of 9.4. `08-agent-kit-and-evals.md` owns each rule's `problem`, `fix` and `why` TEXT and the rule pages; where a "Fix given" cell below words a sentence differently from that document's table, that document's wording is printed.
 
-Columns: **Sev** `E` error, `W` warning. **Layer** as in 9.1. **Hosts**: `all`, or the listed hosts. "TC" marks a rule that Theme Check also reports (9.5.4 rule 4). Every rule has a page `docs/rules/<RULE>.md` generated from this table (3.2).
+Columns: **Sev** `E` error, `W` warning. **Layer** as in 9.1. **Hosts**: `all`, or the listed hosts. "TC" marks a rule that Theme Check also reports (9.5.4 rule 4). Every rule has a page `docs/rules/<RULE>.md` generated from the rule file's `meta` and `text` exports (3.2).
 
 Usage and structure
 
@@ -4426,7 +4434,7 @@ Checks added to build step 10 (the build fails on any):
 | RB-5 | Concatenating `registry/css/tokens.css`, `base.css`, `props.css` and every `registry/css/components/<id>.css` in ascending id order, after `css/layers.css`, is byte-identical to `pkg/browser/ripple.css` |
 | RB-6 | `registry/css/props.css` equals `generatePropsCss(<registry/css/tokens.css>)` and `registry/css/theme.css` equals `generateThemeCss(<registry/css/tokens.css>)` (so a fresh install is `current`, not `stale`) |
 | RB-7 | `registry/liquid/assets/` holds exactly six files (`ripple.js`, `ripple-tabs.js`, `ripple-tooltip.js`, `ripple-toast.js`, `ripple-shared.js`, `ripple-agent.js`). Each contains no relative `import` specifier: only the six bare specifiers `ripple`, `ripple/tabs`, `ripple/tooltip`, `ripple/toast`, `ripple/shared`, `ripple/agent` (D-054 item 3) and the `@shopify/*` platform specifiers that `04-elements.md` section 5.4 lists |
-| RB-8 | In a temporary directory: `ripple init --host liquid` then `ripple add --all`, on a copy of the base theme fixture `test/fixtures/theme-min/` (a `layout/theme.liquid`, an empty `templates/`, `config/settings_schema.json` containing `[]`, `locales/en.default.json` containing `{}`), exits 0; a second run of both prints no line other than `unchanged` and `patch-skipped` lines; `ripple status --json` reports every component `current` |
+| RB-8 | In a temporary directory: `ripple init --host liquid` then `ripple add --all`, on a copy of the base theme fixture `test/fixtures/theme-min/` (a `layout/theme.liquid`, an empty `templates/`, `config/settings_schema.json` containing `[]`, `locales/en.default.json` containing `{}`; the `layout/theme.liquid` contains a line with `{{ content_for_header }}`, anchor 3 of `core/patch:head`, 7.6), exits 0; a second run of both prints no line other than `unchanged` and `patch-skipped` lines; `ripple status --json` reports every component `current` |
 | RB-9 | The same for `--host react` in a directory containing `package.json` with `react` in `dependencies` and `app/styles/app.css` containing `@import "tailwindcss";` |
 
 ### 10.3 `ripple.js` on each host
@@ -4487,7 +4495,7 @@ NOT breaking: adding a component, an optional prop, an enumeration value, a part
 1. A published version is NEVER unpublished and its tarball never changes: `upgrade` fetches old versions as merge bases (8.3).
 2. Dist-tags: `latest` for releases; `next` for prereleases (`0.2.0-next.1`). Liquid instructions always say `npx <pkg>@latest`.
 3. Every release ships `CHANGELOG.md` at the repository root with one section per version and the fixed sub-headings `Breaking`, `Added`, `Fixed`, `Checker`, `Pins`. A `Breaking` entry MUST name the affected component ids and say what `ripple upgrade` does about it.
-4. Release checklist (script `pnpm release:check`, each line fails the script):
+4. Release checklist (script `pnpm release:check`, which is `pnpm gen --release-check`: `src/gen/index.ts` runs the checklist on that flag, `01-architecture.md` section 5.1; each line fails the script):
    1. `pnpm gen --check` exits 0.
    2. `pnpm build` exits 0 (includes RB-1 to RB-9 and `01-architecture.md` tests).
    3. The full test suite of `13-testing.md` for the tiers that need no store exits 0.
@@ -4640,4 +4648,4 @@ If bindings must print `data-rp-open` / `data-rp-close` on buttons (`02-html-con
 
 ## Ledger issues
 
-None open. See `00-decisions.md` section 13.2.
+None open. See `00-decisions.md` sections 13.2 and 13.3 (D-109 to D-113).

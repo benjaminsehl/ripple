@@ -28,8 +28,8 @@ Not in this document, and where to find it:
 |---|---|
 | Source code and behaviour of `rp-dialog`, `rp-carousel`, `rp-quantity`; the runtime, the Invoker Commands polyfill, the link opener listener, the lazy loader, `toast()` | `04-elements.md` |
 | Contract rules, id rules, upgrade allow-list format, fixture record format, canonicalisation | `02-html-contract.md` |
-| Tokens, layers, the component CSS skeleton and lint rules CSS-01 to CSS-29, `base.css` | `03-styling-and-tokens.md` |
-| Binding code patterns, `useElement`, Remix rules X-1 to X-12, Liquid rules L-1 to L-18, schema label keys (D-038) | `06-bindings.md` |
+| Tokens, layers, the component CSS skeleton and lint rules CSS-01 to CSS-31, `base.css` | `03-styling-and-tokens.md` |
+| Binding code patterns, `useElement`, Remix rules X-1 to X-12, Liquid rules L-1 to L-21, schema label keys (D-038) | `06-bindings.md` |
 | Manifest schema, structure rule kinds, checker rule ids | `07-manifest-registry-cli.md` |
 | Button, IconButton, Link, Icon (the openers, closers and icons used here) | `09-components-foundation.md` |
 | CartDrawer, ProductGallery | `11-components-commerce.md` |
@@ -1137,7 +1137,7 @@ The title has no props other than `class` and rest props / `attributes`.
 Fixture `default` (`id="shipping-info"`; one paragraph):
 
 ```html
-<div class="rp-popover" id="shipping-info" popover data-side="bottom" data-align="start">
+<div class="rp-popover" id="shipping-info" popover="" data-side="bottom" data-align="start">
   <p>Free shipping on orders over $50.</p>
 </div>
 ```
@@ -1145,7 +1145,7 @@ Fixture `default` (`id="shipping-info"`; one paragraph):
 Fixture `title` (`id="shipping-info"`; title and one paragraph):
 
 ```html
-<div class="rp-popover" id="shipping-info" popover data-side="bottom" data-align="start">
+<div class="rp-popover" id="shipping-info" popover="" data-side="bottom" data-align="start">
   <p class="rp-popover-title">Shipping</p>
   <p>Free shipping on orders over $50.</p>
 </div>
@@ -1154,7 +1154,7 @@ Fixture `title` (`id="shipping-info"`; title and one paragraph):
 Fixture `placement` (`id="order-actions"`, `side="top"`, `align="end"`):
 
 ```html
-<div class="rp-popover" id="order-actions" popover data-side="top" data-align="end">
+<div class="rp-popover" id="order-actions" popover="" data-side="top" data-align="end">
   <p>Actions</p>
 </div>
 ```
@@ -1162,7 +1162,7 @@ Fixture `placement` (`id="order-actions"`, `side="top"`, `align="end"`):
 Fixture `invalid-enum-falls-back` (`id="w1"`, `side="bogus"`):
 
 ```html
-<div class="rp-popover" id="w1" popover data-side="bottom" data-align="start">
+<div class="rp-popover" id="w1" popover="" data-side="bottom" data-align="start">
   <p>Text</p>
 </div>
 ```
@@ -1170,7 +1170,7 @@ Fixture `invalid-enum-falls-back` (`id="w1"`, `side="bogus"`):
 Fixture `class` (`id="w2"`, `class="custom-a custom-b"`):
 
 ```html
-<div class="rp-popover custom-a custom-b" id="w2" popover data-side="bottom" data-align="start">
+<div class="rp-popover custom-a custom-b" id="w2" popover="" data-side="bottom" data-align="start">
   <p>Text</p>
 </div>
 ```
@@ -1417,7 +1417,7 @@ export function ShippingInfo() {
 `blocks/popover.liquid` markup (between the guards and the schema), complete:
 
 ```liquid
-<div class="rp-popover {{ class | escape }}" id="{{ id | escape }}" popover data-side="{{ side }}" data-align="{{ align }}" {{ attributes }}>{{ content }}</div>
+<div class="rp-popover {{ class | escape }}" id="{{ id | escape }}" popover="" data-side="{{ side }}" data-align="{{ align }}" {{ attributes }}>{{ content }}</div>
 ```
 
 ### Commerce
@@ -4078,4 +4078,4 @@ When SPIKE-04 finds that a root-only `definePrimitive` does not work, `rp-quanti
 
 ## Ledger issues
 
-None open. See `00-decisions.md` section 13.2.
+None open. See `00-decisions.md` sections 13.2 and 13.3 (D-109 to D-113).

@@ -353,7 +353,7 @@ The tree in `00-decisions.md` section 5.1 is the complete tree, and the lists be
 | `pnpm-lock.yaml` | G | Lockfile; committed. |
 | `tsconfig.json` | H | TypeScript configuration (section 5.2). |
 | `size-budget.json` | H | Budgets of D-064; format owned by `13-testing.md`. |
-| `README.md`, `PLAN.md`, `AGENTS.md`, `LICENSE` | H | Project documents. `AGENTS.md` here is for contributors to Ripple; the section generated into projects is owned by `08-agent-kit-and-evals.md`. |
+| `README.md`, `PLAN.md`, `AGENTS.md`, `CHANGELOG.md`, `LICENSE` | H | Project documents. `CHANGELOG.md` has one section per version (`07-manifest-registry-cli.md` section 11). `AGENTS.md` here is for contributors to Ripple; the section generated into projects is owned by `08-agent-kit-and-evals.md`. |
 | `.github/` | H | `workflows/ci.yml` and `workflows/nightly.yml` (D-103; content owned by `13-testing.md`). |
 | `.gitignore` | H | MUST contain exactly the lines `node_modules/`, `pkg/`, `evals/runs/`. |
 
@@ -450,7 +450,8 @@ The root manifest is private. It lists the runtime dependencies and peers so tha
     "test:component": "pnpm test:run --tiers=1,2,3,4,5,6",
     "ci": "pnpm typecheck && pnpm gen --check && pnpm build && pnpm examples:install && pnpm test --no-skips",
     "eval": "node evals/adapters/run.ts",
-    "release:check": "pnpm gen --release-check"
+    "release:check": "pnpm gen --release-check",
+    "theme:css": "tailwindcss -i examples/liquid/config/styles.css -o examples/liquid/assets/styles.min.css --minify"
   },
   "dependencies": {
     "@ui-sdk/core": "0.1.0-beta.14",
@@ -488,6 +489,7 @@ Who owns each script (D-103 item 2):
 | `examples:install`, `test:run`, every `test*` script, `ci` | `13-testing.md` section 2.3 | the test runner `test/run.ts`; the text above MUST equal that section |
 | `eval` | `08-agent-kit-and-evals.md` section 8 | the eval harness `evals/adapters/run.ts`; not part of `pnpm test` or `pnpm ci` |
 | `release:check` | `07-manifest-registry-cli.md` section 11 | the release checklist of that section: `src/gen/index.ts` runs it when it receives the flag `--release-check`, and exits non-zero on the first failed line |
+| `theme:css` | `14-liquid-theme.md` section 5.3 | compiles `examples/liquid/config/styles.css` to `examples/liquid/assets/styles.min.css` with `@tailwindcss/cli` |
 
 - `pnpm gen --check` and `pnpm gen --release-check` work because pnpm appends extra arguments to the end of the script, so the flag reaches `gen.mjs`.
 - Any devDependency added by another document MUST be an exact version (no `^`, no `~`) and MUST be added to the table in section 9.
@@ -942,7 +944,7 @@ Each test is pass/fail and automatable. Where each test lives: A-01 to A-04, A-1
 
 | Id | Tier | Test | Pass condition |
 |---|---|---|---|
-| A-01 | 1 | List top-level entries of the repository (excluding `.git`, `.gitignore`, `node_modules`). | Set equals: `package.json`, `pnpm-lock.yaml`, `tsconfig.json`, `size-budget.json`, `README.md`, `PLAN.md`, `AGENTS.md`, `LICENSE`, `.github`, `bin`, `docs`, `theme`, `src`, `css`, `icons`, `locales`, `components`, `blueprints`, `skills`, `guides`, `evals`, `examples`, `test`, `pkg` (`pkg` optional). No `pnpm-workspace.yaml`. |
+| A-01 | 1 | List top-level entries of the repository (excluding `.git`, `.gitignore`, `node_modules`). | Set equals: `package.json`, `pnpm-lock.yaml`, `tsconfig.json`, `size-budget.json`, `README.md`, `PLAN.md`, `AGENTS.md`, `CHANGELOG.md`, `LICENSE`, `.github`, `bin`, `docs`, `theme`, `src`, `css`, `icons`, `locales`, `components`, `blueprints`, `skills`, `guides`, `evals`, `examples`, `test`, `pkg` (`pkg` optional). No `pnpm-workspace.yaml`. |
 | A-02 | 1 | List entries of `src/`. | Directories equal `runtime`, `elements`, `commerce`, `react`, `remix`, `agent`, `testing`, `check`, `cli`, `gen`; files equal `identity.ts`, `index.ts`, `responsive.ts`, `image.ts`, `types.ts` plus `*.test.ts`. `src/runtime/element.ts` does not exist. |
 | A-03 | 1 | Parse every specifier of `import`, `export ... from` and `import()` in `src/**/*.ts` (not `*.test.ts`) and check it against `IMPORT_RULES` (section 2.2), with the five reading rules stated below the object. | Zero violations; every file matches a key. In particular: no file under `src/check/` imports `src/cli/`; the only specifier containing `remix` under `src/` is `remix/component` in an `import type` statement under `src/remix/`. |
 | A-04 | 1 | Search `src/**/*.ts` for the strings `@ui-sdk/react`, `@ui-sdk/core/internal`, `@ui-sdk/core/web.css`, `@remix-run/ui`, `@shopify/hydrogen/react`, `@tailwindcss/browser`, `CartProvider`, `ripple-kit` (the last one excluding `src/identity.ts`), and for `.css"` / `.css'` import specifiers. | Zero matches. |
@@ -953,7 +955,7 @@ Each test is pass/fail and automatable. Where each test lives: A-01 to A-04, A-1
 | A-09 | 7 | React example, built by its bundler: in the browser evaluate that the object returned by `getCommerce()` imported through `<pkg>/commerce` is identical (`===`) to the one the `<pkg>/react` hooks read (exposed by a test-only component that stores it on `window`). Count `createCartStore` calls with a wrapper installed by the test. | Identical object; exactly one call. |
 | A-10 | build | Build with `RIPPLE_PKG_NAME=@acme/storefront-ui`, then search every file under `pkg/` for `ripple-kit` and `__PKG__`. | Zero matches; `pkg/package.json` `name` is `@acme/storefront-ui`. |
 | A-11 | build | Read `pkg/package.json`. | `dependencies` keys equal exactly `@ui-sdk/core`, `@ui-sdk/web`, both `0.1.0-beta.14`; `peerDependencies` keys equal exactly the five of section 6.2; there is no `devDependencies` key; `pkg/manifest.json` `pins` equals the object in section 7. |
-| A-12 | 1 | Read the root `package.json`. | No value in `dependencies` or `devDependencies` contains any of `^ ~ > < * x` as a range character (test: every value matches `/^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$/`). The `scripts` object has the keys `gen`, `build`, `typecheck`, `test`, `eval`, `release:check`. The `devDependencies` include every tool row of section 9 at the pinned version. |
+| A-12 | 1 | Read the root `package.json`. | No value in `dependencies` or `devDependencies` contains any of `^ ~ > < * x` as a range character (test: every value matches `/^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$/`). The `scripts` object has the keys `gen`, `build`, `typecheck`, `test`, `eval`, `release:check`, `theme:css`. The `devDependencies` include every tool row of section 9 at the pinned version. |
 | A-13 | 3 | In Chromium, load the page of A-07 with a script that makes `crypto.randomUUID` undefined before `ripple.js` runs. | `customElements.get("rp-dialog")` is defined; `customElements.get("rp-cart")` is undefined; `(await import("/ripple/ripple.js")).getCommerce().usable === false`; submitting an add-to-cart form performs a native navigation. (The asynchronous failure, a first cart read that rejects after the elements are defined, is tested by `05-commerce.md` section 14.) |
 | A-14 | 6 | Load the layout blueprint of each host with scripting disabled. | No request for any `ripple*.js` chunk is needed for the page to render; every `noJs.level: full` flow passes (`13-testing.md` tier 6). |
 | A-15 | 1 | Parse every `import` in `components/*/react/*.{ts,tsx}` and `components/*/remix/*.{ts,tsx}`. | Every value import from `@shopify/hydrogen` names only functions from this list: `formatMoney`, `renderShopPayButton`, `buildProductSelectionSearchParams`, `parseCollectionParams`, `serializeCollectionParams`, `isFilterInputActive`, `getFilterRemovalUrl` (D-094). No file imports `<pkg>/elements`, `<pkg>/commerce` (written `__PKG__/elements`, `__PKG__/commerce` in the repository), `@shopify/hydrogen/react` or `@ui-sdk/react`. A file whose first line is `"use client"` exports components only. |
@@ -982,12 +984,4 @@ UNVERIFIED:
 
 ## Ledger issues
 
-None open from the first pass: its 17 items are settled by D-052, D-054, D-062, D-077, D-102 and D-103. See `00-decisions.md` section 13.2.
-
-Points the amended ledger does not cover, with the option applied in this document:
-
-1. **Command of `release:check`.** D-103 requires the script and `07-manifest-registry-cli.md` section 11 owns the checklist, but neither gives the command or a source file, and the tree of ledger 5.1 has no file for it. Applied: `"release:check": "pnpm gen --release-check"`; `src/gen/index.ts` runs the checklist on that flag (section 5.1). No file was added.
-2. **Imports between tooling directories.** The CLI regenerates `props.css` and `theme.css` in a project (D-029), and the registry build stamps trailers and builds the Liquid composite stylesheet, but the ledger states only that `src/check/**` MUST NOT import `src/cli/**`. Applied: `src/cli/**` may import `src/gen/{props-css,theme-css,tokens-source}.ts`; `src/gen/**` may import `src/cli/**` (section 2.2).
-3. **Extension of relative imports.** Sibling documents print source with both forms (`"./x"` and `"./x.ts"`). Applied: both are legal (`allowImportingTsExtensions`, section 5.2), and build step 6 rewrites both in declaration files.
-4. **`CHANGELOG.md`.** `07-manifest-registry-cli.md` section 11 requires a `CHANGELOG.md` at the repository root; the tree of ledger 5.1 and D-103 item 5 (test A-01) do not list it. Applied: the ledger tree; A-01 does not allow `CHANGELOG.md`. Adding it needs a ledger change.
-5. **Trigger of the commerce start.** D-087 item 2 says the start is one microtask after the first element connects; `05-commerce.md` section 4.5 queues it one microtask after the module is evaluated. Applied: this document states only "lazy by one microtask" and leaves the trigger to `05-commerce.md` (section 3.3 step 4).
+None open. See `00-decisions.md` sections 13.2 and 13.3. The five points this document raised while applying the reconciliation are settled by D-110: the `release:check` command is `pnpm gen --release-check` (section 5.1; `07-manifest-registry-cli.md` section 11); the tooling import rules of section 2.2 stand; both relative import forms are legal (section 5.2); `CHANGELOG.md` is a root file (ledger tree 5.1, test A-01); the commerce start is one microtask after the commerce module is evaluated (D-087 item 2 as amended, `05-commerce.md` section 4.5).

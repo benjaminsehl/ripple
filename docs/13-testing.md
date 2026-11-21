@@ -28,7 +28,7 @@ Not owned here (linked, never restated):
 | Canonicalisation algorithm, fixture record schema, required fixtures, masks, fixture lint, upgrade allow-list format | `02-html-contract.md` sections 7, 11, 12. The reference code of section 12 IS `src/testing/canonicalize.ts`; this document never restates the algorithm (D-075) |
 | What each host adapter asserts (Q-1 to Q-22), `REACT_HYDRATION_ALLOW` | `06-bindings.md` section 11 |
 | `pnpm gen`, `pnpm gen --check`, `pnpm gen --snapshot`, checker rules RP601 to RP609 | `07-manifest-registry-cli.md` |
-| CSS acceptance tests A-01 to A-18, the measuring minifier | `03-styling-and-tokens.md` sections 5.4, 15 |
+| CSS acceptance tests A-01 to A-23, the measuring minifier | `03-styling-and-tokens.md` sections 5.4, 15 |
 | Element acceptance tests E-01 to E-25 | `04-elements.md` section 13 |
 | Commerce acceptance tests C-01 to C-23, `fake-sa.js` | `05-commerce.md` section 14 |
 | Eval suite (tier 11) | `08-agent-kit-and-evals.md` |
@@ -38,7 +38,7 @@ Not owned here (linked, never restated):
 
 Vocabulary: "tier n" is item n of D-063. "Fixture", "reference HTML", "mask", "canonical form" have the meanings of `02-html-contract.md`. "Case" means one (component, fixture) pair. "Fixture id" is `<component id>/<fixture name>`.
 
-Evidence marker: code blocks marked **RUN** were executed for this document in `ripple/docs/research/spikes/testing/` (Node 22.23.5, Playwright 1.63.0 Chromium; output in `result.txt`, 22 tests passed). Code blocks marked **NOT RUN** were written for this document and not executed; the tests named next to them are the gate.
+Evidence marker: code blocks marked **RUN** were executed for this document in `ripple/docs/research/spikes/testing/` (Node 22.23.5, Playwright 1.63.0 Chromium; output in `result.txt`, 22 tests passed). Code blocks marked **NOT RUN** were written for this document and not executed; the tests named next to them are the gate. Status of NOT RUN code (D-113): it is the required starting text of the file; the behaviour tables and the named gate tests are normative; when the printed code fails its gate, the code is changed and the gate is not weakened, and such a change needs no ledger entry.
 
 ---
 
@@ -108,7 +108,7 @@ These two rows and their versions are D-103 item 3. The same decision pins `ligh
 
 ### 2.3 Scripts
 
-The `scripts` object of the root `package.json` MUST contain these entries exactly. `gen`, `build` and `typecheck` are those of `01-architecture.md` 5.1 (unchanged); `eval` is owned by `08-agent-kit-and-evals.md`; `release:check` is owned by `07-manifest-registry-cli.md`. All others are owned here.
+The `scripts` object of the root `package.json` MUST contain these entries exactly. `gen`, `build` and `typecheck` are those of `01-architecture.md` 5.1 (unchanged); `eval` is owned by `08-agent-kit-and-evals.md`; `release:check` is owned by `07-manifest-registry-cli.md`; `theme:css` is owned by `14-liquid-theme.md` (section 5.3). All others are owned here. The object is byte-equal to the `scripts` object of `01-architecture.md` 5.1.
 
 ```json
 {
@@ -133,7 +133,10 @@ The `scripts` object of the root `package.json` MUST contain these entries exact
   "test:cross-engine": "pnpm test:webkit && pnpm test:firefox",
   "test:size": "pnpm test:run --tiers=10",
   "test:component": "pnpm test:run --tiers=1,2,3,4,5,6",
-  "ci": "pnpm typecheck && pnpm gen --check && pnpm build && pnpm examples:install && pnpm test --no-skips"
+  "ci": "pnpm typecheck && pnpm gen --check && pnpm build && pnpm examples:install && pnpm test --no-skips",
+  "eval": "node evals/adapters/run.ts",
+  "release:check": "pnpm gen --release-check",
+  "theme:css": "tailwindcss -i examples/liquid/config/styles.css -o examples/liquid/assets/styles.min.css --minify"
 }
 ```
 
@@ -1390,6 +1393,8 @@ export const SHIM_FILTERS: string[] = [
   "escape", "split", "t", "default", "append", "prepend", "strip", "plus", "minus", "times", "size", "money", "image_url",
   "json", "divided_by", "modulo", "round", "remove", "date", "url_encode", "payment_button",
   "standard_event_data", "asset_url", "stylesheet_tag", "font_face",
+  // Infrastructure scope, used only by snippets/meta-tags.liquid (D-097 as amended, D-109):
+  "first", "join", "remove_first", "slice", "strip_html", "money_without_currency", "structured_data",
 ]
 
 const liquidOf = (reference: string): any => resolveResource(reference, "liquid")
@@ -1417,7 +1422,7 @@ export const SHIM_GLOBALS: Record<string, unknown> = {
     account_url: "/account",
     account_login_url: "/account/login",
   },
-  request: { locale: { iso_code: "en", root_url: "/", direction: "ltr" }, design_mode: false, page_type: "index", path: "/" },
+  request: { locale: { iso_code: "en", root_url: "/", direction: "ltr" }, design_mode: false, page_type: "index", path: "/", origin: "http://127.0.0.1" },
   template: { name: "index" },
   shop: {
     name: "Mock Shop",
@@ -1425,8 +1430,10 @@ export const SHIM_GLOBALS: Record<string, unknown> = {
     currency: "USD",
     money_format: "${{amount}}",
     policies: [],
-    brand: { logo: null },
+    brand: { logo: null, favicon: null },
     password_message: "",
+    description: "",
+    published_locales: [],
   },
   localization: { country: US, language: EN, available_countries: [US], available_languages: [EN] },
   linklists: { "main-menu": liquidOf("menu.main"), footer: liquidOf("menu.footer") },
@@ -1438,6 +1445,10 @@ export const SHIM_GLOBALS: Record<string, unknown> = {
   recommendations: { performed: false, products: [] },
   gift_card: null,
   page_title: "Mock Shop",
+  page_description: null,
+  page_image: null,
+  canonical_url: "http://127.0.0.1/",
+  current_tags: null,
   content_for_header: "",
   content_for_additional_checkout_buttons: "",
   additional_checkout_buttons: false,
@@ -1759,6 +1770,9 @@ export function createShim(themeRoot: string, options: ShimOptions = {}): Shim {
   engine.registerFilter("payment_button", () => '<div data-shopify="payment-button" class="shopify-payment-button"></div>')
 
   engine.registerFilter("standard_event_data", () => '{"shim":"standard_event_data"}')
+  // meta-tags.liquid only (D-109). `first`, `join`, `remove_first`, `slice`, `strip_html` are the liquidjs built-ins, kept by the pruning below.
+  engine.registerFilter("money_without_currency", (cents: unknown) => (Number(cents) / 100).toFixed(2))
+  engine.registerFilter("structured_data", () => '{"shim":"structured_data"}')
   // font | font_face: prints one rule for a font that is not a system font; a system font prints nothing.
   engine.registerFilter("font_face", (font: any) =>
     font && typeof font === "object" && font["system?"] !== true ? `@font-face { font-family: "${escapeAttr(font.family)}"; }` : "",
@@ -1826,13 +1840,16 @@ What the shim implements. Anything not in this table throws, so that an unsuppor
 | `date` | `date: format: 'date'` prints `YYYY-MM-DD` in UTC; any other `format:` value throws. `date: '<strftime>'` is the `liquidjs` filter |
 | `payment_button` | `<div data-shopify="payment-button" class="shopify-payment-button"></div>` (opaque markup; fixtures mask it, D-004) |
 | `standard_event_data` | returns the fixed string `{"shim":"standard_event_data"}` whatever its input and arguments (the payload is masked, D-089 item 3) |
+| `money_without_currency` | `48.00` for `4800` (cents divided by 100, two decimals) |
+| `structured_data` | returns the fixed string `{"shim":"structured_data"}` whatever its input |
+| `first`, `join`, `remove_first`, `slice`, `strip_html` | the `liquidjs` built-in filters, kept (not pruned) because `snippets/meta-tags.liquid` uses them (D-109) |
 | `asset_url` | `/assets/<name>` |
 | `stylesheet_tag` | `<link href="<url>" rel="stylesheet" type="text/css" media="all" />` |
 | `font_face` | for a font object whose `system?` is not true: `@font-face { font-family: "<family>"; }`; for a system font or nil: nothing. Named arguments are ignored |
 | Members ending in `?` | `form.posted_successfully?` and `<font>.system?` are read as the property whose key includes the `?` (`liquidjs` 10.30.1 parses them; verified for this document) |
 | Globals | `SHIM_GLOBALS` above, plus `settings` (default `{}`). A font setting is passed by the test as `settings.<id> = { family, fallback_families, weight, style, "system?": <boolean> }` |
 
-Globals in `SHIM_GLOBALS`, with the members Ripple files read: `routes` (the twelve URLs above), `request` (`locale.iso_code`, `locale.root_url`, `locale.direction` = `ltr`, `design_mode`, `page_type`, `path`), `template.name`, `shop` (`name`, `url`, `currency`, `money_format`, `policies` = empty, `brand.logo` = nil, `password_message`), `localization` (`country`, `language`, `available_countries`, `available_languages`), `linklists` (`main-menu` from `menu.main`, `footer` from `menu.footer`; each link has `title`, `url`, `current`, `links`), `collections` (an array with the keys `frontpage`, `summer`, `all`), `cart`, `customer` (nil), `search`, `recommendations` (`products`, `performed`), `gift_card` (nil), `page_title`, `content_for_header`, `content_for_additional_checkout_buttons` (empty string), `additional_checkout_buttons` (false). `renderPage` sets `template.name` and `request.page_type` to the template file name up to its first dot (`page.contact` gives `page`).
+Globals in `SHIM_GLOBALS`, with the members Ripple files read: `routes` (the twelve URLs above), `request` (`locale.iso_code`, `locale.root_url`, `locale.direction` = `ltr`, `design_mode`, `page_type`, `path`), `template.name`, `shop` (`name`, `url`, `currency`, `money_format`, `policies` = empty, `brand.logo` = nil, `password_message`), `localization` (`country`, `language`, `available_countries`, `available_languages`), `linklists` (`main-menu` from `menu.main`, `footer` from `menu.footer`; each link has `title`, `url`, `current`, `links`), `collections` (an array with the keys `frontpage`, `summer`, `all`), `cart`, `customer` (nil), `search`, `recommendations` (`products`, `performed`), `gift_card` (nil), `page_title`, `page_description` (nil), `page_image` (nil), `canonical_url`, `current_tags` (nil), `request.origin`, `shop.description`, `shop.published_locales` (empty), `shop.brand.favicon` (nil) (the last seven are read only by `snippets/meta-tags.liquid`), `content_for_header`, `content_for_additional_checkout_buttons` (empty string), `additional_checkout_buttons` (false). `renderPage` sets `template.name` and `request.page_type` to the template file name up to its first dot (`page.contact` gives `page`).
 
 Rules:
 
@@ -1840,7 +1857,7 @@ Rules:
 - **SH-2** The shim MUST keep `strictFilters: true`. It MUST NOT gain a catch-all filter or tag.
 - **SH-3** The shim's `money`, `image_url`, `payment_button`, `standard_event_data`, `font_face`, `date`, `paginate` and `form` output is NOT Shopify's output. Every fixture that prints them masks them (`02-html-contract.md` 11.6). A test MUST NOT assert their exact text, except the tests of the shim itself (4.6); tier 8 covers the real output.
 - **SH-4** Differences from Shopify that the shim hides are listed in "Evidence and UNVERIFIED" (20). They are settled only by tier 8.
-- **SH-5** `current_page`, `current_query` and `form_state` are shim-only scope variables. A Ripple `.liquid` file MUST NOT read them; only tests and `serveTheme` set them.
+- **SH-5** `current_query` and `form_state` are shim-only scope variables, and `current_page` is set only by tests and `serveTheme`. A Ripple `.liquid` file MUST NOT read them. One exception: `snippets/meta-tags.liquid` reads `current_page` and `current_tags`, which are Shopify globals with the same meaning (D-109).
 
 ### 4.5 `serve-theme.ts` (complete; NOT RUN in this form)
 
@@ -2841,7 +2858,7 @@ export async function createLiquidRenderer(): Promise<HostRenderer> {
 - **L-1** Children are passed as the literal block body (F-7); no token is used on Liquid.
 - **L-2** A prop without `liquid.name` in the manifest uses the snake_case of its name (ledger 4.2).
 - **L-3** Resources are bound as stated in RS-3. A prop whose manifest `hosts` excludes `liquid` is not passed (FX-4).
-- **L-4** The work directory contains component blocks and snippets only. Blueprint files (`layout/*.liquid`, `templates/*.liquid`) are not conformance cases; they are tested as pages through `serveTheme` on the built theme (tiers 3 to 6) with the scope of `loadBlueprintSample` (FX-5).
+- **L-4** The work directory contains component blocks and snippets only. Blueprint files (`layout/*.liquid`, `templates/*.liquid`) are not conformance cases; they are tested as pages through `serveTheme` on the built theme (tiers 3 to 6) with the scope of `loadBlueprintSample` (FX-5). Cross-host comparison of blueprint output is test BT-3 of `12-components-chrome-and-blueprints.md`: it compares the CHILDREN of `<main>`; the `<main>` start tag is not compared, because only the Liquid layout prints `data-template` on it (D-089 item 6).
 
 ### 7.4 React and Remix adapters
 
@@ -3254,9 +3271,10 @@ A test asserts an announcement by polling (at most 2 s, with `page.waitForFuncti
 
 | Tests | File | Owner |
 |---|---|---|
-| A-02 to A-09, A-11, A-14, A-18 (tokens, dials, schemes, props, focus, motion, RTL, hidden) | `css/styling.test.ts` | `03-styling-and-tokens.md` 15 |
-| E-02 to E-25 | `src/elements/<tag>.test.ts`, `src/runtime/<name>.test.ts` | `04-elements.md` 13 |
-| C-01 to C-15 | `test/commerce/liquid.test.ts`, `test/commerce/hydrogen.test.ts` | `05-commerce.md` 14 |
+| A-02 to A-09, A-11, A-14, A-18 to A-22 (tokens, dials, schemes, props, focus, motion, RTL, hidden, display of custom elements, Tabs without JS, scroll padding, `data-rp-js` on a form) | `css/styling.test.ts` | `03-styling-and-tokens.md` 15 |
+| A-23 (the linter's own tests) | `src/gen/css-lint.test.ts` | `03-styling-and-tokens.md` 7.9, 15 |
+| E-02 to E-30 | `src/elements/<tag>.test.ts`, `src/runtime/<name>.test.ts` (the file of each test is stated in `04-elements.md` 13) | `04-elements.md` 13 |
+| C-01 to C-32 | `test/commerce/liquid.test.ts`, `test/commerce/hydrogen.test.ts` (the file of each test is stated in `05-commerce.md` 14) | `05-commerce.md` 14 |
 
 ---
 
@@ -3435,7 +3453,7 @@ Tests in `test/liquid/live.test.ts`:
 | `[T8] liquid: one page view per load` | Load `/`, a product page, a collection page and `/cart`; on each, record Standard Events page views with the hook the SPIKE-01 report names (UNVERIFIED until that report exists; D-089) | exactly one page view per document load; when the platform publishes the page view by itself, the adapter's dispatch is removed and this test still expects exactly one |
 | `[T8] liquid: SPIKE-02 argument and setting questions` | On the fixtures page: a block called with the argument `as`; a block whose schema has a bare setting; a cart with a discount code applied; `{{ request.page_type }}`; a font setting's `system?`; `{{ ... \| standard_event_data: 'view', context: 'page' }}` inside `rp-view-event` | `as` reaches the block; the bare setting is accepted by the theme upload; the `type` of the discount-code `discount_application` is recorded in the report; `request.page_type` equals the template name; `system?` is a boolean; the filter prints JSON. Each failing line names the fallback of `00-decisions.md` section 3 (SPIKE-02) to apply |
 
-UNVERIFIED and to be settled by the first live run: that `?view=rp-fixtures` selects an alternate Liquid template in the developer preview; that `{% block %}` is legal in such a template; the platform questions V-1 to V-16 of `14-liquid-theme.md` (SPIKE-02), which include the ones SPIKE-02 gained (D-108): whether `as` is a legal block argument, whether a bare schema setting is accepted, the `type` value of a discount-code `discount_application`, the value of `request.page_type`, `font.system?`, and `standard_event_data` under `rp-view-event`.
+UNVERIFIED and to be settled by the first live run: that `?view=rp-fixtures` selects an alternate Liquid template in the developer preview; that `{% block %}` is legal in such a template; the platform questions V-1 to V-20 of `14-liquid-theme.md` (SPIKE-02), which include the ones SPIKE-02 gained (D-108): whether `as` is a legal block argument, whether a bare schema setting is accepted, the `type` value of a discount-code `discount_application`, the value of `request.page_type`, `font.system?`, and `standard_event_data` under `rp-view-event`.
 
 ---
 
@@ -3834,7 +3852,7 @@ jobs:
 
 Tier 9 is non-blocking until the SPIKE-06 report exists (D-063 as amended). `continue-on-error: true` stays on the `cross-engine` job until the file `docs/research/spikes/cross-engine-features/README.md` (the SPIKE-06 report) exists. The pull request that adds that file MUST, in the same change: apply the per-feature fallbacks the report calls for (section 21), record any raised floor in the ledger, delete the `continue-on-error: true` line, and leave `cross-engine` passing. From then on the job is required to merge.
 
-### 17.4 `.github/workflows/nightly.yml` (complete)
+### 17.4 `.github/workflows/nightly.yml` (complete, except the `evals` job that `08-agent-kit-and-evals.md` section 8.14 adds from M3 onward; CI-8)
 
 ```yaml
 name: nightly
@@ -3896,7 +3914,7 @@ jobs:
 
 - **CI-6** While the secret `RIPPLE_STORE_URL` is unset, `liquid-live` runs, every `[T8]` test skips, the last output line reports the skips, and the job is green. That is the one place where a green job with skips is accepted; its report states `skipped`, never `passed` (T-3). Once the secret is set, change the job's command to `pnpm test:liquid-live --no-skips` in the same pull request that records the store in the ledger.
 - **CI-7** Uploading `node_modules/.cache/ripple/live-theme/` to the preview store before the run is UNVERIFIED tooling (the Shopify CLI command for the developer preview was not checked). Default now: a person uploads it; the step is added to `liquid-live` by `14-liquid-theme.md` once SPIKE-02 has run.
-- **CI-8** The eval job (tier 11) is added to `nightly.yml` by `08-agent-kit-and-evals.md`; this document defines no eval job.
+- **CI-8** The eval job (tier 11) is added to `nightly.yml` by `08-agent-kit-and-evals.md` (section 8.14: job `evals`, secret `RIPPLE_EVAL_API_KEY`); this document defines no eval job. `nightly.yml` is therefore the text of 17.4 plus that one job.
 
 ---
 
@@ -3961,7 +3979,7 @@ Each line is pass or fail and checkable by a command.
 4. The tests named in 4.6, 6.2, 6.3, 7.5, 15.3, 18.2 and 18.3 exist with exactly those names and pass.
 5. For every case, the tests named by the templates of 7.1, 8.1, 10.3, 10.4, 11.1 and 14.3 exist (they are generated by loops over `loadFixtures()`), and the count test C-2 passes.
 6. `size-budget.json` equals 15.1; `pnpm build` fails when a budget is exceeded or a budgeted file is missing.
-7. `.github/workflows/ci.yml` and `.github/workflows/nightly.yml` equal 17.1 and 17.4.
+7. `.github/workflows/ci.yml` equals 17.1. `.github/workflows/nightly.yml` equals 17.4 plus, from M3 onward, the `evals` job of `08-agent-kit-and-evals.md` section 8.14 (CI-8).
 8. `pnpm ci` exits 0 on the main branch with `RIPPLE_NETWORK=1`, with the last runner line reporting `0 failed, 0 skipped`.
 9. Removing one attribute that an element writes at upgrade from an `upgrade-snapshot` fixture makes `pnpm test:upgrade` fail with a line in the format of U3-1 (verified on the Tabs fixture: removing `aria-selected="true"` gives `... button#t-tab-account: attributes aria-selected: null -> "true"`).
 10. `<pkg>/testing` imports in Node without `playwright` installed (A-05 of `01-architecture.md`), and `serveTheme` is among its exports.
@@ -4036,4 +4054,4 @@ Per feature, when a `[T9]` probe of 11.3 fails in an engine at the floor. The CS
 
 ## Ledger issues
 
-None open. See `00-decisions.md` section 13.2.
+None open. See `00-decisions.md` sections 13.2 and 13.3 (D-109 to D-113).

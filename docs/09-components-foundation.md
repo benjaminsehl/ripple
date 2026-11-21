@@ -78,7 +78,7 @@ Each component's "Acceptance tests" section starts with "CA-1 to CA-9 pass." The
 
 ### 0.4 Checker rules common to all components
 
-These rule ids (`07-manifest-registry-cli.md`) apply to every component here and are not repeated: RP101 (value not in enumeration or scale), RP102 (unknown Liquid argument), RP103 (responsive grammar), RP104 (required prop missing), RP105 (boolean given a string), RP110 (root class on a wrong element), RP111 (unknown `rp-` class), RP116 (inline colour), RP118 (`data-state` or unknown `data-rp-*`). Each component's "Checker rules" section lists only additional rule ids and its manifest `rules[]` entries. A component-specific rule is a manifest `rules[]` entry, reported by RP113; this document never introduces an `RPnnn` id. A rule id is kebab-case and starts with the component id (`00-decisions.md` section 4.1). The keys of an entry are `id`, `kind` (`requires-ancestor | forbids-ancestor | requires-descendant | forbids-descendant | requires-attribute | max-count`), `selector`, `target`, `count`, `message`, `fix` (`00-decisions.md` section 4.8); the selector `:scope` selects the component root itself (`07-manifest-registry-cli.md` section 9.5.3). Where this document writes "(RP113, error)" after a rule id it states how the rule is reported, not a second rule id.
+These rule ids (`07-manifest-registry-cli.md`) apply to every component here and are not repeated: RP101 (value not in enumeration or scale), RP102 (unknown Liquid argument), RP103 (responsive grammar), RP104 (required prop missing), RP105 (boolean given a string), RP110 (root class on a wrong element), RP111 (unknown `rp-` class), RP116 (inline colour), RP118 (`data-state` or unknown `data-rp-*`). Each component's "Checker rules" section lists only additional rule ids and its manifest `rules[]` entries. A component-specific rule is a manifest `rules[]` entry, reported by RP113; this document never introduces an `RPnnn` id. A rule id is kebab-case and starts with the component id (`00-decisions.md` section 4.1). The keys of an entry are `id`, `kind` (`requires-ancestor | forbids-ancestor | requires-descendant | forbids-descendant | requires-attribute | max-count | custom`; `custom` is a rule stated as a sentence here and implemented as a function in `CUSTOM_RULES`, `07-manifest-registry-cli.md` 9.5.3, D-111), `selector`, `target`, `count`, `message`, `fix` (`00-decisions.md` section 4.8); the selector `:scope` selects the component root itself (`07-manifest-registry-cli.md` section 9.5.3). Where this document writes "(RP113, error)" after a rule id it states how the rule is reported, not a second rule id.
 
 ### 0.5 Locale keys
 
@@ -6362,7 +6362,7 @@ SkipLink takes the universal props `id` and `class`; it does NOT take `span` or 
 
 ### Content model
 
-`text` - the link text, required, for example `Skip to content`. The text is the caller's (a theme translation); Ripple ships no locale key for it (FC-8).
+`text` - the link text, required, for example `Skip to content`. The text is the caller's (a theme translation); the SkipLink component ships no locale key for it (FC-8); the `layout` blueprint passes its own key `ripple.blueprints.layout.skip` (`12-components-chrome-and-blueprints.md`).
 
 ### HTML contract
 
@@ -6444,7 +6444,7 @@ None.
 - HTML: None.
 - React: `export function SkipLink(props: SkipLinkProps)`; generated; `href = "#main"` default.
 - Remix: None.
-- Liquid: `{% block 'skip-link' %}{{ 'accessibility.skip_to_content' | t }}{% endblock %}`. Schema settings: none. Locale keys: `ripple.skip-link.name`.
+- Liquid: `{% block 'skip-link' %}{{ 'ripple.blueprints.layout.skip' | t }}{% endblock %}`. Schema settings: none. Locale keys: `ripple.skip-link.name`.
 
 ```tsx
 <body>
@@ -6458,7 +6458,7 @@ None.
 
 ```liquid
 <body>
-  {% block 'skip-link' %}{{ 'accessibility.skip_to_content' | t }}{% endblock %}
+  {% block 'skip-link' %}{{ 'ripple.blueprints.layout.skip' | t }}{% endblock %}
   {% block 'header' %}{% endblock %}
   <main id="main" tabindex="-1" data-template="{{ request.page_type }}">{{ content_for_layout }}</main>
 </body>
@@ -6487,7 +6487,7 @@ Common rules of section 0.4. Manifest `rules[]`: none. (That the target id exist
 ### Evidence and UNVERIFIED
 
 - Evidence: `ripple/docs/00-decisions.md` D-086 (SkipLink `href` defaults to `#main`; the layout's `<main>` has `id="main"`), D-099 item 3 (`<main id="main" data-template="{{ request.page_type }}">` in the Liquid layout), section 8.1 (SkipLink), section 8.5 (`layout` blueprint lists SkipLink and `<main id="main" data-template>`); `ripple/docs/02-html-contract.md` A-10 ("SkipLink targets the `id` of `<main>`"); `ripple/docs/03-styling-and-tokens.md` section 4.1 (`:where(dialog, main):focus-visible { outline: none }`), CSS-19 (`z-index` values).
-- UNVERIFIED: the theme translation key `accessibility.skip_to_content` in the Liquid example (example only; the text is the caller's).
+- UNVERIFIED: None. The Liquid example uses the `layout` blueprint's key `ripple.blueprints.layout.skip` (`12-components-chrome-and-blueprints.md`, blueprint `layout`); the text is the caller's.
 
 ### Fallback (SPIKE-nn)
 
@@ -7236,4 +7236,4 @@ None.
 
 ## Ledger issues
 
-None open. See `00-decisions.md` section 13.2.
+None open. See `00-decisions.md` sections 13.2 and 13.3 (D-109 to D-113).
