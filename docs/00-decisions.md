@@ -28,6 +28,12 @@ Summary of what changed from the original proposal (details in the decisions):
 
 ---
 
+### File layout of the component specs
+
+The per-component specs that docs 09 to 12 own are stored one file per component in `docs/components/<id>.md` (84 files) and one file per blueprint in `docs/blueprints/<id>.md` (14 files). Docs 09 to 12 keep the rules shared by their group and a pointer per component. Wherever this ledger or another doc says "doc 09/10/11/12, <Component>", read that component's file. Ownership is unchanged: the group doc's section 0 plus the component file together are the owning text.
+
+---
+
 ## 1. Decisions
 
 Format of each entry: Decision / Rationale / Evidence / Rejected.
