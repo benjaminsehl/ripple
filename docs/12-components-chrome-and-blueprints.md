@@ -18,12 +18,14 @@ What this document does NOT own (link, do not restate):
 | Contract rules, ids, fixtures, masks, canonicalisation | `02-html-contract.md` |
 | Tokens, layers, `props.css`, component CSS rules | `03-styling-and-tokens.md` |
 | `rp-dialog`, `rp-navigation-menu`, `rp-carousel`, the opener listener, Invoker Commands polyfill | `04-elements.md` |
-| Commerce adapter, regions, refresh, form dialects, resource shapes other than `menu` and `shop` | `05-commerce.md` |
+| Commerce adapter, regions, refresh, form dialects, every `Ripple*` resource type including `RippleMenu` and `RippleShop` (D-094) | `05-commerce.md` |
 | Binding rules for React, Remix, Liquid, `html` | `06-bindings.md` |
 | Manifest schema, registry, CLI, checker rule texts | `07-manifest-registry-cli.md` |
 | Foundation, interactive and commerce components | `09-components-foundation.md`, `10-components-interactive.md`, `11-components-commerce.md` |
 | Test harness and tiers | `13-testing.md` |
-| The assembled Liquid theme (head, import map, settings bridge, `rp-head`) | `14-liquid-theme.md` |
+| The assembled Liquid theme (settings bridge, tokens, `rp-head`, `rp-import-map-entries`, theme rules) | `14-liquid-theme.md` |
+
+This document DOES own the complete text of every Liquid layout and template file (`layout/*.liquid`, `templates/*.liquid`) and of the two theme-owned snippets `import-map` and `meta-tags` (D-099, D-107 item 5); `14-liquid-theme.md` refers to them.
 
 Normative words: MUST, MUST NOT, SHOULD, MAY. "UNVERIFIED" marks a fact nobody ran or read in source. Evidence paths are relative to the directory that holds the local clones.
 
@@ -35,57 +37,45 @@ Milestone for everything in this document: M4 (D-067).
 
 ### 1.1 Markup of components owned by other documents
 
-Contracts in this document embed components owned by docs 09, 10 and 11 (`02-html-contract.md` rule S-10: the embedded markup MUST be exactly the embedded component's own contract). The shapes below are what this document prints for them. They follow the ledger and the examples in `02-html-contract.md` and `04-elements.md`. If the owning document differs, the owning document wins, the fixture files of this document are regenerated (`pnpm gen`), and the text here is updated. Implementers MUST build these embeds with `embed` nodes (TSX: by rendering the component; Liquid: `{% render 'rp-<id>' %}`), never by copying the markup below.
+Contracts in this document embed components owned by docs 09, 10 and 11 (`02-html-contract.md` rule S-10 and D-069: the embedded markup MUST be exactly the embedded component's own contract for the props used). The table is a copy of those contracts. The owning document wins: when it changes, the fixture files of this document are regenerated (`pnpm gen`) and the text here is updated. Implementers MUST build these embeds with `embed` nodes (TSX: by rendering the component; Liquid: `{% render 'rp-<id>' %}`), never by copying the markup below. The manifest records each embed in `dependencies.embeds` (D-070).
 
-| Embedded component | Shape printed in this document |
+`ICON` in this document stands for the Icon markup of the first row with the inner markup of the named icon.
+
+| Embedded component | Markup |
 |---|---|
-| Icon (`09`) | `<svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="<path data>"/></svg>` |
+| Icon (`09`) | `<svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><inner markup></svg>` |
 | IconButton as link (`09`) | `<a class="rp-icon-button" href="<url>" data-variant="ghost" data-size="md" aria-label="<name>">ICON</a>` |
+| IconButton as link and overlay opener (`09`, props `href` and `dialog="<id>"`, fixture `link-opener`) | `<a class="rp-icon-button" href="<url>" data-variant="ghost" data-size="md" aria-label="<name>" data-rp-open="<id>">ICON</a>` |
 | IconButton as button (`09`) | `<button class="rp-icon-button" type="button" data-variant="ghost" data-size="md" aria-label="<name>">ICON</button>` |
+| IconButton as closer (`09`, props `commandFor="<id>"`, `command="close"`) | `<button class="rp-icon-button" type="button" commandfor="<id>" command="close" data-variant="ghost" data-size="md" aria-label="<name>">ICON</button>` |
 | Button (`09`) | `<button class="rp-button" type="<type>" data-variant="<variant>" data-size="<size>">text</button>` |
-| Input (`09`) | `<input class="rp-input" type="<type>" name="<name>" data-size="md">` plus the native attributes passed |
-| FormMessage (`09`) | `<p class="rp-form-message" data-tone="<tone>" role="<status or alert>">text</p>` |
+| Input (`09`) | `<input class="rp-input" type="<type>" name="<name>" data-size="md">` plus the native attributes and `aria-*` attributes passed (attribute order is not part of the contract, `02-html-contract.md` section 4.5) |
+| FormMessage (`09`) | `<p class="rp-form-message" data-tone="<tone>" role="<status or alert>">text</p>`, with `id="<id>"` when an id is passed |
 | VisuallyHidden (`09`) | `<span class="rp-visually-hidden">text</span>` |
 | Grid (`09`) | `<div class="rp-grid" data-columns="<tokens>" data-gap="<tokens>">` |
-| Popover panel (`10`) | `<div id="<id>" popover class="rp-popover" data-side="<side>" data-align="<align>">` (D-010) |
-| Carousel (`10`) | the markup of `04-elements.md` section 10.9 |
-| CartLink (`11`) | `<rp-cart class="rp-cart-link" data-slot="rp-cart"><a class="rp-icon-button" href="<cart url>" data-variant="ghost" data-size="md" aria-label="Cart">ICON<span class="rp-cart-link-count" data-rp-part="count" hidden>0</span></a></rp-cart>`, with `data-rp-open="<drawer id>"` on the link when a drawer id is passed |
-| ProductCard (`11`) | `<article class="rp-product-card">` containing a link, an image, a title and a Price |
+| Popover panel (`10`) | `<div class="rp-popover" id="<id>" popover="" data-side="<side>" data-align="<align>">` (D-010) |
+| Drawer (`10`), composed by MobileNav | `<rp-dialog class="rp-drawer" data-slot="rp-dialog"><dialog class="rp-drawer-panel" id="<id>" data-side="<side>" aria-labelledby="<id>-title" closedby="any"><div class="rp-drawer-header"><h2 class="rp-drawer-title" id="<id>-title">text</h2>CLOSER</div><div class="rp-drawer-body">content</div></dialog></rp-dialog>`; `CLOSER` is the IconButton-as-closer row |
+| Carousel (`10`) | the `default` fixture of `10-components-interactive.md` `## Carousel`: `<rp-carousel class="rp-carousel" id="<id>" role="group" aria-roledescription="carousel" aria-label="<label>" data-slot="rp-carousel">`, a `button.rp-carousel-control` with `data-rp-part="prev"`, the `ul.rp-carousel-viewport` with `id="<id>-list"`, a `button.rp-carousel-control` with `data-rp-part="next"` |
+| CartLink (`11`) | `<rp-cart class="rp-cart-link" data-slot="rp-cart"><a class="rp-cart-link-trigger" href="<cart url>">ICON<span class="rp-visually-hidden">Cart</span><span class="rp-cart-link-count" data-rp-part="count" hidden>0</span></a></rp-cart>`; the prop `drawer="<id>"` (TSX and Liquid) adds `data-rp-open="<id>"` after `href` |
+| ProductCard (`11`) | the `default` fixture of `11-components-commerce.md` `## ProductCard`: `<div class="rp-product-card">` holding `div.rp-product-card-media` (Image) and `div.rp-product-card-body` (title heading with `a.rp-product-card-link`, Price) |
 
-Icon path data used in this document's examples (illustrative; `icons/<name>.svg` in `09-components-foundation.md` is normative):
+Icon inner markup used in this document's fixtures (a copy of `09-components-foundation.md` section 0.6, which is normative):
 
-| Icon name | Path data |
+| Icon name | Inner markup |
 |---|---|
-| `menu` | `M4 7h16M4 12h16M4 17h16` |
-| `close` | `M6 6l12 12M18 6L6 18` |
-| `chevron-down` | `M6 9l6 6 6-6` |
-| `search` | `M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-3.5-3.5` |
-| `account` | `M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 20a8 8 0 0 1 16 0` |
-| `cart` | `M5 8h14l-1 12H6L5 8zM9 8V6a3 3 0 0 1 6 0v2` |
-| `globe` | `M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18` |
+| `menu` | `<path d="M4 7h16M4 12h16M4 17h16"/>` |
+| `close` | `<path d="M6 6l12 12M18 6L6 18"/>` |
+| `chevron-down` | `<path d="M6 9l6 6 6-6"/>` |
+| `chevron-left` | `<path d="M15 6l-6 6 6 6"/>` |
+| `chevron-right` | `<path d="M9 6l6 6-6 6"/>` |
+| `search` | `<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>` |
+| `account` | `<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6"/>` |
+| `cart` | `<path d="M3 4h2l2.4 11h10.2L20 7H6.2"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/>` |
+| `globe` | `<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/>` |
 
 ### 1.2 The `menu` resource
 
-`05-commerce.md` section 11.1 assigns the `menu` shape to this document. TSX hosts pass this plain object (types exported from `<pkg>`, file `src/types.ts`):
-
-```ts
-export interface RippleMenuItem {
-  /** Stable identifier of the item. Used only as a list key. */
-  id: string;
-  title: string;
-  /** Site-relative or absolute URL. `null` for an item that only groups children. */
-  url: string | null;
-  /** True when `url` is the URL of the page being rendered. Computed by the server. */
-  current: boolean;
-  /** Children. Empty array when none. Components read at most three levels. */
-  items: RippleMenuItem[];
-}
-
-export interface RippleMenu {
-  id: string;
-  items: RippleMenuItem[];
-}
-```
+TSX hosts pass a plain object of type `RippleMenu` (items: `RippleMenuItem`). Type: `05-commerce.md` section 11.1; both are exported from `<pkg>` (D-094). Fields of `RippleMenu`: `id: string`, `items: RippleMenuItem[]`. Fields of `RippleMenuItem`: `id: string` (list key only), `title: string`, `url: string | null` (`null` for an item that only groups children), `current: boolean` (true when `url` is the URL of the page being rendered; computed by the server), `items: RippleMenuItem[]` (empty array when none).
 
 | Field | Storefront API source (`menu(handle:)`) | Liquid (a linklist drop, for example `linklists['main-menu']`) |
 |---|---|---|
@@ -103,7 +93,7 @@ Rules:
 
 - **MN-1** A Liquid link whose `url` is blank or equals `#` is treated as `url: null`.
 - **MN-2** Components read three levels: top level, children, grandchildren. Deeper levels MUST be ignored.
-- **MN-3** TSX hosts build the object with the function below. It is NOT a library export: it is scaffolded by the `layout` blueprint to `<blueprint dir>/lib/menu.ts` and owned by the project.
+- **MN-3** TSX hosts build the object with the function below. It is NOT a library export: it is a file of the `layout` blueprint, written to `<blueprint dir>/lib/menu.ts` and owned by the project.
 
 ```ts
 // blueprints/layout/<host>/lib/menu.ts
@@ -184,16 +174,7 @@ UNVERIFIED: that mock.shop serves the `menu` query (mock.shop is blocked from th
 
 ### 1.3 The `shop` resource
 
-Header, Footer and the blueprints need the shop name, home URL and logo. This is an addition to the resource props of ledger section 6.4 (Ledger issues, item 2).
-
-```ts
-export interface RippleShop {
-  name: string;
-  /** Home URL, for example "/" or "/fr-ca". */
-  url: string;
-  logo: RippleImage | null; // RippleImage: 05-commerce.md section 11.1
-}
-```
+Header, Footer and the blueprints need the shop name, home URL and logo. TSX hosts pass a plain object of type `RippleShop`: fields `name: string`, `url: string` (home URL, for example `/` or `/fr-ca`), `logo: RippleImage | null`. Type: `05-commerce.md` section 11.1; exported from `<pkg>` (D-094).
 
 | Field | Storefront API source | Liquid |
 |---|---|---|
@@ -211,11 +192,11 @@ Components in this document print strings themselves (labels of controls they au
 - TSX hosts: the English default is a literal in the binding. A component that prints MORE than one string of its own takes one optional prop `strings` (type `object`, hosts `react` and `remix`): a partial map from the camelCase form of `<key>` to the replacement text. A component that prints exactly one string, and that string is the root's accessible name, uses `ariaLabel` instead and has no `strings` prop.
 - A string with a placeholder is written `{{ name }}` in the locale file. TSX bindings replace placeholders with `text.replace("{{ name }}", value)`.
 
-This prop is an addition to ledger section 6 (Ledger issues, item 3).
+The prop is defined by ledger section 6 (D-066).
 
 ### 1.5 Ids fixed by convention
 
-These ids are the defaults used by the `layout` blueprint and by `CommerceOptions` (`05-commerce.md` section 4.2). A project MAY change them, and MUST then pass the new value to every prop that references it.
+These ids are fixed for V1 (D-107 item 4). They are used by the blueprints and by `CommerceOptions` (`05-commerce.md` section 4.2). `14-liquid-theme.md` rule T-24 copies this table. A project MAY change one, and MUST then pass the new value to every prop that references it.
 
 | Id | Element | Referenced by |
 |---|---|---|
@@ -223,15 +204,24 @@ These ids are the defaults used by the `layout` blueprint and by `CommerceOption
 | `main-nav` | NavigationMenu root | Header prop `navigationMenu` |
 | `mobile-nav` | MobileNav `<dialog>` | Header prop `mobileNav` |
 | `footer-menu` | the Footer's LinkList `<nav>` | Header prop `linkList` (the no-JS target of the menu opener, D-009) |
-| `cart-drawer` | CartDrawer `<dialog>` | Header prop `cartDrawer`; `CommerceOptions.cartDrawer` |
 | `search-dialog` | the search Dialog `<dialog>` | Header prop `searchDialog` |
 | `predictive-search` | PredictiveSearch root | none |
 | `footer-locale` | LocaleSelector popover panel in the footer | none |
 | `newsletter` | NewsletterForm `<form>` | none |
+| `cart-drawer` | CartDrawer `<dialog>`. MUST equal `CommerceOptions.cartDrawer` (D-087); CartDrawer's `id` defaults to it | Header prop `cartDrawer` (which passes it to CartLink's `drawer`); `CommerceOptions.cartDrawer` |
+| `cart-drawer-list` | CartLines inside the drawer; its Liquid form id is `cart-drawer-list-form` | CartSummary `cartLines` / `cart_lines` in the drawer |
+| `cart` | CartLines on the cart page; its Liquid form id is `cart-form` (D-092) | `cartLines` / `cart_lines` of CartSummary, CartNote and CheckoutButton on the cart page |
+| `cart-discount` | DiscountCode on the cart page | none |
+| `cart-note` | CartNote on the cart page | none |
+| `product-gallery` | ProductGallery | none |
+| `product-options` | VariantPicker | none |
+| `product-form` | ProductForm | none |
+| `collection-filters` | Filters | none |
+| `collection-sort` | SortSelect | none |
 
 ### 1.6 Fixture resources
 
-Fixture records reference shared resources by name (`{ "$resource": "<name>" }`, `02-html-contract.md` section 11.2). This document adds these; `13-testing.md` owns the loader. Each exists in two forms with equal content: a JSON object for TSX hosts and a drop stand-in for the Liquid shim.
+Fixture records reference shared resources by name (`{ "$resource": "<type>.<name>" }`, `02-html-contract.md` section 11.2). This document adds the resources below, each named `<type>.<name>`. These values are the source for `src/testing/resources.ts` (`13-testing.md` owns that file and the loader, D-074). Each exists there in two forms with equal content: a JSON object for TSX hosts and a drop stand-in for the Liquid shim.
 
 `menu.main`:
 
@@ -352,9 +342,9 @@ Nesting rules: `inner` is the only child of root. Children (or the default body)
 | `cart` | none (reads `cart`) | object | `RippleCart` (`05-commerce.md` 11.1) | none | no | no | default body: passed to CartLink |
 | `navigationMenu` | `navigation_menu` | id | any id | `main-nav` | no | no | default body: `id` of the NavigationMenu |
 | `linkList` | `link_list` | id | any id | `footer-menu` | no | no | default body: `href="#<value>"` on the menu opener |
-| `mobileNav` | `mobile_nav` | id | id of a MobileNav | none | no | no | default body: `data-rp-open` on the menu opener; omitted when unset |
-| `cartDrawer` | `cart_drawer` | id | id of a CartDrawer | none | no | no | default body: passed to CartLink; omitted when unset |
-| `searchDialog` | `search_dialog` | id | id of a Dialog | none | no | no | default body: `data-rp-open` on the search link; omitted when unset |
+| `mobileNav` | `mobile_nav` | id | id of a MobileNav | none | no | no | default body: passed to the menu opener's IconButton prop `dialog`, which prints `data-rp-open` (D-009); omitted when unset |
+| `cartDrawer` | `cart_drawer` | id | id of a CartDrawer | none | no | no | default body: passed to CartLink's prop `drawer`; when unset the cart link has no `data-rp-open` (D-091 item 5: the cart page) |
+| `searchDialog` | `search_dialog` | id | id of a Dialog | none | no | no | default body: passed to the search link's IconButton prop `dialog`, which prints `data-rp-open`; omitted when unset |
 | `searchUrl` | `search_url` | url | any URL | TSX: `/search`. Liquid: `routes.search_url` | no | no | default body: `href` of the search link |
 | `accountUrl` | `account_url` | url | any URL | TSX: `/account`. Liquid: see AccountLink | no | no | default body: passed to AccountLink `href` |
 | `cartUrl` | `cart_url` | url | any URL | TSX: `/cart`. Liquid: `routes.cart_url` | no | no | default body: passed to CartLink |
@@ -386,7 +376,7 @@ Fixture `default-body` (`menu: menu.main`, `shop: shop.basic`, `cart: null`, `mo
 <header class="rp-header">
   <div class="rp-header-inner">
     <div class="rp-header-start">
-      <a class="rp-icon-button" href="#footer-menu" data-rp-open="mobile-nav" data-variant="ghost" data-size="md" data-hidden="lg:true" aria-label="Menu"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></a>
+      <a class="rp-icon-button" href="#footer-menu" data-variant="ghost" data-size="md" data-hidden="lg:true" aria-label="Menu" data-rp-open="mobile-nav"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></a>
       <a class="rp-logo" href="/" data-size="md">Mock Shop</a>
     </div>
     <div class="rp-header-center" data-hidden="true lg:false">
@@ -396,7 +386,7 @@ Fixture `default-body` (`menu: menu.main`, `shop: shop.basic`, `cart: null`, `mo
             <li class="rp-navigation-menu-item" data-rp-part="item">
               <a class="rp-navigation-menu-link" href="/collections/all" aria-current="page">Shop</a>
               <button type="button" class="rp-navigation-menu-trigger" popovertarget="main-nav-item-1" aria-label="Shop submenu"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
-              <div id="main-nav-item-1" popover class="rp-navigation-menu-content">
+              <div id="main-nav-item-1" popover="" class="rp-navigation-menu-content">
                 <ul class="rp-navigation-menu-sublist">
                   <li class="rp-navigation-menu-subitem"><a class="rp-navigation-menu-sublink" href="/collections/shirts">Shirts</a></li>
                   <li class="rp-navigation-menu-subitem"><a class="rp-navigation-menu-sublink" href="/collections/socks">Socks</a></li>
@@ -411,9 +401,9 @@ Fixture `default-body` (`menu: menu.main`, `shop: shop.basic`, `cart: null`, `mo
       </rp-navigation-menu>
     </div>
     <div class="rp-header-end">
-      <a class="rp-icon-button" href="/search" data-rp-open="search-dialog" data-variant="ghost" data-size="md" aria-label="Search"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-3.5-3.5"/></svg></a>
-      <a class="rp-account-link" href="/account" data-icon-only=""><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 20a8 8 0 0 1 16 0"/></svg><span class="rp-account-link-label">Account</span></a>
-      <rp-cart class="rp-cart-link" data-slot="rp-cart"><a class="rp-icon-button" href="/cart" data-rp-open="cart-drawer" data-variant="ghost" data-size="md" aria-label="Cart"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6L5 8zM9 8V6a3 3 0 0 1 6 0v2"/></svg><span class="rp-cart-link-count" data-rp-part="count" hidden>0</span></a></rp-cart>
+      <a class="rp-icon-button" href="/search" data-variant="ghost" data-size="md" aria-label="Search" data-rp-open="search-dialog"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></a>
+      <a class="rp-account-link" href="/account" data-icon-only=""><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6"/></svg><span class="rp-account-link-label">Account</span></a>
+      <rp-cart class="rp-cart-link" data-slot="rp-cart"><a class="rp-cart-link-trigger" href="/cart" data-rp-open="cart-drawer"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M3 4h2l2.4 11h10.2L20 7H6.2"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg><span class="rp-visually-hidden">Cart</span><span class="rp-cart-link-count" data-rp-part="count" hidden>0</span></a></rp-cart>
     </div>
   </div>
 </header>
@@ -427,7 +417,7 @@ Fixture `invalid-enum-falls-back`: not applicable (`scheme` has no default; an u
 
 Host-owned regions and masks: none of Header's own. The CartLink subtree carries the masks of `11-components-commerce.md` (the `href` of the cart link). The fixtures `default-body` and `default-body-plain` are `generated: "hand"`; `default`, `sticky-scheme`, `class`, `unknown-scheme` are `generated: "hand"` as well, because Header has no contract template (the default body embeds components of kinds `native` and `commerce`).
 
-Kind note: D-006 is applied to the `default` fixture, which has no custom element, so `kind` is `static` as ledger 8.4 states. `dependencies.elements` is empty; `rp-navigation-menu` and `rp-cart` belong to the embedded components (Ledger issues, item 1).
+Kind note (D-085): `kind` is `static` and the `default` fixture passes children, so it contains no custom element. `dependencies.elements` is empty; `rp-navigation-menu` and `rp-cart` belong to the embedded components, which the manifest lists in `dependencies.embeds` (D-070).
 
 ### State and attributes
 
@@ -460,7 +450,7 @@ Everything works. The menu opener is a link to `#<linkList>`: it scrolls to the 
 
 - Pattern: native `<header>` (banner landmark when it is a child of `<body>`); `checkPattern`: none.
 - Accessible name: none on the root (a banner landmark needs none). The menu opener is named by `ripple.header.menu` ("Menu"); the search link by `ripple.header.search` ("Search").
-- Focus: no focus management. With `sticky`, `base.css` MUST set `scroll-padding-block-start: var(--rp-header-height)` on `html` when a `.rp-header[data-sticky]` exists (`html:has(.rp-header[data-sticky])`), so focused and targeted elements are not hidden under the bar (WCAG 2.2 SC 2.4.11).
+- Focus: no focus management. A sticky Header sets `--rp-header-block-size` on `:root:has(.rp-header[data-sticky])` (Styling). `base.css` owns `html { scroll-padding-block-start: var(--rp-header-block-size, 0px); }` (D-085, D-105), so focused and targeted elements are not hidden under the bar (WCAG 2.2 SC 2.4.11).
 - Announcements: None.
 
 | Key | Action |
@@ -474,7 +464,7 @@ Everything works. The menu opener is a link to `#<linkList>`: it scrolls to the 
 
 | Custom property | Default | Purpose |
 |---|---|---|
-| `--rp-header-height` | `4rem` | Minimum block size of the inner row |
+| `--rp-header-block-size` | `4rem` | Minimum block size of the inner row. Set on `:root:has(.rp-header[data-sticky])`, not on `.rp-header`, so that `base.css` can read it for `scroll-padding-block-start`. Without a sticky Header it is unset and the inner row uses the `4rem` fallback |
 | `--rp-header-gap` | `calc(var(--spacing) * 4)` | Gap between direct children of `inner` and inside `start`, `end` |
 | `--rp-header-border` | `1px solid var(--color-border)` | Block-end border of the root |
 
@@ -486,8 +476,10 @@ Required rules (complete list of declarations the file MUST contain; values MAY 
 
 ```css
 @layer rp.components {
+  :root:has(.rp-header[data-sticky]) {
+    --rp-header-block-size: 4rem;
+  }
   .rp-header {
-    --rp-header-height: 4rem;
     --rp-header-gap: calc(var(--spacing) * 4);
     --rp-header-border: 1px solid var(--color-border);
     background: var(--color-background);
@@ -504,7 +496,7 @@ Required rules (complete list of declarations the file MUST contain; values MAY 
     align-items: center;
     justify-content: space-between;
     gap: var(--rp-header-gap);
-    min-block-size: var(--rp-header-height);
+    min-block-size: var(--rp-header-block-size, 4rem);
     max-inline-size: var(--container-page);
     margin-inline: auto;
     padding-inline: var(--spacing-gutter);
@@ -533,9 +525,9 @@ The `data-hidden` attributes in the default body are matched by `props.css` (uni
 ### Host notes
 
 - HTML: copy the `default-body` fixture and replace the embedded subtrees with real data.
-- React: `export function Header(props: HeaderProps): JSX.Element`. No hook. `HeaderProps` is the Props table plus `children?: ReactNode`, `className?: string` and rest props (`RestProps<HeaderOwnProps>`). The default body renders `IconButton`, `Icon`, `Logo`, `NavigationMenu`, `AccountLink`, `CartLink` from their own files.
+- React: `export function Header(props: HeaderProps): JSX.Element`. No hook. `HeaderProps` is the Props table plus `children?: ReactNode`, `className?: string` and rest props (`RestProps<HeaderOwnProps>`). The default body renders `IconButton`, `Logo`, `NavigationMenu`, `AccountLink`, `CartLink` from their own files. The two openers are `<IconButton icon="menu" href={`#${linkList}`} dialog={mobileNav} ariaLabel={strings.menu} hidden="lg:true" />` and `<IconButton icon="search" href={searchUrl} dialog={searchDialog} ariaLabel={strings.search} />`; the cart link is `<CartLink drawer={cartDrawer} href={cartUrl} count={cart?.totalQuantity ?? 0} />`. `data-rp-open` is never passed through rest props (D-009).
 - Remix: same tree; no `data-rmx-*` of its own.
-- Liquid: block `header`; the default body lives in `snippets/rp-header.liquid` (file key `snippet`), which renders `rp-icon-button`, `rp-icon`, `rp-logo`, `rp-navigation-menu`, `rp-account-link`, `rp-cart-link`. Schema settings: `scheme` (select). Locale keys: `ripple.header.name`, `ripple.header.menu` ("Menu"), `ripple.header.search` ("Search").
+- Liquid: block `header`; the default body lives in `snippets/rp-header.liquid` (file key `snippet`), which renders `rp-icon-button`, `rp-logo`, `rp-navigation-menu`, `rp-account-link`, `rp-cart-link`. `{{ attributes }}` is printed LAST in the root's opening tag (D-035). Schema settings: `scheme` (select; label `t:ripple.props.scheme`, block name `t:ripple.header.name`, D-038). Locale keys: `ripple.header.name`, `ripple.header.menu` ("Menu"), `ripple.header.search` ("Search").
 
 ```tsx
 <Header
@@ -573,8 +565,6 @@ The `data-hidden` attributes in the default body are matched by `props.css` (uni
   assign search_label = 'ripple.header.search' | t
   assign account_label = 'ripple.account-link.label' | t
   assign menu_href = '#' | append: link_list
-  assign menu_icon = ''
-  assign search_icon = ''
 -%}
 <header
   class="rp-header {{ class | escape }}"
@@ -589,11 +579,7 @@ The `data-hidden` attributes in the default body are matched by `props.css` (uni
       {{ content }}
     {%- else -%}
       <div class="rp-header-start">
-        {%- capture menu_icon -%}{% render 'rp-icon', name: 'menu' %}{%- endcapture -%}
-        {%- if mobile_nav != blank -%}
-          {%- capture menu_attributes -%}data-rp-open="{{ mobile_nav | escape }}"{%- endcapture -%}
-        {%- endif -%}
-        {% render 'rp-icon-button', href: menu_href, aria_label: menu_label, hidden: 'lg:true', attributes: menu_attributes, content: menu_icon %}
+        {% render 'rp-icon-button', icon: 'menu', href: menu_href, dialog: mobile_nav, aria_label: menu_label, hidden: 'lg:true' %}
         {% render 'rp-logo', content: shop.name %}
       </div>
       {%- if menu.links.size > 0 -%}
@@ -602,11 +588,7 @@ The `data-hidden` attributes in the default body are matched by `props.css` (uni
         </div>
       {%- endif -%}
       <div class="rp-header-end">
-        {%- capture search_icon -%}{% render 'rp-icon', name: 'search' %}{%- endcapture -%}
-        {%- if search_dialog != blank -%}
-          {%- capture search_attributes -%}data-rp-open="{{ search_dialog | escape }}"{%- endcapture -%}
-        {%- endif -%}
-        {% render 'rp-icon-button', href: search_url, aria_label: search_label, attributes: search_attributes, content: search_icon %}
+        {% render 'rp-icon-button', icon: 'search', href: search_url, dialog: search_dialog, aria_label: search_label %}
         {% render 'rp-account-link', href: account_url, icon_only: true, content: account_label %}
         {% render 'rp-cart-link', drawer: cart_drawer, href: cart_url %}
       </div>
@@ -615,7 +597,7 @@ The `data-hidden` attributes in the default body are matched by `props.css` (uni
 </header>
 ```
 
-Notes on this snippet: the two `capture` tags that build `menu_attributes` and `search_attributes` and the two that build icon markup stay inside one file and pass a value to a snippet's `attributes` or `content` param; this is the pattern of `06-bindings.md` section 8.7 (a default body renders `rp-*` snippets) and is not a cross-file slot under rule L-7. `data-rp-open` goes through `attributes` because IconButton has no prop for it; the value is escaped here. `shop.name` is escaped by `rp-logo` (Logo's content is text; see Logo, Host notes). The CartLink param names `drawer` and `href` are owned by `11-components-commerce.md`.
+Notes on this snippet: the openers pass the id to IconButton's `dialog` param (D-009); a blank `dialog` prints no `data-rp-open`. IconButton's `icon` param renders the Icon (`09-components-foundation.md` `## IconButton`). Rendering `rp-*` snippets from a default body is the pattern of `06-bindings.md` section 8.7. `shop.name` is escaped by `rp-logo` (Logo's content is text; see Logo, Host notes). The CartLink params `drawer` and `href` are those of `11-components-commerce.md` `## CartLink`; a blank `drawer` prints no `data-rp-open`, and a blank `href` falls back to `routes.cart_url`.
 
 ### Commerce
 
@@ -634,12 +616,12 @@ None.
 
 ### Acceptance tests
 
-1. Tier 2: fixtures `default`, `sticky-scheme`, `default-body`, `default-body-plain`, `class`, `unknown-scheme` conform in all four hosts.
-2. Tier 3: with `ripple.js` loaded, zero mutations inside `.rp-header` other than `aria-haspopup` and `aria-controls` on `a[data-rp-open]`.
-3. Tier 5: at 375 px wide the menu opener is visible and `.rp-header-center` has computed `display: none`; at 1280 px the opposite.
-4. Tier 5: with `sticky`, after `window.scrollTo(0, 2000)` the header's `getBoundingClientRect().top` is `0`.
-5. Tier 6: with JavaScript disabled, clicking the menu opener changes `location.hash` to `#footer-menu`; clicking the search link navigates to `/search`; clicking the cart link navigates to `/cart`.
-6. Tier 5: `.rp-header-inner` has the same inline start and end offsets as a `Container width="page"` on the same page (difference at most 0.5 CSS px).
+- **AT-1** Tier 2: fixtures `default`, `sticky-scheme`, `default-body`, `default-body-plain`, `class`, `unknown-scheme` conform in all four hosts.
+- **AT-2** Tier 3: with `ripple.js` loaded, zero mutations inside `.rp-header` other than `aria-haspopup` and `aria-controls` on `a[data-rp-open]`.
+- **AT-3** Tier 5: at 375 px wide the menu opener is visible and `.rp-header-center` has computed `display: none`; at 1280 px the opposite.
+- **AT-4** Tier 5: with `sticky`, after `window.scrollTo(0, 2000)` the header's `getBoundingClientRect().top` is `0`.
+- **AT-5** Tier 6: with JavaScript disabled, clicking the menu opener changes `location.hash` to `#footer-menu`; clicking the search link navigates to `/search`; clicking the cart link navigates to `/cart`.
+- **AT-6** Tier 5: `.rp-header-inner` has the same inline start and end offsets as a `Container width="page"` on the same page (difference at most 0.5 CSS px).
 
 ### Evidence and UNVERIFIED
 
@@ -798,7 +780,7 @@ Required rules: `.rp-footer` sets background, colour and `border-block-start`; `
 - HTML: copy the `default-body` fixture.
 - React: `export function Footer(props: FooterProps): JSX.Element`. No hook.
 - Remix: same tree; no `data-rmx-*`.
-- Liquid: block `footer`; default body in `snippets/rp-footer.liquid`, which renders `rp-link-list`. The policies menu is built from `shop.policies` by passing `links: shop.policies` to `rp-link-list` (see LinkList, Host notes: its loop reads `.title` and `.url` of each entry, which both a link drop and a policy drop have). Schema settings: `scheme` (select). Locale keys: `ripple.footer.name`, `ripple.footer.menu` ("Footer"), `ripple.footer.policies` ("Policies"), `ripple.footer.copyright` ("© {{ year }} {{ name }}"). This component adds the filter `date` to the Liquid subset of `06-bindings.md` rule L-13 (used once: `'now' | date: '%Y'`); the shim MUST implement it (section 3, X-6).
+- Liquid: block `footer`; default body in `snippets/rp-footer.liquid`, which renders `rp-link-list`. The policies menu is built from `shop.policies` by passing `links: shop.policies` to `rp-link-list` (see LinkList, Host notes: its loop reads `.title` and `.url` of each entry, which both a link drop and a policy drop have). `{{ attributes }}` is printed LAST in the root's opening tag (D-035). Schema settings: `scheme` (select; label `t:ripple.props.scheme`, block name `t:ripple.footer.name`, D-038). Locale keys: `ripple.footer.name`, `ripple.footer.menu` ("Footer"), `ripple.footer.policies` ("Policies"), `ripple.footer.copyright` ("© {{ year }} {{ name }}"). The snippet uses the filter `date` once (`'now' | date: '%Y'`); `date` is in the component scope of `06-bindings.md` rule L-13 (D-097).
 
 ```tsx
 <Footer menu={footerMenu} policies={policiesMenu} shop={shop} />
@@ -850,10 +832,10 @@ None.
 
 ### Acceptance tests
 
-1. Tier 2: fixtures `default`, `default-body`, `policies`, `scheme`, `class` conform in all four hosts.
-2. Tier 3: zero mutations inside `.rp-footer` when `ripple.js` loads.
-3. Tier 6: with JavaScript disabled, on the `layout` blueprint, following the Header's menu opener scrolls `#footer-menu` into the viewport, and every top-level item of the main menu that has a URL is present as a link in the document.
-4. Tier 5: `.rp-footer-inner` has the same inline offsets as a `Container width="page"` (difference at most 0.5 CSS px).
+- **AT-1** Tier 2: fixtures `default`, `default-body`, `policies`, `scheme`, `class` conform in all four hosts.
+- **AT-2** Tier 3: zero mutations inside `.rp-footer` when `ripple.js` loads.
+- **AT-3** Tier 6: with JavaScript disabled, on the `layout` blueprint, following the Header's menu opener scrolls `#footer-menu` into the viewport, and every top-level item of the main menu that has a URL is present as a link in the document.
+- **AT-4** Tier 5: `.rp-footer-inner` has the same inline offsets as a `Container width="page"` (difference at most 0.5 CSS px).
 
 ### Evidence and UNVERIFIED
 
@@ -987,14 +969,14 @@ Required rules: root `background: var(--_bg); color: var(--_fg); border-block-en
 - HTML: None.
 - React: `export function AnnouncementBar(props: AnnouncementBarProps): JSX.Element`. Generated from the contract template (kind `static`).
 - Remix: None.
-- Liquid: block `announcement-bar`. Schema settings: `scheme` (select). Locale keys: `ripple.announcement-bar.name`, `ripple.announcement-bar.label`.
+- Liquid: block `announcement-bar`. `{{ attributes }}` is printed LAST in the root's opening tag (D-035). Schema settings: `scheme` (select; label `t:ripple.props.scheme`, block name `t:ripple.announcement-bar.name`, D-038). Locale keys: `ripple.announcement-bar.name`, `ripple.announcement-bar.label`.
 
 ```tsx
 <AnnouncementBar>Free shipping over $50</AnnouncementBar>
 ```
 
 ```liquid
-{% block 'announcement-bar' %}{{ 'announcement.message' | t }}{% endblock %}
+{% block 'announcement-bar' %}{{ 'ripple.blueprints.layout.announcement' | t }}{% endblock %}
 ```
 
 ### Commerce
@@ -1011,9 +993,9 @@ None.
 
 ### Acceptance tests
 
-1. Tier 2: fixtures `default`, `scheme`, `escaping`, `class` conform in all four hosts.
-2. Tier 1: `pnpm gen --check` regenerates the four bindings from the template with no diff.
-3. Tier 5: the root spans the full viewport width at 375 px and 1280 px; text is centred.
+- **AT-1** Tier 2: fixtures `default`, `scheme`, `escaping`, `class` conform in all four hosts.
+- **AT-2** Tier 1: `pnpm gen --check` regenerates the four bindings from the template with no diff.
+- **AT-3** Tier 5: the root spans the full viewport width at 375 px and 1280 px; text is centred.
 
 ### Evidence and UNVERIFIED
 
@@ -1089,7 +1071,7 @@ Fixture `default` (`id: "main-nav"`, `menu: menu.main`):
       <li class="rp-navigation-menu-item" data-rp-part="item">
         <a class="rp-navigation-menu-link" href="/collections/all" aria-current="page">Shop</a>
         <button type="button" class="rp-navigation-menu-trigger" popovertarget="main-nav-item-1" aria-label="Shop submenu"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
-        <div id="main-nav-item-1" popover class="rp-navigation-menu-content">
+        <div id="main-nav-item-1" popover="" class="rp-navigation-menu-content">
           <ul class="rp-navigation-menu-sublist">
             <li class="rp-navigation-menu-subitem"><a class="rp-navigation-menu-sublink" href="/collections/shirts">Shirts</a></li>
             <li class="rp-navigation-menu-subitem"><a class="rp-navigation-menu-sublink" href="/collections/socks">Socks</a></li>
@@ -1112,7 +1094,7 @@ Fixture `deep` (`id: "main-nav"`, `menu: menu.deep`): a group item without URL (
     <ul class="rp-navigation-menu-list">
       <li class="rp-navigation-menu-item" data-rp-part="item">
         <button type="button" class="rp-navigation-menu-trigger" popovertarget="main-nav-item-1">Clothing<svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
-        <div id="main-nav-item-1" popover class="rp-navigation-menu-content">
+        <div id="main-nav-item-1" popover="" class="rp-navigation-menu-content">
           <ul class="rp-navigation-menu-sublist">
             <li class="rp-navigation-menu-subitem">
               <a class="rp-navigation-menu-sublink" href="/collections/tops">Tops</a>
@@ -1140,7 +1122,7 @@ Fixture `class` (`class: "custom-a custom-b"`, `menu: menu.empty`): root class i
 
 Host-owned regions and masks: None.
 
-This contract replaces the example of `04-elements.md` section 10.15 in two points, as that section allows: panel ids are `<id>-item-<n>` (not `<id>-content-<handle>`), and the panel's list uses NavigationMenu's own part classes (not `rp-link-list` / `rp-link`). The element code of `04-elements.md` 9.3 depends on neither.
+Panel ids are `<id>-item-<n>`, `<n>` being the 1-based position of the top-level item (D-017, D-085). The panel's list uses NavigationMenu's own part classes (not `rp-link-list` / `rp-link`). This document is normative for the markup; `04-elements.md` section 10.15 follows it, and the element code of `04-elements.md` 9.3 depends on neither point.
 
 ### State and attributes
 
@@ -1161,17 +1143,19 @@ Owned by `04-elements.md` section 9.3; summary of the testable statements:
 2. A mouse pointer resting on an `item` that has a `content` opens it after 120 ms; leaving every item closes all panels of this menu after 250 ms. Touch and pen pointers do not open on hover.
 3. With focus on a top-level `link` or `trigger`: ArrowRight (ArrowLeft in RTL) focuses the next item's first link or button, wrapping; ArrowLeft (ArrowRight in RTL) the previous; Home the first; End the last; each closes open panels first. ArrowDown on an item with a panel opens it and focuses its first link.
 4. Escape closes the open panel and returns focus to its trigger (native).
-5. No event is dispatched.
+5. The element dispatches no event and exposes `api.close()` only (D-017).
 
 ### Behaviour without JavaScript
 
-Every top-level link navigates. Every `trigger` opens its panel natively; Escape and an outside press close it. Missing without JavaScript: hover intent and arrow-key movement between top-level items. That is why the level is `degraded` (D-005 lists NavigationMenu under allowed `degraded`). No control is hidden; the triggers carry no `data-rp-js`. In a browser without the popover API the panels are in-flow content and the triggers do nothing (`04-elements.md` ledger issue L-8); all links stay reachable.
+Every top-level link navigates. Every `trigger` opens its panel natively; Escape and an outside press close it. Missing without JavaScript: hover intent and arrow-key movement between top-level items. That is why the level is `degraded` (D-005 lists NavigationMenu under allowed `degraded`). No control is hidden; the triggers carry no `data-rp-js`. In a browser without the popover API the panels are in-flow content and the triggers do nothing (D-081, D-010 amendment c); all links stay reachable.
 
 ### Events, commands and methods
 
 | Kind | Name | Target | Detail or arguments | React callback |
 |---|---|---|---|---|
 | method | `close` | `rp-navigation-menu` (primitive `api`) | none; closes every open panel of this menu | none |
+
+This is the complete surface (D-017): no event, no command, no other method.
 
 ### Accessibility
 
@@ -1211,7 +1195,7 @@ Required rules:
 2. `item`: `display: flex; align-items: center; gap: calc(var(--spacing) * 1); position: relative`.
 3. `link`, `trigger`: `min-block-size: var(--spacing-control-md)`; `trigger` with only an icon has `min-inline-size: 1.5rem` (target size 24 px, D-066). Focus ring `outline: 2px solid var(--color-ring)` on `:focus-visible`.
 4. `content`: MUST NOT set `display` except under `:popover-open` (`04-elements.md` requirement C-5). Under `:popover-open`: `display: block`. Always: `margin: 0; inset: auto; border: 1px solid var(--color-border); border-radius: var(--radius-surface); background: var(--color-popover); color: var(--color-popover-foreground); box-shadow: var(--shadow-md); padding: var(--rp-navigation-menu-content-padding); min-inline-size: var(--rp-navigation-menu-content-min-width)`.
-5. Position, inside `@supports (inset-block-start: anchor(end))`: `position: fixed; inset-block-start: anchor(end); inset-inline-start: anchor(start); position-try-fallbacks: flip-inline`. The implicit anchor of a popover opened by `popovertarget` is its invoker button. Outside `@supports`: `position: fixed; inset-block-start: var(--rp-header-height, 4rem); inset-inline: var(--spacing-gutter); ` (a panel spanning the page width under the header).
+5. Position, inside `@supports (inset-block-start: anchor(end))`: `position: fixed; inset-block-start: anchor(end); inset-inline-start: anchor(start); position-try-fallbacks: flip-inline`. The implicit anchor of a popover opened by `popovertarget` is its invoker button. Outside `@supports`: `position: fixed; inset-block-start: var(--rp-header-block-size, 4rem); inset-inline: var(--spacing-gutter); ` (a panel spanning the page width under the header).
 6. First-level `sublist` inside `content`: `display: grid; grid-template-columns: repeat(var(--rp-navigation-menu-columns), minmax(0, 1fr)); gap: calc(var(--spacing) * 2) calc(var(--spacing) * 6); margin: 0; padding: 0; list-style: none`. Nested `sublist`: `display: block; padding-inline-start: 0; margin-block-start: calc(var(--spacing) * 1)`; its `sublink`s use `--color-muted-foreground` and `--text-sm`.
 7. Hover styles inside `@media (hover: hover)`; the open and close transition inside `@media (prefers-reduced-motion: no-preference)` using `--rp-duration-fast`.
 
@@ -1220,7 +1204,7 @@ Required rules:
 - HTML: copy the fixture; one `<li>` per item.
 - React: `export function NavigationMenu(props: NavigationMenuProps): JSX.Element`. No hook (the element has no event and no property). `suppressHydrationWarning` on `<rp-navigation-menu>` (D-033). Attributes on the custom element are lowercase (`class`).
 - Remix: prints `data-rmx-key={id}` on the root. No `data-rmx-preserve-attrs` (the element writes no attribute; popover open state is preserved by the Remix diff natively, `ripple/docs/research/remix-3.md`).
-- Liquid: block `navigation-menu`; markup in `snippets/rp-navigation-menu.liquid` (embedded by Header). No schema settings. Locale keys: `ripple.navigation-menu.name`, `ripple.navigation-menu.label` ("Main"), `ripple.navigation-menu.submenu` ("{{ title }} submenu").
+- Liquid: block `navigation-menu`; markup in `snippets/rp-navigation-menu.liquid` (embedded by Header). `{{ attributes }}` is printed LAST in the root's opening tag (D-035). No schema settings; block name `t:ripple.navigation-menu.name` (D-038). Locale keys: `ripple.navigation-menu.name`, `ripple.navigation-menu.label` ("Main"), `ripple.navigation-menu.submenu` ("{{ title }} submenu").
 
 ```tsx
 <NavigationMenu id="main-nav" menu={menu} />
@@ -1270,7 +1254,7 @@ Required rules:
               {%- else -%}
                 <button type="button" class="rp-navigation-menu-trigger" popovertarget="{{ panel_id | escape }}">{{ link.title | escape }}{% render 'rp-icon', name: 'chevron-down' %}</button>
               {%- endif -%}
-              <div id="{{ panel_id | escape }}" popover class="rp-navigation-menu-content">
+              <div id="{{ panel_id | escape }}" popover="" class="rp-navigation-menu-content">
                 <ul class="rp-navigation-menu-sublist">
                   {%- for child in link.links -%}
                     <li class="rp-navigation-menu-subitem">
@@ -1322,20 +1306,20 @@ None.
 
 ### Acceptance tests
 
-1. Tier 2: fixtures `default`, `deep`, `empty`, `escaping`, `class` conform in all four hosts.
-2. Tier 3: zero mutations inside the root when `ripple.js` loads.
-3. Tier 5: hovering the first item with a mouse for 200 ms makes `#main-nav-item-1` match `:popover-open`; moving the pointer out of the menu for 400 ms closes it.
-4. Tier 5: with focus on the first top-level link, ArrowRight moves focus to the second item's link; End moves to the last; Home to the first; in a `dir="rtl"` document ArrowLeft moves forward.
-5. Tier 5: ArrowDown on the first item opens its panel and focuses `a[href="/collections/shirts"]`; Escape closes the panel and focus is on the trigger.
-6. Tier 6: with JavaScript disabled, pressing the trigger opens the panel (Chromium), and clicking `Shop` navigates to `/collections/all`.
-7. Tier 4: Remix morph navigation between two pages that both render the menu keeps an open panel open and reports no console error.
-8. Tier 5: every `trigger` and `link` box is at least 24 by 24 CSS px.
-9. Tier 9: tests 3 to 6 pass in WebKit and Gecko, or the SPIKE-07 fallback is activated.
+- **AT-1** Tier 2: fixtures `default`, `deep`, `empty`, `escaping`, `class` conform in all four hosts.
+- **AT-2** Tier 3: zero mutations inside the root when `ripple.js` loads.
+- **AT-3** Tier 5: hovering the first item with a mouse for 200 ms makes `#main-nav-item-1` match `:popover-open`; moving the pointer out of the menu for 400 ms closes it.
+- **AT-4** Tier 5: with focus on the first top-level link, ArrowRight moves focus to the second item's link; End moves to the last; Home to the first; in a `dir="rtl"` document ArrowLeft moves forward.
+- **AT-5** Tier 5: ArrowDown on the first item opens its panel and focuses `a[href="/collections/shirts"]`; Escape closes the panel and focus is on the trigger.
+- **AT-6** Tier 6: with JavaScript disabled, pressing the trigger opens the panel (Chromium), and clicking `Shop` navigates to `/collections/all`.
+- **AT-7** Tier 4: Remix morph navigation between two pages that both render the menu keeps an open panel open and reports no console error.
+- **AT-8** Tier 5: every `trigger` and `link` box is at least 24 by 24 CSS px.
+- **AT-9** Tier 9: AT-3 to AT-6 pass in WebKit and Gecko, or the SPIKE-07 fallback is activated.
 
 ### Evidence and UNVERIFIED
 
 - Evidence: `04-elements.md` sections 9.3 and 10.15 (element code and markup rules); ledger D-017; `ripple/theme/blocks/main-menu.liquid`, `ripple/theme/assets/s-nav-dropdown.js` (the behaviour being replaced); `uisdk/packages/web/src/define-element.ts` (root-only parts, SPIKE-04).
-- UNVERIFIED: usability of `popover` panels with hover intent for a mega menu, nested focus order, hover gaps, Remix morph (SPIKE-07); CSS anchor positioning with the implicit invoker anchor outside Chromium (SPIKE-06); the `popover` attribute below Chrome 114 and Safari 17 (`04-elements.md` L-8).
+- UNVERIFIED: usability of `popover` panels with hover intent for a mega menu, nested focus order, hover gaps, Remix morph (SPIKE-07); CSS anchor positioning with the implicit invoker anchor outside Chromium (SPIKE-06); the `popover` attribute below Chrome 114 and Safari 17 (D-010 amendment c; behaviour there is D-081).
 
 ### Fallback (SPIKE-07)
 
@@ -1369,16 +1353,16 @@ Behaviour: `rp-navigation-menu` toggles `aria-expanded` between `"true"` and `"f
 | Kind | `native` |
 | Category | `chrome` |
 | Custom elements | `rp-dialog` |
-| Root element and class | `rp-dialog` `.rp-mobile-nav` |
+| Root element and class | `rp-dialog` `.rp-drawer.rp-mobile-nav` (composes Drawer by contract, D-017, D-070) |
 | Liquid tier | `resource` |
 | No-JS level | `full` |
 | Requires `id` | yes |
-| Depends on | `icon-button`, `icon` |
+| Depends on | `drawer`, `icon-button`, `icon` |
 | Milestone | M4 |
 
 ### Purpose
 
-The small-screen navigation: a drawer (native modal `<dialog>` inside `rp-dialog`, D-008) that lists the whole menu, with nested `<details>` for sublevels. Its opener is a link to the footer menu (D-009), so the menu is reachable when JavaScript never loads.
+The small-screen navigation: a Drawer (native modal `<dialog>` inside `rp-dialog`, D-008) that lists the whole menu, with nested `<details>` for sublevels. Its opener is a link to the footer menu (D-009), so the menu is reachable when JavaScript never loads.
 
 - Use when: rendering the store's main menu for widths below `lg`. Render it once, in the `layout` blueprint, outside Header.
 - Do not use when: rendering desktop navigation (use NavigationMenu) or any other drawer (use Drawer).
@@ -1387,17 +1371,19 @@ The small-screen navigation: a drawer (native modal `<dialog>` inside `rp-dialog
 
 | Part | Export (TSX) | Liquid file | Element | Class | Hook attribute | Required | Id rule |
 |---|---|---|---|---|---|---|---|
-| root | `MobileNav` | `blocks/mobile-nav.liquid` | `rp-dialog` | `rp-mobile-nav` | `data-slot="rp-dialog"` | yes | none (D-008: the id is on `panel`) |
-| panel | none (printed by root) | same file | `dialog` | `rp-mobile-nav-panel` | none | yes | `<id>` |
-| header | none (printed by root) | same file | `div` | `rp-mobile-nav-header` | none | yes | none |
-| title | none (printed by root) | same file | `h2` | `rp-mobile-nav-title` | none | yes | `<id>-title` |
+| root | `MobileNav` | `blocks/mobile-nav.liquid` | `rp-dialog` | `rp-drawer rp-mobile-nav` | `data-slot="rp-dialog"` | yes | none (D-008: the id is on `panel`) |
+| panel (Drawer part) | none (printed by root) | same file | `dialog` | `rp-drawer-panel` | none | yes | `<id>` |
+| header (Drawer part) | none (printed by root) | same file | `div` | `rp-drawer-header` | none | yes | none |
+| title (Drawer part) | none (printed by root) | same file | `h2` | `rp-drawer-title` | none | yes | `<id>-title` |
 | close | none (printed by root) | same file | `button` (IconButton) | `rp-icon-button` | none | yes | none |
-| body | none (printed by root) | same file | `nav` | `rp-mobile-nav-body` | none | yes | none |
+| body (Drawer part) | none (printed by root) | same file | `div` | `rp-drawer-body` | none | yes | none |
 | list | none (default body) | same file | `ul` | `rp-mobile-nav-list` | none | yes; nested once per level | none |
 | item | none (default body) | same file | `li` | `rp-mobile-nav-item` | none | one per menu item | none |
 | link | none (default body) | same file | `a` | `rp-mobile-nav-link` | none | per item with URL | none |
 | group | none (default body) | same file | `details` | `rp-mobile-nav-group` | none | per item with children | none |
 | trigger | none (default body) | same file | `summary` | `rp-mobile-nav-trigger` | none | one per `group` | none |
+
+Composition (D-017, D-070): the root, `panel`, `header`, `title` and `body` are the parts of Drawer (`10-components-interactive.md` `## Drawer`), printed by the MobileNav binding itself, following the Drawer contract exactly, with the class `rp-mobile-nav` added after `rp-drawer` on the root. MobileNav's OWN parts and classes are only `list`, `item`, `link`, `group`, `trigger`. `close` is an embedded IconButton with `commandFor="<id>"` and `command="close"`; Drawer has no close part.
 
 Nesting rules: root contains exactly one `panel`. `panel` contains `header` then `body`. `header` contains `title` then `close`. `body` contains one `list`. An item without children is `<li><a class="rp-mobile-nav-link">`. An item with children is `<li><details class="rp-mobile-nav-group"><summary>title + chevron Icon</summary><ul class="rp-mobile-nav-list">...</ul></details></li>`; when that item has a URL, the nested list starts with one extra `item` whose `link` goes to the item's own URL and repeats its title. MobileNav MUST be outside every region (D-046 item 5) and outside Header, `<main>` and Footer. The opener is not a part (D-008 item 2): it is the Header's menu opener, `<a href="#<footer menu id>" data-rp-open="<id>">`.
 
@@ -1407,25 +1393,25 @@ Nesting rules: root contains exactly one `panel`. `panel` contains `header` then
 |---|---|---|---|---|---|---|---|
 | `id` | `id` | id | matches `^[a-zA-Z][a-zA-Z0-9_-]*$` | none | yes | no | `id` on `panel`; `<id>-title` on `title`; `commandfor` on `close` |
 | `menu` | `menu` | object | `RippleMenu`; Liquid: a linklist drop | TSX: none. Liquid: `linklists['main-menu']` | yes in TSX (unless children are supplied) | no | default body |
-| `side` | `side` | enum | `start`, `end` | `start` | no | no | `data-side` on `panel` |
+| `side` | `side` | enum | `start`, `end` (a subset of Drawer's `side`; `bottom` is not accepted) | `start` | no | no | `data-side` on `panel` |
 | `strings` | none | object | keys `title`, `close` | `"Menu"`, `"Close"` | no | no | TSX hosts only |
 
 ### Content model
 
-`flow` - the default body is the menu as nested lists inside `body`. Children, when supplied, replace the content of `body` (the `<nav>` element and its `aria-label` stay). `title` and `close` are always printed by the component.
+`flow` - the default body is the menu as nested lists inside `body`. Children, when supplied, replace the content of `body`. `title` and `close` are always printed by the component.
 
 ### HTML contract
 
 Fixture `default` (`id: "mobile-nav"`, `menu: menu.main`):
 
 ```html
-<rp-dialog class="rp-mobile-nav" data-slot="rp-dialog">
-  <dialog id="mobile-nav" class="rp-mobile-nav-panel" data-side="start" aria-labelledby="mobile-nav-title" closedby="any">
-    <div class="rp-mobile-nav-header">
-      <h2 id="mobile-nav-title" class="rp-mobile-nav-title">Menu</h2>
+<rp-dialog class="rp-drawer rp-mobile-nav" data-slot="rp-dialog">
+  <dialog class="rp-drawer-panel" id="mobile-nav" data-side="start" aria-labelledby="mobile-nav-title" closedby="any">
+    <div class="rp-drawer-header">
+      <h2 class="rp-drawer-title" id="mobile-nav-title">Menu</h2>
       <button class="rp-icon-button" type="button" commandfor="mobile-nav" command="close" data-variant="ghost" data-size="md" aria-label="Close"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
-    <nav class="rp-mobile-nav-body" aria-label="Menu">
+    <div class="rp-drawer-body">
       <ul class="rp-mobile-nav-list">
         <li class="rp-mobile-nav-item">
           <details class="rp-mobile-nav-group" open>
@@ -1439,7 +1425,7 @@ Fixture `default` (`id: "mobile-nav"`, `menu: menu.main`):
         </li>
         <li class="rp-mobile-nav-item"><a class="rp-mobile-nav-link" href="/pages/about">About</a></li>
       </ul>
-    </nav>
+    </div>
   </dialog>
 </rp-dialog>
 ```
@@ -1471,9 +1457,9 @@ Fixture `deep` (`id: "mobile-nav"`, `menu: menu.deep`, `side: "end"`): `panel` h
 
 Fixture `empty` (`id: "mobile-nav"`, `menu: menu.empty`): `body` contains `<ul class="rp-mobile-nav-list"></ul>`.
 
-Fixture `invalid-enum-falls-back` (`side: "left"`): `data-side="start"`.
+Fixture `invalid-enum-falls-back` (`side: "left"`): `data-side="start"`. `side: "bottom"` also falls back to `start`.
 
-Fixture `class` (`class: "custom-a custom-b"`): root class is `rp-mobile-nav custom-a custom-b`.
+Fixture `class` (`class: "custom-a custom-b"`): root class is `rp-drawer rp-mobile-nav custom-a custom-b`.
 
 There is no `defaultOpen` prop: a navigation drawer that opens on load would hide the page.
 
@@ -1492,12 +1478,12 @@ Upgrade allow-list (mutations permitted when the element upgrades): None of its 
 
 ### Behaviour with JavaScript
 
-Owned by `04-elements.md` section 9.1 (`rp-dialog`) and 3.4 (opener listener); summary:
+Owned by `04-elements.md` section 9.1 (`rp-dialog`) and 3.4 (opener listener); MobileNav adds nothing. Summary of the testable statements:
 
-1. An unmodified primary click on `a[data-rp-open="<id>"]` calls `preventDefault()` and `showModal()` on `panel`. A modified click (new tab) follows the `href`.
+1. Opening: the opener behaviour of `04-elements.md` section 3.4 (D-009) applies to `a[data-rp-open="<id>"]`; it is not restated here.
 2. `close` (Invoker Command `close`, polyfilled), Escape and a press on the backdrop close the dialog. `rp-dialog` dispatches `openchange` on the root with `detail.value` `true` or `false`.
 3. Focus moves into the dialog on open (first focusable element: `close`) and returns to the opener on close.
-4. A link inside the drawer navigates; `rp-dialog` closes the dialog when a navigation with a source element starts (`04-elements.md` ledger issue L-10).
+4. A link inside the drawer navigates; `rp-dialog` closes the dialog when a navigation with a source element starts (`04-elements.md` section 9.1).
 5. Toggling a `group` is native; several groups MAY be open at once (no `name` attribute).
 
 ### Behaviour without JavaScript
@@ -1516,8 +1502,8 @@ The opener link scrolls to the footer menu (`#footer-menu`), which lists the top
 
 ### Accessibility
 
-- Pattern: native modal `<dialog>` containing a navigation landmark with native disclosures; `checkPattern`: none.
-- Accessible name: `panel` by `aria-labelledby="<id>-title"`; `body` by `aria-label` equal to the title text (`ripple.mobile-nav.title`, "Menu"); `close` by `ripple.mobile-nav.close` ("Close").
+- Pattern: native modal `<dialog>` (Drawer) containing a list of links with native disclosures; `checkPattern`: none. The dialog's name ("Menu") identifies the content, so no `<nav>` landmark is printed inside it.
+- Accessible name: `panel` by `aria-labelledby="<id>-title"` (title text `ripple.mobile-nav.title`, "Menu"); `close` by `ripple.mobile-nav.close` ("Close").
 - Focus: on open, the first focusable element in the dialog; on close, the opener link.
 - Announcements: None.
 
@@ -1529,39 +1515,34 @@ The opener link scrolls to the footer menu (`#footer-menu`), which lists the top
 
 ### Styling
 
-- File: `components/mobile-nav/mobile-nav.css` (layer `rp.components`).
-- Tokens used: `--color-background`, `--color-foreground`, `--color-border`, `--color-overlay`, `--color-accent`, `--color-ring`, `--shadow-lg`, `--spacing`, `--spacing-control-md`, `--text-lg`, `--text-base`, `--rp-duration-slow`, `--rp-duration-base`, `--ease-drawer`, `--rp-z-overlay`.
+- File: `components/mobile-nav/mobile-nav.css` (layer `rp.components`). It styles `.rp-mobile-nav` and the five own classes only. It MUST NOT contain a rule for the panel, the backdrop, the header, the title, the body or the open/close transition: `drawer.css` styles those through the Drawer classes (D-017, D-085).
+- Tokens used: `--color-accent`, `--color-ring`, `--spacing`, `--spacing-control-md`, `--text-base`, `--rp-duration-base`.
 
 | Custom property | Default | Purpose |
 |---|---|---|
-| `--rp-mobile-nav-width` | `min(22rem, 85vw)` | Inline size of the panel |
-| `--rp-mobile-nav-padding` | `calc(var(--spacing) * 4)` | Padding of `header` and `body` |
 | `--rp-mobile-nav-indent` | `calc(var(--spacing) * 4)` | Inline-start indent of each nested `list` |
-| `--_translate` | `-100%` | Closed-state translation on the inline axis |
+
+A project that wants a different panel width sets Drawer's `--rp-drawer-size` (`10-components-interactive.md` `## Drawer`, Styling).
 
 | Modifier selector | Sets |
 |---|---|
-| `.rp-mobile-nav-panel[data-side="start"]` | `--_translate: -100%`; `inset-inline: 0 auto` |
-| `.rp-mobile-nav-panel[data-side="end"]` | `--_translate: 100%`; `inset-inline: auto 0` |
+| `.rp-mobile-nav-group[open] > .rp-mobile-nav-trigger` | rotates the chevron Icon by 180 degrees |
 
 Required rules:
 
-1. `panel` MUST NOT set `display` except under `[open]` (`04-elements.md` C-5). Under `[open]`: `display: flex; flex-direction: column`. Always: `position: fixed; inset-block: 0; margin: 0; padding: 0; border: 0; inline-size: var(--rp-mobile-nav-width); max-inline-size: none; block-size: 100dvh; max-block-size: none; background: var(--color-background); color: var(--color-foreground); box-shadow: var(--shadow-lg)`.
-2. `panel::backdrop`: `background: var(--color-overlay)`.
-3. Slide transition inside `@media (prefers-reduced-motion: no-preference)`: `transition: translate var(--rp-duration-slow) var(--ease-drawer), overlay var(--rp-duration-slow) allow-discrete, display var(--rp-duration-slow) allow-discrete`; `@starting-style { .rp-mobile-nav-panel[open] { translate: var(--_translate) 0; } }`; closed state `translate: var(--_translate) 0`. In a `dir="rtl"` document the translation sign MUST flip: `:dir(rtl) .rp-mobile-nav-panel { --_translate: 100%; }` for `start` and `-100%` for `end`.
-4. `header`: `display: flex; align-items: center; justify-content: space-between; padding: var(--rp-mobile-nav-padding); border-block-end: 1px solid var(--color-border)`. `title`: `margin: 0; font-size: var(--text-lg)`.
-5. `body`: `flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: var(--rp-mobile-nav-padding)`.
-6. `list`: `margin: 0; padding: 0; list-style: none`; a `list` inside a `group` has `padding-inline-start: var(--rp-mobile-nav-indent)`.
-7. `link`, `trigger`: `display: flex; align-items: center; justify-content: space-between; min-block-size: var(--spacing-control-md); font-size: var(--text-base)`; `trigger` hides the native marker (`list-style: none` and `::-webkit-details-marker { display: none }`); the chevron Icon rotates 180 degrees under `.rp-mobile-nav-group[open] > .rp-mobile-nav-trigger`.
+1. `.rp-mobile-nav`: declares `--rp-mobile-nav-indent`.
+2. `list`: `margin: 0; padding: 0; list-style: none`; a `list` inside a `group` has `padding-inline-start: var(--rp-mobile-nav-indent)`.
+3. `link`, `trigger`: `display: flex; align-items: center; justify-content: space-between; min-block-size: var(--spacing-control-md); font-size: var(--text-base)`; focus ring `outline: 2px solid var(--color-ring)` on `:focus-visible`; `trigger` hides the native marker (`list-style: none` and `::-webkit-details-marker { display: none }`).
+4. The chevron rotation uses `--rp-duration-base` inside `@media (prefers-reduced-motion: no-preference)`.
 
-MobileNav owns these rules itself and does not reuse Drawer's classes, because its root class MUST be `rp-mobile-nav` (`02-html-contract.md` rules N-1 and C-18; Ledger issues, item 5).
+Manifest: `root.class` is `"rp-drawer rp-mobile-nav"`; `dependencies.components` is `["drawer", "icon-button", "icon"]`; `dependencies.embeds` is `["icon-button", "icon"]` (D-070).
 
 ### Host notes
 
 - HTML: copy the fixture.
-- React: `export function MobileNav(props: MobileNavProps): JSX.Element`, hand-written after the Dialog binding of `06-bindings.md` section 6.6: `useElement(ref, { events: { openchange: onOpenChange } })`; `<dialog>` is an ordinary React element; `suppressHydrationWarning` on `<rp-dialog>` and on `<dialog>`.
+- React: `export function MobileNav(props: MobileNavProps): JSX.Element`, hand-written after the Drawer binding (`10-components-interactive.md` `## Drawer`, Host notes; `06-bindings.md` section 6.6): `useElement(ref, { events: { openchange: onOpenChange } })`; `<dialog>` is an ordinary React element; `suppressHydrationWarning` on `<rp-dialog>` and on `<dialog>`. The binding prints the Drawer markup itself (compose by contract, D-070); it does not render `<Drawer>`. The closer is `<IconButton icon="close" ariaLabel={strings.close} commandFor={id} command="close" />`. The file starts with `"use client"` and exports the component only (D-094).
 - Remix: `data-rmx-key={id}` on `<rp-dialog>`; `data-rmx-preserve-attrs="open"` on `<dialog>` and on every `<details class="rp-mobile-nav-group">`.
-- Liquid: block `mobile-nav`; markup in the block file (not embedded by another file). Schema settings: `side` (select). Locale keys: `ripple.mobile-nav.name`, `ripple.mobile-nav.title` ("Menu"), `ripple.mobile-nav.close` ("Close").
+- Liquid: block `mobile-nav`; markup in the block file (not embedded by another file). `{{ attributes }}` is printed LAST in the root's opening tag (D-035). Schema settings: `side` (select; label `t:ripple.props.side`, option labels `t:ripple.props.start`, `t:ripple.props.end`; block name `t:ripple.mobile-nav.name`, D-038). Locale keys: `ripple.mobile-nav.name`, `ripple.mobile-nav.title` ("Menu"), `ripple.mobile-nav.close` ("Close").
 
 ```tsx
 <MobileNav id="mobile-nav" menu={menu} />
@@ -1586,21 +1567,20 @@ Body of `components/mobile-nav/liquid/blocks/mobile-nav.liquid` between `{% doc 
   assign close_label = 'ripple.mobile-nav.close' | t
   assign title_id = id | append: '-title'
 -%}
-{%- capture close_icon -%}{% render 'rp-icon', name: 'close' %}{%- endcapture -%}
 {%- capture chevron -%}{% render 'rp-icon', name: 'chevron-down' %}{%- endcapture -%}
 <rp-dialog
-  class="rp-mobile-nav {{ class | escape }}"
+  class="rp-drawer rp-mobile-nav {{ class | escape }}"
   data-slot="rp-dialog"
   {% if span != blank %}data-span="{{ span | escape }}"{% endif %}
   {% if hidden != blank %}data-hidden="{{ hidden | escape }}"{% endif %}
   {{ attributes }}
 >
-  <dialog id="{{ id | escape }}" class="rp-mobile-nav-panel" data-side="{{ side }}" aria-labelledby="{{ title_id | escape }}" closedby="any">
-    <div class="rp-mobile-nav-header">
-      <h2 id="{{ title_id | escape }}" class="rp-mobile-nav-title">{{ title_text | escape }}</h2>
-      {% render 'rp-icon-button', command_for: id, command: 'close', aria_label: close_label, content: close_icon %}
+  <dialog class="rp-drawer-panel" id="{{ id | escape }}" data-side="{{ side }}" aria-labelledby="{{ title_id | escape }}" closedby="any">
+    <div class="rp-drawer-header">
+      <h2 class="rp-drawer-title" id="{{ title_id | escape }}">{{ title_text | escape }}</h2>
+      {% render 'rp-icon-button', icon: 'close', aria_label: close_label, command_for: id, command: 'close' %}
     </div>
-    <nav class="rp-mobile-nav-body" aria-label="{{ title_text | escape }}">
+    <div class="rp-drawer-body">
       {%- if content != blank -%}
         {{ content }}
       {%- else -%}
@@ -1644,7 +1624,7 @@ Body of `components/mobile-nav/liquid/blocks/mobile-nav.liquid` between `{% doc 
           {%- endfor -%}
         </ul>
       {%- endif -%}
-    </nav>
+    </div>
   </dialog>
 </rp-dialog>
 ```
@@ -1661,24 +1641,24 @@ None.
 
 ### Checker rules
 
-- RP113 structure rules: `mobile-nav-once` (at most one `.rp-mobile-nav` per document); `mobile-nav-needs-opener` (a document that contains `.rp-mobile-nav-panel#X` contains `a[data-rp-open="X"][href^="#"]`); `dialog-needs-title` applies (the `title` part is always printed).
+- RP113 structure rules: `mobile-nav-once` (at most one `.rp-mobile-nav` per document); `mobile-nav-needs-opener` (a document that contains `.rp-mobile-nav dialog#X` contains `a[data-rp-open="X"][href]`); Drawer's structure rules apply to the composed parts (the `title` part is always printed).
 - RP302 (opener is a link), RP303 (no `open`, `hidden`, `aria-hidden`, `aria-modal` on the dialog), RP404 (Liquid: not between `{% partial %}` and `{% endpartial %}`), RP114, RP201.
 
 ### Acceptance tests
 
-1. Tier 2: fixtures `default`, `deep`, `empty`, `invalid-enum-falls-back`, `class` conform in all four hosts.
-2. Tier 3: zero mutations inside the root when `ripple.js` loads.
-3. Tier 5: clicking the opener makes `dialog#mobile-nav` match `[open]` and `:modal`; `document.activeElement` is the close button; Escape closes it and focus returns to the opener.
-4. Tier 5: `openchange` fires once on open with `detail.value === true` and once on close with `false`.
-5. Tier 5: at `data-side="start"` in an LTR document the open panel's `getBoundingClientRect().left` is `0`; in an RTL document its `right` equals the viewport width.
-6. Tier 6: with JavaScript disabled, clicking the opener sets `location.hash` to `#footer-menu`, the dialog is not open, and the footer menu is in the viewport.
-7. Tier 6 (script failure): the same assertions with every `**/ripple*.js` request aborted.
-8. Tier 4: React hydration in both script orders reports no hydration warning; Remix morph navigation with the drawer open closes it and leaves no `open` attribute.
-9. Tier 5: every `link` and `trigger` box is at least 44 px high (the `--spacing-control-md` default).
+- **AT-1** Tier 2: fixtures `default`, `deep`, `empty`, `invalid-enum-falls-back`, `class` conform in all four hosts.
+- **AT-2** Tier 3: zero mutations inside the root when `ripple.js` loads.
+- **AT-3** Tier 5: clicking the opener makes `dialog#mobile-nav` match `[open]` and `:modal`; `document.activeElement` is the close button; Escape closes it and focus returns to the opener.
+- **AT-4** Tier 5: `openchange` fires once on open with `detail.value === true` and once on close with `false`.
+- **AT-5** Tier 5: at `data-side="start"` in an LTR document the open panel's `getBoundingClientRect().left` is `0`; in an RTL document its `right` equals the viewport width.
+- **AT-6** Tier 6: with JavaScript disabled, clicking the opener sets `location.hash` to `#footer-menu`, the dialog is not open, and the footer menu is in the viewport.
+- **AT-7** Tier 6 (script failure): the same assertions with every `**/ripple*.js` request aborted.
+- **AT-8** Tier 4: React hydration in both script orders reports no hydration warning; Remix morph navigation with the drawer open closes it and leaves no `open` attribute.
+- **AT-9** Tier 5: every `link` and `trigger` box is at least 44 px high (the `--spacing-control-md` default).
 
 ### Evidence and UNVERIFIED
 
-- Evidence: `04-elements.md` sections 9.1, 10.2, 10.15 (last paragraph); ledger D-008, D-009, D-017; `ripple/theme/snippets/mobile-nav-drawer.liquid`, `ripple/theme/assets/s-mobile-nav.js` (push panels that need JavaScript, replaced by `<details>`); `ripple/docs/research/base-theme.md` 3.4.
+- Evidence: `04-elements.md` sections 9.1, 10.2, 10.15 (last paragraph); `10-components-interactive.md` `## Drawer` (the composed contract); ledger D-008, D-009, D-017, D-070, D-085; `ripple/theme/snippets/mobile-nav-drawer.liquid`, `ripple/theme/assets/s-mobile-nav.js` (push panels that need JavaScript, replaced by `<details>`); `ripple/docs/research/base-theme.md` 3.4.
 - UNVERIFIED: `closedby` support outside Chromium (SPIKE-06; `rp-dialog` has the backdrop-click fallback); `@starting-style` and `allow-discrete` transitions below the browser floor (without them the drawer opens without animation, which is acceptable); `commandfor` printing in React 19 and Remix 3 (SPIKE-05).
 
 ### Fallback (SPIKE-05)
@@ -1820,7 +1800,7 @@ Required rules: `list` is `display: flex; flex-direction: var(--_direction); fle
 - HTML: None.
 - React: `export function LinkList(props: LinkListProps): JSX.Element`. No hook. Hand-written (the template language has no loops).
 - Remix: None.
-- Liquid: block `link-list`; markup in `snippets/rp-link-list.liquid` (embedded by Footer). Schema settings: `orientation` (select). Locale keys: `ripple.link-list.name`, `ripple.link-list.label` ("Links").
+- Liquid: block `link-list`; markup in `snippets/rp-link-list.liquid` (embedded by Footer). Schema settings: `orientation` (select). Locale keys: `ripple.link-list.name`, `ripple.link-list.label` ("Links"). `{{ attributes }}` is printed LAST in the root's opening tag (D-035). Block name `t:ripple.link-list.name`; setting labels `t:ripple.props.<prop name>`, option labels `t:ripple.props.<value>` (D-038).
 
 ```tsx
 <LinkList menu={footerMenu} ariaLabel="Footer" />
@@ -1883,10 +1863,10 @@ None.
 
 ### Acceptance tests
 
-1. Tier 2: fixtures `default`, `current`, `skips-items-without-url`, `invalid-enum-falls-back`, `escaping`, `class` conform in all four hosts.
-2. Tier 3: zero mutations when `ripple.js` loads.
-3. Tier 5: with `orientation="horizontal"` and a 1280 px viewport, the two links of fixture `current` have equal `top`; with `vertical` they have equal `left`.
-4. Tier 5: every link box is at least 24 by 24 CSS px.
+- **AT-1** Tier 2: fixtures `default`, `current`, `skips-items-without-url`, `invalid-enum-falls-back`, `escaping`, `class` conform in all four hosts.
+- **AT-2** Tier 3: zero mutations when `ripple.js` loads.
+- **AT-3** Tier 5: with `orientation="horizontal"` and a 1280 px viewport, the two links of fixture `current` have equal `top`; with `vertical` they have equal `left`.
+- **AT-4** Tier 5: every link box is at least 24 by 24 CSS px.
 
 ### Evidence and UNVERIFIED
 
@@ -2019,7 +1999,7 @@ Required rules: root `display: inline-flex; align-items: center; min-block-size:
 - HTML: None.
 - React: `export function Logo(props: LogoProps): JSX.Element`. Generated from the contract template.
 - Remix: None.
-- Liquid: block `logo`; markup in `snippets/rp-logo.liquid` (embedded by Header). In the snippet, `content` is the shop name as TEXT and is printed with `| escape` (an exception to "content is HTML" of rule L-11, needed because Header passes `shop.name`); the block wrapper passes its `{{ content }}` through unchanged, so a template author MUST write only text between the block tags. Schema settings: `size` (select). Locale keys: `ripple.logo.name`.
+- Liquid: block `logo`; markup in `snippets/rp-logo.liquid` (embedded by Header). In the snippet, `content` is the shop name as TEXT and is printed with `| escape` (an exception to "content is HTML" of rule L-11, needed because Header passes `shop.name`); the block wrapper passes its `{{ content }}` through unchanged, so a template author MUST write only text between the block tags. Schema settings: `size` (select). Locale keys: `ripple.logo.name`. `{{ attributes }}` is printed LAST in the root's opening tag (D-035). Block name `t:ripple.logo.name`; setting labels `t:ripple.props.<prop name>`, option labels `t:ripple.props.<value>` (D-038).
 
 ```tsx
 <Logo href={shop.url} image={shop.logo ?? undefined}>{shop.name}</Logo>
@@ -2043,9 +2023,9 @@ None.
 
 ### Acceptance tests
 
-1. Tier 2: fixtures `default`, `image`, `invalid-enum-falls-back`, `class` conform in all four hosts (image `src` masked).
-2. Tier 5: for fixture `image` with `size="lg"` the rendered image height is 40 CSS px and its width keeps the 4:1 ratio.
-3. Tier 5: the accessible name computed by the browser for fixture `image` is `Mock Shop`.
+- **AT-1** Tier 2: fixtures `default`, `image`, `invalid-enum-falls-back`, `class` conform in all four hosts (image `src` masked).
+- **AT-2** Tier 5: for fixture `image` with `size="lg"` the rendered image height is 40 CSS px and its width keeps the 4:1 ratio.
+- **AT-3** Tier 5: the accessible name computed by the browser for fixture `image` is `Mock Shop`.
 
 ### Evidence and UNVERIFIED
 
@@ -2112,7 +2092,7 @@ Nesting rules: root contains `opener` then `panel`. `panel` contains exactly one
 
 ### Content model
 
-`none` - no children. Ledger D-037 lists LocaleSelector as tier `resource`; its body is fully determined by the data, so the Liquid block ignores `content` (Ledger issues, item 6).
+`none` - no children. Ledger D-037 lists LocaleSelector as tier `resource`; its body is fully determined by the data, so the Liquid block ignores `content` (D-085).
 
 ### HTML contract
 
@@ -2120,8 +2100,8 @@ Fixture `default` (`id: "footer-locale"`, `locale.multi`, `returnTo: "/"`):
 
 ```html
 <div class="rp-locale-selector">
-  <button class="rp-button" type="button" popovertarget="footer-locale" data-variant="ghost" data-size="sm"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18"/></svg>Canada (CAD $) / English</button>
-  <div id="footer-locale" popover class="rp-popover" data-side="bottom" data-align="start">
+  <button class="rp-button" type="button" popovertarget="footer-locale" data-variant="ghost" data-size="sm"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>Canada (CAD $) / English</button>
+  <div id="footer-locale" popover="" class="rp-popover" data-side="bottom" data-align="start">
     <form class="rp-locale-selector-form" id="footer-locale-content" method="post" action="/api/locale">
       <input type="hidden" name="return_to" value="/">
       <p class="rp-locale-selector-heading">Country/region</p>
@@ -2227,7 +2207,7 @@ Required rules: root `display: inline-block`; `form` `display: flex; flex-direct
 - HTML: copy the fixture; the server needs the route of section 2.6.
 - React: `export function LocaleSelector(props: LocaleSelectorProps): JSX.Element | null`. Returns `null` when no group would be printed. No hook.
 - Remix: the `form` prints `data-rmx-document` (a locale change MUST be a full document load: `hydrogen/packages/hydrogen/skills/hydrogen-markets/SKILL.md`, "One locale per page load").
-- Liquid: block `locale-selector`. Schema settings: `side`, `align` (select). Locale keys: `ripple.locale-selector.name`, `ripple.locale-selector.country` ("Country/region"), `ripple.locale-selector.language` ("Language").
+- Liquid: block `locale-selector`. Schema settings: `side`, `align` (select). Locale keys: `ripple.locale-selector.name`, `ripple.locale-selector.country` ("Country/region"), `ripple.locale-selector.language` ("Language"). `{{ attributes }}` is printed LAST in the root's opening tag (D-035). Block name `t:ripple.locale-selector.name`; setting labels `t:ripple.props.<prop name>`, option labels `t:ripple.props.<value>` (D-038).
 
 ```tsx
 <LocaleSelector id="footer-locale" countries={locale.countries} languages={locale.languages} returnTo={pathname} side="top" />
@@ -2275,7 +2255,7 @@ Body of `components/locale-selector/liquid/blocks/locale-selector.liquid` betwee
     {{ attributes }}
   >
     {% render 'rp-button', variant: 'ghost', size: 'sm', popover_target: id, content: opener_content %}
-    <div id="{{ id | escape }}" popover class="rp-popover" data-side="{{ side }}" data-align="{{ align }}">
+    <div id="{{ id | escape }}" popover="" class="rp-popover" data-side="{{ side }}" data-align="{{ align }}">
       {%- form 'localization', id: form_id, class: 'rp-locale-selector-form' -%}
         {%- if show_countries == true -%}
           <p class="rp-locale-selector-heading">{{ country_label | escape }}</p>
@@ -2299,7 +2279,7 @@ Body of `components/locale-selector/liquid/blocks/locale-selector.liquid` betwee
 {%- endif -%}
 ```
 
-The panel markup is printed inline, following the Popover contract of D-010, because the Popover panel is a part block on Liquid and a block cannot be called from a block file (rule L-12). If `10-components-interactive.md` provides a snippet for the panel, this file MUST render that snippet instead.
+The panel markup is printed inline, following the Popover contract of `10-components-interactive.md` `## Popover` exactly (compose by contract, D-070), because the Popover panel is a part block on Liquid and a block cannot be called from a block file (rule L-12). The root is a `<div>` and prints `{{ attributes }}` LAST (D-035). The `<form>` is printed by `{% form %}` and therefore takes only `id` and `class` (D-091 item 6).
 
 ### Commerce
 
@@ -2316,12 +2296,12 @@ None. (Country and language are not cart state. After the redirect the page is r
 
 ### Acceptance tests
 
-1. Tier 2: fixtures `default`, `countries-only`, `single-locale`, `invalid-enum-falls-back`, `class` conform in all four hosts with the masks above.
-2. Tier 3: zero mutations when `ripple.js` loads.
-3. Tier 6 (hydrogen backend, JavaScript disabled): open the panel, press `United States (USD $)`; the browser POSTs `country_code=US` and `return_to` to the action and lands, after a 303, on a URL whose locale is the US locale (route of section 2.6).
-4. Tier 8 (Liquid live): the same flow against `/localization`; the page reloads with `localization.country.iso_code == 'US'`.
-5. Tier 5: the opener's accessible name equals the opener text rule; the current option has `aria-current="true"`.
-6. Tier 5: every option box is at least 24 CSS px high.
+- **AT-1** Tier 2: fixtures `default`, `countries-only`, `single-locale`, `invalid-enum-falls-back`, `class` conform in all four hosts with the masks above.
+- **AT-2** Tier 3: zero mutations when `ripple.js` loads.
+- **AT-3** Tier 6 (hydrogen backend, JavaScript disabled): open the panel, press `United States (USD $)`; the browser POSTs `country_code=US` and `return_to` to the action and lands, after a 303, on a URL whose locale is the US locale (route of section 2.6).
+- **AT-4** Tier 8 (Liquid live): the same flow against `/localization`; the page reloads with `localization.country.iso_code == 'US'`.
+- **AT-5** Tier 5: the opener's accessible name equals the opener text rule; the current option has `aria-current="true"`.
+- **AT-6** Tier 5: every option box is at least 24 CSS px high.
 
 ### Evidence and UNVERIFIED
 
@@ -2382,13 +2362,13 @@ Nesting rules: root contains `icon` then `label`. Children are the content of `l
 Fixture `default` (children: `Account`):
 
 ```html
-<a class="rp-account-link" href="/account"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 20a8 8 0 0 1 16 0"/></svg><span class="rp-account-link-label">Account</span></a>
+<a class="rp-account-link" href="/account"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6"/></svg><span class="rp-account-link-label">Account</span></a>
 ```
 
 Fixture `icon-only` (`iconOnly: true`, `href: "/account/login"`):
 
 ```html
-<a class="rp-account-link" href="/account/login" data-icon-only=""><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 20a8 8 0 0 1 16 0"/></svg><span class="rp-account-link-label">Account</span></a>
+<a class="rp-account-link" href="/account/login" data-icon-only=""><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6"/></svg><span class="rp-account-link-label">Account</span></a>
 ```
 
 Fixture `class` (`class: "custom-a custom-b"`): root class is `rp-account-link custom-a custom-b`.
@@ -2448,7 +2428,7 @@ Required rules: root `display: inline-flex; align-items: center; justify-content
 - HTML: None.
 - React: `export function AccountLink(props: AccountLinkProps): JSX.Element`. Generated from the contract template.
 - Remix: prints `data-rmx-document` on the root (links to account routes MUST be document navigations, D-034 item 3).
-- Liquid: block `account-link`; markup in `snippets/rp-account-link.liquid` (embedded by Header). No schema settings. Locale keys: `ripple.account-link.name`, `ripple.account-link.label` ("Account").
+- Liquid: block `account-link`; markup in `snippets/rp-account-link.liquid` (embedded by Header). No schema settings. Locale keys: `ripple.account-link.name`, `ripple.account-link.label` ("Account"). `{{ attributes }}` is printed LAST in the root's opening tag (D-035). Block name `t:ripple.account-link.name`; setting labels `t:ripple.props.<prop name>`, option labels `t:ripple.props.<value>` (D-038).
 
 ```tsx
 <AccountLink href="/account" iconOnly>Account</AccountLink>
@@ -2486,9 +2466,9 @@ None.
 
 ### Acceptance tests
 
-1. Tier 2: fixtures `default`, `icon-only`, `class` conform in all four hosts (`href` masked).
-2. Tier 5: with `iconOnly` the link box is 44 by 44 CSS px, the label's box is 1 by 1 CSS px, and the computed accessible name is `Account`.
-3. Tier 4 (Remix): the rendered link has `data-rmx-document`; clicking it causes a document navigation (no `X-Remix-Frame` request).
+- **AT-1** Tier 2: fixtures `default`, `icon-only`, `class` conform in all four hosts (`href` masked).
+- **AT-2** Tier 5: with `iconOnly` the link box is 44 by 44 CSS px, the label's box is 1 by 1 CSS px, and the computed accessible name is `Account`.
+- **AT-3** Tier 4 (Remix): the rendered link has `data-rmx-document`; clicking it causes a document navigation (no `X-Remix-Frame` request).
 
 ### Evidence and UNVERIFIED
 
@@ -2545,7 +2525,7 @@ Nesting rules: root contains `row`, then `message` when printed. `row` contains 
 | `defaultValue` | none (reads `form.email`) | string | an email address | none | no | no | `value` on `input` |
 | `strings` | none | object | keys `email`, `submit`, `success`, `error` | `"Email address"`, `"Subscribe"`, `"Thanks for subscribing."`, `"Enter a valid email address."` | no | no | TSX hosts only |
 
-`action`, `status`, `defaultValue` have `hosts: ["html", "react", "remix"]`. `status` values are not in ledger section 6 (Ledger issues, item 7).
+`action`, `status`, `defaultValue` have `hosts: ["html", "react", "remix"]`. The `status` enum `idle`, `success`, `error` is fixed by D-085.
 
 ### Content model
 
@@ -2653,7 +2633,7 @@ Required rules: root `display: flex; flex-direction: column; gap: var(--rp-newsl
 - HTML: copy the fixture; the server needs the route of section 2.7.
 - React: `export function NewsletterForm(props: NewsletterFormProps): JSX.Element`. No hook; the form is uncontrolled (`defaultValue`).
 - Remix: no `data-rmx-document` (Remix may submit it as a frame navigation; the route answers with a redirect to the page).
-- Liquid: block `newsletter-form`. No schema settings. Locale keys: `ripple.newsletter-form.name`, `.email` ("Email address"), `.submit` ("Subscribe"), `.success` ("Thanks for subscribing."), `.error` ("Enter a valid email address.").
+- Liquid: block `newsletter-form`. No schema settings. Locale keys: `ripple.newsletter-form.name`, `.email` ("Email address"), `.submit` ("Subscribe"), `.success` ("Thanks for subscribing."), `.error` ("Enter a valid email address."). The root is printed by `{% form %}` and takes only `id` and `class` (D-091 item 6). Block name `t:ripple.newsletter-form.name`; setting labels `t:ripple.props.<prop name>`, option labels `t:ripple.props.<value>` (D-038).
 
 ```tsx
 <NewsletterForm id="newsletter" action="/api/newsletter" status={newsletterStatus} />
@@ -2681,9 +2661,9 @@ Body of `components/newsletter-form/liquid/blocks/newsletter-form.liquid` betwee
       {{ content }}
     {%- else -%}
       {%- if form.errors -%}
-        {% render 'rp-input', type: 'email', name: 'contact[email]', required: true, autocomplete: 'email', placeholder: email_label, aria_label: email_label, default_value: form.email, invalid: true, described_by: error_id %}
+        {% render 'rp-input', type: 'email', name: 'contact[email]', required: true, auto_complete: 'email', placeholder: email_label, aria_label: email_label, default_value: form.email, invalid: true, described_by: error_id %}
       {%- else -%}
-        {% render 'rp-input', type: 'email', name: 'contact[email]', required: true, autocomplete: 'email', placeholder: email_label, aria_label: email_label %}
+        {% render 'rp-input', type: 'email', name: 'contact[email]', required: true, auto_complete: 'email', placeholder: email_label, aria_label: email_label %}
       {%- endif -%}
       {% render 'rp-button', type: 'submit', content: submit_label %}
     {%- endif -%}
@@ -2696,7 +2676,7 @@ Body of `components/newsletter-form/liquid/blocks/newsletter-form.liquid` betwee
 {%- endform -%}
 ```
 
-Notes: the root element is printed by the `{% form %}` tag, so `attributes`, `span` and `hidden` cannot be printed on it; this block accepts `class` only (the `{% doc %}` MUST say so; Ledger issues, item 8). The two FormMessage elements are written inline with FormMessage's contract; if `09-components-foundation.md` gives FormMessage a snippet, render `rp-form-message` instead. The Input param names (`default_value`, `invalid`, `described_by`, `aria_label`, `autocomplete`) follow ledger 6.4 and are owned by `09-components-foundation.md`.
+Notes: the root element is printed by the `{% form %}` tag, so `attributes`, `span` and `hidden` cannot be printed on it; this block accepts only `id` and `class` (D-091 item 6), and the `{% doc %}` MUST say so. The two FormMessage elements are written inline, following FormMessage's contract exactly (`09-components-foundation.md` `## FormMessage`). The Input param names (`default_value`, `invalid`, `described_by`, `aria_label`, `auto_complete`) follow ledger 6.4 and are owned by `09-components-foundation.md`.
 
 ### Commerce
 
@@ -2713,12 +2693,12 @@ None. NewsletterForm does not touch the cart store or the commerce adapter.
 
 ### Acceptance tests
 
-1. Tier 2: fixtures `default`, `success`, `error`, `class` conform in all four hosts with the masks above.
-2. Tier 3: zero mutations when `ripple.js` loads.
-3. Tier 6 (hydrogen backend, JavaScript disabled): submit `shopper@example.com`; the response page (after the redirect) contains `.rp-newsletter-form .rp-form-message[data-tone="success"][role="status"]` and the URL ends with `#newsletter`.
-4. Tier 6: submit with the route forced to fail; the response contains the `error` markup, the input has `aria-invalid="true"`, and `aria-describedby` resolves.
-5. Tier 6: pressing the button with an empty field sends no request (native validation).
-6. Tier 8 (Liquid live): the same success flow through `{% form 'customer' %}`.
+- **AT-1** Tier 2: fixtures `default`, `success`, `error`, `class` conform in all four hosts with the masks above.
+- **AT-2** Tier 3: zero mutations when `ripple.js` loads.
+- **AT-3** Tier 6 (hydrogen backend, JavaScript disabled): submit `shopper@example.com`; the response page (after the redirect) contains `.rp-newsletter-form .rp-form-message[data-tone="success"][role="status"]` and the URL ends with `#newsletter`.
+- **AT-4** Tier 6: submit with the route forced to fail; the response contains the `error` markup, the input has `aria-invalid="true"`, and `aria-describedby` resolves.
+- **AT-5** Tier 6: pressing the button with an empty field sends no request (native validation).
+- **AT-6** Tier 8 (Liquid live): the same success flow through `{% form 'customer' %}`.
 
 ### Evidence and UNVERIFIED
 
@@ -2868,7 +2848,7 @@ Required rules: root `position: relative; display: grid; min-block-size: var(--r
 - HTML: None.
 - React: `export function Hero(props: HeroProps): JSX.Element`. Generated from the contract template, with the `srcset` computed by `imageSrcSet` from `<pkg>` (if the template language cannot express the `srcset` value, the binding is hand-written and MUST pass the fixtures).
 - Remix: None.
-- Liquid: block `hero`. Schema settings: `size`, `align`, `scheme` (select; three, the maximum of D-038 item 5). Locale keys: `ripple.hero.name`.
+- Liquid: block `hero`. Schema settings: `size`, `align`, `scheme` (select; three, the maximum of D-038 item 5). Locale keys: `ripple.hero.name`. `{{ attributes }}` is printed LAST in the root's opening tag (D-035). Block name `t:ripple.hero.name`; setting labels `t:ripple.props.<prop name>`, option labels `t:ripple.props.<value>` (D-038).
 
 ```tsx
 <Hero image={heroImage} size="lg" align="center" scheme="dark">
@@ -2883,7 +2863,7 @@ Required rules: root `position: relative; display: grid; min-block-size: var(--r
 {% block 'hero', image: collections.frontpage.image, size: 'lg', align: 'center', scheme: 'dark' %}
   {% block 'stack', gap: '4', align: 'center' %}
     {% block 'heading', level: 1, size: '5xl' %}{{ shop.name }}{% endblock %}
-    {% block 'button', href: routes.all_products_collection_url, size: 'lg' %}{{ 'home.shop_now' | t }}{% endblock %}
+    {% block 'button', href: routes.all_products_collection_url, size: 'lg' %}{{ 'ripple.blueprints.home.cta' | t }}{% endblock %}
   {% endblock %}
 {% endblock %}
 ```
@@ -2902,11 +2882,11 @@ None.
 
 ### Acceptance tests
 
-1. Tier 2: fixtures `default`, `image`, `invalid-enum-falls-back`, `escaping`, `class` conform in all four hosts with the masks above.
-2. Tier 5: `size="full"` gives a root height equal to the viewport height (within 1 px) at 375 by 667 and 1280 by 800.
-3. Tier 5: with `align="center"` the children column is horizontally centred (left and right offsets differ by at most 1 px).
-4. Tier 5: the image covers the root box exactly (its bounding box equals the root's, within 0.5 px).
-5. Tier 3: zero mutations when `ripple.js` loads.
+- **AT-1** Tier 2: fixtures `default`, `image`, `invalid-enum-falls-back`, `escaping`, `class` conform in all four hosts with the masks above.
+- **AT-2** Tier 5: `size="full"` gives a root height equal to the viewport height (within 1 px) at 375 by 667 and 1280 by 800.
+- **AT-3** Tier 5: with `align="center"` the children column is horizontally centred (left and right offsets differ by at most 1 px).
+- **AT-4** Tier 5: the image covers the root box exactly (its bounding box equals the root's, within 0.5 px).
+- **AT-5** Tier 3: zero mutations when `ripple.js` loads.
 
 ### Evidence and UNVERIFIED
 
@@ -2986,7 +2966,7 @@ Fixture `default` (`collection: { title: "Featured", url: "/collections/featured
 </section>
 ```
 
-Fixture `default-body` (same collection, `products: [product.basic]`, `level: 3`, `columns: "2 md:3"`). The ProductCard subtree is the `default` fixture of ProductCard in `11-components-commerce.md` for `product.basic`; the shape printed here is the one of section 1.1:
+Fixture `default-body` (same collection, `products: [product.basic]`, `level: 3`, `columns: "2 md:3"`). The ProductCard subtree is a copy of the `default` fixture of ProductCard in `11-components-commerce.md` for `product.basic` (D-069); FeaturedCollection passes no prop to ProductCard other than `product`:
 
 ```html
 <section class="rp-featured-collection" data-layout="grid">
@@ -2995,7 +2975,7 @@ Fixture `default-body` (same collection, `products: [product.basic]`, `level: 3`
     <a class="rp-featured-collection-link" href="/collections/featured">View all</a>
   </div>
   <div class="rp-grid" data-columns="2 md:3" data-gap="4 md:6">
-    <article class="rp-product-card"><a class="rp-product-card-media" href="/products/tee"><img class="rp-image" src="https://cdn.shopify.com/s/files/1/0000/0001/files/tee.jpg?width=800" alt="Tee" width="800" height="1000" loading="lazy"></a><a class="rp-product-card-title" href="/products/tee">Tee</a><div class="rp-price"><span class="rp-price-current">$20.00</span></div></article>
+    <div class="rp-product-card"><div class="rp-product-card-media"><img class="rp-image" src="https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=600" srcset="https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=300 300w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=600 600w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=900 900w" sizes="(min-width: 64rem) 25vw, 50vw" alt="Linen shirt on a hanger" width="1200" height="1200" loading="lazy" data-ratio="1/1" data-fit="cover"></div><div class="rp-product-card-body"><h3 class="rp-product-card-title"><a class="rp-product-card-link" href="/products/linen-shirt">Linen Shirt</a></h3><span class="rp-price" data-size="base"><span class="rp-price-current"><bdi>$48.00</bdi></span></span></div></div>
   </div>
 </section>
 ```
@@ -3003,16 +2983,16 @@ Fixture `default-body` (same collection, `products: [product.basic]`, `level: 3`
 Fixture `carousel` (`layout: "carousel"`, `carousel: "featured"`, `products: [product.basic]`): root has `data-layout="carousel"`; `items` is:
 
 ```html
-<rp-carousel class="rp-carousel" data-slot="rp-carousel" id="featured" role="group" aria-roledescription="carousel" aria-label="Featured">
-  <button class="rp-icon-button" type="button" data-rp-part="prev" data-rp-js="inflow" aria-controls="featured-list" data-variant="ghost" data-size="md" aria-label="Previous" disabled><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
-  <ul class="rp-carousel-viewport" id="featured-list" data-rp-part="viewport" tabindex="0">
-    <li class="rp-carousel-item" data-rp-part="item"><article class="rp-product-card"><a class="rp-product-card-media" href="/products/tee"><img class="rp-image" src="https://cdn.shopify.com/s/files/1/0000/0001/files/tee.jpg?width=800" alt="Tee" width="800" height="1000" loading="lazy"></a><a class="rp-product-card-title" href="/products/tee">Tee</a><div class="rp-price"><span class="rp-price-current">$20.00</span></div></article></li>
+<rp-carousel class="rp-carousel" id="featured" role="group" aria-roledescription="carousel" aria-label="Featured" data-slot="rp-carousel">
+  <button class="rp-carousel-control" type="button" disabled aria-controls="featured-list" aria-label="Previous" data-rp-part="prev" data-rp-js="inflow"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+  <ul class="rp-carousel-viewport" id="featured-list" tabindex="0" data-rp-part="viewport">
+    <li class="rp-carousel-item" data-rp-part="item"><div class="rp-product-card"><div class="rp-product-card-media"><img class="rp-image" src="https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=600" srcset="https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=300 300w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=600 600w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=900 900w" sizes="(min-width: 64rem) 25vw, 50vw" alt="Linen shirt on a hanger" width="1200" height="1200" loading="lazy" data-ratio="1/1" data-fit="cover"></div><div class="rp-product-card-body"><h3 class="rp-product-card-title"><a class="rp-product-card-link" href="/products/linen-shirt">Linen Shirt</a></h3><span class="rp-price" data-size="base"><span class="rp-price-current"><bdi>$48.00</bdi></span></span></div></div></li>
   </ul>
-  <button class="rp-icon-button" type="button" data-rp-part="next" data-rp-js="inflow" aria-controls="featured-list" data-variant="ghost" data-size="md" aria-label="Next"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+  <button class="rp-carousel-control" type="button" aria-controls="featured-list" aria-label="Next" data-rp-part="next" data-rp-js="inflow"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
 </rp-carousel>
 ```
 
-The Carousel's `aria-label` is the collection title.
+The Carousel markup is a copy of the `default` fixture of `10-components-interactive.md` `## Carousel` (control class `rp-carousel-control`, D-016). The Carousel's `aria-label` is the collection title.
 
 Fixture `empty` (`products: []`, no children): the reference HTML is the empty string.
 
@@ -3024,7 +3004,7 @@ Fixture `class` (`class: "custom-a custom-b"`): root class is `rp-featured-colle
 
 Host-owned regions and masks: those of ProductCard (image `src`, `srcset`, money text) as defined in `11-components-commerce.md`; the Carousel upgrade allow-list of `10-components-interactive.md` applies to fixture `carousel`.
 
-Kind note: the `default` fixture has no custom element, so `kind` is `static` (ledger 8.4). `dependencies.elements` is `["rp-carousel"]`, which makes the CLI install the Carousel component and the runtime define the element.
+Kind note (D-085): `kind` is `static`; the `default` fixture passes children, so it contains no custom element. `dependencies.embeds` is `["grid", "product-card", "carousel"]` (D-070); `dependencies.components` additionally lists `link`. Listing `carousel` makes the CLI install the Carousel component, whose own manifest names the element `rp-carousel`.
 
 ### State and attributes
 
@@ -3082,7 +3062,7 @@ Required rules: root `display: flex; flex-direction: column; gap: var(--rp-featu
 - HTML: copy the fixture.
 - React: `export function FeaturedCollection(props: FeaturedCollectionProps): JSX.Element | null`. No hook. Returns `null` for the empty case.
 - Remix: none of its own (Carousel prints its own `data-rmx-*`).
-- Liquid: block `featured-collection`; renders `rp-product-card` (and, for the carousel layout, the Carousel markup through the snippets `10-components-interactive.md` provides). Schema settings: `layout` (select). Locale keys: `ripple.featured-collection.name`, `ripple.featured-collection.view_all` ("View all").
+- Liquid: block `featured-collection`; renders `rp-product-card` and, for the carousel layout, `rp-carousel` (both are snippets because this block embeds them; `07-manifest-registry-cli.md` `liquid.embeddedBy`). Schema settings: `layout` (select). Locale keys: `ripple.featured-collection.name`, `ripple.featured-collection.view_all` ("View all"). `{{ attributes }}` is printed LAST in the root's opening tag (D-035). Block name `t:ripple.featured-collection.name`; setting labels `t:ripple.props.<prop name>`, option labels `t:ripple.props.<value>` (D-038).
 
 ```tsx
 <FeaturedCollection collection={collection} products={products} limit={4} />
@@ -3117,11 +3097,11 @@ None. (ProductCard is static; FeaturedCollection binds no store and requests no 
 
 ### Acceptance tests
 
-1. Tier 2: fixtures `default`, `default-body`, `carousel`, `empty`, `invalid-enum-falls-back`, `responsive`, `class` conform in all four hosts (ProductCard masks applied).
-2. Tier 3: fixture `carousel`: zero mutations outside the Carousel allow-list; other fixtures: zero mutations.
-3. Tier 5: grid layout shows 2 columns at 375 px and 4 columns at 1280 px with the default `columns`.
-4. Tier 6: with JavaScript disabled, in carousel layout the viewport scrolls horizontally (`scrollWidth > clientWidth` with 6 products at 375 px) and both buttons have computed `visibility: hidden`.
-5. Tier 6: clicking the "View all" link navigates to the collection URL.
+- **AT-1** Tier 2: fixtures `default`, `default-body`, `carousel`, `empty`, `invalid-enum-falls-back`, `responsive`, `class` conform in all four hosts (ProductCard masks applied).
+- **AT-2** Tier 3: fixture `carousel`: zero mutations outside the Carousel allow-list; other fixtures: zero mutations.
+- **AT-3** Tier 5: grid layout shows 2 columns at 375 px and 4 columns at 1280 px with the default `columns`.
+- **AT-4** Tier 6: with JavaScript disabled, in carousel layout the viewport scrolls horizontally (`scrollWidth > clientWidth` with 6 products at 375 px) and both buttons have computed `visibility: hidden`.
+- **AT-5** Tier 6: clicking the "View all" link navigates to the collection URL.
 
 ### Evidence and UNVERIFIED
 
@@ -3142,28 +3122,32 @@ A blueprint is a set of starting files for one page type. `ripple add --blueprin
 
 ### 2.1 Files and targets
 
-Source directory: `blueprints/<id>/`. It holds `blueprint.json` and one directory per host. `<blueprint dir>` in this document means the target directory of the host: `src/pages` (react), `app/pages` (remix), `pages` (html). Liquid files go to the theme root.
+Source directory: `blueprints/<id>/`. It holds `blueprint.json` and one directory per host. `<blueprint dir>` in this document means `paths.pages` of `ripple.json` (D-101): default `src/pages` on `react`, `app/pages` on `remix`, `pages` on `html`. A stored target uses the alias `@pages/`, which the CLI resolves to `<blueprint dir>`. Liquid targets are relative to the theme root.
 
-| Blueprint | `route` | liquid target | react and remix target (under `<blueprint dir>`) | html target |
+| Blueprint | `route` | liquid target (relative to the theme root) | react and remix target (after `@pages/`) | html target (after `@pages/`) |
 |---|---|---|---|---|
-| `layout` | none | `layout/theme.liquid` | `layout.tsx`, `types.ts`, `lib/document.ts`, `lib/menu.ts`, `lib/locale-route.ts`, `lib/newsletter-route.ts` | `pages/layout.html` |
-| `home` | `/` | `templates/index.liquid` | `home.tsx` | `pages/home.html` |
-| `collection` | `/collections/:handle` | `templates/collection.liquid` | `collection.tsx` | `pages/collection.html` |
-| `collections-list` | `/collections` | `templates/list-collections.liquid` | `collections-list.tsx` | `pages/collections-list.html` |
-| `product` | `/products/:handle` | `templates/product.liquid` | `product.tsx` | `pages/product.html` |
-| `search` | `/search` | `templates/search.liquid` | `search.tsx` | `pages/search.html` |
-| `cart` | `/cart` | `templates/cart.liquid` | `cart.tsx` | `pages/cart.html` |
-| `blog` | `/blogs/:blog` | `templates/blog.liquid` | `blog.tsx` | `pages/blog.html` |
-| `article` | `/blogs/:blog/:article` | `templates/article.liquid` | `article.tsx` | `pages/article.html` |
-| `page` | `/pages/:handle` | `templates/page.liquid` | `page.tsx` | `pages/page.html` |
-| `contact` | `/pages/contact` | `templates/page.contact.liquid` | `contact.tsx`, `lib/contact-route.ts` | `pages/contact.html` |
-| `not-found` | none | `templates/404.liquid` | `not-found.tsx` | `pages/not-found.html` |
-| `password` | `/password` | `templates/password.liquid`, `layout/password.liquid` | `password.tsx` | `pages/password.html` |
-| `gift-card` | none | `templates/gift_card.liquid` | `gift-card.tsx` | `pages/gift-card.html` |
+| `layout` | none | `layout/theme.liquid`, `snippets/import-map.liquid`, `snippets/meta-tags.liquid` | `layout.tsx`, `types.ts`, `lib/document.ts`, `lib/menu.ts`, `lib/locale-route.ts`, `lib/newsletter-route.ts` | `layout.html` |
+| `home` | `/` | `templates/index.liquid` | `home.tsx` | `home.html` |
+| `collection` | `/collections/:handle` | `templates/collection.liquid` | `collection.tsx` | `collection.html` |
+| `collections-list` | `/collections` | `templates/list-collections.liquid` | `collections-list.tsx` | `collections-list.html` |
+| `product` | `/products/:handle` | `templates/product.liquid` | `product.tsx` | `product.html` |
+| `search` | `/search` | `templates/search.liquid` | `search.tsx` | `search.html` |
+| `cart` | `/cart` | `templates/cart.liquid` | `cart.tsx` | `cart.html` |
+| `blog` | `/blogs/:blog` | `templates/blog.liquid` | `blog.tsx` | `blog.html` |
+| `article` | `/blogs/:blog/:article` | `templates/article.liquid` | `article.tsx` | `article.html` |
+| `page` | `/pages/:handle` | `templates/page.liquid` | `page.tsx` | `page.html` |
+| `contact` | `/pages/contact` | `templates/page.contact.liquid` | `contact.tsx`, `lib/contact-route.ts` | `contact.html` |
+| `not-found` | none | `templates/404.liquid` | `not-found.tsx` | `not-found.html` |
+| `password` | `/password` | `templates/password.liquid`, `layout/password.liquid` | `password.tsx` | `password.html` |
+| `gift-card` | none | `templates/gift_card.liquid` | `gift-card.tsx` | `gift-card.html` |
 
-Liquid template file names are the names the platform resolves (`ripple/theme/templates/` contains `index.liquid`, `collection.liquid`, `list-collections.liquid`, `product.liquid`, `search.liquid`, `cart.liquid`, `blog.liquid`, `article.liquid`, `page.liquid`, `404.liquid`, `password.liquid`, `gift_card.liquid`). `templates/page.contact.liquid` is an alternate template; the merchant assigns it to the contact page in the admin.
+Liquid template file names are the names the platform resolves (`ripple/theme/templates/` contains `index.liquid`, `collection.liquid`, `list-collections.liquid`, `product.liquid`, `search.liquid`, `cart.liquid`, `blog.liquid`, `article.liquid`, `page.liquid`, `404.liquid`, `password.liquid`, `gift_card.liquid`). `templates/page.contact.liquid` is an alternate template; the merchant assigns it to the contact page in the admin. On Liquid these files ARE the theme's layouts and templates; this document owns their complete text (D-099). `snippets/import-map.liquid` and `snippets/meta-tags.liquid` are theme-owned files of the `layout` blueprint (D-107 item 5); their text is under `layout`.
 
-File records in `blueprint.json` (`07-manifest-registry-cli.md`, `#/$defs/file`): `type` is `blueprint`, `mode` is `owned`, `generated` is `false` for liquid, react and remix and `true` for html (2.3, rule H-1). `key` is `template` for the page file, `layout` for `layout/password.liquid`, and the file's base name without extension for `lib/` files (`document`, `menu`, `locale-route`, `newsletter-route`, `contact-route`) and `types` for `types.ts`.
+`types.ts` (react and remix, `layout` blueprint) holds only page-data types that no component takes as a prop (2.4).
+
+File records in `blueprint.json` (`07-manifest-registry-cli.md`, `#/$defs/file`): `type` is `blueprint`, `mode` is `owned`, `generated` is `false` for liquid, react and remix and `true` for html (2.3, rule H-1). `key` is `template` for the page file (for `layout`: `layout.tsx`, `layout.html`, `layout/theme.liquid`), `layout` for `layout/password.liquid`, `import-map` and `meta-tags` for the two snippets, the file's base name without extension for `lib/` files (`document`, `menu`, `locale-route`, `newsletter-route`, `contact-route`), `types` for `types.ts`, and `locale` for the generated locale patch.
+
+Locale keys (D-107 item 5): the key tables of the blueprints below are the source for `ripple.blueprints.<blueprint id>.*` in the repository's `locales/en.default.json`. The registry build generates one locale patch per blueprint that has keys (`registry/liquid/locales/blueprint.<id>.json`), and `ripple add --blueprint <id>` merges it into every locale file of the theme (`07-manifest-registry-cli.md` sections 4.1 and 7.6). English only (D-098 item 4).
 
 Complete `blueprints/product/blueprint.json` (every other blueprint follows this shape; `components` and `regions` are the lists given in that blueprint's "Components used" and "Regions"):
 
@@ -3177,16 +3161,17 @@ Complete `blueprints/product/blueprint.json` (every other blueprint follows this
   "regions": ["rp-product-buy", "rp-product-media", "rp-product-recommendations"],
   "files": {
     "html": [
-      { "key": "template", "source": "blueprints/product/html/product.html", "target": "pages/product.html", "type": "blueprint", "mode": "owned", "generated": true }
+      { "key": "template", "source": "blueprints/product/html/product.html", "target": "@pages/product.html", "type": "blueprint", "mode": "owned", "generated": true }
     ],
     "react": [
-      { "key": "template", "source": "blueprints/product/react/product.tsx", "target": "src/pages/product.tsx", "type": "blueprint", "mode": "owned", "generated": false }
+      { "key": "template", "source": "blueprints/product/react/product.tsx", "target": "@pages/product.tsx", "type": "blueprint", "mode": "owned", "generated": false }
     ],
     "remix": [
-      { "key": "template", "source": "blueprints/product/remix/product.tsx", "target": "app/pages/product.tsx", "type": "blueprint", "mode": "owned", "generated": false }
+      { "key": "template", "source": "blueprints/product/remix/product.tsx", "target": "@pages/product.tsx", "type": "blueprint", "mode": "owned", "generated": false }
     ],
     "liquid": [
-      { "key": "template", "source": "blueprints/product/liquid/templates/product.liquid", "target": "templates/product.liquid", "type": "blueprint", "mode": "owned", "generated": false }
+      { "key": "template", "source": "blueprints/product/liquid/templates/product.liquid", "target": "templates/product.liquid", "type": "blueprint", "mode": "owned", "generated": false },
+      { "key": "locale", "source": "liquid/locales/blueprint.product.json", "target": "locales/*.json", "type": "asset", "mode": "patch", "generated": true }
     ]
   }
 }
@@ -3194,17 +3179,17 @@ Complete `blueprints/product/blueprint.json` (every other blueprint follows this
 
 ### 2.2 Rules for every blueprint
 
-- **BP-1** A blueprint file contains only: Ripple component calls; the raw elements `html`, `head`, `body`, `main`, `form`, `input type="hidden"`, `rp-view-event`, `script type="application/json"`; and elements carrying `data-rp-region`. It contains no `class` attribute with a value that does not start with `rp-`, no `style` attribute, and no `<style>` element.
-- **BP-2** Exactly one `<main>` exists per document. It is printed by `layout` with `id="main"` and `tabindex="-1"`. Page blueprints MUST NOT print `<main>`.
+- **BP-1** A blueprint file contains only: Ripple component calls; the raw elements `html`, `head`, `body`, `main`, `form`, `input type="hidden"`, `rp-view-event`, `script type="application/json"`; and elements carrying `data-rp-region`. It contains no `class` attribute with a value that does not start with `rp-`, no `style` attribute, and no `<style>` element. `data-rp-region` is the only Ripple hook attribute a blueprint passes through rest props or `attributes` (D-091 item 2). Overlay openers are written with the `dialog` prop; a tooltip trigger with the `tooltip` prop (D-009, D-082).
+- **BP-2** Exactly one `<main>` exists per document. It is printed by `layout`: TSX hosts print `<main id="main" tabindex="-1">`; Liquid prints `<main id="main" tabindex="-1" data-template="{{ request.page_type }}">` (D-089 item 6; `data-template` is read only by the Liquid adapter and is removed before the hosts are compared, see `layout`). Page blueprints MUST NOT print `<main>`.
 - **BP-3** Each page blueprint prints exactly one Heading with `level` 1. Heading levels never skip (after `1` comes `2`).
-- **BP-4** Spacing uses only the rhythm of `08-agent-kit-and-evals.md`: a page band is `Container` with `py="12 md:20"`; the gap between areas of a page is `gap="8 md:12"`; the gap inside a group is `2`, `3` or `4`; a card grid uses `gap="4 md:6"`.
+- **BP-4** Spacing uses only the four values of D-106: a page band is `Container` with `py="12 md:20"`; the gap between areas in a band is `gap="8 md:12"`; the gap inside a group is `gap="2"` to `gap="4"`; a card grid uses `gap="4 md:6"`.
 - **BP-5** Card grids use `Grid` with `as="ul"` and one `<li>` per card, `columns="2 lg:4"` for products, `columns="1 sm:2 lg:3"` for collections and articles. (`<li>` is the one raw element allowed in addition to BP-1; it carries no attribute.)
-- **BP-6** Every string a Liquid blueprint prints is a locale key `ripple.blueprints.<blueprint id>.<key>` in `locales/en.default.json` (Ledger issues, item 9). TSX blueprints print the English text as a literal. The key tables in each blueprint are complete.
+- **BP-6** Every string a Liquid blueprint prints is a locale key `ripple.blueprints.<blueprint id>.<key>` in `locales/en.default.json` (ledger section 4.1, D-066). TSX blueprints print the English text as a literal. The key tables in each blueprint are complete.
 - **BP-7** A blueprint MUST work with JavaScript disabled to the level stated in its "No-JS behaviour". Nothing a buyer needs to read or submit may exist only inside a Dialog, Drawer or Popover.
-- **BP-8** A region element (`data-rp-region`) MUST NOT be, or contain, a `<dialog>`, and MUST NOT contain the commerce root whose `data-rp-refresh` names it (`05-commerce.md` section 8.1).
+- **BP-8** A region element (`data-rp-region`) MUST NOT be, or contain, a `<dialog>`, and MUST NOT contain the `rp-cart` root whose `data-rp-refresh` names it (`05-commerce.md` section 8.1; checker RP308, D-102). The containment check applies to `rp-cart` only. VariantPicker, SortSelect and FilterChips are kept outside the region they refresh by the blueprint, so that focus survives the refresh; the checker does not enforce that.
 - **BP-9** A page blueprint MUST NOT read the cart, the menus or the shop. Those belong to `layout`. Exception: `cart`, which reads the cart.
 - **BP-10** Images above the fold (Hero image, the first ProductGallery image) are `loading="eager"` with `fetchPriority="high"`; every other image keeps the default `lazy`.
-- **BP-11** View events (`05-commerce.md` section 12): `product` prints none (ProductForm prints `product_viewed`); `collection` prints `collection_viewed`; `search` prints `search_viewed` when terms are present; `cart` prints `cart_viewed`. The element is the last child the page blueprint prints. Payload field names are owned by `05-commerce.md`; where that document does not list them they are marked UNVERIFIED in the blueprint.
+- **BP-11** View events (D-089): `product` prints the product view; `collection` the collection view; `search` the search view, only when terms exist; `cart` the cart view. No component prints one. The element is the last child the page blueprint prints. Product, collection and search use the attribute form `<rp-view-event view-event-trigger="connect" view-event-payload="..."></rp-view-event>`; cart uses the child form `<rp-view-event view-event-trigger="connect"><script type="application/json" data-view-event-payload>...</script></rp-view-event>`. Liquid payload: ALWAYS the `standard_event_data` filter. hydrogen backend payload: the JSON `{ "event": ..., "payload": ... }` of `05-commerce.md` section 12, passed to the page function as the string prop `viewEvent`. Trigger `connect` only; no per-card impressions in V1.
 
 ### 2.3 Host forms
 
@@ -3212,85 +3197,84 @@ The **React file is the reference TSX**. It is a set of pure functions from prop
 
 The **Remix file** is derived from the React file by these rules, applied in order. Nothing else changes.
 
-- **R-1** `import { A, B } from "__PKG__/react"` becomes `import { A, B } from "__PKG__/remix"`. `import type { ReactNode } from "react"` becomes `import type { Handle, RemixNode } from "remix/component"`; the type `ReactNode` becomes `RemixNode`.
+- **R-1** Component imports use the specifier `@components/<id>`, one import per component file, in both the React and the Remix source (`import { Stack } from "@components/stack";`). A part export comes from its component's file (`import { Dialog, DialogBody, DialogHeader, DialogTitle } from "@components/dialog";`); a helper comes from `@components/<id>.data` (D-094). The CLI rewrites the specifier at install (D-096 item 4). Type imports from `__PKG__` stay. `import type { ReactNode } from "react"` becomes `import type { Handle, RemixNode } from "remix/component"`; the type `ReactNode` becomes `RemixNode`. Blueprints MUST NOT import a component from `__PKG__/react` or `__PKG__/remix`.
 - **R-2** `export function XPage(props: XPageProps) { const { a, b } = props; return (...); }` becomes `export function XPage(handle: Handle<XPageProps>) { return () => { const { a, b } = handle.props; return (...); }; }` (`06-bindings.md` rules X-1, X-2).
 - **R-3** On raw elements, `className` becomes `class`, `htmlFor` becomes `for`, `tabIndex` becomes `tabindex` (`06-bindings.md` rule X-12). Ripple component props keep their names.
 - **R-4** `key={...}` on list items stays.
 - **R-5** Blueprint files print no `data-rmx-*` attribute. `data-rmx-document` (`06-bindings.md` rule X-5) is printed inside the Remix bindings of CheckoutButton, AccountLink, the cart components, LocaleSelector and NewsletterForm. The one raw `<form>` a blueprint prints (`contact`, `password`) carries `data-rmx-document` in the Remix file; this is stated in those blueprints.
-- **R-6** A region owned by a component (cart, product buy area, filters, recommendations, predictive results) is a named blocking `<Frame>` printed by that component's Remix binding (`06-bindings.md` rule X-10). A region owned by a blueprint (`rp-collection-results`, `rp-collection-toolbar`, `rp-search-results`, `rp-product-buy`) is a plain element with `data-rp-region`; with the reference `reloadFrames` of `05-commerce.md` section 8.3, a URL-driven refresh on Remix is a document navigation that Remix reconciles into the page, so no Frame route is needed (Ledger issues, item 10).
+- **R-6** On Remix every region is a plain element with `data-rp-region`; no blueprint prints a `<Frame>`. `reloadFrames` and `navigate` are opt-in options of the project (D-090 item 5, SPIKE-11).
 
 The **html file** is generated:
 
-- **H-1** `blueprints/<id>/html/<id>.html` is the output of rendering the React file with the sample data of 2.5 through `renderDocument` (2.6), pretty-printed by the fixture printer of `02-html-contract.md`. `pnpm gen` writes it; a hand edit fails the generation check (`07-manifest-registry-cli.md`, G-rules). Page files contain the full document, so each one opens in a browser by itself.
+- **H-1** `blueprints/<id>/html/<id>.html` is the output of rendering the React file with the sample data of 2.5 through `renderDocument` (2.6), pretty-printed by the fixture printer of `02-html-contract.md`. `pnpm gen` writes it (the generating step is owned by `07-manifest-registry-cli.md`, D-101 item 4); a hand edit fails the generation check (`07-manifest-registry-cli.md`, G-rules). Page files contain the full document, so each one opens in a browser by itself.
 - **H-2** In the html file, `initialCart` is omitted from the config element and the cart count part is printed as `hidden` with text `0` (`05-commerce.md` section 10.1 rule 4).
 
 The **Liquid file** is hand-written and is given in full in each blueprint. Rules:
 
 - **L-A** Blueprint Liquid files are templates and layouts, so they MAY use `{% block %}` and `{% partial %}` (`06-bindings.md`; `ripple/docs/research/liquid-blocks-partials.md` section 2.2). They MUST NOT use `{% section %}`, `{% sections %}`, `{% content_for %}`, `{% include %}` or JSON templates.
-- **L-B** Partial names are exactly the region names (`06-bindings.md` rule L-2). A partial name is declared at most once per rendered page. Because `layout/theme.liquid` declares `rp-cart-lines` and `rp-cart-summary` inside the CartDrawer and `templates/cart.liquid` declares the same two names, the layout MUST NOT render the CartDrawer when `template.name == 'cart'` (see `layout`, Structure). The same rule is applied on TSX hosts through the `cartPage` prop so that all hosts print the same page.
+- **L-B** Partial names are exactly the region names (`06-bindings.md` rule L-2). A partial name is declared at most once per rendered page. Because `layout/theme.liquid` declares `rp-cart-lines` and `rp-cart-summary` inside the CartDrawer and `templates/cart.liquid` declares the same two names, the layout MUST NOT render the CartDrawer when `template.name == 'cart'` (see `layout`, Structure; D-091 item 5). The same rule is applied on TSX hosts through the `cartPage` prop so that all hosts print the same page. The CartLink on the cart page has no `drawer`, and `openCart()` there navigates to `cartUrl` (`05-commerce.md`).
 - **L-C** Liquid objects are passed to blocks unchanged. A block param that takes text receives it already translated: `{% block 'heading', level: 1 %}{{ 'ripple.blueprints.cart.title' | t }}{% endblock %}`.
-- **L-D** Blueprint files use the tag and filter subset of `06-bindings.md` rule L-13 plus exactly these: tags `block`, `partial`, `paginate`, `form`, `layout`; objects `content_for_layout`, `template`, `request`, `paginate`, `form`; filters `date`, `json`, `money`, `strip`. The shim (`13-testing.md`) MUST implement them (section 3, X-5 and X-6).
+- **L-D** Blueprint files use the Blueprint scope of `06-bindings.md` rule L-13 (D-097): the component tags plus `block partial paginate layout`; the component filters plus `standard_event_data`; and exactly these globals: `content_for_header`, `content_for_layout`, `template` (`name`), `request` (`locale.iso_code`, `locale.direction`, `page_type`), `routes` (`root_url`, `cart_url`, `search_url`, `all_products_collection_url`, `product_recommendations_url`, `account_url`, `account_login_url`), `shop` (`name`, `policies`, `brand.logo`, `password_message`), `linklists`, `localization`, `customer`, `collections`, `collection`, `product`, `cart`, `search`, `blog`, `article`, `page`, `paginate` (`previous`, `next`), `form`, `gift_card`, `recommendations`, and `settings` (only in the SPIKE-09 fallback of `product`). The two layout files additionally use `asset_url` and `stylesheet_tag` for the one `styles.min.css` line that D-099 item 3 requires. The shim (`13-testing.md`) implements all of them, including `standard_event_data` (it returns a fixed JSON) and `request.page_type` (D-104 item 4).
 
-### 2.4 Calls into documents 10 and 11
+### 2.4 Calls into documents 09, 10 and 11
 
-`10-components-interactive.md` and `11-components-commerce.md` did not exist when this document was written. Blueprints call their components with the signatures below. These are assumptions: the owning document wins, and test BT-1 (2.8) fails until blueprint files match the real signatures. An implementer who finds a difference MUST change the blueprint file, not the component.
+Blueprints call components with the forms below. Each form is a copy of the owning document's "Host notes" usage example (D-069, D-093); the owning document wins. An implementer who finds a difference MUST change the blueprint file, not the component.
 
 | Component | TSX call | Liquid call |
 |---|---|---|
-| Dialog | `<Dialog id="x"><DialogTitle>...</DialogTitle><DialogBody>...</DialogBody><DialogClose /></Dialog>` | `{% block 'dialog', id: 'x' %}{% block 'dialog-title', dialog: 'x' %}...{% endblock %}{% block 'dialog-body' %}...{% endblock %}{% block 'dialog-close', dialog: 'x' %}{% endblock %}{% endblock %}` |
-| Toast | `<Toast />` (prints the empty `ui-toast-region` of `04-elements.md` section 10.6) | `{% block 'toast' %}{% endblock %}` |
+| Dialog | `<Dialog id="x"><DialogHeader><DialogTitle dialog="x">...</DialogTitle><IconButton icon="close" ariaLabel="Close" commandFor="x" command="close" /></DialogHeader><DialogBody>...</DialogBody></Dialog>`; a closer is a `<Button commandFor="x" command="close">` or that IconButton; there is no `DialogClose` | `{% block 'dialog', id: 'x' %}{% block 'dialog-header' %}{% block 'dialog-title', dialog: 'x' %}...{% endblock %}{% block 'icon-button', icon: 'close', aria_label: close_label, command_for: 'x', command: 'close' %}{% endblock %}{% endblock %}{% block 'dialog-body' %}...{% endblock %}{% endblock %}`; there is no `dialog-close` block |
+| Toast | `<Toast />` (prints the region and nothing else, D-083) | `{% block 'toast' %}{% endblock %}` |
 | ProductCard | `<ProductCard product={product} />` | `{% block 'product-card', product: product %}{% endblock %}` |
 | CollectionCard | `<CollectionCard collection={collection} />` | `{% block 'collection-card', collection: collection %}{% endblock %}` |
 | ArticleCard | `<ArticleCard article={article} />` | `{% block 'article-card', article: article %}{% endblock %}` |
 | Price | `<Price price={variant.price} compareAtPrice={variant.compareAtPrice} />` | `{% block 'price', price: variant.price, compare_at_price: variant.compare_at_price %}{% endblock %}` |
-| ProductGallery | `<ProductGallery id="product-gallery" media={product.media} />` | `{% block 'product-gallery', id: 'product-gallery', product: product %}...{% endblock %}` |
-| VariantPicker | `<VariantPicker product={product} variant={variant} />` | `{% block 'variant-picker', product: product, variant: variant %}{% endblock %}` |
-| ProductForm | `<ProductForm id="product-form" product={product} variant={variant} />` (default body: QuantityInput and AddToCartButton) | `{% block 'product-form', id: 'product-form', product: product, variant: variant %}{% endblock %}` |
-| ProductRecommendations | `<ProductRecommendations id="recommendations" product={product} />` | `{% block 'product-recommendations', id: 'recommendations', product: product %}...{% endblock %}` |
-| CartDrawer | `<CartDrawer id="cart-drawer" cart={cart} />` | `{% block 'cart-drawer', id: 'cart-drawer' %}...{% endblock %}` |
-| CartLines | `<CartLines id="cart" cart={cart} />` | `{% block 'cart-lines', id: 'cart' %}...{% endblock %}` |
-| CartSummary | `<CartSummary cart={cart} />` | `{% block 'cart-summary' %}...{% endblock %}` |
-| CartNote | `<CartNote cart={cart} />` | `{% block 'cart-note', cart_form: 'cart-form' %}{% endblock %}` |
-| DiscountCode | `<DiscountCode cart={cart} />` | `{% block 'discount-code' %}{% endblock %}` |
-| CheckoutButton | `<CheckoutButton href={cart.checkoutUrl}>Check out</CheckoutButton>` | `{% block 'checkout-button', cart_form: 'cart-form' %}...{% endblock %}` |
-| Filters | `<Filters id="filters" filters={filters} action={url} />` | `{% block 'filters', id: 'filters', filters: collection.filters, action: collection.url %}...{% endblock %}` |
-| FilterChips | `<FilterChips filters={filters} clearUrl={url} />` | `{% block 'filter-chips', filters: collection.filters, clear_url: collection.url %}{% endblock %}` |
-| SortSelect | `<SortSelect options={sortOptions} value={sort} action={url} />` | `{% block 'sort-select', options: collection.sort_options, value: sort_by, action: collection.url %}{% endblock %}` |
-| SearchForm | `<SearchForm action="/search" defaultValue={terms} />` | `{% block 'search-form', default_value: search.terms %}{% endblock %}` |
-| PredictiveSearch | `<PredictiveSearch id="predictive-search" action="/search" />` | `{% block 'predictive-search', id: 'predictive-search' %}...{% endblock %}` |
+| ProductGallery | `<ProductGallery id="product-gallery" media={product.media} variant={variant} />` | `{% block 'product-gallery', id: 'product-gallery', media: product.media, variant: variant %}{% partial 'rp-product-media' %}{% render 'rp-product-gallery-media', id: 'product-gallery', media: product.media, variant: variant %}{% endpartial %}{% endblock %}` |
+| VariantPicker | `<VariantPicker id="product-options" product={product} search={search} />` | `{% block 'variant-picker', id: 'product-options', product: product %}{% endblock %}` |
+| ProductForm | `<ProductForm id="product-form" product={product} />` | `{% block 'product-form', id: 'product-form', product: product %}{% endblock %}` |
+| ProductRecommendations | `<ProductRecommendations products={recommended} level={2} />` | `{% block 'product-recommendations', url: rec_url %}{% partial 'rp-product-recommendations' %}{% render 'rp-product-recommendations-list', products: recommendations.products %}{% endpartial %}{% endblock %}` |
+| CartDrawer | `<CartDrawer cart={cart} />` (`id` defaults to `cart-drawer`) | `{% block 'cart-drawer', id: 'cart-drawer' %}{% block 'cart-lines', id: 'cart-drawer-list' %}{% partial 'rp-cart-lines' %}{% render 'rp-cart-lines-list', cart: cart %}{% endpartial %}{% endblock %}{% block 'cart-summary', cart_lines: 'cart-drawer-list' %}{% partial 'rp-cart-summary' %}{% render 'rp-cart-summary-totals', cart: cart, cart_lines: 'cart-drawer-list' %}{% endpartial %}{% endblock %}{% endblock %}` |
+| CartLines | `<CartLines id="cart" cart={cart} />` | `{% block 'cart-lines', id: 'cart' %}{% partial 'rp-cart-lines' %}{% render 'rp-cart-lines-list', cart: cart %}{% endpartial %}{% endblock %}` |
+| CartSummary | `<CartSummary cart={cart} cartLines="cart" />` | `{% block 'cart-summary', cart_lines: 'cart' %}{% partial 'rp-cart-summary' %}{% render 'rp-cart-summary-totals', cart: cart, cart_lines: 'cart' %}{% endpartial %}{% endblock %}` |
+| CartNote | `<CartNote id="cart-note" cart={cart} />` | `{% block 'cart-note', id: 'cart-note', cart_lines: 'cart' %}{% endblock %}` |
+| DiscountCode | `<DiscountCode id="cart-discount" />` | `{% block 'discount-code', id: 'cart-discount' %}{% endblock %}` |
+| CheckoutButton | `<CheckoutButton href={cart.checkoutUrl} />` | `{% block 'checkout-button', cart_lines: 'cart' %}{% endblock %}` |
+| CartLink | `<CartLink drawer="cart-drawer" count={cart.totalQuantity} />` | `{% block 'cart-link', drawer: 'cart-drawer' %}{% endblock %}` |
+| Filters | `<Filters id="collection-filters" filters={filters} action={pathname} sortBy={sortBy} />` | `{% block 'filters', id: 'collection-filters' %}{% partial 'rp-collection-filters' %}{% render 'rp-filters-groups', collection: collection %}{% endpartial %}{% endblock %}` |
+| FilterChips | `<FilterChips {...chips} />` with `chips` from `toFilterChips` (`@components/filter-chips.data`) | `{% block 'filter-chips' %}{% endblock %}` |
+| SortSelect | `<SortSelect id="collection-sort" action={pathname} options={sortOptions} value={sort} params={params} />` | `{% block 'sort-select', id: 'collection-sort' %}{% endblock %}` |
+| SearchForm | `<SearchForm defaultValue={terms} />` | `{% block 'search-form', default_value: search.terms %}{% endblock %}` |
+| PredictiveSearch | `<PredictiveSearch id="predictive-search" results={results} />` | `{% block 'predictive-search', id: 'predictive-search' %}{% partial 'rp-predictive-results' %}{% render 'rp-predictive-search-results', search: search %}{% endpartial %}{% endblock %}` |
+| Overlay opener (Link, Button or IconButton with `href`) | `<IconButton icon="search" href="/search" dialog="search-dialog" ariaLabel="Search" />` | `{% block 'icon-button', icon: 'search', href: routes.search_url, dialog: 'search-dialog', aria_label: search_label %}{% endblock %}` |
 
-Assumption **A-1** (Liquid regions). A block file cannot contain `{% partial %}` (ledger D-037; `06-bindings.md`). Therefore a commerce block that owns a region prints `{{ content }}` at the position of the region, and `11-components-commerce.md` ships one snippet per owned region, named `rp-<component id>-region`, that prints the region root (the element with `data-rp-region`) and its contents. The template passes the partial as the block's content:
+**Regions (D-091).** A component whose content is refreshed exposes a region part: a TSX export and a Liquid snippet. On Liquid a block file cannot contain `{% partial %}`, so the TEMPLATE writes `{% partial '<region>' %}` around the rendered snippet inside the component's block body, exactly as in the table above (`11-components-commerce.md` section 0.3 owns the pattern). On TSX hosts the component prints its region part itself; the blueprint passes data only.
 
-```liquid
-{% block 'cart-lines', id: 'cart' %}
-  {% partial 'rp-cart-lines' %}{% render 'rp-cart-lines-region', id: 'cart' %}{% endpartial %}
-{% endblock %}
-```
+| Region | Owner | Part | Liquid snippet |
+|---|---|---|---|
+| `rp-cart-lines` | CartLines | `list` | `rp-cart-lines-list` |
+| `rp-cart-summary` | CartSummary | `totals` | `rp-cart-summary-totals` |
+| `rp-product-media` | ProductGallery | `media` | `rp-product-gallery-media` |
+| `rp-product-recommendations` | ProductRecommendations | `list` | `rp-product-recommendations-list` |
+| `rp-collection-filters` | Filters | `groups` | `rp-filters-groups` |
+| `rp-predictive-results` | PredictiveSearch | `results` | `rp-predictive-search-results` |
+| `rp-product-buy` | blueprint `product` | none | a layout component (Stack) |
+| `rp-collection-results`, `rp-collection-toolbar` | blueprint `collection` | none | a layout component |
+| `rp-search-results` | blueprint `search` | none | a layout component |
 
-The component-owned region snippets assumed are: `rp-cart-lines-region` (`rp-cart-lines`), `rp-cart-summary-region` (`rp-cart-summary`), `rp-product-gallery-region` (`rp-product-media`), `rp-product-recommendations-region` (`rp-product-recommendations`), `rp-filters-region` (`rp-collection-filters`), `rp-predictive-search-region` (`rp-predictive-results`). CartDrawer contains both cart regions; its content is the two partials in order (see `layout`).
+The snippet names `rp-<component id>-region` do not exist (D-091 item 3). A region-part snippet is rendered with the same params everywhere (D-091 item 4): `rp-cart-summary-totals` always receives `cart_lines`. A blueprint-owned region is a layout component that receives `data-rp-region="<name>"` through rest props (TSX) or `attributes: 'data-rp-region="<name>"'` (Liquid) (D-091 item 2).
 
-Assumption **A-2**. On TSX hosts the same components print their regions themselves; the blueprint passes data only.
+**Types (D-094).** Blueprints import resource types from `__PKG__`; they are defined in `05-commerce.md` section 11.1: `RippleProduct`, `RippleProductDetail`, `RippleProductCard`, `RippleCollection`, `RippleCollectionCard`, `RippleArticle`, `RippleArticleCard`, `RippleMedia`, `RippleVariant`, `RippleFilter`, `RippleFilterValue`, `RippleMenu`, `RippleShop`, `RippleCart`, `RippleImage`. A page prop that is passed to a component has exactly the type that component's Props table names (ProductCard: `RippleProduct`; CollectionCard: `RippleCollection`; ArticleCard: `RippleArticle`; Filters: `RippleFilter[]`; the product page: `RippleProductDetail`). A blueprint MUST NOT declare its own copy of one of them; the former local types `ProductDetail` and `FilterData` do not exist. The sort-option, sort-param and chip shapes are written inline in the page props, exactly as the Props tables of `11-components-commerce.md` give them (`Array<{ value: string; label: string }>`, `Array<[string, string]>`, `{ chips: Array<{ label: string; url: string }>; clearUrl: string }`); D-094 item 1 assigns their names to `05-commerce.md` section 11.1, and a blueprint MAY import the named types instead once that section names them.
 
-Assumption **A-3**. `ProductDetail`, `FilterData`, `SortOption` below are the prop types this document assumes for `product`, `filters` and `sortOptions`. They are declared in the blueprint files (not exported by the package) so that a mismatch with doc 11 is a type error in one place:
+`<blueprint dir>/types.ts` (file key `types`, `layout` blueprint; complete) holds only the page-data types that no component takes as a prop:
 
 ```ts
-import type { RippleImage, RippleProduct, RippleVariant } from "__PKG__";
-
-export interface ProductDetail extends RippleProduct {
-  descriptionHtml: string;
-  media: Array<{ id: string; image: RippleImage }>;
-  options: Array<{ name: string; values: string[] }>;
-  variants: Array<RippleVariant & { selectedOptions: Array<{ name: string; value: string }> }>;
+// blueprints/layout/<host>/types.ts
+export interface PageInfo {
+  previousUrl: string | null;
+  nextUrl: string | null;
 }
-export interface FilterData {
-  id: string;
-  label: string;
-  type: "LIST" | "PRICE_RANGE" | "BOOLEAN";
-  values: Array<{ id: string; label: string; count: number; input: string; active: boolean }>;
-}
-export interface SortOption { value: string; label: string }
-export interface PageInfo { previousUrl: string | null; nextUrl: string | null }
 ```
+
+Per-page props (`<Name>PageProps`) and `LayoutProps` are declared in the page files.
 
 ### 2.5 Data loading on the hydrogen backend
 
@@ -3299,17 +3283,19 @@ export interface PageInfo { previousUrl: string | null; nextUrl: string | null }
 - `url` fields of resources are computed by the route code from its route templates (`05-commerce.md` section 11.1). With no locale prefix: `/products/<handle>`, `/collections/<handle>`, `/blogs/<blog handle>/<article handle>`, `/pages/<handle>`.
 - A root field that returns `null` (unknown handle) MUST produce a 404 response that renders the `not-found` blueprint inside `layout`.
 - UNVERIFIED: that mock.shop serves `menu`, `blog`, `articles`, `page`, `localization` and `predictiveSearch`. Each blueprint states what it prints when its data is empty, and every TSX blueprint MUST render without throwing when a list is empty.
-- Sample data for H-1 and for tests is `blueprints/_sample/<id>.json` (one object per blueprint: the props of the page function) and `blueprints/_sample/layout.json`. `13-testing.md` owns the loader. The sample MUST use the fixture resources of section 1.6 and the product, collection and cart fixtures of `11-components-commerce.md`.
+- Sample data for H-1 and for tests is `blueprints/_sample/<id>.json` (one object per blueprint: the props of the page function) and `blueprints/_sample/layout.json`. `13-testing.md` owns the loader. The sample MUST use the fixture resources of section 1.6 and the product, collection and cart fixtures of `11-components-commerce.md`. `13-testing.md` also owns the Liquid-drop form of each sample (D-074, D-104).
 
 ### 2.6 Document shell and locale route (hydrogen backend)
 
-The document shell on TSX hosts is a string function, not a component, because the Hydrogen script tags are HTML strings (`renderShopifyScriptTags(...).join("")`, `05-commerce.md` section 10.1 rule 2) and neither React nor Remix can print raw sibling tags into `<head>`. `<blueprint dir>/lib/document.ts` (complete; identical for react, remix and html):
+The document shell on TSX hosts is a string function, not a component (D-107 item 1: `renderDocument` returns the document as a string around the rendered body; React hydrates the body content and never the parent of `document.body`'s content), because the Hydrogen script tags are HTML strings (`renderShopifyScriptTags(...).join("")`, `05-commerce.md` section 10.1 rule 2) and neither React nor Remix can print raw sibling tags into `<head>`. `<blueprint dir>/lib/document.ts` (complete; identical for react, remix and html):
 
 ```ts
 // blueprints/layout/<host>/lib/document.ts
 export interface DocumentParts {
   /** BCP 47 language tag, for example "en" or "fr-CA". */
   lang: string;
+  /** Text direction of the locale. Default "ltr". */
+  dir?: "ltr" | "rtl";
   title: string;
   description?: string;
   /** Stylesheet URLs, in order. */
@@ -3346,7 +3332,7 @@ export function renderDocument(parts: DocumentParts): string {
     .join("");
   return (
     `<!doctype html>` +
-    `<html lang="${escapeHtml(parts.lang)}" data-rmx-preserve-attrs="style">` +
+    `<html lang="${escapeHtml(parts.lang)}" dir="${parts.dir === "rtl" ? "rtl" : "ltr"}" data-rmx-preserve-attrs="style">` +
     `<head>` +
     `<meta charset="utf-8">` +
     `<meta name="viewport" content="width=device-width, initial-scale=1">` +
@@ -3365,16 +3351,18 @@ export function renderDocument(parts: DocumentParts): string {
 
 Rules:
 
-- **DS-1** `stylesheets` is `["/ripple/tokens.css", "/ripple/ripple.css"]` unless the project bundles CSS itself (`03-styling-and-tokens.md`).
-- **DS-2** `scripts` per host: html `["/ripple/ripple.js"]`; remix `["/ripple/ripple.js", <client entry URL>]` (`06-bindings.md` rule X-11); react `[<client entry URL>]` (the entry imports `<pkg>/commerce` and calls `configureCommerce` before `hydrateRoot`, `05-commerce.md` section 10.3).
+- **DS-1** `stylesheets` is `["/ripple/tokens.css", "/ripple/ripple.css"]` unless the project bundles CSS itself (`03-styling-and-tokens.md`). The URL prefix `/ripple/` is where `paths.public` (default `public/ripple`, D-101) is served; a project that changes `paths.public` changes the prefix. The tokens stylesheet is first, so the tokens precede the config element.
+- **DS-2** `scripts` per host (the browser files are those of ledger section 5 and D-054: `ripple.js` plus its lazy chunks, which `ripple.js` imports itself; `ripple-toast.js` is loaded lazily, D-083, and MUST NOT be listed): html `["/ripple/ripple.js"]`; remix `["/ripple/ripple.js", <client entry URL>]` (`06-bindings.md` rule X-11); react `[<client entry URL>]` (the entry imports `<pkg>/commerce` and calls `configureCommerce` before `hydrateRoot`, `05-commerce.md` section 10.3).
 - **DS-3** `commerce.host` MUST equal the host. `commerce.initialCart` is set only on responses that are not publicly cached (`05-commerce.md` section 10.1 rules 3 and 4).
 - **DS-4** `data-rmx-preserve-attrs="style"` on `<html>` is printed on every TSX host (`06-bindings.md` rule X-6). It is inert outside Remix and is removed by the canonicaliser.
 - **DS-5** React: the client entry hydrates the body: `hydrateRoot(document.body, <Layout {...layout}><XPage {...page} /></Layout>)`. The server renders the same tree with `renderToString` and passes the string as `body`. UNVERIFIED: hydration of `document.body` when scripts append nodes to `<body>` before hydration; see "Fallback for DS-5" below.
+- **DS-7** `commerce` is printed into the config element `<script type="application/json" id="rp-commerce">` (D-087). Its `strings` member, when passed, has exactly the seven keys of D-087 item 4: `added`, `updated`, `removed`, `discountApplied`, `discountRemoved`, `noteSaved`, `error`. A TSX host that omits `strings` gets the English defaults built into the adapter. `commerce.cartDrawer` defaults to `cart-drawer` (section 1.5).
+- **DS-8** `lang` and `dir` come from the request locale, as on Liquid (`<html lang="{{ request.locale.iso_code }}" dir="{{ request.locale.direction | default: 'ltr' }}">`).
 - **DS-6** Remix: `body` is `await renderToString(<Layout .../>)` from `remix/component/server` (`ripple/docs/research/remix-3.md` section 5). UNVERIFIED: that the Remix client runtime (`run()`) accepts a document whose shell was not produced by a Remix component. If it does not, the project writes the shell as a Remix component following `ripple/docs/research/remix-3.md` section 8.2 and MUST still print, in this order: the stylesheets, the Hydrogen script tags, the config element, the module scripts.
 
 #### Fallback for DS-5
 
-No ledger spike covers this (Ledger issues, item 12). The check is test LT-10. If hydrating `document.body` logs hydration errors, `renderDocument` prints `<body><div id="rp-root">${parts.body}</div></body>` and the entry calls `hydrateRoot(document.getElementById("rp-root")!, ...)`. No other file changes; SkipLink remains the first focusable element.
+The ledger fixes this fallback and its test (D-107 item 1). The check is test LT-10. If hydrating `document.body` logs hydration errors, `renderDocument` prints `<body><div id="rp-root">${parts.body}</div></body>` and the entry calls `hydrateRoot(document.getElementById("rp-root")!, ...)`. No other file changes; SkipLink remains the first focusable element.
 
 **Locale route.** LocaleSelector posts `country_code`, `locale_code` and `return_to` to `/api/locale` (LocaleSelector, HTML contract). `<blueprint dir>/lib/locale-route.ts` (complete; react and remix; framework-neutral):
 
@@ -3420,6 +3408,8 @@ export async function handleLocalePost(request: Request, i18n: ShopifyI18n): Pro
 }
 ```
 
+UNVERIFIED against the ledger's import list: `getLocalizedHref`, `getSupportedLocales` and `matchLocale` are value imports from `@shopify/hydrogen` that are NOT in the D-094 item 3 list. D-094 restricts bindings and `.data.ts` files; `lib/locale-route.ts` is project-owned route code, not a binding, so this document keeps the imports and lists the point in section 5. If the architecture test of doc 01 or the checker rule of D-102 item 6 is applied to `lib/*.ts`, these three names MUST be added to its allow-list for this one file.
+
 Evidence: `hydrogen/packages/hydrogen/src/core/i18n/href.ts` (`getLocalizedHref(href, { i18n, locale })`; pathname routing returns a path, domain routing an absolute URL; throws for an unsupported locale, which cannot happen here because `target` comes from `getSupportedLocales` or from `matchLocale`), `match.ts` (`matchLocale(source, i18n)` accepts a pathname string), `define.ts` (`getSupportedLocales(i18n)`), `types.ts` (`ShopifyLocale = { language, country }`). The four names are exported from the package root (`hydrogen/packages/hydrogen/src/core/index.ts`). Not run.
 
 Rules:
@@ -3432,8 +3422,8 @@ Rules:
 
 The Storefront API has no newsletter-subscription or contact-form mutation that is verified in this session. The default path is:
 
-- NewsletterForm posts `email` to `/api/newsletter`. `<blueprint dir>/lib/newsletter-route.ts` validates the address and calls a function the project supplies.
-- The contact form posts `name`, `email`, `message` to `/api/contact`. `<blueprint dir>/lib/contact-route.ts` does the same.
+- NewsletterForm posts `email` to `/api/newsletter`. `<blueprint dir>/lib/newsletter-route.ts` exports `handleNewsletterPost`, which validates the address and calls the project-supplied `subscribe` (D-107 item 2).
+- The contact form posts `name`, `email`, `message` to `/api/contact`. `<blueprint dir>/lib/contact-route.ts` exports `handleContactPost`, which validates the fields and calls the project-supplied `send`.
 
 `<blueprint dir>/lib/newsletter-route.ts` (complete):
 
@@ -3509,11 +3499,11 @@ Rules:
 
 Each blueprint's "Acceptance tests" lists only what it adds to these. `<page>` is the blueprint rendered inside `layout` with the sample data of 2.5; on Liquid, rendered by the shim of `13-testing.md` with the matching drops.
 
-- **BT-1** (tier 1) The react and remix files type-check (`tsc --noEmit`) against the generated bindings; the Liquid file passes Theme Check with the Ripple configuration (`06-bindings.md` section 8) and renders in the shim without an error.
+- **BT-1** (tier 1) Type-check plus Theme Check: the react and remix files type-check (`tsc --noEmit`, exit code 0) against the generated bindings after the `@components/<id>` specifiers are resolved to the example app's component directory; the Liquid file passes Theme Check with the Ripple configuration (`06-bindings.md` section 8) with zero offenses and renders in the shim without an error.
 - **BT-2** (tier 2) For each host, `<page>` passes `ripple check` with zero errors and the contract lint of `02-html-contract.md` section 14 with zero errors.
-- **BT-3** (tier 2) After canonicalisation with the masks of the embedded components, the `<main>` subtree of the react, remix and html outputs is equal; the Liquid output is equal after additionally applying the masks listed in the blueprint.
+- **BT-3** (tier 2) After canonicalisation with the masks of the embedded components, the children of `<main>` in the react, remix and html outputs are equal (the `<main>` start tag is not compared: Liquid adds `data-template`); the Liquid output is equal after additionally applying the masks listed in the blueprint.
 - **BT-4** (tier 2) The document contains exactly one `main`, one `h1`, one `header.rp-header`, one `footer.rp-footer`; every `id` is unique; every `href="#x"`, `data-rp-open`, `commandfor`, `popovertarget`, `for`, `aria-labelledby`, `aria-describedby` and `form` attribute names an existing id.
-- **BT-5** (tier 2) Every `data-rp-refresh` name has a `[data-rp-region]` element with that name in the document; every region name listed in the blueprint's "Regions" is present; on Liquid every such name is also a `{% partial %}` in the template or the layout and is declared once.
+- **BT-5** (tier 2) Every `data-rp-refresh` name has a `[data-rp-region]` element with that name in the document; every region name listed in the blueprint's "Regions" is present; on Liquid every such name is also a `{% partial %}` in the template or the layout and is declared once. On Remix no `<Frame>` is expected: every region is a plain element (rule R-6).
 - **BT-6** (tier 6, JavaScript disabled) axe reports zero violations of the rule set of `13-testing.md`; each step of the blueprint's "No-JS behaviour" list succeeds.
 - **BT-7** (tier 5) With JavaScript enabled, no console error or warning is logged during load, and no element matching `:not(:defined)` remains 2 seconds after `load`.
 - **BT-8** (tier 8) Visual snapshots at widths 375, 768 and 1280 match the reference; no horizontal scroll bar at any of the three widths.
@@ -3533,9 +3523,9 @@ The document shell that every storefront page is rendered in: skip link, announc
 
 ### Components used
 
-`account-link`, `announcement-bar`, `cart-drawer`, `cart-link`, `dialog`, `footer`, `header`, `icon`, `icon-button`, `link-list`, `locale-selector`, `logo`, `mobile-nav`, `navigation-menu`, `newsletter-form`, `predictive-search`, `skip-link`, `text`, `toast`.
+`account-link`, `announcement-bar`, `cart-drawer`, `cart-lines`, `cart-link`, `cart-summary`, `dialog`, `footer`, `header`, `icon`, `icon-button` (the search dialog's closer and the Header openers), `link-list`, `locale-selector`, `logo`, `mobile-nav`, `navigation-menu`, `newsletter-form`, `predictive-search`, `skip-link`, `text`, `toast`.
 
-Ledger 8.5 also lists Announcer. `09-components-foundation.md` (Ledger issues there, item 15) fixed that Announcer exists only inside dialogs and commerce roots and that the layout prints none; this blueprint follows it (Ledger issues, item 11).
+No Announcer (D-079, D-099): the layout prints none; announcements come from the live regions inside dialogs and commerce roots.
 
 ### Structure
 
@@ -3547,7 +3537,7 @@ body
 ├─ AnnouncementBar          only when an announcement text exists
 ├─ Header                   sticky; default body; mobileNav="mobile-nav"; searchDialog="search-dialog";
 │                           cartDrawer="cart-drawer" (omitted on the cart page)
-├─ main#main[tabindex=-1]   the page blueprint
+├─ main#main[tabindex=-1]   the page blueprint; on Liquid also data-template="{{ request.page_type }}"
 ├─ Footer                   custom children:
 │   ├─ LinkList             id="footer-menu", vertical, footer menu
 │   ├─ NewsletterForm       id="newsletter"
@@ -3555,7 +3545,7 @@ body
 │   ├─ Text                 copyright line
 │   └─ LinkList             horizontal, policies            (only when policies exist)
 ├─ MobileNav                id="mobile-nav"
-├─ Dialog                   id="search-dialog"; title; PredictiveSearch id="predictive-search"; close
+├─ Dialog                   id="search-dialog"; header (title, IconButton closer); body: PredictiveSearch id="predictive-search"
 ├─ CartDrawer               id="cart-drawer"                 (omitted on the cart page)
 └─ Toast                    the empty toast region
 ```
@@ -3566,25 +3556,21 @@ Overlays come after the footer so that no `<dialog>` is inside `<header>`, `<mai
 
 ```tsx
 import type { ReactNode } from "react";
-import type { RippleCart, RippleMenu, RippleShop } from "__PKG__";
-import {
-  AnnouncementBar,
-  CartDrawer,
-  Dialog,
-  DialogBody,
-  DialogClose,
-  DialogTitle,
-  Footer,
-  Header,
-  LinkList,
-  LocaleSelector,
-  MobileNav,
-  NewsletterForm,
-  PredictiveSearch,
-  SkipLink,
-  Text,
-  Toast,
-} from "__PKG__/react";
+import type { RippleCart, RippleMenu, RippleProduct, RippleShop } from "__PKG__";
+import { AnnouncementBar } from "@components/announcement-bar";
+import { CartDrawer } from "@components/cart-drawer";
+import { Dialog, DialogBody, DialogHeader, DialogTitle } from "@components/dialog";
+import { Footer } from "@components/footer";
+import { Header } from "@components/header";
+import { IconButton } from "@components/icon-button";
+import { LinkList } from "@components/link-list";
+import { LocaleSelector } from "@components/locale-selector";
+import { MobileNav } from "@components/mobile-nav";
+import { NewsletterForm } from "@components/newsletter-form";
+import { PredictiveSearch } from "@components/predictive-search";
+import { SkipLink } from "@components/skip-link";
+import { Text } from "@components/text";
+import { Toast } from "@components/toast";
 
 export interface LayoutProps {
   shop: RippleShop;
@@ -3604,7 +3590,9 @@ export interface LayoutProps {
   /** Announcement text, or null for no bar. */
   announcement: string | null;
   newsletterStatus: "idle" | "success" | "error";
-  /** True on the cart page: the cart drawer is not rendered. */
+  /** Predictive results for a request whose URL has `q`; null on every other request (doc 11, PredictiveSearch). */
+  searchResults: { terms: string; products: RippleProduct[]; total: number } | null;
+  /** True on the cart page: the cart drawer is not rendered and the cart link has no drawer (D-091 item 5). */
   cartPage: boolean;
   /** Four-digit year for the copyright line. */
   year: number;
@@ -3612,7 +3600,7 @@ export interface LayoutProps {
 }
 
 export function Layout(props: LayoutProps) {
-  const { shop, menu, footerMenu, policies, cart, locale, path, announcement, newsletterStatus, cartPage, year, children } = props;
+  const { shop, menu, footerMenu, policies, cart, locale, path, announcement, newsletterStatus, searchResults, cartPage, year, children } = props;
   const hasFooterMenu = footerMenu.items.length > 0;
   return (
     <>
@@ -3640,13 +3628,15 @@ export function Layout(props: LayoutProps) {
       </Footer>
       <MobileNav id="mobile-nav" menu={menu} />
       <Dialog id="search-dialog">
-        <DialogTitle>Search</DialogTitle>
+        <DialogHeader>
+          <DialogTitle dialog="search-dialog">Search</DialogTitle>
+          <IconButton icon="close" ariaLabel="Close" commandFor="search-dialog" command="close" />
+        </DialogHeader>
         <DialogBody>
-          <PredictiveSearch id="predictive-search" action="/search" />
+          <PredictiveSearch id="predictive-search" results={searchResults} />
         </DialogBody>
-        <DialogClose />
       </Dialog>
-      {cartPage ? null : <CartDrawer id="cart-drawer" cart={cart ?? undefined} />}
+      {cartPage ? null : <CartDrawer cart={cart ?? undefined} />}
       <Toast />
     </>
   );
@@ -3657,20 +3647,27 @@ Rule **LY-1**: the Header menu opener is a link to the footer menu (`href="#foot
 
 **Remix**: the React file converted by R-1 to R-5 (`tabIndex` becomes `tabindex`). The fragment `<>...</>` stays.
 
-**html**: `pages/layout.html` is the document produced by H-1 with an empty `<main id="main" tabindex="-1"></main>`.
+**html**: `layout.html` (target `@pages/layout.html`) is the document produced by H-1 with an empty `<main id="main" tabindex="-1"></main>`.
 
-**Liquid** (`blueprints/layout/liquid/layout/theme.liquid`, complete):
+The TSX layout prints `<main id="main" tabIndex={-1}>` with no `data-template`: the attribute is read only by the Liquid adapter (D-089 item 6). `<CartDrawer>` takes no `id`: it defaults to `cart-drawer` (section 1.5).
+
+**Liquid.** This document owns the complete text of the layout (D-099). `blueprints/layout/liquid/layout/theme.liquid` (complete):
 
 ```liquid
 <!doctype html>
-<html lang="{{ request.locale.iso_code }}">
+<html lang="{{ request.locale.iso_code }}" dir="{{ request.locale.direction | default: 'ltr' }}">
   <head>
+    {% render 'import-map' %}
+    {% render 'meta-tags' %}
     {% render 'rp-head' %}
+    {{ 'styles.min.css' | asset_url | stylesheet_tag }}
+    {{ content_for_header }}
   </head>
   <body>
     {%- liquid
       assign announcement = 'ripple.blueprints.layout.announcement' | t
       assign search_title = 'ripple.blueprints.layout.search' | t
+      assign close_label = 'ripple.blueprints.layout.close' | t
       assign footer_label = 'ripple.footer.menu' | t
       assign policies_label = 'ripple.footer.policies' | t
       assign year = 'now' | date: '%Y'
@@ -3692,7 +3689,7 @@ Rule **LY-1**: the Header menu opener is a link to the footer menu (`href="#foot
       {% block 'announcement-bar' %}{{ announcement }}{% endblock %}
     {%- endif -%}
     {% block 'header', sticky: true, link_list: link_list, mobile_nav: 'mobile-nav', search_dialog: 'search-dialog', cart_drawer: cart_drawer %}{% endblock %}
-    <main id="main" tabindex="-1">
+    <main id="main" tabindex="-1" data-template="{{ request.page_type }}">
       {{ content_for_layout }}
     </main>
     {% block 'footer' %}
@@ -3708,33 +3705,78 @@ Rule **LY-1**: the Header menu opener is a link to the footer menu (`href="#foot
     {% endblock %}
     {% block 'mobile-nav', id: 'mobile-nav' %}{% endblock %}
     {% block 'dialog', id: 'search-dialog' %}
-      {% block 'dialog-title', dialog: 'search-dialog' %}{{ search_title }}{% endblock %}
+      {% block 'dialog-header' %}
+        {% block 'dialog-title', dialog: 'search-dialog' %}{{ search_title }}{% endblock %}
+        {% block 'icon-button', icon: 'close', aria_label: close_label, command_for: 'search-dialog', command: 'close' %}{% endblock %}
+      {% endblock %}
       {% block 'dialog-body' %}
         {% block 'predictive-search', id: 'predictive-search' %}
-          {% partial 'rp-predictive-results' %}{% render 'rp-predictive-search-region', id: 'predictive-search' %}{% endpartial %}
+          {% partial 'rp-predictive-results' %}{% render 'rp-predictive-search-results', search: search %}{% endpartial %}
         {% endblock %}
       {% endblock %}
-      {% block 'dialog-close', dialog: 'search-dialog' %}{% endblock %}
     {% endblock %}
-    {%- if cart_drawer != blank -%}
+    {% unless template.name == 'cart' %}
       {% block 'cart-drawer', id: 'cart-drawer' %}
-        {% partial 'rp-cart-lines' %}{% render 'rp-cart-lines-region', id: 'cart-drawer' %}{% endpartial %}
-        {% partial 'rp-cart-summary' %}{% render 'rp-cart-summary-region' %}{% endpartial %}
+        {% block 'cart-lines', id: 'cart-drawer-list' %}
+          {% partial 'rp-cart-lines' %}{% render 'rp-cart-lines-list', cart: cart %}{% endpartial %}
+        {% endblock %}
+        {% block 'cart-summary', cart_lines: 'cart-drawer-list' %}
+          {% partial 'rp-cart-summary' %}{% render 'rp-cart-summary-totals', cart: cart, cart_lines: 'cart-drawer-list' %}{% endpartial %}
+        {% endblock %}
       {% endblock %}
-    {%- endif -%}
+    {% endunless %}
     {% block 'toast' %}{% endblock %}
   </body>
 </html>
 ```
 
+Normative points of this file (D-099 item 3):
+
+1. `<head>` contains exactly these five lines in this order: `{% render 'import-map' %}`, `{% render 'meta-tags' %}`, `{% render 'rp-head' %}`, the `styles.min.css` stylesheet tag, `{{ content_for_header }}`. The import map is the first element of `<head>` (`14-liquid-theme.md` rule T-6). There is NO `page-view.js` tag: the page view is dispatched by the Liquid adapter (D-089 item 6, D-039).
+2. `<html>` carries `lang` and `dir` (`14-liquid-theme.md` rule T-5; evidence `ripple/theme/layout/theme.liquid` line 3).
+3. `<main>` carries `data-template="{{ request.page_type }}"` (D-089 item 6).
+4. The CartDrawer is omitted on the cart template, and Header receives a blank `cart_drawer` there, so the cart link has no `data-rp-open` (D-091 item 5).
+5. No Announcer is printed (D-079). `{% block 'toast' %}` is the last statement before `</body>`.
+6. Every `<dialog>` is rendered after the footer, outside `<main>` and outside every partial.
+
+`blueprints/layout/liquid/snippets/import-map.liquid` (complete; theme-owned, file key `import-map`; the same text as `14-liquid-theme.md` section 7.1):
+
+```liquid
+{% doc %}
+  The theme's single import map. Render it first in <head>, before any module
+  script and before content_for_header: browsers ignore an import map that
+  appears after the first module script.
+
+  Ripple's entries come from `rp-import-map-entries`. Add theme entries after
+  the `@shopify/standard-events` line. Keep at least one entry after the render
+  line: the Ripple entries end with a comma.
+
+  @example
+  {% render 'import-map' %}
+{% enddoc %}
+<script type="importmap">
+{
+  "imports": {
+    {% render 'rp-import-map-entries' %}
+    "@shopify/standard-events": "https://cdn.shopify.com/storefront/standard-events.js"
+  }
+}
+</script>
+```
+
+`blueprints/layout/liquid/snippets/meta-tags.liquid` (theme-owned, file key `meta-tags`): a byte-for-byte copy of `ripple/theme/snippets/meta-tags.liquid` (253 lines: charset and viewport metas, favicon links, Open Graph and Twitter metas, `<title>`, canonical and `hreflang` links, the description meta, the robots meta, and the JSON-LD scripts). It is not reprinted here because it is copied, never edited. Check: `cmp blueprints/layout/liquid/snippets/meta-tags.liquid theme/snippets/meta-tags.liquid` exits 0 (test LT-12). The two locale keys it reads (`general.meta.tagged`, `general.meta.page`) are theme-owned keys of `14-liquid-theme.md` section 11.1.
+
+`core/patch:head` and `core/patch:import-map` report `patch-skipped` when their target file is missing or already contains the line (D-107 item 5); with this blueprint installed both lines are already present.
+
 Notes on the Liquid file:
 
-- `snippets/rp-head.liquid` is owned by `14-liquid-theme.md`. It MUST print, in this order: charset and viewport metas, `<title>`, the stylesheets, `{{ content_for_header }}`, the import map, the config element `#rp-commerce` of `05-commerce.md` section 10.4, the Invoker Commands polyfill of `04-elements.md` section 3.3, the `ripple.js` module script.
-- `request.locale.iso_code`, `template.name`, `content_for_layout`, `linklists`, `shop.policies`, `shop.name` are read by `ripple/theme/layout/theme.liquid` and `ripple/theme/blocks/footer.liquid` (`template.name` UNVERIFIED in those two files; it is a documented global).
+- `rp-head` is owned by `14-liquid-theme.md` section 7.3 and prints exactly what D-054 item 7 lists (tokens, the config element `#rp-commerce`, the inline polyfill, the stylesheet and module tags of Ripple). It does not print the title, meta tags, the import map or `{{ content_for_header }}` (D-099 item 4).
+- `request.locale.iso_code`, `request.locale.direction`, `content_for_layout`, `linklists`, `shop.policies`, `shop.name` are read by `ripple/theme/layout/theme.liquid` and `ripple/theme/blocks/footer.liquid`. `template.name` and `request.page_type` are documented globals; the values of `request.page_type` are UNVERIFIED (SPIKE-02, section 5).
 - An empty translation for `ripple.blueprints.layout.announcement` means no bar. The English default is the empty string.
 - The Liquid footer menu fallback implements rule LY-1.
+- The Header block is called with no body, so its default body renders the two `dialog`-based openers and the CartLink (Header, Host notes).
 
-Locale keys (`ripple.blueprints.layout.*`): `skip` "Skip to content"; `announcement` ""; `search` "Search".
+Locale keys (`ripple.blueprints.layout.*`): `skip` "Skip to content"; `announcement` ""; `search` "Search"; `close` "Close".
 
 ### Data requirements per backend
 
@@ -3748,6 +3790,8 @@ Locale keys (`ripple.blueprints.layout.*`): `skip` "Skip to content"; `announcem
 | Locales | rule LR-3 | the global `localization` (read inside LocaleSelector) |
 | Language tag | `getHtmlLang(requestContext.locale.language)` (`hydrogen/packages/hydrogen/src/core/i18n/locale.ts`) | `request.locale.iso_code` |
 | Newsletter status | `newsletterStatus(request)` (2.7) | the `form` object inside NewsletterForm |
+| Predictive results | `searchResults`: on a request whose URL has `q`, `{ terms, products, total }` from the `predictiveSearch` query of `11-components-commerce.md` section 0.6; otherwise `null` | the global `search` (read inside `rp-predictive-search-results`) |
+| Text direction | `dir` of `DocumentParts` (rule DS-8) | `request.locale.direction` |
 | Announcement | project-defined (a constant or a metaobject); `null` for none | locale key `ripple.blueprints.layout.announcement` |
 
 Complete query for the hydrogen backend, exported as `LAYOUT_QUERY` from `layout.tsx`:
@@ -3800,16 +3844,18 @@ UNVERIFIED against the schema in this session: `shop.brand.logo.image`, the four
 
 BT-1 to BT-9, plus:
 
-- **LT-1** (tier 2) The children of `<body>` are, in order, elements matching: `a.rp-skip-link`, optionally `div.rp-announcement-bar`, `header.rp-header`, `main#main`, `footer.rp-footer`, `rp-dialog.rp-mobile-nav`, `rp-dialog.rp-dialog`, optionally `rp-dialog` containing `dialog#cart-drawer`, `ui-toast-region`. Script and JSON elements appended by the platform are ignored.
+- **LT-1** (tier 2) The children of `<body>` are, in order, elements matching: `a.rp-skip-link`, optionally `div.rp-announcement-bar`, `header.rp-header`, `main#main`, `footer.rp-footer`, `rp-dialog.rp-drawer.rp-mobile-nav`, `rp-dialog.rp-dialog`, optionally `rp-dialog` containing `dialog#cart-drawer`, `ui-toast-region`. Script and JSON elements appended by the platform are ignored. On Liquid the main element matches `main#main[data-template]`; on the other hosts it has no `data-template`. No host prints an Announcer element outside a dialog or commerce root.
 - **LT-2** (tier 2) With a non-empty footer menu, `a[data-rp-open="mobile-nav"]` has `href="#footer-menu"` and `nav#footer-menu` exists. With both menus empty, the same link has `href="#main"` and no `#footer-menu` exists.
-- **LT-3** (tier 2) With `cartPage: true` (Liquid: `template.name == 'cart'`): no `#cart-drawer` exists and the cart link has no `data-rp-open`.
+- **LT-3** (tier 2) With `cartPage: true` (Liquid: `template.name == 'cart'`): no `#cart-drawer` exists and the cart link has no `data-rp-open` (D-091 item 5).
 - **LT-4** (tier 2) No `<dialog>` has an ancestor matching `header, main, footer, [data-rp-region]`.
-- **LT-5** (tier 1) `renderDocument` output, parsed by an HTML parser, has `html[lang]`, exactly one `script#rp-commerce` whose text parses as JSON, the stylesheets before the config element and the module scripts after it; a `title` containing `</title><script>` is escaped.
+- **LT-5** (tier 1) `renderDocument` output, parsed by an HTML parser, has `html[lang][dir]`, exactly one `script#rp-commerce` whose text parses as JSON, the stylesheets before the config element and the module scripts after it; a `title` containing `</title><script>` is escaped.
 - **LT-6** (tier 1) `handleLocalePost`: with pathname routing `{ defaultLocale: EN/US, locales: [FR/CA] }`, a POST of `country_code=CA&return_to=/products/x` answers 303 with `location: /fr-ca/products/x`; `country_code=ZZ` answers `location: /products/x`; `return_to=//evil.example` answers `location: /`.
 - **LT-7** (tier 1) `handleNewsletterPost`: a valid address with a resolving `subscribe` answers 303 with `location` ending `?newsletter=success#newsletter`; an invalid address does not call `subscribe` and answers `?newsletter=error#newsletter`; the address never appears in `location`.
 - **LT-8** (tier 5) Activating the menu opener at width 375 opens `#mobile-nav`; activating the search link opens `#search-dialog` and focuses the search input; activating the cart link opens `#cart-drawer`. A middle click on each navigates in a new tab instead.
-- **LT-10** (tier 5, React) Hydrating `document.body` with the sample layout logs no hydration error, with the Hydrogen script tags present in `<head>`.
 - **LT-9** (tier 5, Remix) After a client navigation between two pages, the header, the open state of no dialog, and `html[style]` are unchanged, and no element is defined twice (`06-bindings.md` Q-15).
+- **LT-10** (tier 5, React) Hydrating `document.body` with the sample layout logs no hydration error, with the Hydrogen script tags present in `<head>`.
+- **LT-11** (tier 5) On the cart page, `getCommerce().openCart()` navigates to `cartUrl`, because no dialog with the id `cart-drawer` is on the page. The behaviour and its test are owned by `05-commerce.md` (D-042 amendment b); this entry is a reference, not a second test.
+- **LT-12** (tier 1) `snippets/meta-tags.liquid` is byte-equal to `theme/snippets/meta-tags.liquid`; `snippets/import-map.liquid` renders a `<script type="importmap">` whose text parses as JSON in the shim; the rendered `<head>` of `layout/theme.liquid` has the import map before every `script[type="module"]`, and contains no `page-view.js` reference.
 
 ---
 
@@ -3846,7 +3892,15 @@ Container py="12 md:20"
 
 ```tsx
 import type { RippleCollection, RippleImage, RippleProduct } from "__PKG__";
-import { Button, CollectionCard, Container, FeaturedCollection, Grid, Heading, Hero, Stack, Text } from "__PKG__/react";
+import { Button } from "@components/button";
+import { CollectionCard } from "@components/collection-card";
+import { Container } from "@components/container";
+import { FeaturedCollection } from "@components/featured-collection";
+import { Grid } from "@components/grid";
+import { Heading } from "@components/heading";
+import { Hero } from "@components/hero";
+import { Stack } from "@components/stack";
+import { Text } from "@components/text";
 
 export interface HomePageProps {
   hero: { title: string; text: string; image: RippleImage | null; cta: { label: string; href: string } };
@@ -3996,15 +4050,15 @@ Container py="12 md:20"
 └─ Stack gap="8 md:12"
    ├─ Stack as="header" gap="2":  Heading level 1 (title); RichText (description, when present)
    └─ Grid columns="1 lg:4" gap="8 md:12"
-      ├─ Filters id="filters"                     1 column; contains region rp-collection-filters
+      ├─ Filters id="collection-filters"          1 column; rendered inline, not in a Drawer (D-005, D-107 item 3); contains region rp-collection-filters
       └─ Stack gap="4" span="1 lg:3"
-         ├─ SortSelect                            outside every region (it keeps focus while results change)
+         ├─ SortSelect id="collection-sort"        outside every region (it keeps focus while results change)
          ├─ Inline [data-rp-region="rp-collection-toolbar"]:  Text (product count); FilterChips
          └─ Stack gap="8 md:12" [data-rp-region="rp-collection-results"]
             ├─ Grid as="ul" columns="2 lg:3" gap="4 md:6"  →  li > ProductCard     (when products exist)
             ├─ Pagination                                                         (when a previous or next page exists)
             └─ EmptyState: Heading level 2; Button "Clear filters"                 (when no products)
-rp-view-event (collection_viewed)
+rp-view-event (collection view; attribute form, BP-11)
 ```
 
 Below `lg` the filters are above the results in one column; from `lg` they are the first of four columns. The product grid uses 3 columns from `lg` (not the 4 of BP-5) because it sits beside the filters. Filters, FilterChips and SortSelect MUST carry `data-rp-refresh="rp-collection-filters rp-collection-toolbar rp-collection-results"`; that attribute is printed by those components (`11-components-commerce.md`), not by the blueprint.
@@ -4012,29 +4066,48 @@ Below `lg` the filters are above the results in one column; from `lg` they are t
 **React** (`blueprints/collection/react/collection.tsx`, complete except the `COLLECTION_QUERY` constant):
 
 ```tsx
-import type { RippleCollection, RippleProduct } from "__PKG__";
-import {
-  Button, Container, EmptyState, FilterChips, Filters, Grid, Heading, Inline, Pagination, ProductCard, RichText, SortSelect, Stack, Text,
-} from "__PKG__/react";
-import type { FilterData, PageInfo, SortOption } from "./types";
+import type { RippleCollection, RippleFilter, RippleProduct } from "__PKG__";
+import { Button } from "@components/button";
+import { Container } from "@components/container";
+import { EmptyState } from "@components/empty-state";
+import { FilterChips } from "@components/filter-chips";
+import { Filters } from "@components/filters";
+import { Grid } from "@components/grid";
+import { Heading } from "@components/heading";
+import { Inline } from "@components/inline";
+import { Pagination } from "@components/pagination";
+import { ProductCard } from "@components/product-card";
+import { RichText } from "@components/rich-text";
+import { SortSelect } from "@components/sort-select";
+import { Stack } from "@components/stack";
+import { Text } from "@components/text";
+import type { PageInfo } from "./types";
 
 export interface CollectionPageProps {
   collection: RippleCollection & { descriptionHtml: string };
   products: RippleProduct[];
   /** Number of products shown on this page (cursor pagination has no total). */
   count: number;
-  filters: FilterData[];
-  sortOptions: SortOption[];
+  /** From `toRippleFilters` (`@components/filters.data`). */
+  filters: RippleFilter[];
+  /** From `toFilterChips` (`@components/filter-chips.data`). */
+  chips: { chips: Array<{ label: string; url: string }>; clearUrl: string };
+  /** Pathname of the request: the `action` of the filter and sort forms. */
+  pathname: string;
+  sortOptions: Array<{ value: string; label: string }>;
+  /** The selected sort value, for example "manual". */
   sort: string;
+  /** The `sort_by` URL param, or "" when the URL has none. */
+  sortBy: string;
+  /** From `sortParams` (`@components/sort-select.data`): the active filter params. */
+  params: Array<[string, string]>;
   pageInfo: PageInfo;
+  /** JSON text of the collection view event: `{ "event": ..., "payload": ... }` of 05-commerce.md section 12. */
+  viewEvent: string;
 }
 
 export function CollectionPage(props: CollectionPageProps) {
-  const { collection, products, count, filters, sortOptions, sort, pageInfo } = props;
-  const viewEvent = JSON.stringify({
-    event: "collection_viewed",
-    payload: { collection: { id: collection.id, title: collection.title } },
-  }).replace(/</g, "\\u003c");
+  const { collection, products, count, filters, chips, pathname, sortOptions, sort, sortBy, params, pageInfo, viewEvent } = props;
   return (
     <>
       <Container py="12 md:20">
@@ -4044,12 +4117,12 @@ export function CollectionPage(props: CollectionPageProps) {
             {collection.descriptionHtml !== "" ? <RichText html={collection.descriptionHtml} /> : null}
           </Stack>
           <Grid columns="1 lg:4" gap="8 md:12">
-            <Filters id="filters" filters={filters} action={collection.url} />
+            <Filters id="collection-filters" filters={filters} action={pathname} sortBy={sortBy} />
             <Stack gap="4" span="1 lg:3">
-              <SortSelect options={sortOptions} value={sort} action={collection.url} />
+              <SortSelect id="collection-sort" action={pathname} options={sortOptions} value={sort} params={params} />
               <Inline gap="4" justify="between" data-rp-region="rp-collection-toolbar">
                 <Text tone="muted">{count === 1 ? "1 product" : `${count} products`}</Text>
-                <FilterChips filters={filters} clearUrl={collection.url} />
+                <FilterChips {...chips} />
               </Inline>
               <Stack gap="8 md:12" data-rp-region="rp-collection-results">
                 {products.length > 0 ? (
@@ -4074,24 +4147,19 @@ export function CollectionPage(props: CollectionPageProps) {
           </Grid>
         </Stack>
       </Container>
-      <rp-view-event view-event-trigger="connect">
-        <script type="application/json" data-view-event-payload="" dangerouslySetInnerHTML={{ __html: viewEvent }} />
-      </rp-view-event>
+      <rp-view-event view-event-trigger="connect" view-event-payload={viewEvent} />
     </>
   );
 }
 ```
 
-`./types` is `<blueprint dir>/types.ts`, a file of the `layout` blueprint (key `types`) that holds the declarations of 2.4, assumption A-3. The JSX type of `rp-view-event` comes from the generated intrinsic-element declarations of `06-bindings.md` section 6; if that file does not declare it, section 3, X-9 applies.
+`./types` is `<blueprint dir>/types.ts`, a file of the `layout` blueprint (key `types`, section 2.4). The JSX type of `rp-view-event` comes from the generated intrinsic-element declarations (`src/react/jsx.generated.ts`, `src/remix/jsx.generated.ts`, D-096 item 2). React and Remix escape the attribute value; no `dangerouslySetInnerHTML` and no `innerHTML` is used. The route code builds `viewEvent` with `JSON.stringify` from the shape of `05-commerce.md` section 12, and builds `filters`, `chips` and `params` with the three `.data` helpers named above.
 
-**Remix**: rules R-1 to R-6; the payload script is written `<script type="application/json" data-view-event-payload innerHTML={unsafeHTML(viewEvent)} />` with `unsafeHTML` from `remix/component` (this is the second permitted use of `innerHTML`; section 3, X-10). **html**: rule H-1.
+**Remix**: rules R-1 to R-6. **html**: rule H-1.
 
 **Liquid** (`blueprints/collection/liquid/templates/collection.liquid`, complete):
 
 ```liquid
-{%- liquid
-  assign sort_by = collection.sort_by | default: collection.default_sort_by
--%}
 {% block 'container', py: '12 md:20' %}
   {% block 'stack', gap: '8 md:12' %}
     {% block 'stack', as: 'header', gap: '2' %}
@@ -4101,15 +4169,15 @@ export function CollectionPage(props: CollectionPageProps) {
       {%- endif -%}
     {% endblock %}
     {% block 'grid', columns: '1 lg:4', gap: '8 md:12' %}
-      {% block 'filters', id: 'filters', filters: collection.filters, action: collection.url %}
-        {% partial 'rp-collection-filters' %}{% render 'rp-filters-region', id: 'filters', filters: collection.filters %}{% endpartial %}
+      {% block 'filters', id: 'collection-filters' %}
+        {% partial 'rp-collection-filters' %}{% render 'rp-filters-groups', collection: collection %}{% endpartial %}
       {% endblock %}
       {% block 'stack', gap: '4', span: '1 lg:3' %}
-        {% block 'sort-select', options: collection.sort_options, value: sort_by, action: collection.url %}{% endblock %}
+        {% block 'sort-select', id: 'collection-sort' %}{% endblock %}
         {% partial 'rp-collection-toolbar' %}
           {% block 'inline', gap: '4', justify: 'between', attributes: 'data-rp-region="rp-collection-toolbar"' %}
             {% block 'text', tone: 'muted' %}{{ 'ripple.blueprints.collection.count' | t: count: collection.products_count }}{% endblock %}
-            {% block 'filter-chips', filters: collection.filters, clear_url: collection.url %}{% endblock %}
+            {% block 'filter-chips' %}{% endblock %}
           {% endblock %}
         {% endpartial %}
         {% partial 'rp-collection-results' %}
@@ -4137,16 +4205,16 @@ export function CollectionPage(props: CollectionPageProps) {
     {% endblock %}
   {% endblock %}
 {% endblock %}
-<rp-view-event view-event-trigger="connect">
-  <script type="application/json" data-view-event-payload>{"event":"collection_viewed","payload":{"collection":{"id":{{ collection.id | json }},"title":{{ collection.title | json }}}}}</script>
-</rp-view-event>
+<rp-view-event view-event-trigger="connect" view-event-payload="{{ collection | standard_event_data: 'view', context: 'page' | escape }}"></rp-view-event>
 ```
 
 Locale keys (`ripple.blueprints.collection.*`): `count.one` "{{ count }} product"; `count.other` "{{ count }} products"; `empty` "No products found"; `clear` "Clear filters".
 
-Differences between backends, masked for BT-3: the count text (Liquid prints the collection total, `collection.products_count`; the hydrogen backend prints the number on the page) and the collection id in the view-event payload (Liquid: a number; hydrogen: a GID). Mask list: `{ "select": "[data-rp-region=\"rp-collection-toolbar\"] > .rp-text", "op": "text" }`, `{ "select": "rp-view-event > script", "op": "text" }`.
+The Filters, SortSelect and FilterChips blocks read the global `collection` themselves (`11-components-commerce.md`: source `collection.filters`, action `collection.url`). The two blueprint-owned regions keep `attributes: 'data-rp-region="..."'`, which is allowed (D-091 item 2).
 
-Evidence: `ripple/theme/templates/collection.liquid` (`collection.title`, `collection.description`, `collection.url`, `{% paginate collection.products by 20 %}` inside `{% partial 'collection-grid' %}`, a block call inside the product loop). `paginate.previous`, `paginate.next`: see `09-components-foundation.md`, Pagination, Evidence. UNVERIFIED: `collection.filters`, `collection.sort_options`, `collection.sort_by`, `collection.default_sort_by`, `collection.products_count` were not re-read in this session (they are documented Liquid drops by general knowledge); the `collection_viewed` payload shape (`05-commerce.md` section 15 lists the Standard Events payload shape as not run).
+Differences between backends, masked for BT-3: the count text (Liquid prints the collection total, `collection.products_count`; the hydrogen backend prints the number on the page) and the view-event payload, which is masked as a whole (D-089 item 3: Liquid prints the platform filter's output, the hydrogen backend the JSON of `05-commerce.md` section 12). Mask list: `{ "select": "[data-rp-region=\"rp-collection-toolbar\"] > .rp-text", "op": "text" }`, `{ "select": "rp-view-event", "op": "attr", "name": "view-event-payload" }`.
+
+Evidence: `ripple/theme/templates/collection.liquid` (the `standard_event_data: 'view', context: 'page'` view event; `collection.title`, `collection.description`, `collection.url`, `{% paginate collection.products by 20 %}` inside `{% partial 'collection-grid' %}`, a block call inside the product loop). `paginate.previous`, `paginate.next`: see `09-components-foundation.md`, Pagination, Evidence. UNVERIFIED: `collection.filters`, `collection.sort_options`, `collection.sort_by`, `collection.default_sort_by`, `collection.products_count` were not re-read in this session (they are documented Liquid drops by general knowledge); the hydrogen-backend payload shape of the collection view (`05-commerce.md` section 12; section 5 of this document).
 
 ### Data requirements per backend
 
@@ -4154,8 +4222,9 @@ Evidence: `ripple/theme/templates/collection.liquid` (`collection.title`, `colle
 |---|---|---|
 | Collection | `collection(handle:)`: `id`, `title`, `handle`, `descriptionHtml`, `image` | `collection` |
 | Products | `collection.products(first: 24, after:, before:, last:, filters:, sortKey:, reverse:)` | `collection.products` inside `{% paginate ... by 24 %}` |
-| Filters | `collection.products.filters { id label type values { id label count input } }`; `active` computed from the URL | `collection.filters` |
-| Sort | URL param `sort_by`; options are a constant list in the route code | `collection.sort_options`, `collection.sort_by` |
+| Filters | `collection.products.filters { id label type values { id label count input } }`, mapped by `toRippleFilters(filters, searchParams, pathname)` (`@components/filters.data`); chips by `toFilterChips` (`@components/filter-chips.data`) | `collection.filters` (read inside the components) |
+| Sort | URL param `sort_by`; options are a constant list in the route code (CO-R1); `params` from `sortParams(searchParams)` (`@components/sort-select.data`) | `collection.sort_options`, `collection.sort_by` (read inside SortSelect) |
+| View event | `viewEvent`: `JSON.stringify` of the collection view of `05-commerce.md` section 12 | `collection \| standard_event_data: 'view', context: 'page'` |
 | Pagination | `pageInfo`; URLs carry `after=<endCursor>` or `before=<startCursor>` with every other param kept | `paginate.previous.url`, `paginate.next.url` |
 
 ```graphql
@@ -4199,6 +4268,7 @@ BT-1 to BT-9, plus:
 - **CL-3** (tier 5 and tier 7) Choosing a sort option changes the URL to contain `sort_by=price-ascending` without a document navigation, and the first product card changes; focus stays on the sort control.
 - **CL-4** (tier 6) With JavaScript disabled, submitting the filter form navigates to a URL containing the chosen `filter.` param, and the chosen value is checked in the response.
 - **CL-5** (tier 1) Route helper tests for CO-R1 to CO-R3 with the seven sort values, an unknown value, and both pagination directions.
+- **CL-6** (tier 2) Exactly one `rp-view-event` exists; it is the last element child of `<main>`, has `view-event-trigger="connect"`, a non-empty `view-event-payload` attribute that parses as JSON, and no child element. `#collection-filters` and `#collection-sort` exist; no element has the id `filters`. The Filters root is not inside a `<dialog>`.
 
 ---
 
@@ -4231,7 +4301,13 @@ Container py="12 md:20"
 
 ```tsx
 import type { RippleCollection } from "__PKG__";
-import { CollectionCard, Container, EmptyState, Grid, Heading, Pagination, Stack } from "__PKG__/react";
+import { CollectionCard } from "@components/collection-card";
+import { Container } from "@components/container";
+import { EmptyState } from "@components/empty-state";
+import { Grid } from "@components/grid";
+import { Heading } from "@components/heading";
+import { Pagination } from "@components/pagination";
+import { Stack } from "@components/stack";
 import type { PageInfo } from "./types";
 
 export interface CollectionsListPageProps {
@@ -4351,12 +4427,13 @@ Container py="12 md:20"
    │  └─ Stack gap="4"
    │     ├─ Text variant="overline" tone="muted"         vendor (when present)
    │     ├─ Heading level 1                              title
-   │     ├─ VariantPicker                                outside every region; data-rp-refresh="rp-product-buy rp-product-media"
+   │     ├─ VariantPicker id="product-options"           outside every region; data-rp-refresh="rp-product-buy rp-product-media"
    │     ├─ Stack gap="4" [data-rp-region="rp-product-buy"]
    │     │  ├─ Price                                     selected variant
-   │     │  └─ ProductForm id="product-form"             quantity, add to cart; prints the product_viewed view event
+   │     │  └─ ProductForm id="product-form"             quantity, add to cart
    │     └─ RichText                                     description (when present)
-   └─ ProductRecommendations id="recommendations"        contains region rp-product-recommendations
+   └─ ProductRecommendations                           contains region rp-product-recommendations
+rp-view-event (product view; attribute form, BP-11)   the last child the page prints; not inside rp-product-form
 ```
 
 Below `md` the gallery is above the details. The description is outside the buy region because it does not change with the variant. VariantPicker is outside `rp-product-buy` so that it keeps focus when the region is replaced.
@@ -4364,42 +4441,60 @@ Below `md` the gallery is above the details. The description is outside the buy 
 **React** (`blueprints/product/react/product.tsx`, complete except `PRODUCT_QUERY`):
 
 ```tsx
-import type { RippleVariant } from "__PKG__";
-import {
-  Container, Grid, Heading, Price, ProductForm, ProductGallery, ProductRecommendations, RichText, Stack, Text, VariantPicker,
-} from "__PKG__/react";
-import type { ProductDetail } from "./types";
+import type { RippleProduct, RippleProductDetail, RippleVariant } from "__PKG__";
+import { Container } from "@components/container";
+import { Grid } from "@components/grid";
+import { Heading } from "@components/heading";
+import { Price } from "@components/price";
+import { ProductForm } from "@components/product-form";
+import { ProductGallery } from "@components/product-gallery";
+import { ProductRecommendations } from "@components/product-recommendations";
+import { RichText } from "@components/rich-text";
+import { Stack } from "@components/stack";
+import { Text } from "@components/text";
+import { VariantPicker } from "@components/variant-picker";
 
 export interface ProductPageProps {
-  product: ProductDetail;
+  product: RippleProductDetail;
   /** The variant selected by the URL, or the first available one. */
   variant: RippleVariant;
+  /** The current query string without "?": the base of the VariantPicker value URLs. */
+  search: string;
+  /** Recommended products loaded by the route code; an empty array prints no list. */
+  recommended: RippleProduct[];
+  /** JSON text of the product view event: `{ "event": ..., "payload": ... }` of 05-commerce.md section 12. */
+  viewEvent: string;
 }
 
 export function ProductPage(props: ProductPageProps) {
-  const { product, variant } = props;
+  const { product, variant, search, recommended, viewEvent } = props;
   return (
-    <Container py="12 md:20">
-      <Stack gap="8 md:12">
-        <Grid columns="1 md:2" gap="8 md:12">
-          <ProductGallery id="product-gallery" media={product.media} />
-          <Stack gap="4">
-            {product.vendor !== "" ? <Text variant="overline" tone="muted">{product.vendor}</Text> : null}
-            <Heading level={1}>{product.title}</Heading>
-            <VariantPicker product={product} variant={variant} />
-            <Stack gap="4" data-rp-region="rp-product-buy">
-              <Price price={variant.price} compareAtPrice={variant.compareAtPrice ?? undefined} />
-              <ProductForm id="product-form" product={product} variant={variant} />
+    <>
+      <Container py="12 md:20">
+        <Stack gap="8 md:12">
+          <Grid columns="1 md:2" gap="8 md:12">
+            <ProductGallery id="product-gallery" media={product.media} variant={variant} />
+            <Stack gap="4">
+              {product.vendor !== "" ? <Text variant="overline" tone="muted">{product.vendor}</Text> : null}
+              <Heading level={1}>{product.title}</Heading>
+              <VariantPicker id="product-options" product={product} search={search} />
+              <Stack gap="4" data-rp-region="rp-product-buy">
+                <Price price={variant.price} compareAtPrice={variant.compareAtPrice ?? undefined} />
+                <ProductForm id="product-form" product={product} />
+              </Stack>
+              {product.descriptionHtml !== "" ? <RichText html={product.descriptionHtml} /> : null}
             </Stack>
-            {product.descriptionHtml !== "" ? <RichText html={product.descriptionHtml} /> : null}
-          </Stack>
-        </Grid>
-        <ProductRecommendations id="recommendations" product={product} />
-      </Stack>
-    </Container>
+          </Grid>
+          <ProductRecommendations products={recommended} level={2} />
+        </Stack>
+      </Container>
+      <rp-view-event view-event-trigger="connect" view-event-payload={viewEvent} />
+    </>
   );
 }
 ```
+
+`RippleProductDetail` (`05-commerce.md` section 11.1) carries `descriptionHtml`, `media` (`RippleMedia[]`), the options and the selected variant that VariantPicker and ProductForm read. ProductForm takes no `variant` prop: it reads the selected variant from `product` (`11-components-commerce.md` `## ProductForm`).
 
 **Remix**: rules R-1 to R-6. **html**: rule H-1.
 
@@ -4408,23 +4503,24 @@ export function ProductPage(props: ProductPageProps) {
 ```liquid
 {%- liquid
   assign variant = product.selected_or_first_available_variant
+  assign rec_url = routes.product_recommendations_url | append: '?product_id=' | append: product.id | append: '&limit=4&intent=related'
 -%}
 {% block 'container', py: '12 md:20' %}
   {% block 'stack', gap: '8 md:12' %}
     {% block 'grid', columns: '1 md:2', gap: '8 md:12' %}
-      {% block 'product-gallery', id: 'product-gallery', product: product %}
-        {% partial 'rp-product-media' %}{% render 'rp-product-gallery-region', id: 'product-gallery', product: product, variant: variant %}{% endpartial %}
+      {% block 'product-gallery', id: 'product-gallery', media: product.media, variant: variant %}
+        {% partial 'rp-product-media' %}{% render 'rp-product-gallery-media', id: 'product-gallery', media: product.media, variant: variant %}{% endpartial %}
       {% endblock %}
       {% block 'stack', gap: '4' %}
         {%- if product.vendor != blank -%}
           {% block 'text', variant: 'overline', tone: 'muted' %}{{ product.vendor | escape }}{% endblock %}
         {%- endif -%}
         {% block 'heading', level: 1 %}{{ product.title | escape }}{% endblock %}
-        {% block 'variant-picker', product: product, variant: variant %}{% endblock %}
+        {% block 'variant-picker', id: 'product-options', product: product %}{% endblock %}
         {% partial 'rp-product-buy' %}
           {% block 'stack', gap: '4', attributes: 'data-rp-region="rp-product-buy"' %}
             {% block 'price', price: variant.price, compare_at_price: variant.compare_at_price %}{% endblock %}
-            {% block 'product-form', id: 'product-form', product: product, variant: variant %}{% endblock %}
+            {% block 'product-form', id: 'product-form', product: product %}{% endblock %}
           {% endblock %}
         {% endpartial %}
         {%- if product.description != blank -%}
@@ -4432,16 +4528,19 @@ export function ProductPage(props: ProductPageProps) {
         {%- endif -%}
       {% endblock %}
     {% endblock %}
-    {% block 'product-recommendations', id: 'recommendations', product: product %}
-      {% partial 'rp-product-recommendations' %}{% render 'rp-product-recommendations-region', product: product %}{% endpartial %}
+    {% block 'product-recommendations', url: rec_url %}
+      {% partial 'rp-product-recommendations' %}{% render 'rp-product-recommendations-list', products: recommendations.products %}{% endpartial %}
     {% endblock %}
   {% endblock %}
 {% endblock %}
+<rp-view-event view-event-trigger="connect" view-event-payload="{{ product | standard_event_data: 'view', context: 'page' | escape }}"></rp-view-event>
 ```
 
 No locale keys (every string comes from the product or from the embedded components).
 
-Evidence: `ripple/docs/research/liquid-blocks-partials.md` section 7 (a template that places `{% partial 'rp-product-buy' %}` inside a block body, around a price and a product form; `product.selected_or_first_available_variant`); `ripple/theme/templates/product.liquid` (`{% partial 'product-form' %}` inside a container block).
+`rec_url` is built as `11-components-commerce.md` `## ProductRecommendations` states. The view event is the platform filter's output (D-089 item 4). Mask for BT-3: `{ "select": "rp-view-event", "op": "attr", "name": "view-event-payload" }` (the payload is masked as a whole, D-089 item 3).
+
+Evidence: `ripple/theme/templates/product.liquid` (the `standard_event_data: 'view', context: 'page'` view event); `ripple/docs/research/liquid-blocks-partials.md` section 7 (a template that places `{% partial 'rp-product-buy' %}` inside a block body, around a price and a product form; `product.selected_or_first_available_variant`); `ripple/theme/templates/product.liquid` (`{% partial 'product-form' %}` inside a container block).
 
 ### Data requirements per backend
 
@@ -4450,7 +4549,8 @@ Evidence: `ripple/docs/research/liquid-blocks-partials.md` section 7 (a template
 | Product | `product(handle:)` with the selection below | `product` |
 | Selected variant | `selectedOrFirstAvailableVariant(selectedOptions:)` from URL option params (the param names are owned by VariantPicker, `11-components-commerce.md`) | `product.selected_or_first_available_variant` (the platform reads `?variant=`) |
 | Media | `media(first: 20)`, `MediaImage` nodes only | `product.media` (read by the gallery snippet) |
-| Recommendations | `productRecommendations(productId:)`, rendered by ProductRecommendations; inline or through its `data-url` route (`05-commerce.md` section 7.5) | `routes.product_recommendations_url` through region refresh (SPIKE-09) |
+| Recommendations | `productRecommendations(productId:, intent: RELATED)` in the route code, passed as `recommended` (`11-components-commerce.md` `## ProductRecommendations`: pass `products`, omit `url`) | `rec_url` (`routes.product_recommendations_url` with `product_id`, `limit=4`, `intent=related`) through region refresh (SPIKE-09) |
+| View event | `viewEvent`: `JSON.stringify` of the product view of `05-commerce.md` section 12 | `product \| standard_event_data: 'view', context: 'page'` |
 
 ```graphql
 fragment RippleVariantFields on ProductVariant {
@@ -4475,18 +4575,19 @@ query RippleProduct($handle: String!, $selectedOptions: [SelectedOptionInput!]!,
 }
 ```
 
-Mapping: `ProductDetail.options[n].values` is `optionValues[].name`; `media` drops nodes without `image`. UNVERIFIED against the schema in this session: `optionValues`, `selectedOrFirstAvailableVariant` and its two boolean arguments (they are the fields the Hydrogen product skills use; if absent, select `variants` and choose in route code: the first variant whose `selectedOptions` all match, else the first with `availableForSale`, else the first).
+Mapping to `RippleProductDetail`: the field list is owned by `05-commerce.md` section 11.1 and the selection that satisfies it by `11-components-commerce.md` section 0.6 (fragment `RippleProductDetail`); when that fragment differs from the query above, doc 11 wins. `media` drops nodes without `image`. UNVERIFIED against the schema in this session: `optionValues`, `selectedOrFirstAvailableVariant` and its two boolean arguments (they are the fields the Hydrogen product skills use; if absent, select `variants` and choose in route code: the first variant whose `selectedOptions` all match, else the first with `availableForSale`, else the first).
 
 ### No-JS behaviour
 
 1. VariantPicker is a GET form of radio inputs (or links) with a submit button; choosing a variant reloads the page with that variant selected (D-047).
 2. The add-to-cart form posts; the response is a redirect back (hydrogen: 303 to the referring page; Liquid: the cart page), and the header count shows the new total.
 3. The gallery shows the first image and its thumbnails as a scrollable list (Carousel without script, `04-elements.md` section 10.9).
-4. Recommendations: empty unless the server rendered them inline (`rp-recommendations` needs script to load them).
+4. Recommendations: on the hydrogen backend the server renders them inline; on Liquid the list is empty until `rp-recommendations` loads it with script.
+5. The view event element prints nothing visible and does nothing without script.
 
 ### Fallback (SPIKE-09)
 
-If a partial cannot be fetched from `routes.product_recommendations_url` on Liquid, the Liquid template removes the `product-recommendations` block and its partial (five lines), and test BT-5 skips `rp-product-recommendations` on Liquid. `blueprint.json` and the other hosts do not change.
+If a partial cannot be fetched from `routes.product_recommendations_url` on Liquid, the fallback of `11-components-commerce.md` `## ProductRecommendations` (Fallback SPIKE-09) applies: the Liquid template removes the `rec_url` line and the `product-recommendations` block with its partial, and prints in their place `{% block 'featured-collection', collection: settings.rp_related_collection, limit: 4 %}{% endblock %}` inside `{% if settings.rp_related_collection != blank %}` (theme setting `rp_related_collection`, type `collection`, owned by `14-liquid-theme.md`). Test BT-5 skips `rp-product-recommendations` on Liquid, and `featured-collection` is added to the Liquid file's component list. `blueprint.json` regions and the other hosts do not change.
 
 ### Acceptance tests
 
@@ -4497,6 +4598,7 @@ BT-1 to BT-9, plus:
 - **PR-3** (tier 5 and tier 7) Choosing another variant updates the URL with `history.replaceState`, replaces the price text and keeps focus on the chosen option.
 - **PR-4** (tier 6) With JavaScript disabled, submitting the add-to-cart form ends on a page whose cart count is 1.
 - **PR-5** (tier 2) A product with one variant and no description renders with no empty `.rp-rich-text`.
+- **PR-6** (tier 2) Exactly one `rp-view-event` exists; it is the last element child of `<main>`, is not inside `rp-product-form`, has `view-event-trigger="connect"` and a non-empty `view-event-payload` attribute that parses as JSON. The elements `#product-gallery`, `#product-options` and `#product-form` exist.
 
 ---
 
@@ -4526,7 +4628,7 @@ Container py="12 md:20"
       ├─ Grid as="ul" columns="2 lg:4" gap="4 md:6"  →  li > ProductCard  (when results exist)
       ├─ Pagination                                                      (when a previous or next page exists)
       └─ EmptyState icon="search": Heading level 2                        (terms exist, no results)
-rp-view-event (search_viewed)            only when terms exist
+rp-view-event (search view; attribute form, BP-11)   only when terms exist
 ```
 
 Results are products only in V1: the hydrogen query passes `types: PRODUCT`, and the Liquid template skips results whose `object_type` is not `product`. A search with no terms shows the form and an empty region.
@@ -4535,7 +4637,15 @@ Results are products only in V1: the hydrogen query passes `types: PRODUCT`, and
 
 ```tsx
 import type { RippleProduct } from "__PKG__";
-import { Container, EmptyState, Grid, Heading, Pagination, ProductCard, SearchForm, Stack, Text } from "__PKG__/react";
+import { Container } from "@components/container";
+import { EmptyState } from "@components/empty-state";
+import { Grid } from "@components/grid";
+import { Heading } from "@components/heading";
+import { Pagination } from "@components/pagination";
+import { ProductCard } from "@components/product-card";
+import { SearchForm } from "@components/search-form";
+import { Stack } from "@components/stack";
+import { Text } from "@components/text";
 import type { PageInfo } from "./types";
 
 export interface SearchPageProps {
@@ -4545,17 +4655,18 @@ export interface SearchPageProps {
   /** Total number of results. */
   count: number;
   pageInfo: PageInfo;
+  /** JSON text of the search view event: `{ "event": ..., "payload": ... }` of 05-commerce.md section 12. Read only when terms exist. */
+  viewEvent: string;
 }
 
 export function SearchPage(props: SearchPageProps) {
-  const { terms, results, count, pageInfo } = props;
-  const viewEvent = JSON.stringify({ event: "search_viewed", payload: { searchTerm: terms } }).replace(/</g, "\\u003c");
+  const { terms, results, count, pageInfo, viewEvent } = props;
   return (
     <>
       <Container py="12 md:20">
         <Stack gap="8 md:12">
           <Heading level={1}>Search</Heading>
-          <SearchForm action="/search" defaultValue={terms} />
+          <SearchForm defaultValue={terms} />
           <Stack gap="8 md:12" data-rp-region="rp-search-results">
             {terms !== "" ? (
               <Text tone="muted">{count === 1 ? `1 result for "${terms}"` : `${count} results for "${terms}"`}</Text>
@@ -4580,17 +4691,13 @@ export function SearchPage(props: SearchPageProps) {
           </Stack>
         </Stack>
       </Container>
-      {terms !== "" ? (
-        <rp-view-event view-event-trigger="connect">
-          <script type="application/json" data-view-event-payload="" dangerouslySetInnerHTML={{ __html: viewEvent }} />
-        </rp-view-event>
-      ) : null}
+      {terms !== "" ? <rp-view-event view-event-trigger="connect" view-event-payload={viewEvent} /> : null}
     </>
   );
 }
 ```
 
-**Remix**: rules R-1 to R-6 and the `innerHTML={unsafeHTML(viewEvent)}` form given in `collection`. **html**: rule H-1.
+**Remix**: rules R-1 to R-6. **html**: rule H-1.
 
 **Liquid** (`blueprints/search/liquid/templates/search.liquid`, complete):
 
@@ -4630,15 +4737,17 @@ export function SearchPage(props: SearchPageProps) {
   {% endblock %}
 {% endblock %}
 {%- if search.performed and terms != blank -%}
-  <rp-view-event view-event-trigger="connect">
-    <script type="application/json" data-view-event-payload>{"event":"search_viewed","payload":{"searchTerm":{{ terms | json }}}}</script>
-  </rp-view-event>
+  <rp-view-event view-event-trigger="connect" view-event-payload="{{ search | standard_event_data: 'view', context: 'page' | escape }}"></rp-view-event>
 {%- endif -%}
 ```
 
 Locale keys (`ripple.blueprints.search.*`): `title` "Search"; `count.one` "{{ count }} result for "{{ terms }}""; `count.other` "{{ count }} results for "{{ terms }}""; `empty` "No results".
 
-Notes: the `t` filter does not escape its arguments, so `terms` is escaped at the call (the translated string is printed unescaped). SearchForm on Liquid MUST add `<input type="hidden" name="type" value="product">` so that the platform returns products only; that input is part of the SearchForm contract in `11-components-commerce.md` (section 3, X-3). Evidence: `ripple/theme/templates/search.liquid` (`search.terms`, `search.performed`, `search.results_count`, `{% paginate search.results by 20 %}`, `routes.search_url`). UNVERIFIED: `result.object_type`; the `search_viewed` payload shape.
+Notes: the `t` filter does not escape its arguments, so `terms` is escaped at the call (the translated string is printed unescaped). SearchForm on Liquid MUST add `<input type="hidden" name="type" value="product">` so that the platform returns products only; that input is part of the SearchForm contract in `11-components-commerce.md`. Mask for BT-3: `{ "select": "rp-view-event", "op": "attr", "name": "view-event-payload" }`. Evidence: `ripple/theme/templates/search.liquid` (`search.terms`, `search.performed`, `search.results_count`, `{% paginate search.results by 20 %}`, `routes.search_url`). UNVERIFIED: `result.object_type`; that the filter `standard_event_data` accepts the `search` object (the base theme's `templates/search.liquid`, as read, does not use it). Check: SPIKE-02, on the preview store, the rendered attribute parses as JSON and names the search terms.
+
+#### Fallback (SPIKE-02, search view event)
+
+If `{{ search | standard_event_data: 'view', context: 'page' }}` renders an error or an empty value on the preview store, the Liquid template omits the `rp-view-event` element (the three lines of the final `{% if %}`), and tests SE-2 and SE-4 skip the element on Liquid. The other hosts do not change.
 
 ### Data requirements per backend
 
@@ -4647,6 +4756,7 @@ Notes: the `t` filter does not escape its arguments, so `terms` is escaped at th
 | Terms | URL param `q`, trimmed | `search.terms` |
 | Results | `search(query:, types: PRODUCT, first: 24, after:, before:, last:)` | `search.results` inside `{% paginate search.results by 24 %}` |
 | Count | `search.totalCount` | `search.results_count` |
+| View event | `viewEvent`: `JSON.stringify` of the search view of `05-commerce.md` section 12 | `search \| standard_event_data: 'view', context: 'page'` (UNVERIFIED, see above) |
 
 ```graphql
 query RippleSearch($terms: String!, $first: Int, $last: Int, $after: String, $before: String, $country: CountryCode, $language: LanguageCode)
@@ -4671,8 +4781,9 @@ The route code MUST NOT run the query when `terms` is `""`; it passes `results: 
 BT-1 to BT-9, plus:
 
 - **SE-1** (tier 2) With `terms: ""`: the region `rp-search-results` exists and has no element children; no `rp-view-event` exists.
-- **SE-2** (tier 2) With terms `<b>x</b>` and no results: the count text contains the literal characters `<b>x</b>` as text (no `b` element in the region), and the view-event script text parses as JSON.
+- **SE-2** (tier 2) With terms `<b>x</b>` and no results: the count text contains the literal characters `<b>x</b>` as text (no `b` element in the region), and the `view-event-payload` attribute value parses as JSON.
 - **SE-3** (tier 6) Submitting the form with JavaScript disabled lands on `/search?q=shirt` (plus `type=product` on Liquid) and the input value is `shirt`.
+- **SE-4** (tier 2) With terms: exactly one `rp-view-event` exists; it is the last element child of `<main>`, has `view-event-trigger="connect"` and no child element.
 
 ---
 
@@ -4688,7 +4799,7 @@ The cart page: lines with quantity controls, summary, discount code, note and ch
 
 ### Components used
 
-`cart-line`, `cart-lines`, `cart-note`, `cart-summary`, `checkout-button`, `container`, `discount-code`, `grid`, `heading`, `stack`. (`cart-line` is listed because CartLines renders it.)
+`cart-line`, `cart-lines`, `cart-note`, `cart-summary`, `checkout-button`, `container`, `discount-code`, `grid`, `heading`, `stack`. (`cart-line` is listed because CartLines renders it; `checkout-button` because CartSummary renders it.)
 
 ### Structure
 
@@ -4699,30 +4810,41 @@ Container py="12 md:20"
    └─ Grid columns="1 lg:3" gap="8 md:12"
       ├─ CartLines id="cart" span="1 lg:2"      contains region rp-cart-lines; prints the empty state when the cart is empty
       └─ Stack gap="4"                          only when the cart has lines at render time
-         ├─ CartSummary                         contains region rp-cart-summary
-         ├─ DiscountCode
-         ├─ CartNote
-         └─ CheckoutButton
-rp-view-event (cart_viewed)
+         ├─ CartSummary cartLines="cart"         contains region rp-cart-summary; its totals part prints the CheckoutButton
+         ├─ DiscountCode id="cart-discount"
+         └─ CartNote id="cart-note"
+rp-view-event (cart view; child form, BP-11)
 ```
 
 Below `lg` the summary column is under the lines. The layout does not render the CartDrawer on this page (rule L-B, `cartPage`).
 
-Limit, stated so that nobody "fixes" it in the blueprint: the right column is decided on the server. When script removes the last line, `rp-cart-lines` is refreshed to the empty state but the right column stays until the next page load. `11-components-commerce.md` MUST make CheckoutButton inert for an empty cart (section 3, X-4).
+Limit, stated so that nobody "fixes" it in the blueprint: the right column is decided on the server. When script removes the last line, `rp-cart-lines` is refreshed to the empty state but the right column stays until the next page load. CheckoutButton is inert for an empty cart; that behaviour is owned by `11-components-commerce.md` `## CheckoutButton`.
+
+The blueprint prints no CheckoutButton of its own: CartSummary's region part `totals` prints it, inside the region, so that a changed checkout URL is refreshed (`11-components-commerce.md` `## CartSummary`, Anatomy). A second button would duplicate the control.
 
 **React** (`blueprints/cart/react/cart.tsx`, complete):
 
 ```tsx
 import type { RippleCart } from "__PKG__";
-import { CartLines, CartNote, CartSummary, CheckoutButton, Container, DiscountCode, Grid, Heading, Stack } from "__PKG__/react";
+import { CartLines } from "@components/cart-lines";
+import { CartNote } from "@components/cart-note";
+import { CartSummary } from "@components/cart-summary";
+import { Container } from "@components/container";
+import { DiscountCode } from "@components/discount-code";
+import { Grid } from "@components/grid";
+import { Heading } from "@components/heading";
+import { Stack } from "@components/stack";
 
 export interface CartPageProps {
   /** Server cart read; null when the buyer has no cart yet. */
   cart: RippleCart | null;
+  /** JSON text of the cart view event: `{ "event": ..., "payload": ... }` of 05-commerce.md section 12. */
+  viewEvent: string;
 }
 
 export function CartPage(props: CartPageProps) {
-  const { cart } = props;
+  const { cart, viewEvent } = props;
+  const payload = viewEvent.replace(/</g, "\\u003c");
   return (
     <>
       <Container py="12 md:20">
@@ -4732,17 +4854,16 @@ export function CartPage(props: CartPageProps) {
             <CartLines id="cart" cart={cart ?? undefined} span="1 lg:2" />
             {cart !== null && cart.lines.length > 0 ? (
               <Stack gap="4">
-                <CartSummary cart={cart} />
-                <DiscountCode cart={cart} />
-                <CartNote cart={cart} />
-                <CheckoutButton href={cart.checkoutUrl}>Check out</CheckoutButton>
+                <CartSummary cart={cart} cartLines="cart" />
+                <DiscountCode id="cart-discount" />
+                <CartNote id="cart-note" cart={cart} />
               </Stack>
             ) : null}
           </Grid>
         </Stack>
       </Container>
       <rp-view-event view-event-trigger="connect">
-        <script type="application/json" data-view-event-payload="" dangerouslySetInnerHTML={{ __html: '{"event":"cart_viewed","payload":{}}' }} />
+        <script type="application/json" data-view-event-payload="" dangerouslySetInnerHTML={{ __html: payload }} />
       </rp-view-event>
     </>
   );
@@ -4751,7 +4872,9 @@ export function CartPage(props: CartPageProps) {
 
 There is no query constant: the cart comes from `cartHandlers.get({ storefrontClient, request })` (`05-commerce.md` section 10.1 rule 3), mapped to `RippleCart`. The response MUST NOT be cached publicly.
 
-**Remix**: rules R-1 to R-6. **html**: rule H-1 with the sample cart of two lines.
+This is the one place where a blueprint uses `dangerouslySetInnerHTML`: the JSON body of the child-form view event (section 3, X-10). `<` is escaped as `\u003c` so that the text cannot close the script element.
+
+**Remix**: rules R-1 to R-6; the script is written `<script type="application/json" data-view-event-payload innerHTML={unsafeHTML(payload)} />` with `unsafeHTML` from `remix/component`. **html**: rule H-1 with the sample cart of two lines.
 
 **Liquid** (`blueprints/cart/liquid/templates/cart.liquid`, complete):
 
@@ -4761,35 +4884,35 @@ There is no query constant: the cart comes from `cartHandlers.get({ storefrontCl
     {% block 'heading', level: 1 %}{{ 'ripple.blueprints.cart.title' | t }}{% endblock %}
     {% block 'grid', columns: '1 lg:3', gap: '8 md:12' %}
       {% block 'cart-lines', id: 'cart', span: '1 lg:2' %}
-        {% partial 'rp-cart-lines' %}{% render 'rp-cart-lines-region', id: 'cart' %}{% endpartial %}
+        {% partial 'rp-cart-lines' %}{% render 'rp-cart-lines-list', cart: cart %}{% endpartial %}
       {% endblock %}
       {%- if cart.item_count > 0 -%}
         {% block 'stack', gap: '4' %}
-          {% block 'cart-summary' %}
-            {% partial 'rp-cart-summary' %}{% render 'rp-cart-summary-region' %}{% endpartial %}
+          {% block 'cart-summary', cart_lines: 'cart' %}
+            {% partial 'rp-cart-summary' %}{% render 'rp-cart-summary-totals', cart: cart, cart_lines: 'cart' %}{% endpartial %}
           {% endblock %}
-          {% block 'discount-code' %}{% endblock %}
-          {% block 'cart-note', cart_form: 'cart-form' %}{% endblock %}
-          {% block 'checkout-button', cart_form: 'cart-form' %}{{ 'ripple.blueprints.cart.checkout' | t }}{% endblock %}
+          {% block 'discount-code', id: 'cart-discount' %}{% endblock %}
+          {% block 'cart-note', id: 'cart-note', cart_lines: 'cart' %}{% endblock %}
         {% endblock %}
       {%- endif -%}
     {% endblock %}
   {% endblock %}
 {% endblock %}
 <rp-view-event view-event-trigger="connect">
-  <script type="application/json" data-view-event-payload>{"event":"cart_viewed","payload":{}}</script>
+  <script type="application/json" data-view-event-payload>{{ cart | standard_event_data: 'view', context: 'page' }}</script>
 </rp-view-event>
 ```
 
-Locale keys (`ripple.blueprints.cart.*`): `title` "Cart"; `checkout` "Check out".
+Locale keys (`ripple.blueprints.cart.*`): `title` "Cart". (The checkout label is CheckoutButton's own key.)
 
-`cart-form` is the id of the one Liquid cart form: CartLines with `id: 'cart'` prints `<form id="cart-form">` (`05-commerce.md` section 6.2: the form id is `<CartLines id>-form`), and the note and the checkout button join it with `form="cart-form"`. UNVERIFIED: the `cart_viewed` payload (printed empty; the Standard Events element may fill cart data itself or require fields, `05-commerce.md` section 15).
+The Liquid cart form has the id `cart-form` (`<CartLines id>-form`, D-092); components receive the CartLines id through `cart_lines` and derive the form id themselves. The view-event payload is the platform filter's output, printed unescaped inside the JSON script (evidence: `ripple/theme/templates/cart.liquid`). Mask for BT-3: `{ "select": "rp-view-event > script", "op": "text" }` (the payload is masked as a whole, D-089 item 3). UNVERIFIED: the hydrogen-backend payload shape of the cart view (`05-commerce.md` section 12).
 
 ### Data requirements per backend
 
 | Data | hydrogen backend | liquid backend |
 |---|---|---|
-| Cart | `cartHandlers.get(...)` result mapped to `RippleCart` (`05-commerce.md` section 11.1) | the global `cart`, read inside the cart components |
+| Cart | `cartHandlers.get(...)` result mapped to `RippleCart` (`05-commerce.md` section 11.1) | the global `cart`, passed to the region-part snippets |
+| View event | `viewEvent`: `JSON.stringify` of the cart view of `05-commerce.md` section 12 | `cart \| standard_event_data: 'view', context: 'page'` |
 
 ### No-JS behaviour
 
@@ -4803,11 +4926,12 @@ Locale keys (`ripple.blueprints.cart.*`): `title` "Cart"; `checkout` "Check out"
 
 BT-1 to BT-9, plus:
 
-- **CA-1** (tier 2) With an empty cart: no `.rp-cart-summary`, no `.rp-checkout-button`; the lines region contains `.rp-empty-state`.
-- **CA-2** (tier 2) No `#cart-drawer` exists in the document, and the header cart link has no `data-rp-open`.
-- **CA-3** (tier 5) Raising a quantity changes the line total text and the summary subtotal text without a document navigation, and each region root is replaced exactly once per mutation.
-- **CA-4** (tier 6) With JavaScript disabled: update a quantity to 3 and submit; the reloaded page shows quantity 3. Remove a line; the reloaded page has one line fewer.
-- **CA-5** (tier 2, Liquid) The template declares `rp-cart-lines` and `rp-cart-summary` exactly once each, and `layout/theme.liquid` rendered with `template.name == 'cart'` prints no `#cart-drawer`.
+- **CR-1** (tier 2) With an empty cart: no `.rp-cart-summary`, no `.rp-checkout-button`; the lines region contains `.rp-empty-state`. With two lines: exactly one `.rp-checkout-button` exists, and `#cart`, `#cart-discount` and `#cart-note` exist.
+- **CR-2** (tier 2) No `#cart-drawer` exists in the document, and the header cart link has no `data-rp-open` (D-091 item 5).
+- **CR-3** (tier 5) Raising a quantity changes the line total text and the summary subtotal text without a document navigation, and each region root is replaced exactly once per mutation.
+- **CR-4** (tier 6) With JavaScript disabled: update a quantity to 3 and submit; the reloaded page shows quantity 3. Remove a line; the reloaded page has one line fewer.
+- **CR-5** (tier 2, Liquid) The template declares `rp-cart-lines` and `rp-cart-summary` exactly once each, and `layout/theme.liquid` rendered with `template.name == 'cart'` prints no `#cart-drawer`.
+- **CR-6** (tier 2) Exactly one `rp-view-event` exists; it is the last element child of `<main>`, has `view-event-trigger="connect"` and exactly one child, `script[type="application/json"][data-view-event-payload]`, whose text parses as JSON.
 
 ---
 
@@ -4840,7 +4964,13 @@ Container py="12 md:20"
 
 ```tsx
 import type { RippleArticle } from "__PKG__";
-import { ArticleCard, Container, EmptyState, Grid, Heading, Pagination, Stack } from "__PKG__/react";
+import { ArticleCard } from "@components/article-card";
+import { Container } from "@components/container";
+import { EmptyState } from "@components/empty-state";
+import { Grid } from "@components/grid";
+import { Heading } from "@components/heading";
+import { Pagination } from "@components/pagination";
+import { Stack } from "@components/stack";
 import type { PageInfo } from "./types";
 
 export interface BlogPageProps {
@@ -4946,7 +5076,7 @@ BT-1 to BT-9, plus:
 
 ### Purpose
 
-One blog article: title, date and author, lead image, body, and a link back to the blog. Comments are not part of V1 (the base theme's comment list and `new_comment` form in `ripple/theme/templates/article.liquid` are not ported; Ledger issues, item 13).
+One blog article: title, date and author, lead image, body, and a link back to the blog. Comments are not part of V1 (the base theme's comment list and `new_comment` form in `ripple/theme/templates/article.liquid` are not ported; D-107 item 6, Q19). The template MUST NOT contain a comment form or a comment list.
 
 ### Regions
 
@@ -4971,7 +5101,13 @@ Container width="prose" py="12 md:20"
 
 ```tsx
 import type { RippleImage } from "__PKG__";
-import { Container, Heading, Image, Link, RichText, Stack, Text } from "__PKG__/react";
+import { Container } from "@components/container";
+import { Heading } from "@components/heading";
+import { Image } from "@components/image";
+import { Link } from "@components/link";
+import { RichText } from "@components/rich-text";
+import { Stack } from "@components/stack";
+import { Text } from "@components/text";
 
 export interface ArticlePageProps {
   article: {
@@ -5105,7 +5241,10 @@ Container width="prose" py="12 md:20"
 **React** (`blueprints/page/react/page.tsx`, complete except `PAGE_QUERY`):
 
 ```tsx
-import { Container, Heading, RichText, Stack } from "__PKG__/react";
+import { Container } from "@components/container";
+import { Heading } from "@components/heading";
+import { RichText } from "@components/rich-text";
+import { Stack } from "@components/stack";
 
 export interface PagePageProps {
   page: { title: string; bodyHtml: string };
@@ -5213,7 +5352,15 @@ Masks for BT-3: `{ "select": "#contact-form", "op": "attr", "name": "action" }`,
 **React** (`blueprints/contact/react/contact.tsx`, complete):
 
 ```tsx
-import { Banner, Button, Container, Heading, Input, Label, RichText, Stack, Textarea } from "__PKG__/react";
+import { Banner } from "@components/banner";
+import { Button } from "@components/button";
+import { Container } from "@components/container";
+import { Heading } from "@components/heading";
+import { Input } from "@components/input";
+import { Label } from "@components/label";
+import { RichText } from "@components/rich-text";
+import { Stack } from "@components/stack";
+import { Textarea } from "@components/textarea";
 
 export interface ContactPageProps {
   page: { title: string; bodyHtml: string };
@@ -5413,7 +5560,13 @@ Container py="12 md:20"
 **React** (`blueprints/not-found/react/not-found.tsx`, complete):
 
 ```tsx
-import { Button, Container, EmptyState, Heading, SearchForm, Stack, Text } from "__PKG__/react";
+import { Button } from "@components/button";
+import { Container } from "@components/container";
+import { EmptyState } from "@components/empty-state";
+import { Heading } from "@components/heading";
+import { SearchForm } from "@components/search-form";
+import { Stack } from "@components/stack";
+import { Text } from "@components/text";
 
 export interface NotFoundPageProps {
   /** Home URL, for example "/" or "/fr-ca". */
@@ -5484,7 +5637,7 @@ BT-1 to BT-9, plus:
 
 The page a visitor sees when the storefront is password protected: the shop name, a message, and a password form.
 
-Scope per backend: on Liquid this is the platform's password page (`templates/password.liquid` with its own layout). The hydrogen backend has no storefront-password feature; there the blueprint is a presentational page for projects that gate a storefront themselves, and the route that checks the password is project code that this document does not specify (Ledger issues, item 14).
+Scope per backend: on Liquid this is the platform's password page (`templates/password.liquid` with its own layout). The hydrogen backend has no storefront-password feature; there the blueprint is a presentational page for projects that gate a storefront themselves, and the route that checks the password is project code that this document does not specify (D-107 item 2, Q22).
 
 ### Regions
 
@@ -5516,7 +5669,15 @@ main#main[tabindex=-1]
 **React** (`blueprints/password/react/password.tsx`, complete):
 
 ```tsx
-import { Button, Container, FormMessage, Heading, Input, Label, SkipLink, Stack, Text } from "__PKG__/react";
+import { Button } from "@components/button";
+import { Container } from "@components/container";
+import { FormMessage } from "@components/form-message";
+import { Heading } from "@components/heading";
+import { Input } from "@components/input";
+import { Label } from "@components/label";
+import { SkipLink } from "@components/skip-link";
+import { Stack } from "@components/stack";
+import { Text } from "@components/text";
 
 export interface PasswordPageProps {
   shopName: string;
@@ -5566,22 +5727,28 @@ The document is produced with `renderDocument` (2.6) with `body` set to this com
 
 **Remix**: rules R-1 to R-4; the `<form>` carries `data-rmx-document`. **html**: rule H-1 with `error: false`.
 
-**Liquid**, two files. `blueprints/password/liquid/layout/password.liquid` (complete):
+**Liquid**, two files. This document owns the complete text of both (D-099). `blueprints/password/liquid/layout/password.liquid` (complete):
 
 ```liquid
 <!doctype html>
-<html lang="{{ request.locale.iso_code }}">
+<html lang="{{ request.locale.iso_code }}" dir="{{ request.locale.direction | default: 'ltr' }}">
   <head>
+    {% render 'import-map' %}
+    {% render 'meta-tags' %}
     {% render 'rp-head' %}
+    {{ 'styles.min.css' | asset_url | stylesheet_tag }}
+    {{ content_for_header }}
   </head>
   <body>
     {% block 'skip-link' %}{{ 'ripple.blueprints.layout.skip' | t }}{% endblock %}
-    <main id="main" tabindex="-1">
+    <main id="main" tabindex="-1" data-template="{{ request.page_type }}">
       {{ content_for_layout }}
     </main>
   </body>
 </html>
 ```
+
+The head has the same five lines in the same order as `layout/theme.liquid` (`layout`, normative point 1). The file prints no Header, no Footer, no MobileNav, no search Dialog, no CartDrawer and no Toast. It renders the snippets `import-map` and `meta-tags` of the `layout` blueprint and the key `ripple.blueprints.layout.skip`, so the `layout` blueprint MUST be installed in the same theme (a project installs `layout` before any page blueprint; test PW-3 runs with both installed).
 
 `blueprints/password/liquid/templates/password.liquid` (complete):
 
@@ -5635,7 +5802,7 @@ BT-1 to BT-3, BT-6 to BT-9, plus:
 
 - **PW-1** (tier 2) The document has one `main#main`, one `h1`, no `header.rp-header`, no `footer.rp-footer`, no `dialog`.
 - **PW-2** (tier 2) With `error: true`: the input has `aria-invalid="true"` and `aria-describedby="password-error"`, and `#password-error` exists with `role="alert"`.
-- **PW-3** (tier 2, Liquid) `templates/password.liquid` starts with `{% layout 'password' %}` and `layout/password.liquid` contains `content_for_layout` exactly once.
+- **PW-3** (tier 2, Liquid) `templates/password.liquid` starts with `{% layout 'password' %}`; `layout/password.liquid` contains `content_for_layout` exactly once, contains the five head lines of `layout/theme.liquid` in the same order, and contains none of the strings `'header'`, `'footer'`, `'cart-drawer'`, `'mobile-nav'`.
 
 ---
 
@@ -5645,9 +5812,9 @@ BT-1 to BT-3, BT-6 to BT-9, plus:
 
 The page a buyer opens from a gift card email: the balance, the code, its state, and a link to start shopping.
 
-Scope per backend: on Liquid this is the platform's `gift_card` template. The Storefront API does not expose a gift card by URL, so on the hydrogen backend the blueprint is a presentational page whose data the project supplies (Ledger issues, item 14).
+Scope per backend: on Liquid this is the platform's `gift_card` template. The Storefront API does not expose a gift card by URL, so on the hydrogen backend the blueprint is a presentational page whose data the project supplies (D-107 item 2, Q22).
 
-V1 has no copy-to-clipboard button and no QR code. The base theme implements both with theme JavaScript (`ripple/theme/blocks/gift-card.liquid`, command `--copy-code`); neither has a Ripple element (ledger section 8.6 maps the block to this blueprint only). The code is printed as selectable text.
+V1 has no copy-to-clipboard button, no tilt effect and no QR code (D-107 item 6, Q19). The base theme implements both with theme JavaScript (`ripple/theme/blocks/gift-card.liquid`, command `--copy-code`); neither has a Ripple element (ledger section 8.6 maps the block to this blueprint only). The code is printed as selectable text.
 
 ### Regions
 
@@ -5678,7 +5845,14 @@ Container width="prose" py="12 md:20"
 **React** (`blueprints/gift-card/react/gift-card.tsx`, complete):
 
 ```tsx
-import { Banner, Button, Card, Container, Heading, Link, Stack, Text } from "__PKG__/react";
+import { Banner } from "@components/banner";
+import { Button } from "@components/button";
+import { Card } from "@components/card";
+import { Container } from "@components/container";
+import { Heading } from "@components/heading";
+import { Link } from "@components/link";
+import { Stack } from "@components/stack";
+import { Text } from "@components/text";
 
 export interface GiftCardPageProps {
   /** Balance already formatted as money, for example "$25.00". */
@@ -5780,23 +5954,23 @@ BT-1 to BT-9, plus:
 
 ## 3. Cross-document requirements
 
-Each item is a requirement this document places on another document. Until the owning document adopts it, the implementer of this document MUST treat the item as the specification.
+Decided; kept as an index. Each row names where the point is now settled.
 
-| Id | On | Requirement |
+| Id | Owner | Status |
 |---|---|---|
-| X-1 | `09`, `11` | These components need a Liquid snippet file (`snippets/rp-<id>.liquid`, the `embeddedBy` mechanism of `07-manifest-registry-cli.md` rule MB-1) because a component of this document renders them from a block or snippet file: `icon` (by `header`, `mobile-nav`, `navigation-menu`, `locale-selector`, `account-link`), `icon-button` (by `header`, `mobile-nav`), `button` (by `newsletter-form`, `locale-selector`), `input` (by `newsletter-form`), `logo`, `navigation-menu`, `account-link`, `link-list` (by `header`, `footer`), `cart-link` (by `header`), `product-card` (by `featured-collection`). Their manifests MUST list the embedding components in `liquid.embeddedBy`. |
-| X-2 | `11` | CartLink accepts `drawer` (Liquid) / `cartDrawer` (TSX): the id of a CartDrawer, printed as `data-rp-open` on its link, omitted when unset; and `href` (Liquid, default `routes.cart_url`) / `cartUrl` (TSX, default `/cart`). |
-| X-3 | `11` | The components called in section 2.4 accept those signatures, and region-owning Liquid blocks follow assumption A-1 (region through `content`, one `rp-<component id>-region` snippet per owned region). SearchForm on Liquid prints `<input type="hidden" name="type" value="product">`. CartDrawer's dialog id defaults to `cart-drawer`. |
-| X-4 | `11` | CheckoutButton is inert when the cart is empty (hydrogen: the link is not printed or has `aria-disabled="true"`; Liquid: the submit button is `disabled`), and `rp-cart` keeps that state in sync after a mutation. |
-| X-5 | `13` | The Liquid shim implements `{% form %}` for the types `localization`, `customer`, `contact`, `storefront_password` (and `product`, `cart` for doc 11): it prints `<form method="post" action="<route>" id="<id>" class="<class>" accept-charset="UTF-8">`, the hidden inputs `form_type` and `utf8`, for `localization` also `_method` and `return_to`, and exposes a `form` object with `posted_successfully?`, `errors`, `email`, `name`, `body` taken from the test's input. It also implements `{% layout %}`, `{% paginate %}` with `paginate.previous`, `paginate.next`, and `{% partial %}` (prints its body). |
-| X-6 | `06`, `13` | The filter `date` joins the Liquid subset of rule L-13 with two forms: `date: '%Y'` and `date: format: 'date'`. The shim implements both; with `format: 'date'` it prints the ISO date `YYYY-MM-DD` (date text is masked in every comparison that contains it). The shim also provides the globals `shop` (`name`, `policies`, `brand.logo`, `password_message`), `routes` (`root_url`, `cart_url`, `search_url`, `all_products_collection_url`, `account_url`, `account_login_url`), `linklists`, `localization`, `request.locale.iso_code`, `template.name`, `customer`, `collections`, `search`, `gift_card`, and `t` with named arguments and `count` pluralisation (`one`, `other`). |
-| X-7 | `07` | `pnpm gen` renders each blueprint's react file with the sample data of 2.5 into `blueprints/<id>/html/<id>.html` (rule H-1) and verifies it in the generation check. The `layout` blueprint has a file with key `types`. `blueprint.json` file keys follow 2.1. |
-| X-8 | `03` | `base.css` contains `html { scroll-padding-block-start: var(--rp-header-block-size, 0px); }` and Header sets `--rp-header-block-size` on `:root:has(.rp-header[data-sticky])` so that in-page targets (`#main`, `#footer-menu`, `#newsletter`, `#contact-form`) are not covered by the sticky header. It also contains `rp-view-event { display: block; }` (`05-commerce.md` section 12). |
-| X-9 | `06` | The generated intrinsic-element type declarations for React and Remix include `rp-view-event` with the attributes `view-event-trigger` and `view-event-payload`. |
-| X-10 | `06` | Rule X-9 of `06-bindings.md` ("no other binding uses `innerHTML`") applies to bindings. Blueprint files MAY use `dangerouslySetInnerHTML` (React) or `innerHTML={unsafeHTML(...)}` (Remix) for exactly one purpose: the JSON body of a `<script type="application/json">` element, with `<` escaped as `<`. The import lint of `06-bindings.md` section 2 does not run on blueprint files. |
-| X-11 | `13` | Sample data files `blueprints/_sample/<id>.json` and the fixture resources of section 1.6 exist in both forms (JSON, Liquid drops). Tests BT-1 to BT-9 run for every blueprint in every host. |
-| X-12 | `14` | `snippets/rp-head.liquid` prints the head described under `layout`, Structure. `locales/en.default.json` contains every `ripple.blueprints.*` key listed in this document. `templates/page.contact.liquid` is an alternate template the merchant assigns. |
-| X-13 | `08` | The agent kit's blueprint index (`llms.txt`, skill references) lists the 14 blueprints with the `route` values of 2.1 and states rule BP-9 (page blueprints never read cart, menus or shop). |
+| X-1 | `07`, `09`, `10`, `11` | Decided: this is the `liquid.embeddedBy` data of `07-manifest-registry-cli.md` (rule MB-1). Components of this document render these components from a block or snippet file, so each has a snippet file `snippets/rp-<id>.liquid`: `icon` (by `mobile-nav`, `navigation-menu`, `locale-selector`, `account-link`), `icon-button` (by `header`, `mobile-nav`), `button` (by `newsletter-form`, `locale-selector`), `input` (by `newsletter-form`), `logo`, `navigation-menu`, `account-link`, `cart-link` (by `header`), `link-list` (by `footer`), `product-card` and `carousel` (by `featured-collection`). |
+| X-2 | `11` | Decided: the CartLink prop that names the drawer is `drawer` in TSX AND in Liquid; `href` defaults to `/cart` (Liquid: `routes.cart_url`) (`11-components-commerce.md` `## CartLink`). Header's own props stay `cartDrawer` / `cart_drawer` and `cartUrl` / `cart_url`. |
+| X-3 | `10`, `11` | Signatures: section 2.4, copied from docs 10 and 11. Region parts: D-091. SearchForm on Liquid prints `<input type="hidden" name="type" value="product">` (`11-components-commerce.md` `## SearchForm`). CartDrawer's `id` defaults to `cart-drawer`. |
+| X-4 | `11` | Reference: CheckoutButton is inert when the cart is empty; owned by `11-components-commerce.md` `## CheckoutButton`. |
+| X-5 | `13` | Decided (D-097, D-104 item 4). The Liquid shim implements `{% form %}` for the types `localization`, `customer`, `contact`, `storefront_password` (and `product`, `cart` for doc 11): it prints `<form method="post" action="<route>" id="<id>" class="<class>" accept-charset="UTF-8">`, the hidden inputs `form_type` and `utf8`, for `localization` also `_method` and `return_to`, and exposes a `form` object with `posted_successfully?`, `errors`, `email`, `name`, `body` taken from the test's input. It also implements `{% layout %}`, `{% paginate %}` with `paginate.previous`, `paginate.next`, and `{% partial %}` (prints its body). |
+| X-6 | `06`, `13` | Decided (D-097, D-104 item 4). `date` is in the component scope of rule L-13; the shim implements `date: '%Y'` and `date: format: 'date'` (with `format: 'date'` it prints the ISO date `YYYY-MM-DD`; date text is masked in every comparison that contains it). The shim provides the globals of rule L-D, `t` with named arguments and `count` pluralisation (`one`, `other`), the filter `standard_event_data` (returns a fixed JSON) and `request.page_type`. |
+| X-7 | `07` | Decided (D-101 item 4): `pnpm gen` renders each blueprint's react file with the sample data of 2.5 into `blueprints/<id>/html/<id>.html` (rule H-1) and verifies it in the generation check. File keys: section 2.1. |
+| X-8 | `03` | Decided (D-105 item 5): `base.css` contains `html { scroll-padding-block-start: var(--rp-header-block-size, 0px); }`; Header sets `--rp-header-block-size` on `:root:has(.rp-header[data-sticky])`; `rp-view-event` is in the display region of `base.css`. |
+| X-9 | `06` | Decided (D-096 item 2): the generated intrinsic-element declarations include `rp-view-event` with `view-event-trigger` and `view-event-payload`. |
+| X-10 | `06` | Kept, narrowed. Rule X-9 of `06-bindings.md` ("no other binding uses `innerHTML`") applies to bindings. Only the `cart` blueprint uses `dangerouslySetInnerHTML` (React) / `innerHTML={unsafeHTML(...)}` (Remix), for exactly one purpose: the JSON body of the one `<script type="application/json" data-view-event-payload>` element, with `<` escaped as `\u003c`. No other blueprint file uses either. |
+| X-11 | `13` | Decided (D-074, D-104): sample data files `blueprints/_sample/<id>.json` and the fixture resources of section 1.6 exist in both forms (JSON, Liquid drops). Tests BT-1 to BT-9 run for every blueprint in every host. |
+| X-12 | `14` | `rp-head`: D-099 item 4. Locale keys: `14-liquid-theme.md` section 11 prints every `ripple.blueprints.*` key of this document. `templates/page.contact.liquid` is an alternate template the merchant assigns. |
+| X-13 | `08` | Decided (D-106): the agent kit's blueprint index lists the 14 blueprints with the `route` values of 2.1 and states rule BP-9; the four spacing values of BP-4 are the ones of the `ripple-compose-page` skill. |
 
 ---
 
@@ -5805,14 +5979,17 @@ Each item is a requirement this document places on another document. Until the o
 A script can check each line.
 
 1. `manifest.json` contains exactly these component ids from this document: `account-link`, `announcement-bar`, `featured-collection`, `footer`, `header`, `hero`, `link-list`, `locale-selector`, `logo`, `mobile-nav`, `navigation-menu`, `newsletter-form`; each with the kind, tags and Liquid tier of ledger 8.4 and `milestone: "M4"`.
-2. `manifest.json` `blueprints` has exactly the 14 keys of ledger 8.5; each has four host file lists, each non-empty, with the targets of 2.1.
+2. `manifest.json` `blueprints` has exactly the 14 keys of ledger 8.5; each has four host file lists, each non-empty, with the targets of 2.1; every html, react and remix target starts with `@pages/`; the `layout` Liquid list has the keys `template`, `import-map`, `meta-tags`, `locale`.
 3. Every fixture named in a component section exists as `components/<id>/fixtures/<name>.html` and passes tier 2 in all four hosts (`02-html-contract.md` section 11).
-4. Every "Acceptance tests" item of every component and blueprint exists as a test whose title starts with the item's id (for example `LT-6`, `CL-3`) or, for component items, with `<component id> #<n>`.
+4. Every "Acceptance tests" item of every component and blueprint exists as a test whose title starts with the item's id (for example `LT-6`, `CL-3`) or, for component items, with `AT-<n>` (D-104; the test file is the component's, so `AT-<n>` is unique within it).
 5. Tests BT-1 to BT-9 pass for all 14 blueprints in all four hosts (BT-1's Theme Check part and BT-5's partial part on Liquid only).
 6. `grep -R "TODO\|FIXME" blueprints/ components/{header,footer,announcement-bar,navigation-menu,mobile-nav,link-list,logo,locale-selector,account-link,newsletter-form,hero,featured-collection}` prints nothing.
 7. `locales/en.default.json` contains every locale key named in this document, and no blueprint Liquid file contains a string literal between `>` and `<` other than whitespace and Liquid output.
-8. No file under `blueprints/*/liquid/` contains `{% section`, `{% sections`, `{% content_for`, `{% include`, `{% javascript`, `{% stylesheet`, `{% style`, or a `<script` element other than `type="application/json"`.
-9. `blueprints/*/react/*.tsx` and `blueprints/*/remix/*.tsx` import only from `__PKG__`, `__PKG__/react` or `__PKG__/remix`, `react` (type only), `remix/component`, and relative files of the same blueprint or of `layout`; `lib/locale-route.ts` imports only from `@shopify/hydrogen`.
+8. No file under `blueprints/*/liquid/layout/` or `blueprints/*/liquid/templates/` contains `{% section`, `{% sections`, `{% content_for`, `{% include`, `{% javascript`, `{% stylesheet`, `{% style`, `page-view.js`, `-region'`, `cart_form`, `dialog-close`, or a `<script` element other than `type="application/json"`. (The two theme-owned snippets of `layout` are exempt: `import-map.liquid` prints `<script type="importmap">` and `meta-tags.liquid` prints JSON-LD scripts.)
+9. `blueprints/*/react/*.tsx` and `blueprints/*/remix/*.tsx` import only from `__PKG__` (types and helpers), `@components/<id>` and `@components/<id>.data`, `react` (type only), `remix/component`, and relative files of the same blueprint or of `layout`; no import from `__PKG__/react` or `__PKG__/remix` except the hooks `useCart` and `useRegionHtml` (D-096). `lib/locale-route.ts` imports only from `@shopify/hydrogen`.
+10. `grep -R "rp-mobile-nav-panel\|rp-mobile-nav-header\|rp-mobile-nav-title\|rp-mobile-nav-body" components/ blueprints/` prints nothing, and `components/mobile-nav/mobile-nav.css` contains no selector with `dialog`, `::backdrop` or `rp-drawer`.
+11. Each of the four blueprints `product`, `collection`, `search`, `cart` prints exactly one `rp-view-event` in every host (for `search`: with terms), and no file under `components/` contains the string `rp-view-event` (D-089). The `layout` blueprint files contain no Announcer call (D-079).
+12. No blueprint file and no chrome component binding passes `data-rp-open` through rest props or `attributes`: `grep -R "data-rp-open" blueprints/` prints nothing outside `html/` files.
 
 ---
 
@@ -5820,9 +5997,9 @@ A script can check each line.
 
 Evidence (read in the local clones or verified with the Shopify docs tool in the session that wrote this document):
 
-- Ledger: `ripple/docs/00-decisions.md` D-006, D-008, D-009, D-010, D-017, D-019 to D-024, D-028, D-033 to D-038, D-041 to D-051, D-063, D-066, D-068; sections 6, 7, 8.4, 8.5, 8.6.
-- Sibling documents: `02-html-contract.md` (fixtures, masks, id rules), `04-elements.md` sections 9.3, 10.1, 10.2, 10.6, 10.9, 10.15, `05-commerce.md` sections 4, 6, 7.5, 8, 10, 11, 12, `06-bindings.md` sections 7 and 8, `07-manifest-registry-cli.md` (`#/$defs/blueprint`, `#/$defs/file`), `08-agent-kit-and-evals.md` (spacing rhythm), `09-components-foundation.md` (props of every foundation component called here; Pagination; Announcer placement).
-- Base theme: `ripple/theme/layout/theme.liquid`, `layout/password.liquid`, `templates/*.liquid` (file names; `collection`, `search`, `article`, `password`, `gift_card` read), `blocks/header.liquid`, `footer.liquid`, `basic-menu.liquid`, `main-menu.liquid`, `logo.liquid`, `gift-card.liquid`, `featured-collection.liquid`, `snippets/localization-form.liquid`.
+- Ledger: `ripple/docs/00-decisions.md` D-006, D-008, D-009, D-010, D-017, D-019 to D-024, D-028, D-033 to D-038, D-041 to D-051, D-063, D-066, D-068 to D-070, D-079, D-083, D-085, D-087, D-089 to D-094, D-096, D-097, D-099, D-101, D-104 to D-107; sections 6, 7, 8.4, 8.5, 8.6, 13.2.
+- Sibling documents: `02-html-contract.md` (fixtures, masks, id rules), `04-elements.md` sections 9.3, 10.1, 10.2, 10.6, 10.9, 10.15, `05-commerce.md` sections 4, 6, 7.5, 8, 10, 11, 12, `06-bindings.md` sections 7 and 8, `07-manifest-registry-cli.md` (`#/$defs/blueprint`, `#/$defs/file`), `08-agent-kit-and-evals.md` (spacing rhythm), `09-components-foundation.md` (props of every foundation component called here; IconButton `icon`, `dialog`; icon set of section 0.6; Pagination; Announcer placement), `10-components-interactive.md` (Dialog, Drawer, Popover, Carousel contracts and usage), `11-components-commerce.md` (sections 0.3 and 0.6; usage examples of every commerce component called here), `14-liquid-theme.md` (rules T-5, T-6; `import-map` snippet).
+- Base theme: `ripple/theme/layout/theme.liquid`, `layout/password.liquid`, `snippets/meta-tags.liquid`, `snippets/import-map.liquid`, `templates/*.liquid` (file names; `product`, `collection`, `cart` for the `standard_event_data` view events; `search`, `article`, `password`, `gift_card` read), `blocks/header.liquid`, `footer.liquid`, `basic-menu.liquid`, `main-menu.liquid`, `logo.liquid`, `gift-card.liquid`, `featured-collection.liquid`, `snippets/localization-form.liquid`.
 - Hydrogen: `hydrogen/packages/hydrogen/src/core/i18n/href.ts`, `match.ts`, `define.ts`, `locale.ts`, `types.ts`, `index.ts`; `hydrogen/packages/hydrogen/skills/hydrogen-markets/SKILL.md`.
 - Remix: `ripple/docs/research/remix-3.md` sections 5 and 8.
 - Liquid tags: `ripple/docs/research/liquid-blocks-partials.md` sections 2.1, 2.2, 7.
@@ -5830,36 +6007,20 @@ Evidence (read in the local clones or verified with the Shopify docs tool in the
 
 UNVERIFIED (nobody ran or read these; each has a stated default):
 
-1. Everything about `10-components-interactive.md` and `11-components-commerce.md` signatures (2.4). Default: the table of 2.4; the owning document wins.
-2. mock.shop content: `menu`, `blog`, `page`, `localization`, the `frontpage` collection. mock.shop was not reachable. Default: every blueprint renders its empty form.
-3. Storefront API fields not re-checked: `shop.brand.logo.image`, the four policy fields, `localization.availableLanguages`, `search.totalCount`, `articleByHandle`, `authorV2`, `optionValues`, `selectedOrFirstAvailableVariant` and its arguments, `Collection.products.filters`.
-4. `storefrontClient.query(document, { variables })` as the call that runs a query.
-5. Liquid: `template.name`, `collection.filters`, `collection.sort_options`, `collection.sort_by`, `collection.default_sort_by`, `collection.products_count`, `result.object_type`, `paginate.previous`, the form types `contact`, `customer`, `storefront_password` and their field names, `blog.url` on the article template.
-6. Standard Events payload shapes for `collection_viewed`, `search_viewed`, `cart_viewed`.
-7. How the platform treats a partial name declared in both the layout and a template (avoided by rule L-B), and whether partials may be nested inside `{% paginate %}` in the other order (this document always puts `paginate` inside the partial, as the base theme does).
-8. React hydration of `document.body` (rule DS-5, test LT-10) and the Remix client runtime with a string document shell (rule DS-6).
-9. No code in this document was executed. The TypeScript in 1.2, 2.6, 2.7 and `contact` was written against the signatures in the cited Hydrogen files and the web platform types only.
+1. mock.shop content: `menu`, `blog`, `page`, `localization`, the `frontpage` collection. mock.shop was not reachable. Default: every blueprint renders its empty form (D-104 item 5).
+2. Storefront API fields not re-checked: `shop.brand.logo.image`, the four policy fields, `localization.availableLanguages`, `search.totalCount`, `articleByHandle`, `authorV2`, `optionValues`, `selectedOrFirstAvailableVariant` and its arguments, `Collection.products.filters`.
+3. `storefrontClient.query(document, { variables })` as the call that runs a query.
+4. Liquid: `template.name`, `collection.filters`, `collection.sort_options`, `collection.sort_by`, `collection.default_sort_by`, `collection.products_count`, `result.object_type`, `paginate.previous`, the form types `contact`, `customer`, `storefront_password` and their field names, `blog.url` on the article template.
+5. hydrogen-backend payload shapes for the collection, search and cart views (`05-commerce.md` section 12); the Liquid payload is the platform filter's output.
+6. That the filter `standard_event_data` accepts the `search` object (blueprint `search`). Check: SPIKE-02. Fallback: omit the element on Liquid (stated in `search`).
+7. The values of `request.page_type` printed into `main[data-template]` (SPIKE-02).
+8. How the platform treats a partial name declared in both the layout and a template (avoided by rule L-B), and whether partials may be nested inside `{% paginate %}` in the other order (this document always puts `paginate` inside the partial, as the base theme does).
+9. React hydration of `document.body` (rule DS-5, test LT-10) and the Remix client runtime with a string document shell (rule DS-6).
+10. `lib/locale-route.ts` value-imports `getLocalizedHref`, `getSupportedLocales` and `matchLocale` from `@shopify/hydrogen`. They are exported from the package root (read) but are not in the D-094 item 3 list, which covers bindings and `.data.ts` files. Default: the file keeps the imports as project-owned route code (section 2.6).
+11. No code in this document was executed. The TypeScript in 1.2, 2.6, 2.7 and `contact` was written against the signatures in the cited Hydrogen files and the web platform types only.
 
 ---
 
 ## Ledger issues
 
-Each item: what the ledger says or omits, and what this document applied.
-
-1. **Kind of Header, Footer and FeaturedCollection (8.4: `static`).** Their default bodies embed `native` and `commerce` components (NavigationMenu, CartLink, Carousel). D-006 derives kind from the `default` fixture. Applied: the `default` fixture of Header and Footer uses children, and FeaturedCollection's uses `layout="grid"`, so the kind is `static` as listed; the default bodies are in separate fixtures and their custom elements belong to the embedded components' manifests.
-2. **No `shop` resource in section 6.4.** Header, Footer and Logo need the shop name, URL and logo. Applied: the object prop `shop` (`RippleShop`, section 1.3), TSX hosts only; Liquid reads the globals.
-3. **No way to override strings a TSX component prints (D-066 covers Liquid keys only).** Applied: the optional `strings` prop of section 1.4.
-4. **NavigationMenu panel ids.** D-020 lists the suffix `-item-<v>`; `04-elements.md` section 10.15 writes panels as `<id>-content-<handle>`. Menu items have no stable handle on Liquid. Applied: panel id `<id>-item-<n>` with `n` the 1-based position of the top-level item; and the Liquid-only `links` param of LinkList (an array with `.title` and `.url`) so that `shop.policies` can be listed without building a menu.
-5. **MobileNav and Drawer classes.** 8.4 says MobileNav uses `rp-dialog`; D-008 gives Drawer the classes `rp-drawer`, `rp-drawer-panel`. A component's root class must be its own (`02-html-contract.md` N-1). Applied: MobileNav prints `rp-mobile-nav` and `rp-mobile-nav-panel` and ships its own panel CSS; it does not embed Drawer.
-6. **LocaleSelector tier `resource` and ids.** Its body is fully determined by data, and it needs an id although D-020 does not list it among components that require one. Applied: `id` is required (it names the popover panel and, with the suffix `-content`, the form); the Liquid block ignores `content`.
-7. **NewsletterForm `status`.** Section 6 has no vocabulary for a form's server result. Applied: enum `idle`, `success`, `error`; `id` is required (it names the error message `<id>-error` and the redirect fragment).
-8. **Universal props on a root printed by `{% form %}`.** The Liquid roots of NewsletterForm and of LocaleSelector's form are printed by the form tag, which accepts `id` and `class` only. Applied: NewsletterForm on Liquid does not accept `attributes`, `span` or `hidden`; its `{% doc %}` says so.
-9. **Locale keys for blueprints.** D-066 defines `ripple.<component id>.<key>` only. Applied: `ripple.blueprints.<blueprint id>.<key>`.
-10. **Blueprint-owned regions on Remix.** D-046 item 2 says a region is a named blocking `<Frame>` on Remix. A Frame needs a route that returns only the region; the regions owned by blueprints (`rp-collection-results`, `rp-collection-toolbar`, `rp-search-results`, `rp-product-buy`) are refreshed only by URL change, which the reference `reloadFrames` of `05-commerce.md` handles as a document navigation. Applied: those four are plain elements with `data-rp-region` on Remix (rule R-6). Component-owned regions stay Frames.
-11. **Announcer in `layout` (8.5).** `09-components-foundation.md` fixed that Announcer exists only inside dialogs and commerce roots. Applied: `layout` prints no Announcer. 8.5 also omits the search dialog and PredictiveSearch, which the Header's search link needs as its overlay; applied: `layout` prints a Dialog `search-dialog` containing PredictiveSearch.
-12. **Document shell on TSX hosts.** The ledger gives the shell to this document (D-034 item 2) but not its form, and no spike covers hydrating `document.body`. Applied: a string function `renderDocument` shared by html, react and remix (section 2.6), with a stated fallback and test LT-10.
-13. **Scope of the brief versus the ledger.** The brief named account and content components and nine blueprints. Applied: the ledger's 12 components and 14 blueprints. Article comments (present in the base theme) are not in V1 because no component in section 8 covers a comment form; the `article` blueprint omits them.
-14. **`password` and `gift-card` on the hydrogen backend.** 8.5 requires every blueprint for all four hosts, but the Storefront API has neither a storefront password nor a gift card page. Applied: presentational pages whose data and POST route the project supplies; full behaviour on Liquid only.
-15. **Cart drawer on the cart page.** The ledger does not say whether `layout` renders the CartDrawer on the cart page. On Liquid that would declare the partials `rp-cart-lines` and `rp-cart-summary` twice in one response. Applied: no CartDrawer on the cart page, in every host (rule L-B, prop `cartPage`).
-16. **Newsletter and contact on the hydrogen backend.** The ledger lists NewsletterForm and the `contact` blueprint but no server operation for them. Applied: scaffolded route handlers that validate, call a project-supplied function and redirect with a status param (sections 2.7 and `contact`).
-17. **Liquid subset additions.** Rule L-13 of `06-bindings.md` does not include `date`, `paginate`, `form`, `layout`, `money`, `json` for blueprint files. Applied: rule L-D and requirement X-6.
+None open. See `00-decisions.md` section 13.2.

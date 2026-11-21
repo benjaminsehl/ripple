@@ -22,7 +22,7 @@ What this document does NOT define, and where to find it:
 
 Reading rules:
 
-1. `00-decisions.md` (the ledger) is law. Where this document and the ledger differ, the difference is listed in "Ledger issues" at the end, and the text here is what an implementer follows.
+1. `00-decisions.md` (the ledger) is law. Where this document and the ledger differ, the ledger wins; every difference found while writing was settled in the ledger (section 13.2), and the text here is what an implementer follows.
 2. The code in sections 4 to 8 is complete and was executed (section 13). The components used as examples are Button and Stack (kind `static`), Dialog and Tabs (kinds `native` and `ui`), ProductForm and CartLines (kind `commerce`). The example code fixes the PATTERN. The exact props, parts and markup of each component are owned by docs 09 to 12; when a component spec differs from an example here, the component spec wins and the pattern stays.
 3. Rule ids defined here: `B-n` (behaviour-free), `T-n` (TSX conventions), `R-n` (React), `X-n` (Remix), `L-n` (Liquid), `H-n` (`html` host), `G-n` (generated versus hand-written), `V-n` (validation), `Q-n` (conformance harness). Ids `M-`, `N-`, `S-`, `F-`, `K-`, `U-`, `C-`, `I-`, `PE-` belong to `02-html-contract.md`.
 4. `<pkg>` is the published package name. Repository sources write the literal token `__PKG__`; the registry copy and the project copy contain the real name (`01-architecture.md`).
@@ -35,7 +35,7 @@ A binding is a pure function from props to the contract's markup. All behaviour 
 ### 1.1 Behaviour-free rules
 
 - **B-1** A binding MUST print exactly the contract of `02-html-contract.md` for the given props: same tags, classes, attributes, ids, part order. It MUST NOT add wrapper elements.
-- **B-2** A binding MUST NOT contain behaviour: no event handler it defines itself, no timer, no DOM query, no network call, no storage access, no state machine. The one exception is React wiring through `useElement` (R-4, R-5) and `useCart` (R-12), which forwards element events to caller callbacks and reads the store.
+- **B-2** A binding MUST NOT contain behaviour: no event handler it defines itself, no timer, no DOM query, no network call, no storage access, no state machine. The one exception is React wiring through `useElement` (R-4, R-5) `useCart` (R-12) and `useRegionHtml` (section 6.2), which forward element events to caller callbacks and read the cart store and the region-HTML store.
 - **B-3** A binding MUST NOT compute state the element owns. It prints the INITIAL state from props (I-1 in `02-html-contract.md`) and never updates it.
 - **B-4** A binding MUST NOT import anything except the modules in the table below.
 - **B-5** A binding MUST NOT print `<script>`, `<style>`, a `style` attribute, or an attribute whose name matches `/^on/i`.
@@ -46,10 +46,13 @@ Allowed imports (B-4). `<sibling>` is another scaffolded binding file in the sam
 
 | Host | A binding file MAY import | Nothing else |
 |---|---|---|
-| `react` | `react`; `__PKG__` (`rv`, `cx`, type `Responsive`); `__PKG__/react` (`useElement`, `useCart`, type `RestProps`); `@shopify/hydrogen` with `import type` only; `./<sibling>` (no file extension) | no `react-dom`, no `@shopify/hydrogen/react`, no `@ui-sdk/*` |
-| `remix` | `remix/component` with `import type` only (`Handle`, `RemixNode`), plus the values `unsafeHTML` and `Frame` from `remix/component` where X-9 and X-10 require them; `__PKG__`; `__PKG__/remix` (type `RestProps`); `@shopify/hydrogen` with `import type` only; `./<sibling>.tsx` (WITH the `.tsx` extension) | no `@remix-run/*`, no `@ui-sdk/*` |
+| `react` | `react`; `__PKG__` (`rv`, `cx`, type `Responsive`, the resource types of D-094); `__PKG__/react` (`useElement`, `useCart`, `useRegionHtml`, type `RestProps`); `@shopify/hydrogen`: type imports, plus value imports of exactly `formatMoney`, `renderShopPayButton`, `buildProductSelectionSearchParams`, `parseCollectionParams`, `serializeCollectionParams`, `isFilterInputActive`, `getFilterRemovalUrl` (D-094); `./<sibling>` (no file extension); its own `./<id>.data` (D-094) | no `react-dom`, no `@shopify/hydrogen/react`, no `@ui-sdk/*`, no `__PKG__/elements`, no `__PKG__/commerce` |
+| `remix` | `remix/component` with `import type` only (`Handle`, `RemixNode`), plus the value `unsafeHTML` from `remix/component` where X-9 requires it; `__PKG__`; `__PKG__/remix` (type `RestProps`); `@shopify/hydrogen`: type imports, plus value imports of exactly `formatMoney`, `renderShopPayButton`, `buildProductSelectionSearchParams`, `parseCollectionParams`, `serializeCollectionParams`, `isFilterInputActive`, `getFilterRemovalUrl` (D-094); `./<sibling>.tsx` (WITH the `.tsx` extension); its own `./<id>.data.ts` | no `Frame`, no `@remix-run/*`, no `@ui-sdk/*`, no `__PKG__/elements`, no `__PKG__/commerce` |
 | `liquid` | `{% render 'rp-<id>' %}` of Ripple snippets | no `{% block %}`, no `{% section %}`, no `{% include %}` |
 | `html` | nothing (static markup) | |
+
+- **B-8** A binding file MUST NOT import `<pkg>/elements` or `<pkg>/commerce`, and MUST NOT re-export a library function (D-083, D-096). Example: the Toast binding does not re-export `toast`; callers import `toast` from `<pkg>/elements` (bundled apps) or from `ripple.js` (prebuilt pages).
+- **B-9** Pure data helpers (`toRippleCart`, `toRippleMenu` and every other function that maps Storefront API objects to `Ripple*` types) live in `<id>.data.ts` next to the binding (manifest file key `data`, type `data`). A `.data.ts` file has no `"use client"` directive, exports functions and types only, and MAY import only `__PKG__` (types) and the `@shopify/hydrogen` names listed in the table (D-094).
 
 Why the extension differs: the Remix template compiles with `module: NodeNext` and `allowImportingTsExtensions` (`remix/template/tsconfig.json`), where a relative import needs its extension; React projects (Vite, Next.js) resolve extensionless relative imports.
 
@@ -74,6 +77,13 @@ Why the extension differs: the Remix template compiles with `module: NodeNext` a
 | `liquid` | `\{%-?\s*(block\|section\|sections\|include\|javascript\|stylesheet\|style\|layout\|paginate)\b` | L-12, L-13 |
 | `liquid`, `html` | `<(script\|style)\b`, `\sstyle\s*=`, `\son[a-z]+\s*=` | B-5 |
 | `liquid` | `block\.id` | L-8 |
+| `react`, `remix` | an `import` (not `import type`) from `@shopify/hydrogen` that names any binding other than `formatMoney`, `renderShopPayButton`, `buildProductSelectionSearchParams`, `parseCollectionParams`, `serializeCollectionParams`, `isFilterInputActive`, `getFilterRemovalUrl`; detection: `import\s+(?!type\b)[^;]*from\s+["']@shopify/hydrogen["']`, then every imported name is compared with this list | B-4, D-094 |
+| `react`, `remix` | `from\s+["'][^"']+/(elements\|commerce)(/[^"']*)?["']` | B-8 |
+| `react`, `remix` | `\bexport\s+(\*\|\{[^}]*\})\s+from\s+["'](?!\./)` (a re-export from anything other than a sibling) | B-8 |
+| `remix` | `\bFrame\b` | X-10 |
+| `react` | a file whose first line is `"use client";` and that contains `export (async )?function [a-z]` or `export const [a-z]` (a non-component export) | R-14 |
+
+Exception to the `dangerouslySetInnerHTML` pattern: the React region parts `PredictiveSearchResults` and `ProductRecommendationsList` use it once each for the `useRegionHtml` value (section 6.2, D-090). The lint allows the pattern only in `components/predictive-search/react/predictive-search.tsx` and `components/product-recommendations/react/product-recommendations.tsx`. RichText in React prints its `html` prop the same way and is allowed in `components/rich-text/react/rich-text.tsx`.
 
 A test file `src/gen/bindings-lint.test.ts` MUST hold one failing sample and one passing sample per row.
 
@@ -260,7 +270,7 @@ React and Remix bindings share one shape. Differences are listed in T-12.
 | Class prop | `className` on native elements; `class` on custom elements (R-7) | `class` everywhere |
 | Children type | `ReactNode` | `RemixNode` |
 | Attribute spelling on native elements | React names: `tabIndex`, `popoverTarget`, `htmlFor`; but `commandfor`, `command`, `closedby` lowercase (section 6.3) | HTML names, lowercase: `tabindex`, `popovertarget`, `for`, `commandfor`, `command`, `closedby` |
-| Hooks | `useRef`, `useState` (initialiser only), `useElement`, `useCart`, only in hand-written files | none |
+| Hooks | `useRef`, `useState` (initialiser only), `useElement`, `useCart`, `useRegionHtml`, only in hand-written files | none |
 | Host extras | `suppressHydrationWarning` (R-6) | `data-rmx-key`, `data-rmx-preserve-attrs`, `data-rmx-document` (section 7.3) |
 | Callback and controlled props | D-036 | none (X-7) |
 | First line | `"use client";` when the file calls a hook (R-14) | never a directive |
@@ -310,7 +320,7 @@ R-1 to R-5 are the ledger's (D-033). R-6 to R-14 are the ledger's supporting rul
 - **R-11** A node whose content or attributes an element writes (parts `count`, `error`, `status`; `data-pending`; `aria-busy`) is rendered by React with CONSTANT props for the lifetime of the component, plus R-6. React MUST NOT also render that value from the store: one writer per node.
 - **R-12** React MAY render STRUCTURE from the store (D-045 item 2): which lines exist, in which order. It does so with `useCart(selector, serverValue)`. The element inside each structure node still owns that node's state.
 - **R-13** `CartProvider` and every other export of `@shopify/hydrogen/react` MUST NOT be imported or mounted. `@ui-sdk/react` MUST NOT be used.
-- **R-14** A React binding file whose code calls a hook (`useRef`, `useState`, `useElement`, `useCart`) MUST have `"use client";` as its first line. A file that calls no hook MUST NOT have the directive, so that it stays usable as a React Server Component.
+- **R-14** A React binding file whose code calls a hook (`useRef`, `useState`, `useElement`, `useCart`, `useRegionHtml`) MUST have `"use client";` as its first line. A file that calls no hook MUST NOT have the directive, so that it stays usable as a React Server Component. A file that starts with `"use client"` exports components only: a server module that imports a function from a client module receives a reference, not the function. Pure data helpers (`toRippleCart` and similar) therefore live in `<id>.data.ts` (file key `data`), which has no `"use client"` (B-9, D-094).
 - **R-15** Native elements (`<dialog>`, `<details>`, `<button>`, `<input>`) are ordinary React elements. A binding does not attach handlers to them; a caller MAY, through `rest` on the root.
 - **R-16** Uncontrolled form controls print `defaultValue` / `defaultChecked` (React props) for visible controls. `<input type="hidden">` prints `value` and MUST NOT print `readOnly` (it would add `readonly=""` to the contract).
 
@@ -321,7 +331,7 @@ Decision procedure for a React binding:
 3. It has `events[]` or a controlled prop: add `useRef`, `useElement`, `useState` for R-3, the callbacks of D-036, and `"use client";`. (Examples: Dialog, Tabs.)
 4. Its structure depends on the cart: add `useCart` and `"use client";`. (Example: CartLines.)
 
-### 6.2 `<pkg>/react`: `useElement`, `useCart`, `RestProps`
+### 6.2 `<pkg>/react`: `useElement`, `useCart`, `useRegionHtml`, `RestProps`
 
 ```ts
 // src/react/index.ts
@@ -424,6 +434,44 @@ export function useCart<T>(selector: (state: CartState) => T, serverValue: T): T
 }
 ```
 
+`useRegionHtml`, in the same file `src/react/hooks.ts` (complete code). UNVERIFIED (SPIKE-10): hydration and update without a mismatch have not been run.
+
+```ts
+import { getRegionHtml, subscribeRegionHtml } from "../commerce/refresh-react.ts";
+
+const noRegionHtml = (): string | null => null;
+
+/**
+ * Returns the inner HTML that the React refresh strategy last published for the region `name`,
+ * or `null` when nothing was published. It is `null` on the server and during hydration.
+ * Used only by the region parts of PredictiveSearch (`results`) and ProductRecommendations (`list`).
+ */
+export function useRegionHtml(name: string): string | null {
+  return useSyncExternalStore(
+    subscribeRegionHtml,
+    () => getRegionHtml(name),
+    noRegionHtml,
+  );
+}
+```
+
+The region-HTML store is owned by `05-commerce.md`: `subscribeRegionHtml(listener: () => void): () => void` and `getRegionHtml(name: string): string | null`, written by the React refresh strategy for the reasons `predictive` and `recommendations` (D-090). `getRegionHtml` MUST return the same string reference until a new document is published for that name. The module path `src/commerce/refresh-react.ts` is this document's reading of the ledger tree (section 5.1); when `05-commerce.md` names another module, that module wins.
+
+Usage rule (the only allowed use; D-090). A React region part renders its server children while the value is `null`, and `dangerouslySetInnerHTML` on the SAME element once the value is a string:
+
+```tsx
+const html = useRegionHtml("rp-predictive-results");
+return html === null
+  ? <div {...rest} className={cx("rp-predictive-search-results", className)} data-rp-part="results" data-rp-region="rp-predictive-results" suppressHydrationWarning>{children}</div>
+  : <div {...rest} className={cx("rp-predictive-search-results", className)} data-rp-part="results" data-rp-region="rp-predictive-results" suppressHydrationWarning dangerouslySetInnerHTML={{ __html: html }} />;
+```
+
+The snippet above shows the rule only; the normative element, classes and attributes of the two region parts are those of `11-components-commerce.md` (PredictiveSearch part `results`, ProductRecommendations part `list`). No other component calls `useRegionHtml`.
+
+#### Fallback (SPIKE-10)
+
+When the spike shows a hydration mismatch or a lost update, `useRegionHtml` is removed from the two region parts (they render `children` only), and the app cancels `rp:refresh` for the reasons `predictive` and `recommendations` (`event.preventDefault()` in a `document` listener) and renders the results itself. The export stays in `<pkg>/react` and returns `null`.
+
 Semantics an implementer MUST keep:
 
 1. `useElement` attaches one DOM listener per event name in an effect keyed on the SORTED LIST OF NAMES, not on the handlers. The latest handler is read from a ref at call time. Passing a new closure each render therefore adds and removes no listener.
@@ -432,7 +480,8 @@ Semantics an implementer MUST keep:
 4. A React callback is called as `(value, detail)`: `onOpenChange(detail.value, detail)` (D-036).
 5. `useCart` returns `serverValue` on the server, during hydration, and whenever `getCommerce()` throws or `getCommerce().usable` is `false`. The selector MUST return a primitive or a reference held by the state; returning a new object or array per call causes an infinite render loop in `useSyncExternalStore`.
 6. `getCommerce()`, its `usable` flag and its `cart` member are owned by `05-commerce.md` (file `src/commerce/adapter.ts`). `cart` has the Hydrogen `CartStore` surface (`getState()`, `subscribe(listener)`; `hydrogen/packages/hydrogen/src/core/cart/cart.ts`, `hydrogen/packages/hydrogen/src/core/cart/state.ts`).
-7. `<pkg>/react` exports exactly: `useElement`, `useCart`, the types `UseElementOptions` and `RestProps`, and the JSX augmentation of 6.3. V1 has no other store hook.
+7. `<pkg>/react` exports exactly: `useElement`, `useCart`, `useRegionHtml`, the types `UseElementOptions` and `RestProps`, and the JSX augmentation of 6.3 (D-033, D-096). V1 has no other store hook.
+8. `useRegionHtml(name)` returns `null` on the server, during hydration and until the React refresh strategy publishes HTML for `name`; afterwards it returns the published inner HTML string. It never throws.
 
 ### 6.3 JSX types for custom elements and Invoker attributes
 
@@ -461,6 +510,7 @@ declare module "react" {
       "rp-live": CE;
       "rp-predictive-search": CE;
       "rp-recommendations": CE;
+      "rp-view-event": CE<{ "view-event-trigger"?: "connect" | "intersect"; "view-event-payload"?: string }>;
       "ui-tabs": CE<{ "default-value"?: string }>;
       "ui-tabs-list": CE;
       "ui-tabs-tab": CE<{ value: string }>;
@@ -477,6 +527,8 @@ declare module "react" {
 Verified spellings on native elements in React 19.3.1 (server and client output identical): `commandfor="x"` and `command="show-modal"` are written lowercase in JSX and printed unchanged; `popoverTarget="x"` prints `popovertarget="x"`; `closedby="any"` is written lowercase and printed unchanged; on a custom element `class="x"` prints `class="x"`.
 
 ### 6.4 Static pattern: Button (generated)
+
+> Copy rule (D-069). The owning component document is normative for Button (`09-components-foundation.md`, section "Button"). Props the code below does not yet print and that the generated file MUST print as doc 09 defines them: `dialog` / `dialog` (only with `href`; prints `data-rp-open="<dialog id>"`), `tooltip` / `tooltip` (prints `aria-describedby="<id>-content"` and `data-slot="tooltip-trigger"`), `formId` / `form_id` (prints the native `form` attribute). The code in this section illustrates the binding PATTERN of this host (file shape, prop handling, guards, attribute order). Where it differs from the owning document, the owning document wins and this section is the defect; the committed file is whatever `pnpm gen` produces from the manifest entry (generated files) or the code in the owning document (hand-written files).
 
 `components/button/react/button.tsx`:
 
@@ -579,6 +631,8 @@ What to copy from this pattern: value arrays first; `OwnProps` then `Props`; des
 
 ### 6.5 Static pattern with responsive props: Stack (generated)
 
+> Copy rule (D-069). The owning component document is normative for Stack (`09-components-foundation.md`, section "Stack"). Props the code below does not yet print and that the generated file MUST print as doc 09 defines them: `gapX` / `gap_x` (`data-gap-x`), `gapY` / `gap_y` (`data-gap-y`), `textAlign` / `text_align` (`data-text-align`); and `role="list"` when `as` is `ul` or `ol`. The code in this section illustrates the binding PATTERN of this host (file shape, prop handling, guards, attribute order). Where it differs from the owning document, the owning document wins and this section is the defect; the committed file is whatever `pnpm gen` produces from the manifest entry (generated files) or the code in the owning document (hand-written files).
+
 `components/stack/react/stack.tsx`:
 
 ```tsx
@@ -642,6 +696,8 @@ export function Stack(props: StackProps) {
 ```
 
 ### 6.6 Interactive patterns: Dialog (kind `native`) and Tabs (kind `ui`), hand-written
+
+> Copy rule (D-069). The owning component document is normative for Dialog and Tabs (`10-components-interactive.md`, sections "Dialog" and "Tabs"). Dialog parts are exactly `panel`, `header`, `title`, `description`, `body`, `footer` (exports `DialogHeader`, `DialogBody`, `DialogFooter`; blocks `dialog-header`, `dialog-body`, `dialog-footer`), and there is no `describedBy` prop (D-008). Tabs is horizontal only; `TabsTab` and `TabsPanel` each receive `tabs`, `value`, and `selected` on the selected pair (D-012). Parts that the code below does not show MUST be added as doc 10 defines them. The code in this section illustrates the binding PATTERN of this host (file shape, prop handling, guards, attribute order). Where it differs from the owning document, the owning document wins and this section is the defect; the committed file is whatever `pnpm gen` produces from the manifest entry (generated files) or the code in the owning document (hand-written files).
 
 `components/dialog/react/dialog.tsx`:
 
@@ -900,9 +956,11 @@ Notes:
 
 - `TabsTab` puts `rest` and the class on the native `<button>` (the focusable control), not on `ui-tabs-tab` (T-4 exception).
 - The caller passes `selected` to the tab AND the panel whose `value` equals `defaultValue` (S-7: no context). Both capture it once (R-3); after hydration the element owns selection.
-- An unselected panel prints only `class`, `value`, `hidden`, `data-slot`: the verified upgrade snapshot (`02-html-contract.md` section 11.9, Ledger issues item 12 there).
+- An unselected panel prints only `class`, `value`, `hidden`, `data-slot`: the verified upgrade snapshot (`02-html-contract.md` section 11.9; D-012).
 
 ### 6.7 Commerce patterns: ProductForm and CartLines (hand-written)
+
+> Copy rule (D-069). The owning component document is normative for ProductForm and CartLines (`11-components-commerce.md`, sections "ProductForm", "AddToCartButton" and "CartLines"). Differences the code below still has and that the implemented file MUST NOT have: the ProductForm root carries no `data-rp-refresh` (ledger section 4.4); the submit button is the AddToCartButton component (class `rp-button rp-add-to-cart-button`) with the dialect attributes of doc 11, not a plain Button; locale keys are the ones doc 11 names (the key `ripple.product-form.add_to_cart` below is replaced by doc 11's key for AddToCartButton); CartLines renders its lines through the region part `CartLinesList` (Liquid snippet `rp-cart-lines-list`, region `rp-cart-lines`) and always prints one `data-rp-part="status"` element (D-045, D-091). The code in this section illustrates the binding PATTERN of this host (file shape, prop handling, guards, attribute order). Where it differs from the owning document, the owning document wins and this section is the defect; the committed file is whatever `pnpm gen` produces from the manifest entry (generated files) or the code in the owning document (hand-written files).
 
 `components/product-form/react/product-form.tsx`:
 
@@ -998,7 +1056,7 @@ Notes:
 - **X-7** Remix components are uncontrolled and have no callback props (D-034 item 7). Code that needs to react listens to the DOM events of `04-elements.md`.
 - **X-8** `data-rmx-*` attributes are host extras. The canonicaliser removes them before comparison (K-rules in `02-html-contract.md` section 12), so they never appear in fixtures.
 - **X-9** RichText prints its HTML with `innerHTML={unsafeHTML(html)}`, `unsafeHTML` imported from `remix/component` (D-034 item 6). No other binding uses `innerHTML`.
-- **X-10** Structural commerce updates use named blocking `<Frame>` regions reloaded by the Remix adapter on `rp:refresh` (D-046). Which component owns which Frame, the Frame names and the route that serves them are owned by `05-commerce.md`. A binding that owns a region imports `Frame` from `remix/component` and prints the region root with `data-rp-region`.
+- **X-10** A region on Remix is a plain element with `data-rp-region="<name>"`, the same markup as in every other host. The `html` refresh strategy is the default. `reloadFrames` and `navigate` are opt-in `configureCommerce` options that the app passes (D-034 item 4, D-090; UNVERIFIED, SPIKE-11; fallback: the two options are removed from the Remix documentation and Remix uses the `html` strategy only). No binding and no blueprint renders a `<Frame>` or imports `Frame`. An app that opts in to `reloadFrames` passes its own `<Frame>` as the children of the region part.
 - **X-11** `ripple.js` is loaded from `public/ripple/` with a plain `<script type="module" src="/ripple/ripple.js">` in the document shell; it MUST NOT be imported by a binding or passed through the Remix asset server (D-034 item 5).
 - **X-12** Attribute names are HTML names in lowercase (`class`, `tabindex`, `for`, `popovertarget`, `commandfor`). Boolean attributes are passed as `true` or as a bare JSX attribute.
 
@@ -1035,6 +1093,7 @@ declare global {
       "rp-live": El;
       "rp-predictive-search": El;
       "rp-recommendations": El;
+      "rp-view-event": El<{ "view-event-trigger"?: "connect" | "intersect"; "view-event-payload"?: string }>;
       "ui-tabs": El<{ "default-value"?: string }>;
       "ui-tabs-list": El;
       "ui-tabs-tab": El<{ value: string }>;
@@ -1054,8 +1113,8 @@ declare global {
 
 | Attribute | Printed on | Value | Source |
 |---|---|---|---|
-| `data-rmx-key` | every `ui-*` and `rp-*` root | the root id, or `rmxKey` | X-3 |
-| `data-rmx-preserve-attrs` | every element with element-written or browser-written state | state attribute names | X-4, manifest `state[]` |
+| `data-rmx-key` | every `ui-*` and `rp-*` root | the root `id` when the component has a required `id`; otherwise the value of the Remix-only prop `rmxKey`, and the attribute is omitted when `rmxKey` is unset. `rmxKey` exists only on components with an `rp-*` or `ui-*` root and no required `id` (D-034, ledger section 6.1) | X-3 |
+| `data-rmx-preserve-attrs` | every element named by the `on` of a manifest `state[]` row whose `writer` is `element` or `browser`; `<html>` prints `data-rmx-preserve-attrs="style"` | the `reflects` attribute names of those rows, space-separated, sorted | X-4, manifest `state[]` (D-034, D-100) |
 | `data-rmx-document` | cart forms; links and forms to account routes and `/checkout` | bare | X-5 |
 
 For Tabs the generated constants are (from the manifest `state[]` of Tabs; the list is owned by `10-components-interactive.md`):
@@ -1067,6 +1126,8 @@ const DIRECTION_STATE = "data-activation-direction";
 ```
 
 ### 7.4 Static pattern: Button (generated)
+
+> Copy rule (D-069). The owning component document is normative for Button (`09-components-foundation.md`, section "Button"). Props the code below does not yet print and that the generated file MUST print as doc 09 defines them: `dialog` / `dialog` (only with `href`; prints `data-rp-open="<dialog id>"`), `tooltip` / `tooltip` (prints `aria-describedby="<id>-content"` and `data-slot="tooltip-trigger"`), `formId` / `form_id` (prints the native `form` attribute). The code in this section illustrates the binding PATTERN of this host (file shape, prop handling, guards, attribute order). Where it differs from the owning document, the owning document wins and this section is the defect; the committed file is whatever `pnpm gen` produces from the manifest entry (generated files) or the code in the owning document (hand-written files).
 
 `components/button/remix/button.tsx`:
 
@@ -1169,6 +1230,8 @@ export function Button(handle: Handle<ButtonProps>) {
 
 ### 7.5 Static pattern with responsive props: Stack (generated)
 
+> Copy rule (D-069). The owning component document is normative for Stack (`09-components-foundation.md`, section "Stack"). Props the code below does not yet print and that the generated file MUST print as doc 09 defines them: `gapX` / `gap_x` (`data-gap-x`), `gapY` / `gap_y` (`data-gap-y`), `textAlign` / `text_align` (`data-text-align`); and `role="list"` when `as` is `ul` or `ol`. The code in this section illustrates the binding PATTERN of this host (file shape, prop handling, guards, attribute order). Where it differs from the owning document, the owning document wins and this section is the defect; the committed file is whatever `pnpm gen` produces from the manifest entry (generated files) or the code in the owning document (hand-written files).
+
 `components/stack/remix/stack.tsx`:
 
 ```tsx
@@ -1234,6 +1297,8 @@ export function Stack(handle: Handle<StackProps>) {
 ```
 
 ### 7.6 Interactive patterns: Dialog and Tabs (generated)
+
+> Copy rule (D-069). The owning component document is normative for Dialog and Tabs (`10-components-interactive.md`, sections "Dialog" and "Tabs"). Dialog parts are exactly `panel`, `header`, `title`, `description`, `body`, `footer` (exports `DialogHeader`, `DialogBody`, `DialogFooter`; blocks `dialog-header`, `dialog-body`, `dialog-footer`), and there is no `describedBy` prop (D-008). Tabs is horizontal only; `TabsTab` and `TabsPanel` each receive `tabs`, `value`, and `selected` on the selected pair (D-012). Parts that the code below does not show MUST be added as doc 10 defines them. The code in this section illustrates the binding PATTERN of this host (file shape, prop handling, guards, attribute order). Where it differs from the owning document, the owning document wins and this section is the defect; the committed file is whatever `pnpm gen` produces from the manifest entry (generated files) or the code in the owning document (hand-written files).
 
 `components/dialog/remix/dialog.tsx`:
 
@@ -1444,6 +1509,8 @@ export function TabsPanel(handle: Handle<TabsPanelProps>) {
 
 ### 7.7 Commerce pattern: ProductForm (hand-written)
 
+> Copy rule (D-069). The owning component document is normative for ProductForm and CartLines (`11-components-commerce.md`, sections "ProductForm", "AddToCartButton" and "CartLines"). Differences the code below still has and that the implemented file MUST NOT have: the ProductForm root carries no `data-rp-refresh` (ledger section 4.4); the submit button is the AddToCartButton component (class `rp-button rp-add-to-cart-button`) with the dialect attributes of doc 11, not a plain Button; locale keys are the ones doc 11 names (the key `ripple.product-form.add_to_cart` below is replaced by doc 11's key for AddToCartButton); CartLines renders its lines through the region part `CartLinesList` (Liquid snippet `rp-cart-lines-list`, region `rp-cart-lines`) and always prints one `data-rp-part="status"` element (D-045, D-091). The code in this section illustrates the binding PATTERN of this host (file shape, prop handling, guards, attribute order). Where it differs from the owning document, the owning document wins and this section is the defect; the committed file is whatever `pnpm gen` produces from the manifest entry (generated files) or the code in the owning document (hand-written files).
+
 `components/product-form/remix/product-form.tsx`:
 
 ```tsx
@@ -1498,6 +1565,8 @@ Each component maps to Liquid by exactly one tier, recorded in the manifest key 
 
 Decision procedure for the tier of a new component: (1) it is Icon: `snippet`. (2) It takes a Shopify resource or is in the list of D-037 item 3: `resource`. (3) Its manifest has parts with `authoredBy: "author"`: `parts`. (4) Otherwise: `block`.
 
+Two fixed assignments (ledger section 8.1): Icon is tier `snippet` (`snippets/rp-icon.liquid`, no block file). Pagination is tier `resource`; it takes URL params (previous and next URLs), not a resource object (D-037).
+
 ### 8.2 Rules
 
 L-1 to L-11 are the rules of `ripple/docs/research/liquid-blocks-partials.md` with the choices of D-038 applied. L-12 to L-18 are added by this document.
@@ -1514,7 +1583,15 @@ L-1 to L-11 are the rules of `ripple/docs/research/liquid-blocks-partials.md` wi
 - **L-10 Locale keys.** A string the block prints itself is `{{ 'ripple.<component id>.<key>' | t }}`, assigned to a variable when passed to a snippet. Schema labels are `t:` keys (L-17).
 - **L-11 Escaping.** Every param printed into an attribute value is `| escape`d and the attribute value is double-quoted. A validated enumeration (after its guard) is printed bare. `class` is escaped. `attributes` is the only raw attribute input. `content` is HTML. Text from data (`product.title`) is escaped; HTML fields are not. Numeric resource ids (`variant.id`) are printed bare.
 - **L-12 No blocks inside Ripple files.** `{% block %}` appears only in templates and layouts (platform rule; Theme Check `ValidBlockTagPlacement`). A Ripple block or snippet file MUST NOT contain `{% block %}`; reuse is `{% render 'rp-<id>' %}` (D-037).
-- **L-13 Liquid subset.** Ripple-owned `.liquid` files under `blocks/` and `snippets/` use only these tags: `doc`, `schema`, `liquid`, `assign`, `if`, `unless`, `elsif`, `else`, `case`, `when`, `for`, `capture` (only under L-7), `render`, `form`, `comment`, `echo`. And only these filters: `escape`, `split`, `t`, `default`, `append`, `prepend`, `strip`, `plus`, `minus`, `times`, `size`, `money`, `image_url`, `json`. A component spec that needs another filter MUST add it to this list in the same pull request that adds it to the shim (`13-testing.md`). The checker rejects anything else (`07-manifest-registry-cli.md`).
+- **L-13 Liquid subset (D-097).** The subset has three scopes. The local shim (`13-testing.md`) implements the union. A file that uses a tag or filter outside its scope is a checker error (layer S, `07-manifest-registry-cli.md`).
+
+  | Scope | Files | Tags | Filters and objects |
+  |---|---|---|---|
+  | Component | `blocks/*.liquid`, `snippets/rp-<id>*.liquid` of components | `doc`, `schema`, `liquid`, `assign`, `if`, `unless`, `elsif`, `else`, `case`, `when`, `for`, `capture`, `render`, `form`, `comment`, `echo` | `escape`, `split`, `t`, `default`, `append`, `prepend`, `strip`, `plus`, `minus`, `times`, `size`, `money`, `image_url`, `json`, `divided_by`, `modulo`, `round`, `remove`, `date`, `url_encode`, `payment_button`; objects `content_for_additional_checkout_buttons`, `additional_checkout_buttons` |
+  | Blueprint | `layout/*.liquid`, `templates/*.liquid` | the component tags plus `block`, `partial`, `paginate`, `layout` | the component filters plus `standard_event_data`; the globals listed by `12-chrome-and-blueprints.md` (rule L-D) |
+  | Infrastructure | `rp-head`, `rp-tokens`, `rp-import-map-entries`, `rp-icon`, and the theme-owned `import-map` and `meta-tags` snippets | the component tags | the component filters plus `asset_url`, `stylesheet_tag`, `font_face`, and the font object members used by `14-liquid-theme.md` section 6 |
+
+  `{% capture %}` is in the subset only for building attribute strings and for the named slot params of L-7 (D-037); never to pass markup between files. `as` as a param name: UNVERIFIED on a store (SPIKE-02); fallback name `tag` (D-038).
 - **L-14 Booleans.** A boolean param is true only for the Liquid boolean `true`: `{% if disabled == true %}`. The string `'false'` and the string `'true'` are both not true.
 - **L-15 Enumerations.** Each non-responsive enumeration param, including schema settings, is guarded before first use and falls back to the manifest default (M-6):
 
@@ -1527,7 +1604,10 @@ L-1 to L-11 are the rules of `ripple/docs/research/liquid-blocks-partials.md` wi
 
   An enumeration with no default has no fallback assignment: its attribute is printed inside `{% if allowed_<param> contains <param> %}...{% endif %}`.
 - **L-16 Unset and responsive.** A param is unset when it `== blank` (nil, empty string, whitespace-only string). Optional attributes are printed as `{% if x != blank %}data-x="{{ x | escape }}"{% endif %}`. Responsive params are strings, always quoted at the call site, escaped and printed unchanged (D-038 item 4); they are not validated at render time (V-7).
-- **L-17 `{% doc %}` and `{% schema %}`.** Every block file has both; every snippet file has `{% doc %}`. Every block accepts `class` and `attributes`. A schema has at most three settings, all styling settings (manifest `prop.liquid.surface: "setting"`), of type `select`; option values are prop tokens, never classes (D-038 item 5). Label keys: block name `t:ripple.<component id>.name` for the root and `t:ripple.<component id>.<part>_name` for a part (part name in snake_case); setting labels `t:ripple.props.<prop liquid name>`; option labels `t:ripple.props.<value>` (shared across components; a value that is not a valid key segment, such as `2xl` or `0.5`, uses the key `t:ripple.props.v_<value with "." replaced by "_">`).
+- **L-17 `{% doc %}` and `{% schema %}`.** Every block file has both; every snippet file has `{% doc %}`. Every block accepts `class` and `attributes` (exception: L-19). A schema setting exists only for a non-responsive enumerated prop that has a default (manifest `prop.liquid.surface: "setting"`); a schema has at most three settings, all of type `select`; option values are prop tokens, never classes (D-038 amended). Label keys: block name `t:ripple.<component id>.name` for the root and `t:ripple.<component id>.<part>_name` for a part (part name in snake_case); setting labels `t:ripple.props.<prop liquid name>`; option labels `t:ripple.props.<value>` (shared across components). A character outside `[a-z0-9_]` in a value becomes `_` in the key: `0.5` gives `t:ripple.props.0_5`, `1/1` gives `t:ripple.props.1_1`, `2xl` stays `t:ripple.props.2xl`. The English text of every label is humanised from the prop name or value by the generator (`full_width` gives "Full width"). There are no per-component setting label keys.
+- **L-19 `{% form %}` roots.** A root printed by Liquid `{% form %}` accepts only `id` and `class`. It takes no `attributes`, `span` or `hidden` param (D-035, D-037, D-091).
+- **L-20 Ids across files.** The root id of ANOTHER component is received through the param named after that root component in snake_case (`cart_lines`, `dialog`, `tabs`), never `for` and never `form`. The native `form` attribute is printed by the param `form_id` (TSX `formId`) (D-020).
+- **L-21 Region parts.** A component whose content is a region ships a snippet `rp-<component id>-<part>` (`rp-cart-lines-list`, `rp-cart-summary-totals`, `rp-product-gallery-media`, `rp-product-recommendations-list`, `rp-filters-groups`, `rp-predictive-search-results`). The TEMPLATE writes `{% partial '<region>' %}` around the rendered snippet inside the component's block body; a block or snippet never contains `{% partial %}`. The snippet is rendered with the same params everywhere it is rendered. A region name is declared at most once per rendered page. The exact pattern is owned by `11-components-commerce.md` section 0 (D-091).
 - **L-18 `attributes` last.** `{{ attributes }}` is printed as the LAST thing inside the root start tag, after every contract attribute (M-14: the HTML parser keeps the first duplicate, so the contract wins). The class attribute is always `class="<root class> {{ class | escape }}"` (the trailing space when `class` is unset is removed by canonicalisation and is harmless in browsers).
 
 How schema settings and params meet: a call-site argument with the same name as a schema setting sets that setting, and the block reads it by its bare name (`{{ variant }}`); the dotted form `block.settings.variant:` is a syntax error at the call site (`ripple/docs/research/liquid-blocks-partials.md` section 2). Reading a setting by bare name when the caller did not pass it is used by `ripple/theme/blocks/container.liquid` and accepted by Theme Check; behaviour on a live store is UNVERIFIED and covered by tier 8. Because every enumeration is guarded (L-15), an unset or unknown value prints the default in either case.
@@ -1543,6 +1623,8 @@ In this order, nothing else:
 5. In scaffolded copies only: the provenance trailer (D-056).
 
 ### 8.4 Static pattern: Button (tier `block`, embedded by other files, generated)
+
+> Copy rule (D-069). The owning component document is normative for Button (`09-components-foundation.md`, section "Button"). Props the code below does not yet print and that the generated file MUST print as doc 09 defines them: `dialog` / `dialog` (only with `href`; prints `data-rp-open="<dialog id>"`), `tooltip` / `tooltip` (prints `aria-describedby="<id>-content"` and `data-slot="tooltip-trigger"`), `formId` / `form_id` (prints the native `form` attribute). The code in this section illustrates the binding PATTERN of this host (file shape, prop handling, guards, attribute order). Where it differs from the owning document, the owning document wins and this section is the defect; the committed file is whatever `pnpm gen` produces from the manifest entry (generated files) or the code in the owning document (hand-written files).
 
 `components/button/liquid/snippets/rp-button.liquid`:
 
@@ -1735,6 +1817,8 @@ In this order, nothing else:
 
 ### 8.5 Static pattern with responsive params: Stack (tier `block`, not embedded, generated)
 
+> Copy rule (D-069). The owning component document is normative for Stack (`09-components-foundation.md`, section "Stack"). Props the code below does not yet print and that the generated file MUST print as doc 09 defines them: `gapX` / `gap_x` (`data-gap-x`), `gapY` / `gap_y` (`data-gap-y`), `textAlign` / `text_align` (`data-text-align`); and `role="list"` when `as` is `ul` or `ol`. The code in this section illustrates the binding PATTERN of this host (file shape, prop handling, guards, attribute order). Where it differs from the owning document, the owning document wins and this section is the defect; the committed file is whatever `pnpm gen` produces from the manifest entry (generated files) or the code in the owning document (hand-written files).
+
 `components/stack/liquid/blocks/stack.liquid`:
 
 ```liquid
@@ -1805,6 +1889,8 @@ In this order, nothing else:
 The param `as` passes Theme Check 4.0.2 and the shim. Whether Shopify accepts `as` as a block param name is UNVERIFIED (it is a keyword of `{% render ... as %}`). Default path: use `as`. Fallback: set the manifest `prop.liquid.name` of `as` to `tag` for every component; nothing else changes, because the name is generated from the manifest.
 
 ### 8.6 Interactive patterns: Dialog and Tabs (tier `parts`, generated)
+
+> Copy rule (D-069). The owning component document is normative for Dialog and Tabs (`10-components-interactive.md`, sections "Dialog" and "Tabs"). Dialog parts are exactly `panel`, `header`, `title`, `description`, `body`, `footer` (exports `DialogHeader`, `DialogBody`, `DialogFooter`; blocks `dialog-header`, `dialog-body`, `dialog-footer`), and there is no `describedBy` prop (D-008). Tabs is horizontal only; `TabsTab` and `TabsPanel` each receive `tabs`, `value`, and `selected` on the selected pair (D-012). Parts that the code below does not show MUST be added as doc 10 defines them. The code in this section illustrates the binding PATTERN of this host (file shape, prop handling, guards, attribute order). Where it differs from the owning document, the owning document wins and this section is the defect; the committed file is whatever `pnpm gen` produces from the manifest entry (generated files) or the code in the owning document (hand-written files).
 
 `components/dialog/liquid/blocks/dialog.liquid`:
 
@@ -2054,6 +2140,8 @@ The param `as` passes Theme Check 4.0.2 and the shim. Whether Shopify accepts `a
 
 ### 8.7 Commerce pattern: ProductForm (tier `resource`, hand-written)
 
+> Copy rule (D-069). The owning component document is normative for ProductForm and CartLines (`11-components-commerce.md`, sections "ProductForm", "AddToCartButton" and "CartLines"). Differences the code below still has and that the implemented file MUST NOT have: the ProductForm root carries no `data-rp-refresh` (ledger section 4.4); the submit button is the AddToCartButton component (class `rp-button rp-add-to-cart-button`) with the dialect attributes of doc 11, not a plain Button; locale keys are the ones doc 11 names (the key `ripple.product-form.add_to_cart` below is replaced by doc 11's key for AddToCartButton); CartLines renders its lines through the region part `CartLinesList` (Liquid snippet `rp-cart-lines-list`, region `rp-cart-lines`) and always prints one `data-rp-part="status"` element (D-045, D-091). The code in this section illustrates the binding PATTERN of this host (file shape, prop handling, guards, attribute order). Where it differs from the owning document, the owning document wins and this section is the defect; the committed file is whatever `pnpm gen` produces from the manifest entry (generated files) or the code in the owning document (hand-written files).
+
 `components/product-form/liquid/blocks/product-form.liquid`:
 
 ```liquid
@@ -2125,6 +2213,8 @@ Notes:
 
 ## 10. Validation of enumerated and responsive props, per host
 
+The rules of this section implement D-073. In TSX the enumeration guard is the inline form `(X as readonly string[]).includes(xProp ?? "") ? xProp : "<default>"` on the generated `const` array (T-8); no helper function is introduced. An invalid enumerated value prints the default in every host.
+
 - **V-5** Summary (complete):
 
 | Prop | `react`, `remix`: compile time | `react`, `remix`: run time | `liquid`: authoring | `liquid`: run time | `html` |
@@ -2146,10 +2236,10 @@ Tiers are those of D-063. The runner, resource fixtures, the Liquid shim and the
 ### 11.1 Common rules
 
 - **Q-1** For every component, every fixture record (`02-html-contract.md` section 11.2) and every host in the record's `hosts` (absent: all four), the adapter renders the binding and the test asserts `canonicalize(output, { mask }) === canonicalize(referenceHtml, { mask })`, with `canonicalize` from `src/testing/canonicalize.ts`. On failure the test prints the fixture name, the host and both canonical strings.
-- **Q-2** The adapter renders the files under `components/<id>/<host>/` with `__PKG__` resolved to the built package. It MUST NOT render a re-implementation.
+- **Q-2** The adapter renders the files under `components/<id>/<host>/` with `__PKG__` resolved to the built package. It MUST NOT render a re-implementation. Per-host work directories are `examples/<host>/.ripple-conformance/` (git-ignored, D-096).
 - **Q-3** Fixture `props` keys are manifest prop names. Each adapter maps them: React renames `class` to `className`; Remix keeps `class`; Liquid uses `prop.liquid.name`.
 - **Q-4** Part instances in a fixture's `parts` are rendered in order as children. In TSX the export is `<Title><Part in PascalCase>`; in Liquid the block is `<id>-<part>`.
-- **Q-5** Required fixtures every component with the stated feature MUST have, in addition to those of `02-html-contract.md` section 11.5: `invalid-enum-falls-back` (any non-responsive enum; V-6), `escaping` (any string prop printed into an attribute: the value `Say "hi" & <go>`), and one fixture passing `class` with two class names.
+- **Q-5** Required fixtures every component with the stated feature MUST have, in addition to those of `02-html-contract.md` section 11.5: `invalid-enum-falls-back` (any non-responsive enum; V-6), `escaping` (any string prop printed into an attribute: the value `Say "hi" & <go>`), and one fixture passing `class` with two class names. The complete list of required fixtures is that of D-074; where this rule and D-074 differ, D-074 wins.
 
 ### 11.2 React adapter
 
@@ -2160,7 +2250,7 @@ Tiers are those of D-063. The runner, resource fixtures, the Liquid shim and the
 - **Q-10** Hydration (tier 4), for every component of kind `native`, `ui` or `commerce`, in a development build of React inside `<StrictMode>`, for both script orders (elements defined before `hydrateRoot`; `hydrateRoot` before elements defined):
   1. zero `console.error` and `console.warn` output;
   2. zero calls of `onRecoverableError`;
-  3. a `MutationObserver` on the React root, installed before any module script, records nothing other than (i) entries of the component's `upgradeAllow` and (ii) the constant list `REACT_HYDRATION_ALLOW` below;
+  3. a `MutationObserver` on the React root, installed before any module script, records nothing other than (i) entries of the component's `upgradeAllow` and (ii) the constant list `REACT_HYDRATION_ALLOW` below (file `test/hydration/react-allow.ts`; this document owns its content, D-033, D-071);
   4. each callback of D-036 fires on the FIRST interaction, with no prior re-render;
   5. in controlled mode with a parent that rejects the change, the state does not change (dialog stays closed; tab selection unchanged);
   6. a parent re-render while the element is in a non-initial state leaves that state unchanged (dialog stays open).
@@ -2269,6 +2359,7 @@ Applies only if the Invoker Commands polyfill fails in an engine (React 19.3.1 a
    ```
 
 4. The contract changes are those of `02-html-contract.md` "Fallback (SPIKE-05)"; affected fixtures are regenerated. No prop is added or renamed.
+5. When React 19 or Remix 3 does not print the empty value of `popover=""` unchanged, the Popover panel prints `popover="auto"` in all four hosts (D-010); the Popover fixtures are regenerated.
 
 ### Fallback (SPIKE-02)
 
@@ -2286,26 +2377,4 @@ Applies only if root-only `definePrimitive` fails and `rp-*` elements become `Ri
 
 ## Ledger issues
 
-Decisions this document had to make because the ledger is silent, and places where the ledger's wording is wrong. Each was resolved in the most consistent way and applied above.
-
-1. **Enumeration fallback in TSX versus "only `rv()` and `cx()`" (D-035 item 7, `02-html-contract.md` M-6).** M-6 requires a fallback to the default in every host, and D-035 forbids a third helper. Applied: an inline `includes` expression on a `const` array (T-8).
-2. **`rv` signature.** The ledger names `rv()` without a signature. Applied: `rv(value, allowed?, label?)`, accepts string, number, boolean, `null`, `undefined`; development-only warnings; never changes the output (section 4). `rv` is also the "unset" normaliser for plain string props (V-4).
-3. **Where prop types live (D-003 "TypeScript prop types" generated; `01-architecture.md` lists "prop types" as an export of `<pkg>`).** Applied: value arrays and prop interfaces are generated INTO each scaffolded binding file; `<pkg>` exports only `Responsive` (T-13). `01-architecture.md` should read "the type `Responsive`".
-4. **`RestProps`.** Not in the ledger. Applied: a type exported from `<pkg>/react` and `<pkg>/remix`; the Remix variant omits `mix` and `role` (7.2). `<pkg>/remix` has no runtime helper, although `01-architecture.md` says "Remix binding helpers". `src/remix/**` needs the type-only import `import type {} from "remix/component"`; `01-architecture.md` says `src/remix/**` imports nothing external and must allow `remix/component (type)`, as it allows `@shopify/hydrogen (type)` for `src/react/**`.
-5. **Generated JSX type files.** D-003 says `IntrinsicElements` is generated; `01-architecture.md` lists only hand-written files in `src/react/` and `src/remix/`. Applied: `src/react/jsx.generated.ts` and `src/remix/jsx.generated.ts`, imported by the index files. The React file also augments `ButtonHTMLAttributes` with `commandfor` and `command`.
-6. **"A stable key prop when the component has no id" (D-034 item 2).** No name was given. Applied: Remix-only optional prop `rmxKey`; the attribute is omitted when it is unset (X-3).
-7. **Which names go in `data-rmx-preserve-attrs`.** Applied: the manifest `state[]` rows for that element written by the element or the browser, space-joined (X-4). `07-manifest-registry-cli.md` must make `state[]` rows carry the target element and the writer.
-8. **Placement of Liquid `attributes` (D-035 item 4, ledger section 6.1).** Follows `02-html-contract.md` M-14: last in the start tag (L-18). The ledger wording "before contract attributes" is wrong for Liquid.
-9. **Store hooks (D-033 "hooks from `<pkg>/react`").** No names were given. Applied: exactly one hook, `useCart(selector, serverValue)`; `serverValue` is returned on the server, during hydration and when the store is not usable (6.2).
-10. **One writer per node in React (D-045).** D-045 lets React render structure from the store but does not say who writes counts, errors and pending state. Applied: the element writes them; React renders those nodes with constant props (R-11, R-12).
-11. **React hydration is not literally mutation-free (D-033, D-063 tier 4).** React 19.3.1 re-writes `type`, `value`, `name`, `checked` on native `<input>` with the same value and re-sets `<textarea>` text. Applied: constant `REACT_HYDRATION_ALLOW` (Q-10).
-12. **`"use client"`.** Not in the ledger. Applied: first line if and only if the file calls a hook (R-14).
-13. **Generated versus hand-written per host for kinds `native` and `ui` (D-003).** D-003 names only "React wiring" as hand-written. Applied: `html`, `remix`, `liquid` generated; `react` hand-written with a generated, checked header region (G-1 to G-3). For hand-written Liquid (kind `commerce`) the generator checks `{% doc %}`, `{% schema %}` and guards instead of writing them.
-14. **Schema label keys (D-038 item 6 says only `t:ripple.<...>`).** Applied: `t:ripple.<component id>.name`, `t:ripple.<component id>.<part>_name`, shared `t:ripple.props.<name or value>` (L-17).
-15. **The closed filter list of the Ripple Liquid subset (D-038 item 8).** The research names the tags but not the filters. Applied: the 14 filters of L-13.
-16. **Liquid param `as`.** D-038 item 3 does not reserve it; live acceptance is UNVERIFIED. Applied: use `as`; fallback name `tag` through `prop.liquid.name` (8.5).
-17. **Sibling import specifiers.** Applied: `./<id>` in React, `./<id>.tsx` in Remix (section 1.1). The CLI must not rewrite them.
-18. **Controlled props need element support (D-036).** Applied as a requirement on `04-elements.md`: settable properties `open` / `value` and cancelable change events (6.2 item 3).
-19. **Parts cannot learn the root's initial state (D-020, S-7).** Applied: the caller passes `selected` to each Tabs part in every host, and React parts capture it once (R-3, L-9).
-20. **Conformance work directories.** `01-architecture.md` says scaffolded TSX is type-checked "inside each host's example project" without a path. Applied: `examples/<host>/.ripple-conformance/` (Q-6, Q-11).
-21. **Extra required fixtures.** Applied: `invalid-enum-falls-back`, `escaping`, and a two-class `class` fixture (Q-5), in addition to `02-html-contract.md` section 11.5.
+None open. See `00-decisions.md` section 13.2.

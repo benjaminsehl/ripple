@@ -1,6 +1,6 @@
 # 11 - Components: commerce
 
-Status: specification. Law: [00-decisions.md](00-decisions.md). This document owns the 26 components of ledger section 8.3 and uses the component template of ledger section 7 verbatim. Where this document and the ledger disagree, the ledger wins; known disagreements and additions are listed under [Ledger issues](#ledger-issues).
+Status: specification. Law: [00-decisions.md](00-decisions.md). This document owns the 26 components of ledger section 8.3 and uses the component template of ledger section 7 verbatim. This document is normative for the contracts of these 26 components (D-069, D-093). Where this document and the ledger disagree, the ledger wins. Markup of a component owned by another document that is shown here is a copy of the owner's contract (D-069); where a copy differs from the owner, the owner wins.
 
 Not owned here, linked instead: the commerce JavaScript, adapter, dialect tables and refresh strategies ([05-commerce.md](05-commerce.md)); contract rules, masks and fixture format ([02-html-contract.md](02-html-contract.md)); CSS rules and tokens ([03-styling-and-tokens.md](03-styling-and-tokens.md)); `rp-dialog`, `rp-carousel`, `rp-quantity` ([04-elements.md](04-elements.md)); binding rules ([06-bindings.md](06-bindings.md)); manifest and checker ([07-manifest-registry-cli.md](07-manifest-registry-cli.md)); foundation and interactive components ([09-components-foundation.md](09-components-foundation.md), [10-components-interactive.md](10-components-interactive.md)); chrome and blueprints ([12-components-chrome-and-blueprints.md](12-components-chrome-and-blueprints.md)); test harness and resource fixtures ([13-testing.md](13-testing.md)); the assembled theme ([14-liquid-theme.md](14-liquid-theme.md)).
 
@@ -28,7 +28,7 @@ All 26 components are milestone M3 (D-067). Names, ids, kinds, tags and tiers ar
 | 14 | CartLine | `cart-line` | static | `li` | resource | full | no | hand |
 | 15 | CartSummary | `cart-summary` | commerce | `rp-cart` | resource | full | no | hand |
 | 16 | CartNote | `cart-note` | commerce | `rp-cart` | resource | full | yes | hand |
-| 17 | DiscountCode | `discount-code` | commerce | `rp-cart` | resource | full (hydrogen backend), degraded (liquid backend) | yes | hand |
+| 17 | DiscountCode | `discount-code` | commerce | `rp-cart` | resource | degraded | yes | hand |
 | 18 | CheckoutButton | `checkout-button` | static | `a` or `button` | block | full | no | hand |
 | 19 | Filters | `filters` | commerce | `rp-live` | resource | full | yes | hand |
 | 20 | FilterGroup | `filter-group` | static | `details` | resource | full | no | hand |
@@ -39,55 +39,106 @@ All 26 components are milestone M3 (D-067). Names, ids, kinds, tags and tiers ar
 | 25 | PredictiveSearch | `predictive-search` | commerce | `rp-predictive-search` | resource | degraded | yes | hand |
 | 26 | LiveForm | `live-form` | commerce | `rp-live` | block | full | no | hand |
 
-"Binding" says how the four bindings are produced. `generated`: from the manifest contract template by `pnpm gen` (D-003). `hand`: hand-written in all four hosts, because the contract needs a loop over data, a value derived from data, or a host-owned region, none of which the contract template language can express (D-003: no loops, no expressions). A hand-written binding MUST pass fixture conformance (D-063 tier 2). See Ledger issues, item 1.
+"Binding" says how the four bindings are produced. `generated`: from the manifest contract template by `pnpm gen` (D-003). `hand`: hand-written in the `react`, `remix` and `liquid` hosts, because the contract needs a loop over data, a value derived from data, or a host-owned region, none of which the contract template language can express (D-072: no loops, no expressions). The `html` binding of a hand-written component is its fixture reference HTML. Hand-written files contain the generated, checked regions of D-072 item (c): Liquid `{% doc %}`, `{% schema %}` and enumeration guards; TSX prop types. A hand-written binding MUST pass fixture conformance (D-063 tier 2). Only Swatch and SearchForm are generated (D-072).
+
+The No-JS column is the manifest value `noJs.level` (D-005). DiscountCode is `degraded` in every host: on the `liquid` backend the form is absent without JavaScript (D-092); on the `hydrogen` backend it posts to the cart route.
 
 ### 0.2 Embedded components
 
-Commerce components embed foundation and interactive components. Rule S-10 of [02-html-contract.md](02-html-contract.md) applies: embedded markup MUST be exactly the embedded component's own contract for the props passed. In TSX the embedding binding renders the embedded component; in Liquid it calls `{% render 'rp-<id>' %}` (never `{% block %}`, D-037).
+Commerce components reuse foundation and interactive components in exactly two ways (D-070).
 
-Docs 09 and 10 own these contracts. The fixtures in this document were written with the markup below. If doc 09 or doc 10 specifies different markup for the same props, doc 09 or doc 10 wins and the implementer MUST regenerate the fixture files of this document from the embedded component's reference HTML, changing nothing else.
+**Embed.** The embedding binding renders the other component unchanged: in TSX it renders the component; in Liquid it calls `{% render 'rp-<id>' %}` (never a nested `{% block %}`, D-037). The embedded markup MUST equal the owner's contract for the props passed (D-069; rule S-10 of [02-html-contract.md](02-html-contract.md)). The embedded component is listed in the manifest key `dependencies.components`.
+
+**Compose by contract.** The composing component prints the other component's element ITSELF, with the other component's class first and its own class second, and with every attribute the other component's contract prints for the same props. The binding does not call the other component, because the element also carries hook attributes (`data-rp-part`, `data-rp-js`, `form`) that the other component does not print. The pair is recorded in the composing component's manifest (`root.class` when the element is the root, otherwise the part's `class`), and the other component is listed in `dependencies.components`. The composed pairs this document prints are exactly these:
+
+| Class pair | Printed by | Element | Composes |
+|---|---|---|---|
+| `rp-drawer rp-cart-drawer` | CartDrawer root | `rp-dialog` | Drawer |
+| `rp-button rp-add-to-cart-button` | AddToCartButton root | `button` | Button |
+| `rp-button rp-checkout-button` | CheckoutButton root | `a` or `button` | Button |
+| `rp-button rp-filters-submit` | Filters part `submit` | `button` | Button |
+| `rp-button rp-cart-lines-update` | CartLines part `submit` (`liquid` backend) | `button` | Button |
+| `rp-button rp-cart-line-update` | CartLine part `update` (`hydrogen` backend) | `button` | Button |
+| `rp-input rp-search-form-input` | SearchForm part `input` | `input` | Input |
+| `rp-icon-button rp-search-form-submit` | SearchForm part `submit` | `button` | IconButton |
+| `rp-icon-button rp-cart-line-remove` | CartLine part `remove` | `button` or `a` | IconButton |
+| `rp-badge rp-product-card-badge` | ProductCard part `badge` | `span` | Badge |
+| `rp-dialog rp-product-gallery-lightbox` | ProductGallery part `lightbox` | `rp-dialog` | Dialog |
+| `rp-dialog-title rp-visually-hidden` | ProductGallery lightbox title | `h2` | Dialog (part `title`), VisuallyHidden |
+
+A foundation control that carries a hook attribute (`data-rp-part` or `data-rp-js`) but no second class is printed the same way: by the commerce binding itself, with exactly the owner's attributes for the props shown, and recorded with the part `class` `rp-button` and the dependency `button`. These are the fallback submit buttons of VariantPicker (`dropdown` layout) and SortSelect, the save button of CartNote and the apply button of DiscountCode. Reason: no foundation prop prints these hook attributes, and a hook attribute other than `data-rp-region` MUST NOT be passed through rest props or `attributes` (D-091 item 2).
+
+Docs 09 and 10 own the contracts below. The fixtures in this document are written with this markup, which is a copy of the owner's reference HTML for the props shown. If doc 09 or doc 10 differs for the same props, doc 09 or doc 10 wins (D-069) and the fixture files of this document MUST be regenerated from the owner's reference HTML, changing nothing else.
 
 | Embedded | Props passed in this document | Markup used in this document's fixtures |
 |---|---|---|
-| Image | `src`, `alt`, `width`, `height`, `sizes`, `loading`, `ratio`, `fit` | `<img class="rp-image" src="U?width=600" srcset="U?width=300 300w, U?width=600 600w, U?width=900 900w" sizes="S" alt="A" width="W" height="H" loading="lazy" data-ratio="1/1" data-fit="cover">` |
-| Placeholder | `ratio` | `<div class="rp-placeholder" data-ratio="1/1"></div>` |
-| Icon | `name` | `<svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="D"/></svg>` where `D` is the path data of `icons/<name>.svg` |
-| Button | `type`, `variant`, `size`, `fullWidth`, `disabled`, `href`, `name`, `value` | `<button class="rp-button" type="submit" data-variant="primary" data-size="md">` ; with `href`: `<a class="rp-button" href="..." data-variant="primary" data-size="md">` ; `fullWidth` adds `data-full-width=""` |
-| IconButton | `type`, `variant`, `size`, `ariaLabel`, `commandFor`, `command`, `href` | `<button class="rp-icon-button" type="button" data-variant="ghost" data-size="md" aria-label="...">` + one Icon |
+| Image | `image` (REQUIRED object: `url`, `altText`, `width`, `height`), `alt`, `sizes`, `loading`, `fetchPriority`, `ratio`, `fit` | `<img class="rp-image" src="U?width=800" srcset="U?width=200 200w, U?width=400 400w, U?width=600 600w, U?width=800 800w, U?width=1200 1200w, U?width=1600 1600w" sizes="S" alt="A" width="W" height="H" loading="lazy" decoding="async" data-ratio="1/1" data-fit="cover" data-radius="none">`. `src` is always width 800 and `srcset` is always these six widths (doc 09); a component in this document MUST NOT choose other widths. `fetchPriority="high"` prints `fetchpriority="high"` between `loading` and `decoding`. |
+| Placeholder | `ratio` | `<div class="rp-placeholder" data-ratio="1/1" data-radius="none" aria-hidden="true"></div>` |
+| Icon | `name` | `<svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">C</svg>` where `C` is the content of the icon (table below) |
+| Button | `type`, `variant`, `size`, `fullWidth`, `disabled`, `href`, `name`, `value` | `<button class="rp-button" type="submit" data-variant="primary" data-size="md">` ; with `href`: `<a class="rp-button" href="<href>" data-variant="primary" data-size="md">` ; `fullWidth` adds `data-full-width=""` |
+| IconButton | `type`, `variant`, `size`, `ariaLabel`, `commandFor`, `command`, `href` | `<button class="rp-icon-button" type="button" data-variant="ghost" data-size="md" aria-label="<ariaLabel>">` + one Icon |
 | Badge | `variant`, `tone`, `size` | `<span class="rp-badge" data-variant="solid" data-tone="sale" data-size="md">` |
-| Label | `htmlFor` | `<label class="rp-label" for="...">` |
-| Input | `type`, `name`, `value`, `placeholder`, `size` | `<input class="rp-input" type="text" data-size="md" ...>` |
-| Textarea | `name` | `<textarea class="rp-textarea" ...>` |
-| Select | `name`, `size` | `<select class="rp-select" data-size="md" ...>` |
-| Checkbox | `name`, `value`, `defaultChecked`, `disabled` | `<input class="rp-checkbox" type="checkbox" ...>` |
+| Label | `htmlFor` | `<label class="rp-label" for="<htmlFor>">` |
+| Input | `id`, `type`, `name`, `defaultValue`, `placeholder`, `autoComplete`, `min`, `step`, `size`, `ariaLabel`, `describedBy`, `rpField`, `formId` | `<input class="rp-input" type="text" data-size="md">` with the attributes of doc 09 for the props passed |
+| Textarea | `id`, `name`, `rows`, `defaultValue`, `rpField`, `formId` | `<textarea class="rp-textarea" rows="4" data-size="md"></textarea>` with the attributes of doc 09 for the props passed |
+| Select | `id`, `name`, `size`, `ariaLabel`, `rpField`, `formId` | `<select class="rp-select" data-size="md">` with the attributes of doc 09 for the props passed |
+| Checkbox | `name`, `value`, `defaultChecked`, `disabled` | `<input class="rp-checkbox" type="checkbox">` with the attributes of doc 09 for the props passed (`name`, `value`, `checked`, `disabled`) |
 | FormMessage (error part) | none | `<p class="rp-form-message" data-rp-part="error" data-tone="destructive" role="alert" hidden></p>` (D-045 item 4; exact) |
 | VisuallyHidden | none | `<span class="rp-visually-hidden">` (the class MAY also be put on a `p`) |
-| QuantityInput | `name`, `defaultValue`, `min`, `max`, `step`, `ariaLabel`, `rpField` | the `rp-quantity` markup of [04-elements.md](04-elements.md) section 8.1 |
-| Carousel | `id`, `ariaLabel` | the `rp-carousel` markup of [04-elements.md](04-elements.md) section 10.9 |
-| Dialog, Drawer | `id`, `side`, `size` | the `rp-dialog` markup of [04-elements.md](04-elements.md) sections 10.1 and 10.2 |
+| QuantityInput | `name`, `defaultValue`, `min`, `max`, `step`, `ariaLabel`, `formId` | the `rp-quantity` markup below ([10-components-interactive.md](10-components-interactive.md), QuantityInput) |
+| Carousel | `id`, `ariaLabel` | the `rp-carousel` markup of [10-components-interactive.md](10-components-interactive.md), Carousel: controls are `<button class="rp-carousel-control">`, viewport `<ul class="rp-carousel-viewport">`, items `<li class="rp-carousel-item">` |
+| Dialog, Drawer | `id`, `side`, `size` | the `rp-dialog` markup of [10-components-interactive.md](10-components-interactive.md), Dialog and Drawer (composed by contract, table above) |
 
-Icon path data used in this document's fixtures (illustrative; the real data is the content of `icons/<name>.svg`, owned by doc 09):
+Icon content used in this document's fixtures (a copy of the icon data of [09-components-foundation.md](09-components-foundation.md), Icon):
 
-| Icon | `d` |
+| Icon | Content of the `svg` |
 |---|---|
-| `close` | `M6 6l12 12M18 6L6 18` |
-| `chevron-left` | `M15 6l-6 6 6 6` |
-| `chevron-right` | `M9 6l6 6-6 6` |
-| `cart` | `M3 4h2l2.4 11h10.2L20 7H6.2M9 20h.01M17 20h.01` |
-| `trash` | `M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13` |
-| `search` | `M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM20 20l-4-4` |
+| `cart` | `<path d="M3 4h2l2.4 11h10.2L20 7H6.2"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/>` |
+| `chevron-left` | `<path d="M15 6l-6 6 6 6"/>` |
+| `chevron-right` | `<path d="M9 6l6 6-6 6"/>` |
+| `close` | `<path d="M6 6l12 12M18 6L6 18"/>` |
+| `minus` | `<path d="M5 12h14"/>` |
+| `plus` | `<path d="M12 5v14M5 12h14"/>` |
+| `search` | `<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>` |
+| `trash` | `<path d="M4 7h16M10 7V4h4v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>` |
 
-Requirement on docs 09 and 10 (Ledger issues, item 2): Input, Textarea, Select and QuantityInput MUST accept the prop `rpField` (Liquid `rp_field`; values `merchandise-id`, `quantity`, `line-id`, `selling-plan`, `note`, `discount-code`) and print it as `data-rp-field="<value>"` on the native control (for QuantityInput: on the inner `<input>`). Without it the commerce elements cannot find the field ([05-commerce.md](05-commerce.md) section 6.2).
+QuantityInput markup (a byte-equal copy of the `default` fixture of [10-components-interactive.md](10-components-interactive.md), QuantityInput):
+
+```html
+<rp-quantity class="rp-quantity" data-size="md" data-slot="rp-quantity">
+  <button class="rp-quantity-button" type="button" disabled aria-label="Decrease quantity" data-rp-part="decrement" data-rp-js="inflow"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+  <input class="rp-quantity-input" type="number" inputmode="numeric" name="quantity" min="1" step="1" value="1" aria-label="Quantity" data-rp-part="input" data-rp-field="quantity">
+  <button class="rp-quantity-button" type="button" aria-label="Increase quantity" data-rp-part="increment" data-rp-js="inflow"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+</rp-quantity>
+```
+
+Differences by prop, all from doc 10: the decrement button prints `disabled` only when the value equals `min`; the increment button prints `disabled` only when the value equals `max`; `max` prints `max="<n>"` after `min`; `formId` (Liquid `form_id`) prints the native attribute `form="<value>"` directly after `value`. QuantityInput always prints `data-rp-field="quantity"` on its input; it takes no `rpField` prop.
+
+`data-rp-field` on Input, Textarea and Select is printed ONLY through the prop `rpField` (Liquid `rp_field`; values `merchandise-id`, `quantity`, `line-id`, `selling-plan`, `note`, `discount-code`; an invalid value prints no attribute; doc 09). The native `form` attribute on an embedded control is printed ONLY through the prop `formId` (Liquid `form_id`; D-020). A binding in this document MUST NOT pass either attribute through rest props or `attributes`. The commerce elements find fields by `data-rp-field` ([05-commerce.md](05-commerce.md) section 6.2).
 
 ### 0.3 Region slots
 
-Six components contain a region (D-046): ProductGallery (`rp-product-media`), ProductRecommendations (`rp-product-recommendations`), CartLines (`rp-cart-lines`), CartSummary (`rp-cart-summary`), Filters (`rp-collection-filters`), PredictiveSearch (`rp-predictive-results`). The other regions (`rp-product-buy`, `rp-collection-results`, `rp-collection-toolbar`, `rp-search-results`) are declared by blueprints around whole components ([12-components-chrome-and-blueprints.md](12-components-chrome-and-blueprints.md)).
+Six components own a region (D-046, D-091). The other four regions are owned by blueprints ([12-components-chrome-and-blueprints.md](12-components-chrome-and-blueprints.md)). This table is the one of D-091 item 1 with the TSX export added; docs 12 and 14 copy it.
 
-Rules:
+| Region | Owner | Part | TSX export | Liquid snippet |
+|---|---|---|---|---|
+| `rp-cart-lines` | CartLines | `list` | `CartLinesList` | `rp-cart-lines-list` |
+| `rp-cart-summary` | CartSummary | `totals` | `CartSummaryTotals` | `rp-cart-summary-totals` |
+| `rp-product-media` | ProductGallery | `media` | `ProductGalleryMedia` | `rp-product-gallery-media` |
+| `rp-product-recommendations` | ProductRecommendations | `list` | `ProductRecommendationsList` | `rp-product-recommendations-list` |
+| `rp-collection-filters` | Filters | `groups` | `FiltersGroups` | `rp-filters-groups` |
+| `rp-predictive-results` | PredictiveSearch | `results` | `PredictiveSearchResults` | `rp-predictive-search-results` |
+| `rp-product-buy` | blueprint `product` | none | none (a layout component, Stack) | none |
+| `rp-collection-results`, `rp-collection-toolbar` | blueprint `collection` | none | none (a layout component) | none |
+| `rp-search-results` | blueprint `search` | none | none (a layout component) | none |
 
-- **RS-1** The region root is a part of the component. It is ONE element that carries `data-rp-region="<name>"`. It is printed by a dedicated region part: a TSX export `<Component><Part>` and a Liquid snippet `snippets/rp-<component id>-<part>.liquid` (a snippet, not a block, so that it can be rendered inside `{% partial %}`).
+A blueprint-owned region is a layout component that receives `data-rp-region="<name>"` through rest props (TSX) or `attributes: 'data-rp-region="<name>"'` (Liquid); no other Ripple hook attribute may be passed that way (D-091 item 2).
+
+Rules (D-090, D-091):
+
+- **RS-1** The region root is a part of the component. It is ONE element that carries `data-rp-region="<name>"`. It is printed by a dedicated region part: a TSX export `<Component><Part>` and a Liquid snippet `snippets/rp-<component id>-<part>.liquid` (a snippet, not a block, so that it can be rendered inside `{% partial %}`). A snippet named `rp-<component id>-region` does not exist (D-091 item 3).
 - **RS-2** The component's default body renders the region part. In every host the component's children (`{{ content }}` in Liquid) REPLACE the default rendering of the region part, and nothing else. This is the "default body" of D-037 for these six components.
-- **RS-3** Liquid: Ripple block and snippet files MUST NOT contain `{% partial %}` ([06-bindings.md](06-bindings.md) rule L-13; checker RP403). For in-place refresh the TEMPLATE or LAYOUT MUST pass the region part inside a partial, exactly like this:
+- **RS-3** Liquid: Ripple block and snippet files MUST NOT contain `{% partial %}` ([06-bindings.md](06-bindings.md) rule L-13; checker RP403 reports a `data-rp-refresh` name that has no `{% partial %}` in `layout/` or `templates/`, and a partial name declared twice). For in-place refresh the TEMPLATE or LAYOUT MUST pass the region part inside a partial, exactly like this:
 
   ```liquid
   {% block 'cart-lines', id: 'cart', cart: cart %}
@@ -95,22 +146,26 @@ Rules:
   {% endblock %}
   ```
 
-  The HTML is identical to the default body (no wrapper is assumed, SPIKE-02). A call without the partial renders correctly, but `ripple check` reports RP403, and a refresh of that region ends in the navigation fallback of [05-commerce.md](05-commerce.md) section 8.2 step 11.
-- **RS-4** Liquid: a partial name MUST be declared at most once per rendered page. Therefore a layout MUST NOT render CartDrawer on the cart template when the cart template renders CartLines (owned by doc 12 and doc 14).
-- **RS-5** Remix: the default body renders the region part inline and the `html` refresh strategy applies ([05-commerce.md](05-commerce.md) section 8.3). An app that uses Frames passes `<Frame name="<region name>" src="<its route>" />` as children; the Frame's route MUST render the region part and nothing else.
-- **RS-6** React: cart regions render from the store (D-045 item 2); children are not needed. URL-driven regions re-render through the router.
-- **RS-7** A region part MUST NOT contain a `<dialog>` and MUST NOT contain the `rp-cart` root that names it in `data-rp-refresh` (checker RP308).
+  The HTML is identical to the default body (no wrapper is assumed, SPIKE-02). A call without the partial renders correctly, but a refresh of that region then fails and ends in the `liquid` failure action of D-090 (`location.reload()` or `location.assign(url)`; nothing for `predictive` and `recommendations`).
+
+  A region-part snippet MUST be rendered with the same params everywhere it is rendered (D-091 item 4): the call inside the partial lists exactly the params that the component's default body passes, with the same values. Each owning component's usage example shows the complete call; a template MUST copy it and change only the values.
+- **RS-4** In EVERY host a region name MUST be declared at most once per rendered page (D-091 item 5). Therefore the `layout` blueprint omits CartDrawer on the cart page (TSX layout prop `cartPage`; Liquid `template.name == 'cart'`), the CartLink there has no `drawer`, and `openCart()` navigates to `cartUrl` (owned by doc 12 and doc 14).
+- **RS-5** Remix: a region is a plain element with `data-rp-region`; the default body renders the region part inline and the `html` refresh strategy applies (D-090 items 2 and 5; [05-commerce.md](05-commerce.md) section 8.3). No blueprint uses a `<Frame>`. `reloadFrames` and `navigate` are opt-in adapter options (SPIKE-11): an app that configures `reloadFrames` passes `<Frame name="<region name>" src="<its route>" />` as children, and the Frame's route MUST render the region part and nothing else.
+- **RS-6** React (D-090): cart regions (`rp-cart-lines`, `rp-cart-summary`) render from the store (D-045 item 2); the strategy does nothing and children are not needed. Regions refreshed with reason `variant` or `filter` (`rp-product-media`, `rp-collection-filters`) re-render through the router: the adapter calls `navigate(url, { replace })` when that option is configured, otherwise `location.assign(url)`. Regions refreshed with reason `predictive` or `recommendations` (`rp-predictive-results`, `rp-product-recommendations`) never navigate: the adapter fetches the URL and publishes the inner HTML of the same-named region, and the region part reads it with `useRegionHtml("<region name>")` from `<pkg>/react`. While the hook returns `null` (on the server, during hydration and until the first publish) the part renders its server children; afterwards it renders the HTML string with `dangerouslySetInnerHTML` on the region root. Only `PredictiveSearchResults` and `ProductRecommendationsList` use the hook; their complete code is in their React host notes. UNVERIFIED (SPIKE-10); each of the two components has a `Fallback (SPIKE-10)` subsection.
+- **RS-7** A region part MUST NOT contain a `<dialog>` (the dialog would be replaced while open; checker RP308 on rendered HTML, RP404 on Liquid source). An `rp-cart` root MUST NOT be inside the region it names in `data-rp-refresh` (checker RP308, an error; D-102). VariantPicker, SortSelect and FilterChips inside the region they refresh are legal (D-102). RP308 also reports, in every host, a `data-rp-refresh` that names a region that is not on the page.
 
 ### 0.4 Backend-scoped fixtures and masks
 
-- **FX-1** Money text, image URLs, form `action`, dialect field `name` / `value`, cart line identity and backend-specific URLs are masked with the rules of [02-html-contract.md](02-html-contract.md) section 11.6. Each component lists its masks under "Host-owned regions and masks".
-- **FX-2** Where D-043 or D-050 makes the two backends print a different TAG or a different form STRUCTURE (CartLines, CartLine actions, CartNote, CheckoutButton, CartSummary, CartDrawer), a mask cannot make the outputs equal. Those components have two fixtures per state: `<name>` with `"hosts": ["html", "react", "remix"]` (hydrogen dialect, in full) and `liquid-<name>` (for the default state: `liquid`) with `"hosts": ["liquid"]` (liquid dialect, in full). Both are `generated: "hand"`. Parts outside the host-owned subtree MUST be identical in the two files. See Ledger issues, item 3.
+- **FX-1** Money text, image URLs, form `action`, dialect field `name` / `value` and backend-specific URLs are masked with the rules of [02-html-contract.md](02-html-contract.md) section 11.6. Each component lists its masks under "Host-owned regions and masks".
+- **FX-2** Where D-043 or D-050 makes the two backends print a different TAG or a different form STRUCTURE (CartLines, CartLine actions, CartNote, CheckoutButton, CartSummary, CartDrawer), a mask cannot make the outputs equal. Those components and DiscountCode (whose Liquid form carries `data-rp-js="inflow"`, D-092) have two fixtures per state (D-074): `<name>` with `"hosts": ["html", "react", "remix"]` (hydrogen dialect, in full) and `liquid-<name>` with `"hosts": ["liquid"]` (liquid dialect, in full). The default state is `default` and `liquid-default`. Both are `generated: "hand"`. Parts outside the backend-dependent subtree MUST be identical in the two files. The seven components are CartLines, CartLine, CartSummary, CartNote, CheckoutButton, CartDrawer and DiscountCode; no other component scopes a fixture by host.
+- **FX-2a** A mask MUST NOT target a Ripple-owned attribute or class (D-074). Masks have the form `{ "select", "op", "name" }` with `op` one of `attr`, `drop-attr`, `srcset`, `text`, `children`, `remove`. Rule F-19 of [02-html-contract.md](02-html-contract.md) (a mask must match in the reference HTML) does not apply to `drop-attr` and `remove` masks (D-074).
 - **FX-3** Every component additionally has the required fixtures of [02-html-contract.md](02-html-contract.md) section 11.5 (`class`, `invalid-enum-falls-back`, `responsive`, `escaping`, one per non-default prop). Where this document does not print such a fixture in full, its HTML is the `default` fixture with exactly the change stated in the component's "Further required fixtures" line.
 - **FX-4** Whitespace and line breaks in the fenced contracts are not significant (canonicalisation, D-063).
+- **FX-5** A line of the form `<!-- <Component> fixture `<name>` -->` inside a fenced contract of this document is not part of the fixture. The fixture FILE contains, at that position, the complete reference HTML of the named fixture of the named component, with the prop changes stated next to the contract. No fixture file contains an HTML comment.
 
 ### 0.5 Resource fixtures
 
-Fixtures reference resources by name (F-4 of [02-html-contract.md](02-html-contract.md)). [13-testing.md](13-testing.md) owns the data files for both backends; it MUST provide these resources with these values, because the reference HTML in this document shows them.
+Fixtures reference resources as `{ "$resource": "<type>.<name>" }` (D-074; F-4 of [02-html-contract.md](02-html-contract.md)). The table below is the source of the values in `src/testing/resources.ts` ([13-testing.md](13-testing.md)), which provides every resource for both backends with exactly these values, because the reference HTML in this document shows them. Each resource is named `<type>.<name>`.
 
 | Resource | Values |
 |---|---|
@@ -129,7 +184,7 @@ Fixtures reference resources by name (F-4 of [02-html-contract.md](02-html-contr
 
 ### 0.6 Data: Storefront API fragments and Liquid objects
 
-Resource prop shapes (`RippleProduct`, `RippleVariant`, `RippleCollection`, `RippleArticle`, `RippleCart`, `RippleLine`, `RippleImage`, `RippleMoney`) are defined in [05-commerce.md](05-commerce.md) section 11.1. This section gives the Storefront API selections that satisfy them and the additional shapes this document needs. Ripple ships NO Storefront API client and NO query (ledger section 11 item 13): the fragments below are documentation printed in `docs/guides/` and in the `ripple-commerce` skill; the app's loader runs them with `createStorefrontClient` from `@shopify/hydrogen`.
+Every resource prop shape is defined in [05-commerce.md](05-commerce.md) section 11.1 and exported from `<pkg>` (D-094): `RippleProduct`, `RippleVariant`, `RippleCollection`, `RippleArticle`, `RippleCart`, `RippleLine`, `RippleImage`, `RippleMoney`, `RippleMedia`, `RippleFilter`, `RippleFilterValue`, `RippleProductCard`, `RippleProductDetail`, `RippleCollectionCard`, `RippleArticleCard`, and the option, chip and sort-option shapes. This document declares none of them; each component lists the fields it READS, and doc 05 is the definition. This section gives the Storefront API selections that satisfy the types. Ripple ships NO Storefront API client and NO query (ledger section 11 item 13): the fragments below are documentation printed in `docs/guides/` and in the `ripple-commerce` skill; the app's loader runs them with `createStorefrontClient` from `@shopify/hydrogen`.
 
 Verification status: the cart fields were read in `hydrogen/packages/hydrogen/src/core/cart/queries.ts` (`HydrogenCartFragment`). The product option fields (`options.optionValues.firstSelectableVariant`, `selectedOrFirstAvailableVariant`, `adjacentVariants`, `encodedVariantExistence`, `encodedVariantAvailability`) were read as type requirements in `hydrogen/packages/hydrogen/src/core/product/state.ts`. Every other field name below is UNVERIFIED against the Storefront API schema in this session and MUST be checked with the Shopify docs tool before the guide is published.
 
@@ -223,18 +278,26 @@ Liquid equivalents (the expression each Liquid binding reads; nothing else may b
 
 Liquid drop members confirmed through the Shopify docs tool in this session: `product_option_value` (`available`, `name`, `product_url`, `selected`, `swatch`), `product_option` (`name`, `position`, `selected_value`, `values`), `filter` (`param_name`, `presentation`, `min_value`, `active_values`, `url_to_remove`), `filter_value` (`active`, `count`, `label`, `param_name`, `swatch`, `url_to_add`, `url_to_remove`, `value`), `cart` (`cart_level_discount_applications`, `items_subtotal_price`, `total_price`, `item_count`, `note`), `recommendations` (`performed?`, `products`, `products_count`, `intent`). `product_option_value.variant` and the `discount_application.type` value `discount_code` are used by the base theme (`ripple/theme/blocks/variant-picker.liquid`) or come from general knowledge: UNVERIFIED in the docs tool.
 
-Liquid filters this document adds to the Ripple Liquid subset of [06-bindings.md](06-bindings.md) rule L-13 (the shim of [13-testing.md](13-testing.md) MUST implement them): `divided_by` and `modulo` (PriceRange), `date` (ArticleCard), `url_encode` (FilterChips clear link on search), `payment_button` (ProductForm accelerated checkout). Objects added: `content_for_additional_checkout_buttons` and `additional_checkout_buttons` (CartSummary). Liquid loop variables `forloop.index` and `forloop.first` are used.
+Liquid subset: the components of this document use only the component scope of D-097 ([06-bindings.md](06-bindings.md) rule L-13). That scope includes the filters `divided_by` and `modulo` (PriceRange), `date` (ArticleCard), `url_encode` (FilterChips clear link on search) and `payment_button` (ProductForm accelerated checkout), and the objects `content_for_additional_checkout_buttons` and `additional_checkout_buttons` (CartSummary). The shim of [13-testing.md](13-testing.md) implements the scope. The loop variables `forloop.index` and `forloop.first` are used.
 
 ### 0.7 Shared conventions
 
-- **CV-1 Locale and money in TSX hosts.** Components that print money or dates take a `locale` prop (BCP 47 tag, default `"en-US"`, TSX hosts only, manifest `prop.hosts: ["react", "remix"]`). Money text is `formatMoney(money, { locale }).localizedString` with `formatMoney` imported from `@shopify/hydrogen` (`hydrogen/packages/hydrogen/src/core/money/format.ts`; D-049). Liquid prints `{{ cents | money }}`. The `html` host writes the text by hand.
+- **CV-1 Locale and money in TSX hosts.** Components that print money or dates take a `locale` prop (BCP 47 tag, default `"en-US"`, TSX hosts only, manifest `prop.hosts: ["react", "remix"]`). Money text is `formatMoney(money, { locale }).localizedString` with `formatMoney` imported from `@shopify/hydrogen` (`hydrogen/packages/hydrogen/src/core/money/format.ts`; D-049). Liquid prints `{{ cents | money }}`; there is no money snippet (D-049). The `html` host writes the text by hand. `locale` and `strings` are ordinary TSX props (D-094).
 - **CV-2 Strings.** Every string a component prints itself is a locale key. The tables under "Host notes" give key and English default. TSX hosts override a string by passing children where the string is the component's text, and otherwise through the prop `strings` (type `object`, a partial map from the key's last segment in camelCase to text, TSX hosts only).
 - **CV-3 `refresh` prop.** Components rooted in `rp-live` take `refresh` (Liquid `refresh`): a space-separated list of region names, printed escaped as `data-rp-refresh`. It is a `string` prop, not responsive.
-- **CV-4 Ids.** Derived ids use only the suffixes of D-020 plus `-form` (defined by [05-commerce.md](05-commerce.md) section 6.2 for the Liquid cart form).
-- **CV-5 Custom element roots** print `data-slot="<tag>"` (D-019). In Remix they also print `data-rmx-key="<id>"` when the component has an `id`, otherwise `data-rmx-key="<component id>"` (D-034).
+- **CV-4 Ids.** `id` is REQUIRED on ProductGallery, ProductForm, VariantPicker, CartDrawer, CartLines, CartNote, DiscountCode, Filters, SortSelect and PredictiveSearch (D-020). Derived ids use only the suffixes of D-020 (`-title`, `-description`, `-error`, `-trigger`, `-content`, `-tab-<v>`, `-panel-<v>`, `-item-<v>`, `-list`, `-live`, `-form`). `<cart lines id>-form` is the Liquid cart form (D-092).
+- **CV-5 Custom element roots** print `data-slot="<tag>"` (D-019). In Remix they also print `data-rmx-key` (D-034): the value is the `id` when the component has a REQUIRED `id`; otherwise it is the prop `rmxKey` (Remix host only), and the attribute is omitted when `rmxKey` is unset. Fixtures do not show `data-rmx-key`.
 - **CV-6 Liquid tier `resource`.** The block takes the resource as a param, prints the default body, and prints `{{ content }}` in place of the default body when `content != blank` (D-037). For the six region components "default body" means the region part (RS-2). For the others the component section states what the content replaces.
 - **CV-7 Styling sections** list tokens and public custom properties; the CSS file itself MUST follow [03-styling-and-tokens.md](03-styling-and-tokens.md) section 7 (one `@layer rp.components` block, modifiers set custom properties only, logical properties, hover inside `@media (hover: hover)`).
-- **CV-8 Upgrade allow-list entries** use the format of [02-html-contract.md](02-html-contract.md) section 7.2 and go into the manifest key `upgradeAllow`.
+- **CV-8 Upgrade allow-list entries** use the format of [02-html-contract.md](02-html-contract.md) section 7.2 (D-071) and go into the manifest key `upgradeAllow`. An entry has exactly these keys: `select` (REQUIRED), `attrs` (attribute names; `["*"]` is forbidden), `childList`, `text`, `subtree` (booleans, default `false`) and `reason` (REQUIRED). The global entry for `a[data-rp-open]` (`aria-haspopup`, `aria-controls`) is owned by doc 02 and is not repeated per component.
+- **CV-9 Value imports of `@shopify/hydrogen`** in scaffolded TSX files are exactly these seven pure functions (D-094): `formatMoney`, `renderShopPayButton`, `buildProductSelectionSearchParams`, `parseCollectionParams`, `serializeCollectionParams`, `isFilterInputActive`, `getFilterRemovalUrl`. Every other import from `@shopify/hydrogen` is `import type`.
+- **CV-10 Data helpers.** A pure helper that builds prop values (`toRippleCart`, `toRippleLine`, `variantPickerOptions`, `toRippleFilters`, `toFilterChips`, `sortParams`) lives in `<id>.data.ts` (manifest file key `data`), which has no `"use client"` directive. The binding imports it as `./<id>.data` (Remix: `./<id>.data.ts`); blueprints import it as `@components/<id>.data`. A `"use client"` file exports components only (D-094).
+- **CV-11 Composition.** Reuse of another component's markup follows section 0.2 (D-070).
+- **CV-12 Analytics.** No component in this document prints `rp-view-event`; only blueprints do (D-089).
+- **CV-13 Acceptance tests.** Item `n` of a component's "Acceptance tests" list has the id `AT-<n>` (D-104); a cross-reference is written `<Component> AT-<n>`. "Tier" is a tier of D-063.
+- **CV-14 Checker rules.** A component-specific rule is an entry of the manifest key `rules[]` with the keys `id`, `kind` (`requires-ancestor`, `forbids-ancestor`, `requires-descendant`, `forbids-descendant`, `requires-attribute`, `max-count`), `selector`, `target`, `count`, `message`, `fix`. `ripple check` reports a violated rule as RP113 with the rule id in brackets (D-102).
+- **CV-16 Remix cart forms.** Every cart `<form>` printed by a component of this document on the `remix` host (ProductForm fields, CartLine actions, the CartSummary remove form, the CartNote form, the DiscountCode form) and the checkout link print `data-rmx-document` (D-034 item 3). Fixtures do not show it; the canonicaliser removes host extra attributes (D-063).
+- **CV-15 Liquid attributes.** A Liquid binding prints `{{ attributes }}` last on the root (D-035). A root printed by `{% form %}` accepts only `id` and `class` (D-091 item 6). Schema label keys are `t:ripple.<id>.name`, `t:ripple.<id>.<part>_name` and `t:ripple.props.<prop>` (D-038).
 
 ---
 
@@ -297,7 +360,7 @@ Fixture `default` (`product`: `product.basic`):
 ```html
 <div class="rp-product-card">
   <div class="rp-product-card-media">
-    <img class="rp-image" src="https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=600" srcset="https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=300 300w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=600 600w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=900 900w" sizes="(min-width: 64rem) 25vw, 50vw" alt="Linen shirt on a hanger" width="1200" height="1200" loading="lazy" data-ratio="1/1" data-fit="cover">
+    <img class="rp-image" src="https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=800" srcset="https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=200 200w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=400 400w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=600 600w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=800 800w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=1200 1200w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=1600 1600w" sizes="(min-width: 64rem) 25vw, 50vw" alt="Linen shirt on a hanger" width="1200" height="1200" loading="lazy" decoding="async" data-ratio="1/1" data-fit="cover" data-radius="none">
   </div>
   <div class="rp-product-card-body">
     <h3 class="rp-product-card-title"><a class="rp-product-card-link" href="/products/linen-shirt">Linen Shirt</a></h3>
@@ -311,7 +374,7 @@ Fixture `sale` (`product`: `product.sale`, `showVendor`: true, `level`: `2`):
 ```html
 <div class="rp-product-card" data-show-vendor="">
   <div class="rp-product-card-media">
-    <img class="rp-image" src="https://cdn.shopify.com/s/files/1/0001/wool-socks.jpg?width=600" srcset="https://cdn.shopify.com/s/files/1/0001/wool-socks.jpg?width=300 300w, https://cdn.shopify.com/s/files/1/0001/wool-socks.jpg?width=600 600w, https://cdn.shopify.com/s/files/1/0001/wool-socks.jpg?width=900 900w" sizes="(min-width: 64rem) 25vw, 50vw" alt="Grey wool socks" width="1200" height="1200" loading="lazy" data-ratio="1/1" data-fit="cover">
+    <img class="rp-image" src="https://cdn.shopify.com/s/files/1/0001/wool-socks.jpg?width=800" srcset="https://cdn.shopify.com/s/files/1/0001/wool-socks.jpg?width=200 200w, https://cdn.shopify.com/s/files/1/0001/wool-socks.jpg?width=400 400w, https://cdn.shopify.com/s/files/1/0001/wool-socks.jpg?width=600 600w, https://cdn.shopify.com/s/files/1/0001/wool-socks.jpg?width=800 800w, https://cdn.shopify.com/s/files/1/0001/wool-socks.jpg?width=1200 1200w, https://cdn.shopify.com/s/files/1/0001/wool-socks.jpg?width=1600 1600w" sizes="(min-width: 64rem) 25vw, 50vw" alt="Grey wool socks" width="1200" height="1200" loading="lazy" decoding="async" data-ratio="1/1" data-fit="cover" data-radius="none">
     <span class="rp-badge rp-product-card-badge" data-variant="solid" data-tone="sale" data-size="md">Sale</span>
   </div>
   <div class="rp-product-card-body">
@@ -327,7 +390,7 @@ Fixture `sold-out` (`product`: `product.sold-out`, `ratio`: `4/5`):
 ```html
 <div class="rp-product-card">
   <div class="rp-product-card-media">
-    <div class="rp-placeholder" data-ratio="4/5"></div>
+    <div class="rp-placeholder" data-ratio="4/5" data-radius="none" aria-hidden="true"></div>
     <span class="rp-badge rp-product-card-badge" data-variant="solid" data-tone="neutral" data-size="md">Sold out</span>
   </div>
   <div class="rp-product-card-body">
@@ -396,9 +459,9 @@ Required rules: root `position: relative; display: flex; flex-direction: column;
 ### Host notes
 
 - HTML: copy the contract; write the formatted price by hand.
-- React: `ProductCard(props: { product: RippleProduct; level?: 2 | 3 | 4 | 5 | 6; ratio?: Ratio; sizes?: string; loading?: "lazy" | "eager"; showVendor?: boolean; locale?: string; className?: string })`. No hook, no `"use client"`. Sale test: `product.compareAtPrice !== null && Number(product.compareAtPrice.amount) > Number(product.price.amount)`. Image: `imageUrl(src, { width: 600 })` and `imageSrcSet(src, [300, 600, 900])` from `<pkg>`.
+- React: `ProductCard(props: { product: RippleProduct; level?: 2 | 3 | 4 | 5 | 6; ratio?: Ratio; sizes?: string; loading?: "lazy" | "eager"; showVendor?: boolean; locale?: string; className?: string })`. No hook, no `"use client"`. Sale test: `product.compareAtPrice !== null && Number(product.compareAtPrice.amount) > Number(product.price.amount)`. The badge composes Badge by contract (D-070; class pair `rp-badge rp-product-card-badge`, section 0.2): the binding prints the `<span>` itself with Badge's `data-variant`, `data-tone`, `data-size`. Image: the embedded Image, `<Image image={product.featuredImage} sizes={sizes} loading={loading} ratio={ratio} />`; Image prints `src` (width 800) and the six-width `srcset` itself (doc 09). The binding MUST NOT build image URLs.
 - Remix: same props with `class`; no `data-rmx-*` attribute.
-- Liquid: `snippets/rp-product-card.liquid` holds the markup; `blocks/product-card.liquid` is the thin wrapper (L-3). Sale test: `product.compare_at_price > product.price`. Image: `product.featured_image | image_url: width: 600`, and one `image_url` call per width `300`, `600`, `900` for `srcset`. No schema settings. Locale keys: `ripple.product-card.sale` = `Sale`; `ripple.product-card.sold_out` = `Sold out`.
+- Liquid: `snippets/rp-product-card.liquid` holds the markup; `blocks/product-card.liquid` is the thin wrapper (L-3). Sale test: `product.compare_at_price > product.price`. Image: `{% render 'rp-image', image: product.featured_image, sizes: sizes, loading: loading, ratio: ratio %}`; the Image snippet prints `src` (width 800) and the six-width `srcset` (doc 09). The root prints `{{ attributes }}` last (D-035). No schema settings. Locale keys: `ripple.product-card.sale` = `Sale`; `ripple.product-card.sold_out` = `Sold out`.
 
 ```tsx
 <ProductCard product={product} level={2} showVendor />
@@ -492,13 +555,13 @@ Fixture `default` (`collection`: `collection.basic`):
 ```html
 <div class="rp-collection-card">
   <div class="rp-collection-card-media">
-    <img class="rp-image" src="https://cdn.shopify.com/s/files/1/0001/summer.jpg?width=600" srcset="https://cdn.shopify.com/s/files/1/0001/summer.jpg?width=300 300w, https://cdn.shopify.com/s/files/1/0001/summer.jpg?width=600 600w, https://cdn.shopify.com/s/files/1/0001/summer.jpg?width=900 900w" sizes="(min-width: 64rem) 33vw, 50vw" alt="Beach at noon" width="1600" height="1200" loading="lazy" data-ratio="1/1" data-fit="cover">
+    <img class="rp-image" src="https://cdn.shopify.com/s/files/1/0001/summer.jpg?width=800" srcset="https://cdn.shopify.com/s/files/1/0001/summer.jpg?width=200 200w, https://cdn.shopify.com/s/files/1/0001/summer.jpg?width=400 400w, https://cdn.shopify.com/s/files/1/0001/summer.jpg?width=600 600w, https://cdn.shopify.com/s/files/1/0001/summer.jpg?width=800 800w, https://cdn.shopify.com/s/files/1/0001/summer.jpg?width=1200 1200w, https://cdn.shopify.com/s/files/1/0001/summer.jpg?width=1600 1600w" sizes="(min-width: 64rem) 33vw, 50vw" alt="Beach at noon" width="1600" height="1200" loading="lazy" decoding="async" data-ratio="1/1" data-fit="cover" data-radius="none">
   </div>
   <h3 class="rp-collection-card-title"><a class="rp-collection-card-link" href="/collections/summer">Summer</a></h3>
 </div>
 ```
 
-Further required fixtures: `class`; `invalid-enum-falls-back` (`level`: `9`; equals `default`); `escaping` (`sizes`: `Say "hi" & <go>`); `props` (`level`: `2`, `ratio`: `3/2`, `loading`: `eager`; title tag `h2`, `data-ratio="3/2"`, `loading="eager"`). A collection without an image prints `<div class="rp-placeholder" data-ratio="1/1"></div>` in place of the `<img>` (no shared fixture; covered by a host unit test).
+Further required fixtures: `class`; `invalid-enum-falls-back` (`level`: `9`; equals `default`); `escaping` (`sizes`: `Say "hi" & <go>`); `props` (`level`: `2`, `ratio`: `3/2`, `loading`: `eager`; title tag `h2`, `data-ratio="3/2"`, `loading="eager"`). A collection without an image prints `<div class="rp-placeholder" data-ratio="1/1" data-radius="none" aria-hidden="true"></div>` in place of the `<img>` (no shared fixture; covered by a host unit test).
 
 Host-owned regions and masks: no host-owned region. Masks: `img` `src` (`attr`) and `srcset` (`srcset`).
 
@@ -556,7 +619,7 @@ Required rules: the same overlay-link and focus rules as ProductCard, with the `
 - HTML: None.
 - React: `CollectionCard(props: { collection: RippleCollection; level?: 2 | 3 | 4 | 5 | 6; ratio?: Ratio; sizes?: string; loading?: "lazy" | "eager"; className?: string })`. No hook.
 - Remix: None.
-- Liquid: markup in `blocks/collection-card.liquid` (not embedded by another file). Image: `collection.image | image_url: width: 600`; when `collection.image == blank` use Placeholder. No schema settings. No locale keys.
+- Liquid: markup in `blocks/collection-card.liquid` (not embedded by another file). Image: `{% render 'rp-image', image: collection.image, sizes: sizes, loading: loading, ratio: ratio %}`; when `collection.image == blank` render Placeholder (`{% render 'rp-placeholder', ratio: ratio %}`). No schema settings. No locale keys.
 
 ```tsx
 <CollectionCard collection={collection} ratio="3/2" />
@@ -652,7 +715,7 @@ Fixture `default` (`article`: `article.basic`):
 ```html
 <div class="rp-article-card">
   <div class="rp-article-card-media">
-    <img class="rp-image" src="https://cdn.shopify.com/s/files/1/0001/wash.jpg?width=600" srcset="https://cdn.shopify.com/s/files/1/0001/wash.jpg?width=300 300w, https://cdn.shopify.com/s/files/1/0001/wash.jpg?width=600 600w, https://cdn.shopify.com/s/files/1/0001/wash.jpg?width=900 900w" sizes="(min-width: 64rem) 33vw, 100vw" alt="Linen in a basin" width="1500" height="1000" loading="lazy" data-ratio="3/2" data-fit="cover">
+    <img class="rp-image" src="https://cdn.shopify.com/s/files/1/0001/wash.jpg?width=800" srcset="https://cdn.shopify.com/s/files/1/0001/wash.jpg?width=200 200w, https://cdn.shopify.com/s/files/1/0001/wash.jpg?width=400 400w, https://cdn.shopify.com/s/files/1/0001/wash.jpg?width=600 600w, https://cdn.shopify.com/s/files/1/0001/wash.jpg?width=800 800w, https://cdn.shopify.com/s/files/1/0001/wash.jpg?width=1200 1200w, https://cdn.shopify.com/s/files/1/0001/wash.jpg?width=1600 1600w" sizes="(min-width: 64rem) 33vw, 100vw" alt="Linen in a basin" width="1500" height="1000" loading="lazy" decoding="async" data-ratio="3/2" data-fit="cover" data-radius="none">
   </div>
   <div class="rp-article-card-body">
     <time class="rp-article-card-date" datetime="2026-06-01">Jun 1, 2026</time>
@@ -891,7 +954,7 @@ Required rules: root `display: inline-flex; flex-wrap: wrap; align-items: baseli
 ### Host notes
 
 - HTML: write the formatted text by hand.
-- React: `Price(props: { price: RippleMoney; compareAtPrice?: RippleMoney | null; size?: "sm" | "base" | "lg" | "xl" | "2xl"; from?: boolean; locale?: string; strings?: { sale?: string; regular?: string; from?: string }; className?: string })`. Imports `formatMoney` from `@shopify/hydrogen` (a value import; allowed in scaffolded bindings, see Ledger issues item 4). Text: `formatMoney(price, { locale }).localizedString`. No hook.
+- React: `Price(props: { price: RippleMoney; compareAtPrice?: RippleMoney | null; size?: "sm" | "base" | "lg" | "xl" | "2xl"; from?: boolean; locale?: string; strings?: { sale?: string; regular?: string; from?: string }; className?: string })`. Imports `formatMoney` from `@shopify/hydrogen` (a value import allowed by D-094, CV-9). Text: `formatMoney(price, { locale }).localizedString`. No hook.
 - Remix: None.
 - Liquid: markup in `snippets/rp-price.liquid`; `blocks/price.liquid` is the thin wrapper. Text: `{{ price | money }}`. On-sale test: `compare_at_price != blank and compare_at_price > price`. One schema setting: `size` (`select`). Locale keys: `ripple.price.sale` = `Sale price`; `ripple.price.regular` = `Regular price`; `ripple.price.from` = `From`.
 
@@ -996,27 +1059,27 @@ Fixture `default` (`id`: `gallery`, `media`: media of `product.basic`):
 ```html
 <div class="rp-product-gallery">
   <div class="rp-product-gallery-media" data-rp-region="rp-product-media">
-    <rp-carousel class="rp-carousel" data-slot="rp-carousel" id="gallery" role="group" aria-roledescription="carousel" aria-label="Product images">
-      <button type="button" class="rp-icon-button" data-variant="ghost" data-size="md" data-rp-part="prev" data-rp-js="inflow" aria-controls="gallery-list" aria-label="Previous" disabled><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
-      <ul class="rp-carousel-viewport" id="gallery-list" data-rp-part="viewport" tabindex="0">
+    <rp-carousel class="rp-carousel" id="gallery" role="group" aria-roledescription="carousel" aria-label="Product images" data-slot="rp-carousel">
+      <button class="rp-carousel-control" type="button" disabled aria-controls="gallery-list" aria-label="Previous" data-rp-part="prev" data-rp-js="inflow"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <ul class="rp-carousel-viewport" id="gallery-list" tabindex="0" data-rp-part="viewport">
         <li class="rp-carousel-item" data-rp-part="item">
-          <a class="rp-product-gallery-zoom" href="https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=2000" data-rp-open="gallery-content"><img class="rp-image" src="https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=900" srcset="https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=600 600w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=900 900w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=1200 1200w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=1600 1600w" sizes="(min-width: 64rem) 50vw, 100vw" alt="Linen shirt on a hanger" width="1200" height="1200" loading="eager" fetchpriority="high" data-ratio="1/1" data-fit="cover"><span class="rp-visually-hidden">View larger image</span></a>
+          <a class="rp-product-gallery-zoom" href="https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=2000" data-rp-open="gallery-content"><img class="rp-image" src="https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=800" srcset="https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=200 200w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=400 400w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=600 600w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=800 800w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=1200 1200w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=1600 1600w" sizes="(min-width: 64rem) 50vw, 100vw" alt="Linen shirt on a hanger" width="1200" height="1200" loading="eager" fetchpriority="high" decoding="async" data-ratio="1/1" data-fit="cover" data-radius="none"><span class="rp-visually-hidden">View larger image</span></a>
         </li>
         <li class="rp-carousel-item" data-rp-part="item">
-          <a class="rp-product-gallery-zoom" href="https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=2000" data-rp-open="gallery-content"><img class="rp-image" src="https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=900" srcset="https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=600 600w, https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=900 900w, https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=1200 1200w, https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=1600 1600w" sizes="(min-width: 64rem) 50vw, 100vw" alt="Back of the linen shirt" width="1200" height="1200" loading="lazy" data-ratio="1/1" data-fit="cover"><span class="rp-visually-hidden">View larger image</span></a>
+          <a class="rp-product-gallery-zoom" href="https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=2000" data-rp-open="gallery-content"><img class="rp-image" src="https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=800" srcset="https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=200 200w, https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=400 400w, https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=600 600w, https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=800 800w, https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=1200 1200w, https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=1600 1600w" sizes="(min-width: 64rem) 50vw, 100vw" alt="Back of the linen shirt" width="1200" height="1200" loading="lazy" decoding="async" data-ratio="1/1" data-fit="cover" data-radius="none"><span class="rp-visually-hidden">View larger image</span></a>
         </li>
       </ul>
-      <button type="button" class="rp-icon-button" data-variant="ghost" data-size="md" data-rp-part="next" data-rp-js="inflow" aria-controls="gallery-list" aria-label="Next"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+      <button class="rp-carousel-control" type="button" aria-controls="gallery-list" aria-label="Next" data-rp-part="next" data-rp-js="inflow"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
     </rp-carousel>
   </div>
   <rp-dialog class="rp-dialog rp-product-gallery-lightbox" data-slot="rp-dialog">
-    <dialog id="gallery-content" class="rp-dialog-panel" data-size="full" aria-labelledby="gallery-content-title" closedby="any">
-      <h2 id="gallery-content-title" class="rp-dialog-title rp-visually-hidden">Product images</h2>
+    <dialog class="rp-dialog-panel" id="gallery-content" data-size="full" aria-labelledby="gallery-content-title" closedby="any">
+      <h2 class="rp-dialog-title rp-visually-hidden" id="gallery-content-title">Product images</h2>
       <div class="rp-dialog-body">
-        <img class="rp-image" src="https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=2000" alt="Linen shirt on a hanger" width="1200" height="1200" loading="lazy" data-ratio="auto" data-fit="contain">
-        <img class="rp-image" src="https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=2000" alt="Back of the linen shirt" width="1200" height="1200" loading="lazy" data-ratio="auto" data-fit="contain">
+        <img class="rp-image" src="https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=800" srcset="https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=200 200w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=400 400w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=600 600w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=800 800w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=1200 1200w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=1600 1600w" sizes="100vw" alt="Linen shirt on a hanger" width="1200" height="1200" loading="lazy" decoding="async" data-ratio="auto" data-fit="contain" data-radius="none">
+        <img class="rp-image" src="https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=800" srcset="https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=200 200w, https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=400 400w, https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=600 600w, https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=800 800w, https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=1200 1200w, https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=1600 1600w" sizes="100vw" alt="Back of the linen shirt" width="1200" height="1200" loading="lazy" decoding="async" data-ratio="auto" data-fit="contain" data-radius="none">
       </div>
-      <button type="button" class="rp-icon-button" data-variant="ghost" data-size="md" commandfor="gallery-content" command="close" aria-label="Close"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <button class="rp-icon-button" type="button" commandfor="gallery-content" command="close" data-variant="ghost" data-size="md" aria-label="Close"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </dialog>
   </rp-dialog>
 </div>
@@ -1027,14 +1090,14 @@ Fixture `empty` (`id`: `gallery`, `media`: empty list):
 ```html
 <div class="rp-product-gallery">
   <div class="rp-product-gallery-media" data-rp-region="rp-product-media">
-    <div class="rp-placeholder" data-ratio="1/1"></div>
+    <div class="rp-placeholder" data-ratio="1/1" data-radius="none" aria-hidden="true"></div>
   </div>
 </div>
 ```
 
 Further required fixtures: `class` (root class `rp-product-gallery custom-a custom-b`); `invalid-enum-falls-back` (`ratio`: `9/9`; equals `default`); `escaping` (`ariaLabel`: `Say "hi" & <go>`; the `aria-label` attribute and the title text are escaped); `variant-first` (`variant` whose image is the second media image; the two `<li>` are swapped, the first printed image has `loading="eager" fetchpriority="high"`, and the lightbox images are swapped the same way).
 
-Image rules: carousel images use `imageUrl(src, { width: 900 })`, `imageSrcSet(src, [600, 900, 1200, 1600])`, `sizes="(min-width: 64rem) 50vw, 100vw"`; the first printed image has `loading="eager"` and `fetchpriority="high"`, the others `loading="lazy"` and no `fetchpriority`. The zoom `href` and the lightbox image `src` are `imageUrl(src, { width: 2000 })`; lightbox images have no `srcset`.
+Image rules: every image is the embedded Image of doc 09 (`src` at width 800 and the six-width `srcset`, printed by Image). Carousel images pass `sizes="(min-width: 64rem) 50vw, 100vw"` and `ratio` from the prop; the first printed image passes `loading="eager"` and `fetchPriority="high"`, the others `loading="lazy"` and no `fetchPriority`. Lightbox images pass `sizes="100vw"`, `ratio="auto"`, `fit="contain"`, `loading="lazy"`. The zoom `href` is the only URL the binding builds itself: `imageUrl(image.url, { width: 2000 })` from `<pkg>` (Liquid: `image | image_url: width: 2000`).
 
 Host-owned regions and masks: no host-owned region. Masks: `{ "select": "img", "op": "attr", "name": "src" }`, `{ "select": "img", "op": "srcset", "name": "srcset" }`, `{ "select": "a.rp-product-gallery-zoom", "op": "attr", "name": "href" }`.
 
@@ -1105,7 +1168,7 @@ Required rules: `.rp-product-gallery .rp-carousel-item { flex: 0 0 var(--rp-prod
 ### Host notes
 
 - HTML: None.
-- React: `ProductGallery(props: { id: string; media: RippleMedia[]; variant?: RippleVariant | null; ratio?: Ratio; ariaLabel?: string; onIndexChange?: (value: number, detail: object) => void; onOpenChange?: (value: boolean, detail: object) => void; className?: string; children?: ReactNode })` where `type RippleMedia = { id: string; image: RippleImage }`. The file starts with `"use client"` because it calls `useElement` for the two callbacks (R-4). `ProductGalleryMedia` is exported from the same file.
+- React: `ProductGallery(props: { id: string; media: RippleMedia[]; variant?: RippleVariant | null; ratio?: Ratio; ariaLabel?: string; onIndexChange?: (value: number, detail: object) => void; onOpenChange?: (value: boolean, detail: object) => void; className?: string; children?: ReactNode })` where `RippleMedia` is imported as a type from `<pkg>` ([05-commerce.md](05-commerce.md) section 11.1, D-094); this component reads its fields `id: string` and `image: RippleImage`. The file starts with `"use client"` because it calls `useElement` for the two callbacks (R-4). `ProductGalleryMedia` is exported from the same file. The carousel is the embedded Carousel (controls `rp-carousel-control`, doc 10). The lightbox composes Dialog by contract (D-070; class pairs `rp-dialog rp-product-gallery-lightbox` and `rp-dialog-title rp-visually-hidden`, section 0.2): the binding prints the `rp-dialog`, the `<dialog class="rp-dialog-panel">`, the title and the body itself; the close button is the embedded IconButton. Manifest `dependencies.components`: `carousel`, `dialog`, `image`, `placeholder`, `icon-button`, `icon`, `visually-hidden`.
 - Remix: `data-rmx-key="<id>"` on the `rp-carousel` and `data-rmx-key="<id>-content"` on the `rp-dialog`; the `prev` and `next` buttons print `data-rmx-preserve-attrs="disabled"`; the `dialog` prints `data-rmx-preserve-attrs="open"`.
 - Liquid: the block prints root and lightbox and renders `rp-product-gallery-media` as its default body. Media loop: `{% for item in media %}{% if item.media_type == 'image' %}` reading `item.preview_image` and `item.alt`. No schema settings. Locale keys: `ripple.product-gallery.label` = `Product images`; `ripple.product-gallery.zoom` = `View larger image`; `ripple.product-gallery.previous` = `Previous`; `ripple.product-gallery.next` = `Next`; `ripple.product-gallery.close` = `Close`.
 
@@ -1181,12 +1244,12 @@ The add-to-cart form for one product variant. It posts natively; with JavaScript
 | fields | printed by root | same | `form` | `rp-product-form-fields` | none | yes | `<id>` |
 | variant field | printed by root | same | `input type="hidden"` | none | `data-rp-field="merchandise-id"` | yes | none |
 | quantity | printed by root (default body) | same | `div` | `rp-product-form-quantity` | none | no | none |
-| accelerated | printed by root | same | `div` | `rp-product-form-accelerated` | none | when `acceleratedCheckout` | none |
+| accelerated | printed by root | same | `div` | `rp-product-form-accelerated` | `data-agent-confirm` | when `acceleratedCheckout` | none |
 | error | printed by root | same | `p` | `rp-form-message` | `data-rp-part="error"` | yes | none |
 
 Nesting rules: fields is the only child of root. Children of fields in this order: variant field, body (default body or the caller's children), accelerated, error. The body MUST contain exactly one AddToCartButton. A VariantPicker MUST NOT be inside a ProductForm (a GET form cannot be nested in the add form). The `id` prop is printed on the `<form>`, not on root.
 
-Default body (printed when the caller passes no children): the quantity part containing one QuantityInput (`name` from the dialect, `defaultValue` 1, `min` 1, `step` 1, `rpField` `quantity`, `ariaLabel` from locale key `ripple.product-form.quantity`), then one AddToCartButton with `fullWidth`, `disabled` when the variant is missing or not available.
+Default body (printed when the caller passes no children): the quantity part containing one QuantityInput (`name` from the dialect, `defaultValue` 1, `min` 1, `step` 1, `ariaLabel` from locale key `ripple.product-form.quantity`), then one AddToCartButton with `fullWidth`, `disabled` when the variant is missing or not available.
 
 ### Props
 
@@ -1211,10 +1274,10 @@ Fixture `default` (`id`: `pf`, `product`: `product.basic`; no children):
   <form class="rp-product-form-fields" id="pf" method="post" action="/api/cart">
     <input type="hidden" name="merchandiseId" value="gid://shopify/ProductVariant/11" data-rp-field="merchandise-id">
     <div class="rp-product-form-quantity">
-      <rp-quantity class="rp-quantity" data-slot="rp-quantity">
-        <button type="button" class="rp-quantity-button" data-rp-part="decrement" data-rp-js="inflow" aria-label="Decrease quantity" disabled>-</button>
-        <input class="rp-quantity-input" data-rp-part="input" data-rp-field="quantity" type="number" inputmode="numeric" name="quantity" min="1" step="1" value="1" aria-label="Quantity">
-        <button type="button" class="rp-quantity-button" data-rp-part="increment" data-rp-js="inflow" aria-label="Increase quantity">+</button>
+      <rp-quantity class="rp-quantity" data-size="md" data-slot="rp-quantity">
+        <button class="rp-quantity-button" type="button" disabled aria-label="Decrease quantity" data-rp-part="decrement" data-rp-js="inflow"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+        <input class="rp-quantity-input" type="number" inputmode="numeric" name="quantity" min="1" step="1" value="1" aria-label="Quantity" data-rp-part="input" data-rp-field="quantity">
+        <button class="rp-quantity-button" type="button" aria-label="Increase quantity" data-rp-part="increment" data-rp-js="inflow"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
       </rp-quantity>
     </div>
     <button class="rp-button rp-add-to-cart-button" type="submit" name="intent" value="add" data-variant="primary" data-size="md" data-full-width="" data-rp-part="submit">Add to cart</button>
@@ -1244,7 +1307,7 @@ Fixture `sold-out` (`id`: `pf`, `product`: `product.sold-out`; no children): as 
 Fixture `accelerated` (`id`: `pf`, `product`: `product.basic`, `acceleratedCheckout`: true): as `default` with this element between the AddToCartButton and the error part (children shown for the hydrogen backend):
 
 ```html
-<div class="rp-product-form-accelerated"><hydrogen-shop-pay-button></hydrogen-shop-pay-button></div>
+<div class="rp-product-form-accelerated" data-agent-confirm="Buys this product now with an express checkout"><hydrogen-shop-pay-button></hydrogen-shop-pay-button></div>
 ```
 
 Further required fixtures: `class` (root class `rp-product-form custom-a custom-b`).
@@ -1266,7 +1329,7 @@ Host-owned regions and masks: the form dialect (D-043) and the accelerated part 
 ]
 ```
 
-Fixture `accelerated` adds `{ "select": ".rp-product-form-accelerated", "op": "children" }`. Rule F-19 of doc 02 (a mask must match in the reference HTML) holds for every rule except the two `drop-attr` rules on the form and the `remove` rule, which match only Liquid output; [13-testing.md](13-testing.md) MUST exempt `drop-attr` and `remove` rules from F-19 (Ledger issues, item 5).
+Fixture `accelerated` adds `{ "select": ".rp-product-form-accelerated", "op": "children" }`. The two `drop-attr` masks on the form and the `remove` mask match only Liquid output; `drop-attr` and `remove` masks are exempt from rule F-19 of doc 02 (D-074). None of these masks targets a Ripple-owned attribute or class.
 
 ### State and attributes
 
@@ -1327,14 +1390,14 @@ The form posts natively: hydrogen backend to `/api/cart` (303 back to the produc
 |---|---|
 | `.rp-product-form[data-pending]` | `--_opacity: 0.7` (consumed by the submit button's `opacity`) |
 
-Required rules: `.rp-product-form-fields { display: flex; flex-direction: column; gap: var(--rp-product-form-gap) }`. `base.css` carries `rp-product-form { display: block }` (generated, D-021).
+Required rules: `.rp-product-form-fields { display: flex; flex-direction: column; gap: var(--rp-product-form-gap) }`. The root `rp-product-form` is a block box: `base.css` carries `rp-product-form { display: block }` (generated; D-021, D-080). `product-form.css` MUST NOT set `display: contents` or `display: none` on the root.
 
 ### Host notes
 
 - HTML: use the hydrogen dialect of the fixture; `action` MUST be the cart endpoint.
-- React: `ProductForm(props: { id: string; product: ProductFormProduct; variant?: RippleVariant | null; acceleratedCheckout?: boolean; action?: string; onAction?: (value: "add", detail: { merchandiseId: string; quantity: number }) => void; className?: string; children?: ReactNode })`. `suppressHydrationWarning` on the root, the form and the error part ([06-bindings.md](06-bindings.md) section 6.7). The accelerated part is `<div className="rp-product-form-accelerated" dangerouslySetInnerHTML={{ __html: renderShopPayButton({ variants: [{ id: variant.id, quantity: 1 }], disabled: !variant.availableForSale }) }} />` with `renderShopPayButton` from `@shopify/hydrogen` (`hydrogen/packages/hydrogen/src/core/shop-pay/shop-pay.ts`); it is not printed when there is no variant.
+- React: `ProductForm(props: { id: string; product: ProductFormProduct; variant?: RippleVariant | null; acceleratedCheckout?: boolean; action?: string; onAction?: (value: "add", detail: { merchandiseId: string; quantity: number }) => void; className?: string; children?: ReactNode })`. `suppressHydrationWarning` on the root, the form and the error part ([06-bindings.md](06-bindings.md) section 6.7). The accelerated part is `<div className="rp-product-form-accelerated" data-agent-confirm={strings?.agentConfirmAccelerated ?? "Buys this product now with an express checkout"} dangerouslySetInnerHTML={{ __html: renderShopPayButton({ variants: [{ id: variant.id, quantity: 1 }], disabled: !variant.availableForSale }) }} />` with `renderShopPayButton` from `@shopify/hydrogen` (`hydrogen/packages/hydrogen/src/core/shop-pay/shop-pay.ts`; a value import allowed by D-094, CV-9); `strings?: { added?: string; quantity?: string; agentConfirmAccelerated?: string }` is a prop (CV-2); it is not printed when there is no variant.
 - Remix: `data-rmx-key="<id>"` on the root; `data-rmx-document` on the `<form>`; `data-rmx-preserve-attrs="hidden"` on the error part; `data-rmx-preserve-attrs="data-pending aria-busy"` on the root ([06-bindings.md](06-bindings.md) section 7.7).
-- Liquid: `{% form 'product', product, id: id, class: 'rp-product-form-fields' %}`; variant field `name="id" value="{{ variant.id }}"`; the default body calls `{% render 'rp-quantity-input' %}` and `{% render 'rp-add-to-cart-button' %}`; the accelerated part is `<div class="rp-product-form-accelerated">{{ form | payment_button }}</div>` (the `payment_button` filter is added to the Liquid subset for this one use). A caller-supplied body is rendered before the block runs and cannot read `form`. No schema settings. Locale keys: `ripple.product-form.added` = `Added to cart`; `ripple.product-form.quantity` = `Quantity`.
+- Liquid: `{% form 'product', product, id: id, class: 'rp-product-form-fields' %}`; variant field `name="id" value="{{ variant.id }}"`; the default body calls `{% render 'rp-quantity-input' %}` and `{% render 'rp-add-to-cart-button' %}`; the accelerated part is `<div class="rp-product-form-accelerated" data-agent-confirm="{{ 'ripple.product-form.agent_confirm_accelerated' | t }}">{{ form | payment_button }}</div>` (the `payment_button` filter is in the component scope of the Liquid subset, D-097). The root `rp-product-form` is printed by the binding and prints `{{ attributes }}` last (D-035); the fields part is printed by `{% form %}` and accepts only `id` and `class` (D-091 item 6). A caller-supplied body is rendered before the block runs and cannot read `form`. No schema settings. Locale keys: `ripple.product-form.added` = `Added to cart`; `ripple.product-form.quantity` = `Quantity`; `ripple.product-form.agent_confirm_accelerated` = `Buys this product now with an express checkout`.
 
 ```tsx
 <ProductForm id="buy" product={product} acceleratedCheckout />
@@ -1362,11 +1425,11 @@ Required rules: `.rp-product-form-fields { display: flex; flex-direction: column
 
 ### Agent surface
 
-`bridge`; component `rp-product-form`; actions `add` ("Add the selected variant to the cart") and `setQuantity(quantity: number)`; confirm: none; secret: none.
+`bridge`; component `rp-product-form`; manifest `agent.actions`: `["setQuantity", "add"]` ([08-agent-kit-and-evals.md](08-agent-kit-and-evals.md) section 7.2, D-095): `setQuantity(quantity: number): void` sets the quantity field; `add(): void` submits the form ("Add the selected variant to the cart"). Confirm: none on the root. In fixture `accelerated` the wrapper `.rp-product-form-accelerated` carries `data-agent-confirm="Buys this product now with an express checkout"` (doc 08 section 7.3; locale key `ripple.product-form.agent_confirm_accelerated`). Secret: none.
 
 ### Checker rules
 
-RP104 (`id`, `product`), RP301, RP305 (dialect fields), RP110. Manifest `rules[]`: `product-form-one-submit` (`requires-descendant`, selector `:scope`, target `button[type="submit"][data-rp-part="submit"]`; "A ProductForm has no AddToCartButton, so nothing can be added to the cart."); `product-form-single-submit` (`max-count`, selector `[data-rp-part="submit"]`, count 1); `variant-picker-outside-form` (`forbids-ancestor`, selector `.rp-variant-picker`, target `rp-product-form`).
+RP104 (`id`, `product`), RP301, RP305 (dialect fields), RP110. Manifest `rules[]`: `product-form-one-submit` (`requires-descendant`, selector `:scope`, target `button[type="submit"][data-rp-part="submit"]`; "A ProductForm has no AddToCartButton, so nothing can be added to the cart."); `product-form-single-submit` (`max-count`, selector `[data-rp-part="submit"]`, count 1). The rule `variant-picker-outside-form`, which reports a VariantPicker inside a ProductForm, is defined once, in VariantPicker's manifest.
 
 ### Acceptance tests
 
@@ -1576,11 +1639,11 @@ Required rules: `base.css` carries `rp-live { display: block }` (generated). Eve
 ### Host notes
 
 - HTML: None.
-- React: `VariantPicker(props: { id: string; product: VariantPickerProduct; layout?: "auto" | "buttons" | "dropdown"; refresh?: string; search?: string; className?: string })`. No hook. The binding file exports the types and the pure function below, which the component calls; the app passes the Storefront API product (fragment `RippleProductDetail`) plus `url`.
+- React: `VariantPicker(props: { id: string; product: VariantPickerProduct; layout?: "auto" | "buttons" | "dropdown"; refresh?: string; search?: string; className?: string })`. No hook. The component calls the pure function `variantPickerOptions`, which lives with its types in `variant-picker.data.ts` (CV-10; the binding imports `./variant-picker.data`, blueprints import `@components/variant-picker.data`); the app passes the Storefront API product (fragment `RippleProductDetail`) plus `url`.
 - Remix: `data-rmx-key="<id>"` on the root; `data-rmx-preserve-attrs="data-pending aria-busy"` on the root.
 - Liquid: loop `product.options_with_values`; per value: `exists` is `value.variant != blank`; sold out is `value.variant.available == false`; URL is `value.product_url` when not blank, otherwise `value.variant.url`; selected is `value.selected`; swatch is `value.swatch`. `auto` test per option: every value has `value.swatch != blank`. Layout `dropdown`: `action="{{ product.url }}"`, `<option value="{{ value.variant.id }}">`. One schema setting: `layout` (`select`). Locale keys: `ripple.variant-picker.sold_out` = `(Sold out)`; `ripple.variant-picker.unavailable` = `(Unavailable)`; `ripple.variant-picker.apply` = `Apply`. In layout `dropdown` the option text is `<name> <string>`.
 
-`components/variant-picker/react/variant-picker.tsx` and `remix/variant-picker.tsx` MUST contain this function unchanged:
+`components/variant-picker/react/variant-picker.data.ts` and `components/variant-picker/remix/variant-picker.data.ts` MUST contain exactly this code (manifest file key `data`; no `"use client"`). `buildProductSelectionSearchParams` is one of the seven value imports of D-094. The four `VariantPicker*` interfaces are the option shapes of VariantPicker that D-094 assigns to [05-commerce.md](05-commerce.md) section 11.1; when doc 05 exports them from `<pkg>` under these names, the `export interface` declarations below are replaced by one `import type` line and nothing else changes:
 
 ```ts
 import { buildProductSelectionSearchParams } from "@shopify/hydrogen";
@@ -1688,11 +1751,11 @@ The component prints nothing when `product.options.every((option) => option.opti
 
 ### Agent surface
 
-`accessibility-tree` (links and selects); the `rp-live` root is also visible to the bridge with no actions. Confirm: none. Secret: none.
+`accessibility-tree` (links and selects). Bridge: component `rp-live`, manifest `agent.actions`: `["submit"]` ([08-agent-kit-and-evals.md](08-agent-kit-and-evals.md) section 7.2): `submit()` calls `requestSubmit()` on the first GET form inside the root; it throws `"rp-live: nothing to submit here"` in the `buttons` layout, which prints no form. Confirm: none. Secret: none.
 
 ### Checker rules
 
-RP101 (`layout`), RP104 (`id`, `product`), RP114 (value ids), RP308 (W: `data-rp-refresh` names without a region on the page), RP403 (Liquid: partials `rp-product-buy`, `rp-product-media` declared). Manifest `rules[]`: `variant-picker-outside-form` (`forbids-ancestor`, selector `:scope`, target `rp-product-form`); `variant-picker-fallback-submit` (`requires-descendant`, selector `form.rp-variant-picker-option`, target `button[type="submit"][data-rp-js="fallback"]`).
+RP101 (`layout`), RP104 (`id`, `product`), RP114 (value ids), RP308 (a `data-rp-refresh` name with no region on the page; this root MAY be inside the region it refreshes, D-102), RP403 (Liquid: partials `rp-product-buy`, `rp-product-media` declared). Manifest `rules[]`: `variant-picker-outside-form` (kind `forbids-ancestor`, selector `.rp-variant-picker`, target `rp-product-form`; message "A VariantPicker is inside a ProductForm."; fix "Move the VariantPicker out of the ProductForm; it is a GET form or a set of links of its own."; test T08 of [08-agent-kit-and-evals.md](08-agent-kit-and-evals.md) depends on this id, D-061); `variant-picker-fallback-submit` (`requires-descendant`, selector `form.rp-variant-picker-option`, target `button[type="submit"][data-rp-js="fallback"]`).
 
 ### Acceptance tests
 
@@ -1893,7 +1956,7 @@ None.
 
 ### Purpose
 
-The submit button of a ProductForm. It is a Button with the dialect's submit attributes and the `submit` part hook that `rp-product-form` looks for.
+The submit button of a ProductForm. It composes Button by contract (D-070; class pair `rp-button rp-add-to-cart-button`, section 0.2) and adds the dialect's submit attributes and the `submit` part hook that `rp-product-form` looks for.
 
 - Use when: inside a ProductForm body, exactly once.
 - Do not use when: outside a ProductForm (it would submit nothing), or for checkout (use CheckoutButton).
@@ -1983,21 +2046,22 @@ The button submits the ProductForm natively.
 
 - File: `components/add-to-cart-button/add-to-cart-button.css` (layer `rp.components`).
 - Tokens used: none of its own; all visuals come from `button.css`.
+- Required rule: `.rp-add-to-cart-button { opacity: var(--rp-add-to-cart-button-opacity) }`.
 
 | Custom property | Default | Purpose |
 |---|---|---|
-| None | | |
+| `--rp-add-to-cart-button-opacity` | `1` | opacity of the button; lowered while the form is pending |
 
 | Modifier selector | Sets |
 |---|---|
-| `rp-product-form[data-pending] .rp-add-to-cart-button` | `--rp-button-opacity: 0.7` (consumed by Button; if Button has no such property the rule sets `opacity: 0.7` on the element instead) |
+| `rp-product-form[data-pending] .rp-add-to-cart-button` | `--rp-add-to-cart-button-opacity: 0.7` |
 
 ### Host notes
 
 - HTML: use the hydrogen attributes of the fixture.
-- React: `AddToCartButton(props: { variant?: ButtonVariant; size?: "sm" | "md" | "lg"; fullWidth?: boolean; disabled?: boolean; strings?: { label?: string; soldOut?: string }; className?: string; children?: ReactNode })`. It renders `<Button type="submit" name="intent" value="add" data-rp-part="submit" className={cx("rp-add-to-cart-button", className)} ...>`.
+- React: `AddToCartButton(props: { variant?: ButtonVariant; size?: "sm" | "md" | "lg"; fullWidth?: boolean; disabled?: boolean; strings?: { label?: string; soldOut?: string }; className?: string; children?: ReactNode })`. Compose by contract (D-070): the binding prints the `<button>` itself, `<button className={cx("rp-button", "rp-add-to-cart-button", className)} type="submit" name="intent" value="add" disabled={disabled} data-variant={variant} data-size={size} data-full-width={fullWidth ? "" : undefined} data-rp-part="submit" {...rest}>`; it does NOT render `<Button>`. Manifest `root.class`: `rp-button rp-add-to-cart-button`; `dependencies.components`: `["button"]`.
 - Remix: None.
-- Liquid: markup in `snippets/rp-add-to-cart-button.liquid`, which calls `{% render 'rp-button', type: 'submit', name: 'add', class: <'rp-add-to-cart-button' followed by a space and the caller's class>, attributes: 'data-rp-part="submit"', ... %}`. Schema settings: `variant`, `size`. Locale keys: `ripple.add-to-cart-button.label` = `Add to cart`; `ripple.add-to-cart-button.sold_out` = `Sold out`.
+- Liquid: markup in `snippets/rp-add-to-cart-button.liquid`, which prints the `<button>` itself (compose by contract; it does NOT call `{% render 'rp-button' %}`): `class="rp-button rp-add-to-cart-button{% if class != blank %} {{ class }}{% endif %}" type="submit" name="add"`, `disabled` when set, Button's `data-variant`, `data-size`, `data-full-width`, then `data-rp-part="submit"`, then `{{ attributes }}` last (D-035). Schema settings: `variant`, `size`. Locale keys: `ripple.add-to-cart-button.label` = `Add to cart`; `ripple.add-to-cart-button.sold_out` = `Sold out`.
 
 ```tsx
 <AddToCartButton fullWidth disabled={!variant.availableForSale} />
@@ -2023,7 +2087,7 @@ RP101 (`variant`, `size`), RP110. Manifest `rules[]`: `add-to-cart-in-product-fo
 
 1. Tier 2: fixtures `default`, `sold-out`, `children`, `class`, `invalid-enum-falls-back` are canonical-equal in all four hosts with the masks above.
 2. Tier 5: hydrogen hosts print `name="intent"` and `value="add"`; the Liquid shim prints `name="add"` and no `value`.
-3. Tier 6: covered by ProductForm test 6.
+3. Tier 6: covered by ProductForm AT-6.
 
 ### Evidence and UNVERIFIED
 
@@ -2072,7 +2136,7 @@ Nesting rules: the list is the only child of root. Each item contains exactly on
 
 ### Props
 
-Root and region part take the same props, except `url` (root only).
+Root and region part take the same props, except `url` (root only). The Liquid region-part snippet `rp-product-recommendations-list` takes exactly `products` and `level`; every call passes both (D-091 item 4).
 
 | Prop (TSX) | Liquid param | Type | Values | Default | Required | Responsive | Renders as |
 |---|---|---|---|---|---|---|---|
@@ -2113,7 +2177,7 @@ Fixture `products` (`products`: [`product.sale`]; `level`: `3`):
       <li class="rp-product-recommendations-item">
         <div class="rp-product-card">
           <div class="rp-product-card-media">
-            <img class="rp-image" src="https://cdn.shopify.com/s/files/1/0001/wool-socks.jpg?width=600" srcset="https://cdn.shopify.com/s/files/1/0001/wool-socks.jpg?width=300 300w, https://cdn.shopify.com/s/files/1/0001/wool-socks.jpg?width=600 600w, https://cdn.shopify.com/s/files/1/0001/wool-socks.jpg?width=900 900w" sizes="(min-width: 64rem) 25vw, 50vw" alt="Grey wool socks" width="1200" height="1200" loading="lazy" data-ratio="1/1" data-fit="cover">
+            <img class="rp-image" src="https://cdn.shopify.com/s/files/1/0001/wool-socks.jpg?width=800" srcset="https://cdn.shopify.com/s/files/1/0001/wool-socks.jpg?width=200 200w, https://cdn.shopify.com/s/files/1/0001/wool-socks.jpg?width=400 400w, https://cdn.shopify.com/s/files/1/0001/wool-socks.jpg?width=600 600w, https://cdn.shopify.com/s/files/1/0001/wool-socks.jpg?width=800 800w, https://cdn.shopify.com/s/files/1/0001/wool-socks.jpg?width=1200 1200w, https://cdn.shopify.com/s/files/1/0001/wool-socks.jpg?width=1600 1600w" sizes="(min-width: 64rem) 25vw, 50vw" alt="Grey wool socks" width="1200" height="1200" loading="lazy" decoding="async" data-ratio="1/1" data-fit="cover" data-radius="none">
             <span class="rp-badge rp-product-card-badge" data-variant="solid" data-tone="sale" data-size="md">Sale</span>
           </div>
           <div class="rp-product-card-body">
@@ -2188,8 +2252,63 @@ Required rules: items `display: grid; grid-template-columns: repeat(var(--rp-pro
 ### Host notes
 
 - HTML: None.
-- React: `ProductRecommendations(props: { products?: RippleProduct[]; url?: string; level?: 2 | 3 | 4 | 5 | 6; locale?: string; strings?: { title?: string }; className?: string; children?: ReactNode })`; no hook. `ProductRecommendationsList` is exported from the same file.
-- Remix: `data-rmx-key="product-recommendations"` and `data-rmx-preserve-attrs="data-pending aria-busy"` on the root.
+- React: `ProductRecommendations(props: { products?: RippleProduct[]; url?: string; level?: 2 | 3 | 4 | 5 | 6; locale?: string; strings?: { title?: string }; className?: string; children?: ReactNode })` and the region part `ProductRecommendationsList` (complete code below) are exported from the same file. The file starts with `"use client";` because the region part calls a hook, and it exports components only (D-094). On `react` the adapter's strategy for reason `recommendations` fetches `data-url`, takes the inner HTML of the region `rp-product-recommendations` from the response and publishes it; `ProductRecommendationsList` reads it with `useRegionHtml("rp-product-recommendations")` from `<pkg>/react` (D-090). While the hook returns `null` the part renders its server children from the `products` prop; afterwards it renders the HTML string with `dangerouslySetInnerHTML` on the region root. There is no navigation. UNVERIFIED (SPIKE-10); see `Fallback (SPIKE-10)`.
+
+  `components/product-recommendations/react/product-recommendations.tsx` MUST contain this region part unchanged (`__PKG__` is replaced by the package name at install):
+
+  ```tsx
+  "use client";
+
+  import type { RippleProduct } from "__PKG__";
+  import { useRegionHtml } from "__PKG__/react";
+  import { ProductCard } from "./product-card";
+
+  const LEVELS = [2, 3, 4, 5, 6] as const;
+  type Level = (typeof LEVELS)[number];
+
+  export interface ProductRecommendationsListProps {
+    products?: RippleProduct[];
+    level?: Level;
+    locale?: string;
+    strings?: { title?: string };
+  }
+
+  export function ProductRecommendationsList(props: ProductRecommendationsListProps) {
+    const { products = [], locale = "en-US", strings = {} } = props;
+    const level: Level = LEVELS.includes(props.level as Level) ? (props.level as Level) : 2;
+    const html = useRegionHtml("rp-product-recommendations");
+
+    if (html !== null) {
+      return (
+        <div
+          className="rp-product-recommendations-list"
+          data-rp-region="rp-product-recommendations"
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      );
+    }
+
+    if (products.length === 0) {
+      return <div className="rp-product-recommendations-list" data-rp-region="rp-product-recommendations" />;
+    }
+
+    const Title = `h${level}` as "h2";
+    const cardLevel = Math.min(level + 1, 6) as Level;
+    return (
+      <div className="rp-product-recommendations-list" data-rp-region="rp-product-recommendations">
+        <Title className="rp-product-recommendations-title">{strings.title ?? "You may also like"}</Title>
+        <ul className="rp-product-recommendations-items">
+          {products.map((product) => (
+            <li className="rp-product-recommendations-item" key={product.id}>
+              <ProductCard product={product} level={cardLevel} locale={locale} />
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+  ```
+- Remix: prop `rmxKey?: string` prints `data-rmx-key` on the root (omitted when unset; CV-5, D-034); `data-rmx-preserve-attrs="data-pending aria-busy"` on the root.
 - Liquid: the block prints the root and renders `rp-product-recommendations-list` as default body. The list snippet prints the title and items only when `products.size > 0`. The template builds the URL and declares the partial (example below). No schema settings. Locale key: `ripple.product-recommendations.title` = `You may also like`.
 
 ```tsx
@@ -2201,7 +2320,7 @@ Required rules: items `display: grid; grid-template-columns: repeat(var(--rp-pro
   assign rec_url = routes.product_recommendations_url | append: '?product_id=' | append: product.id | append: '&limit=4&intent=related'
 %}
 {% block 'product-recommendations', url: rec_url %}
-  {% partial 'rp-product-recommendations' %}{% render 'rp-product-recommendations-list', products: recommendations.products %}{% endpartial %}
+  {% partial 'rp-product-recommendations' %}{% render 'rp-product-recommendations-list', products: recommendations.products, level: 2 %}{% endpartial %}
 {% endblock %}
 ```
 
@@ -2219,11 +2338,11 @@ Required rules: items `display: grid; grid-template-columns: repeat(var(--rp-pro
 
 ### Agent surface
 
-`accessibility-tree` (links); the `rp-recommendations` root is visible to the bridge with no actions. Confirm: none. Secret: none.
+`accessibility-tree` (links). Bridge: component `rp-recommendations`, manifest `agent.actions`: `[]` with `shown: () => false`, so the bridge does not list it ([08-agent-kit-and-evals.md](08-agent-kit-and-evals.md) section 7.2). Confirm: none. Secret: none.
 
 ### Checker rules
 
-RP101 (`level`), RP308, RP403 (Liquid: partial `rp-product-recommendations` declared). Manifest `rules[]`: `product-recommendations-region` (`requires-descendant`, selector `:scope`, target `[data-rp-region="rp-product-recommendations"]`).
+RP101 (`level`), RP308 (the name `rp-product-recommendations` has a region on the page), RP403 (Liquid: partial `rp-product-recommendations` declared). Manifest `rules[]`: `product-recommendations-region` (`requires-descendant`, selector `:scope`, target `[data-rp-region="rp-product-recommendations"]`).
 
 ### Acceptance tests
 
@@ -2236,7 +2355,7 @@ RP101 (`level`), RP308, RP403 (Liquid: partial `rp-product-recommendations` decl
 ### Evidence and UNVERIFIED
 
 - Evidence: `ripple/docs/05-commerce.md` section 7.5; `ripple/docs/research/spikes/commerce/result.txt` (H7); Shopify docs tool, Liquid object `recommendations` ("returns products only when rendered in a section using the Product Recommendations API and the Section Rendering API").
-- UNVERIFIED: whether a `{% partial %}` fetched from `routes.product_recommendations_url` populates `recommendations` (SPIKE-09). The docs sentence quoted above suggests it may not.
+- UNVERIFIED: whether a `{% partial %}` fetched from `routes.product_recommendations_url` populates `recommendations` (SPIKE-09). The docs sentence quoted above suggests it may not. `useRegionHtml` on the `react` host (SPIKE-10; D-090 item 4).
 
 ### Fallback (SPIKE-09)
 
@@ -2247,6 +2366,13 @@ If it fails, the liquid backend changes as follows and nothing changes on the hy
 1. The Liquid product blueprint MUST NOT call `product-recommendations`. It calls FeaturedCollection ([12-components-chrome-and-blueprints.md](12-components-chrome-and-blueprints.md)) with a merchant-chosen collection instead (theme setting `rp_related_collection`, type `collection`, owned by doc 14), titled with locale key `ripple.product-recommendations.title`.
 2. `blocks/product-recommendations.liquid` and `snippets/rp-product-recommendations-list.liquid` stay in the registry (they still serve a template that passes `products` explicitly, for example from a metafield list of products); the `url` param is documented as "not supported on Liquid".
 3. Fixture `lazy` gets `"hosts": ["html", "react", "remix"]`.
+
+### Fallback (SPIKE-10)
+
+Applies only to the `react` host and only when SPIKE-10 fails (D-090 item 4). Nothing changes in the other hosts.
+
+1. `ProductRecommendationsList` does not call `useRegionHtml`; it always renders its `products` prop.
+2. The React app either passes `products` from its loader and omits `url` (preferred; no request is made), or handles `rp:refresh` on `document`: when `event.detail.reason === "recommendations"` it calls `event.preventDefault()`, fetches its own recommendations route, and passes the result as the `products` prop.
 
 ---
 
@@ -2288,13 +2414,13 @@ Nesting rules: the trigger is the only child of root. Inside the trigger, in ord
 
 | Prop (TSX) | Liquid param | Type | Values | Default | Required | Responsive | Renders as |
 |---|---|---|---|---|---|---|---|
-| `href` | `href` | string | a URL | `/cart` (Liquid: `routes.cart_url`) | no | no | `href` on the trigger |
-| `drawer` | `drawer` | string | the `id` of a CartDrawer on the page | none | no | no | `data-rp-open="<value>"` on the trigger |
+| `href` | `href` | url | a URL | `/cart` (Liquid: `routes.cart_url`) | no | no | `href` on the trigger |
+| `drawer` | `drawer` | id | the `id` of a CartDrawer on the page | none | no | no | `data-rp-open="<value>"` on the trigger. CartLink prints this opener attribute itself, from its own prop (the same first-class prop pattern as `dialog` on Link, D-009). The caller MUST omit `drawer` on the cart page, where no CartDrawer is rendered (D-091 item 5); the link then navigates to `href` |
 | `count` | `count` | number | integer 0 or greater | `0` (Liquid: `cart.item_count`) | no | no | text of the count part; `hidden` on the count part when `0` |
 
 ### Content model
 
-`phrasing` - replaces the Icon and the visually hidden label. The children MUST contain text (it becomes the link's accessible name). When there are no children the label text is `Cart`.
+`flow` restricted to phrasing content - replaces the Icon and the visually hidden label. The children MUST contain text (it becomes the link's accessible name). When there are no children the label text is `Cart`.
 
 ### HTML contract
 
@@ -2303,7 +2429,7 @@ Fixture `default` (`count`: `3`, `drawer`: `cart-drawer`):
 ```html
 <rp-cart class="rp-cart-link" data-slot="rp-cart">
   <a class="rp-cart-link-trigger" href="/cart" data-rp-open="cart-drawer">
-    <svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M3 4h2l2.4 11h10.2L20 7H6.2M9 20h.01M17 20h.01"/></svg>
+    <svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M3 4h2l2.4 11h10.2L20 7H6.2"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>
     <span class="rp-visually-hidden">Cart</span>
     <span class="rp-cart-link-count" data-rp-part="count">3</span>
   </a>
@@ -2315,7 +2441,7 @@ Fixture `empty` (no props):
 ```html
 <rp-cart class="rp-cart-link" data-slot="rp-cart">
   <a class="rp-cart-link-trigger" href="/cart">
-    <svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M3 4h2l2.4 11h10.2L20 7H6.2M9 20h.01M17 20h.01"/></svg>
+    <svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M3 4h2l2.4 11h10.2L20 7H6.2"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>
     <span class="rp-visually-hidden">Cart</span>
     <span class="rp-cart-link-count" data-rp-part="count" hidden>0</span>
   </a>
@@ -2332,7 +2458,7 @@ Fixture `children` (`count`: `1`, children: `Bag`):
 
 Further required fixtures: `class` (root class `rp-cart-link custom-a custom-b`); `escaping` (`href`: `/cart?a="b"&c=<d>`; the attribute is `/cart?a=&quot;b&quot;&amp;c=&lt;d&gt;`).
 
-Host-owned regions and masks: none. In Remix the root also carries `data-rmx-key="cart-link"` (CV-5), removed by the canonicaliser.
+Host-owned regions and masks: none. In Remix the root also carries `data-rmx-key="<rmxKey>"` when the prop `rmxKey` is set (CV-5); the canonicaliser removes it.
 
 ### State and attributes
 
@@ -2342,7 +2468,7 @@ Host-owned regions and masks: none. In Remix the root also carries `data-rmx-key
 | `data-pending` | root | `rp-cart` | the cart store is busy | absent |
 | `aria-busy` | root | `rp-cart` | the cart store is busy (`"true"`) | absent |
 
-Upgrade allow-list (mutations permitted when the element upgrades): `{ "select": "[data-rp-part=\"count\"]", "text": true, "attributes": ["hidden"] }` (the server value can be stale on a cached page; the store value replaces it), `{ "select": ":scope", "attributes": ["data-pending", "aria-busy"] }`.
+Upgrade allow-list (mutations permitted when the element upgrades): `{ "select": "[data-rp-part=\"count\"]", "attrs": ["hidden"], "text": true, "reason": "The server value can be stale on a cached page; the store value replaces it." }` (the count entry fixed by D-071), `{ "select": "rp-cart", "attrs": ["data-pending", "aria-busy"], "reason": "The store may already hold a pending mutation when the element upgrades." }`.
 
 ### Behaviour with JavaScript
 
@@ -2392,8 +2518,8 @@ Required rules: root `display: inline-flex`; trigger `position: relative; displa
 
 - HTML: copy the contract; the count text is replaced by `rp-cart` at runtime.
 - React: `CartLink(props: { href?: string; drawer?: string; count?: number; strings?: { label?: string }; className?: string; children?: ReactNode })`. First line `"use client";`. The count is `useCart((state) => state.data?.totalQuantity ?? 0, count ?? 0)` (`useCart` from `<pkg>/react`, [06-bindings.md](06-bindings.md) section 6.2). The count `<span>` MUST carry `suppressHydrationWarning` ([05-commerce.md](05-commerce.md) section 10.3).
-- Remix: `data-rmx-key="cart-link"` on root. The server prints `count`; no hydration.
-- Liquid: `count` defaults to `cart.item_count`, `href` to `routes.cart_url`. No schema settings. Locale key: `ripple.cart-link.label` = `Cart`.
+- Remix: prop `rmxKey?: string` prints `data-rmx-key` on root; the attribute is omitted when the prop is unset (CV-5, D-034). The server prints `count`; no hydration.
+- Liquid: `count` defaults to `cart.item_count`, `href` to `routes.cart_url`. The layout passes `drawer` only when `template.name != 'cart'` (D-091 item 5). The root prints `{{ attributes }}` last (D-035). No schema settings. Locale key: `ripple.cart-link.label` = `Cart`.
 
 ```tsx
 <CartLink drawer="cart-drawer" count={cart.totalQuantity} />
@@ -2480,13 +2606,13 @@ Nesting rules: root contains only the panel. The panel contains, in order: title
 
 | Prop (TSX) | Liquid param | Type | Values | Default | Required | Responsive | Renders as |
 |---|---|---|---|---|---|---|---|
-| `id` | `id` | string | `^[a-zA-Z][a-zA-Z0-9_-]*$` | `cart-drawer` | yes | no | `id` on the panel; `<id>-title`; `<id>-list` on the embedded CartLines |
+| `id` | `id` | id | any id | `cart-drawer` | yes | no | `id` on the panel; `<id>-title`; `<id>-list` on the embedded CartLines |
 | `cart` | `cart` | object | `RippleCart` / Liquid `cart` drop | Liquid: the global `cart` | yes (TSX) | no | passed to CartLines and CartSummary |
 | `side` | `side` | enum | `start end` | `end` | no | no | `data-side` on the panel |
 | `acceleratedCheckout` | `accelerated_checkout` | boolean | `true false` | `false` | no | no | passed to CartSummary |
 | `locale` | none | string | BCP 47 tag | `en-US` | no | no | passed on (CV-1) |
 
-The value of `id` MUST equal `CommerceOptions.cartDrawer` ([05-commerce.md](05-commerce.md) section 4.2; default `cart-drawer`), otherwise the drawer does not open after an add.
+The value of `id` defaults to `cart-drawer` and MUST equal `CommerceOptions.cartDrawer` (D-087; [05-commerce.md](05-commerce.md) section 4.2; default `cart-drawer`), otherwise the drawer does not open after an add. CartDrawer composes Drawer by contract (D-070, section 0.2): manifest `root.class` is `rp-drawer rp-cart-drawer` and `dependencies.components` contains `drawer`. In EVERY host the `layout` blueprint MUST omit CartDrawer on the cart page (TSX layout prop `cartPage`; Liquid `template.name == 'cart'`), because the regions `rp-cart-lines` and `rp-cart-summary` may be declared only once per page (D-091 item 5, RS-4).
 
 ### Content model
 
@@ -2498,8 +2624,8 @@ Fixture `default` (`cart`: `cart.empty`; hosts `html`, `react`, `remix`):
 
 ```html
 <rp-dialog class="rp-drawer rp-cart-drawer" data-slot="rp-dialog">
-  <dialog id="cart-drawer" class="rp-drawer-panel" data-side="end" aria-labelledby="cart-drawer-title" closedby="any">
-    <h2 id="cart-drawer-title" class="rp-drawer-title">Cart</h2>
+  <dialog class="rp-drawer-panel" id="cart-drawer" data-side="end" aria-labelledby="cart-drawer-title" closedby="any">
+    <h2 class="rp-drawer-title" id="cart-drawer-title">Cart</h2>
     <div class="rp-drawer-body">
       <rp-cart class="rp-cart-lines" data-slot="rp-cart" id="cart-drawer-list" data-rp-refresh="rp-cart-lines rp-cart-summary">
         <div class="rp-cart-lines-list" data-rp-region="rp-cart-lines">
@@ -2510,16 +2636,16 @@ Fixture `default` (`cart`: `cart.empty`; hosts `html`, `react`, `remix`):
       </rp-cart>
       <!-- CartSummary fixture `empty` -->
     </div>
-    <button type="button" class="rp-icon-button" data-variant="ghost" data-size="md" commandfor="cart-drawer" command="close" aria-label="Close"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <button class="rp-icon-button" type="button" commandfor="cart-drawer" command="close" data-variant="ghost" data-size="md" aria-label="Close"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   </dialog>
 </rp-dialog>
 ```
 
 The comment stands for the complete reference HTML of the named CartSummary fixture.
 
-Fixture `liquid` (same props; host `liquid`): identical except that the first child of body is the `liquid-empty` fixture of CartLines with `id` `cart-drawer-list` (so its form id is `cart-drawer-list-form`). The second child is the same CartSummary `empty` fixture.
+Fixture `liquid-default` (same props; host `liquid`): identical except that the first child of body is the `liquid-empty` fixture of CartLines with `id` `cart-drawer-list` (so its form id is `cart-drawer-list-form`). The second child is the same CartSummary `empty` fixture.
 
-Further required fixtures (each in the two backend variants, FX-2): `two-lines` / `liquid-two-lines` (`cart`: `cart.two-lines`; body = CartLines `default` / `liquid` with id `cart-drawer-list`, then CartSummary `two-lines` / `liquid-two-lines` with `cartLines` `cart-drawer-list`); `start` (`side`: `start`; `data-side="start"`); `children` (children `<p>Custom</p>`; body contains only that paragraph); `class` (root class `rp-drawer rp-cart-drawer custom-a custom-b`); `invalid-enum-falls-back` (`side`: `top`; equals `default`).
+Further required fixtures (each in the two backend variants, FX-2): `two-lines` / `liquid-two-lines` (`cart`: `cart.two-lines`; body = CartLines `default` / `liquid-default` with id `cart-drawer-list`, then CartSummary `two-lines` / `liquid-two-lines` with `cartLines` `cart-drawer-list`); `start` (`side`: `start`; `data-side="start"`); `children` (children `<p>Custom</p>`; body contains only that paragraph); `class` (root class `rp-drawer rp-cart-drawer custom-a custom-b`); `invalid-enum-falls-back` (`side`: `top`; equals `default`).
 
 Host-owned regions and masks: the body's default content is the embedded components' contract; the masks of CartLines and CartSummary apply inside it.
 
@@ -2549,7 +2675,7 @@ The drawer never opens (a closed `<dialog>` is not rendered). CartLink navigates
 | Kind | Name | Target | Detail or arguments | React callback |
 |---|---|---|---|---|
 | command | `close` | panel | invoker command of the close button | none |
-| event | `toggle` (native) | panel | `newState: "open" \| "closed"` | `onOpenChange?: (open: boolean) => void` (through `useElement`) |
+| event | `openchange` | `rp-dialog` root | `{ value: boolean, reason, source }` ([10-components-interactive.md](10-components-interactive.md), Drawer) | `onOpenChange?: (value: boolean, detail: object) => void` (through `useElement`) |
 
 ### Accessibility
 
@@ -2581,9 +2707,9 @@ Required rules: `.rp-cart-drawer .rp-drawer-body { display: flex; flex-direction
 ### Host notes
 
 - HTML: copy the contract once per page, as the last child of `<body>`.
-- React: `CartDrawer(props: { id?: string; cart: RippleCart; side?: "start" | "end"; acceleratedCheckout?: boolean; locale?: string; onOpenChange?: (open: boolean) => void; strings?: { title?: string; close?: string }; className?: string; children?: ReactNode })`. `"use client";` (it uses `useElement` for `onOpenChange`). It renders `<CartLines id={id + "-list"} cart={cart} />` and `<CartSummary cart={cart} cartLines={id + "-list"} />`, which read the store themselves.
-- Remix: `data-rmx-key="<id>"` on root. To use Frames, pass children: CartLines and CartSummary each with a `<Frame>` child (RS-5).
-- Liquid: `blocks/cart-drawer.liquid` renders `{% render 'rp-cart-lines', id: <id>-list, cart: cart %}` and `{% render 'rp-cart-summary', cart: cart, cart_lines: <id>-list %}` as its default body. For in-place refresh the LAYOUT MUST pass the body with partial-wrapped region parts (RS-3), exactly as in the usage below; without it `ripple check` reports RP403. The layout MUST NOT render the block when `template.name == 'cart'` (RS-4). No schema settings. Locale keys: `ripple.cart-drawer.title` = `Cart`; `ripple.cart-drawer.close` = `Close`.
+- React: `CartDrawer(props: { id?: string; cart: RippleCart; side?: "start" | "end"; acceleratedCheckout?: boolean; locale?: string; onOpenChange?: (value: boolean, detail: object) => void; strings?: { title?: string; close?: string }; className?: string; children?: ReactNode })`. `"use client";` (it uses `useElement` for `onOpenChange`). Compose by contract (D-070): the binding prints `<rp-dialog class="rp-drawer rp-cart-drawer">`, the `<dialog class="rp-drawer-panel">`, the title and the body itself with Drawer's attributes; it does NOT render `<Drawer>`. The close button is the embedded IconButton. It renders `<CartLines id={id + "-list"} cart={cart} />` and `<CartSummary cart={cart} cartLines={id + "-list"} />`, which read the store themselves.
+- Remix: `data-rmx-key="<id>"` on root. The default body renders the two region parts inline as plain elements (D-090 item 5). Frames are opt-in: an app that configures `reloadFrames` passes children, CartLines and CartSummary each with a `<Frame>` child (RS-5; SPIKE-11).
+- Liquid: `blocks/cart-drawer.liquid` renders `{% render 'rp-cart-lines', id: <id>-list, cart: cart %}` and `{% render 'rp-cart-summary', cart: cart, cart_lines: <id>-list %}` as its default body. For in-place refresh the LAYOUT MUST pass the body with partial-wrapped region parts (RS-3), exactly as in the usage below; without it `ripple check` reports RP403. The layout MUST NOT render the block when `template.name == 'cart'` (RS-4, D-091 item 5). The root is not printed by `{% form %}`; it prints `{{ attributes }}` last (D-035). No schema settings. Locale keys: `ripple.cart-drawer.title` = `Cart`; `ripple.cart-drawer.close` = `Close`.
 
 ```tsx
 <CartDrawer cart={cart} />
@@ -2596,7 +2722,7 @@ Required rules: `.rp-cart-drawer .rp-drawer-body { display: flex; flex-direction
       {% partial 'rp-cart-lines' %}{% render 'rp-cart-lines-list', cart: cart %}{% endpartial %}
     {% endblock %}
     {% block 'cart-summary', cart_lines: 'cart-drawer-list' %}
-      {% partial 'rp-cart-summary' %}{% render 'rp-cart-summary-totals', cart: cart %}{% endpartial %}
+      {% partial 'rp-cart-summary' %}{% render 'rp-cart-summary-totals', cart: cart, cart_lines: 'cart-drawer-list' %}{% endpartial %}
     {% endblock %}
   {% endblock %}
 {% endunless %}
@@ -2611,11 +2737,11 @@ Required rules: `.rp-cart-drawer .rp-drawer-body { display: flex; flex-direction
 
 | Meaning | hydrogen backend | liquid backend |
 |---|---|---|
-| Body content | per-line forms (CartLines `default`) | one cart form (CartLines `liquid`) |
+| Body content | per-line forms (CartLines `default`) | one cart form (CartLines `liquid-default`) |
 
 ### Agent surface
 
-`bridge` (through the embedded `rp-cart` roots); actions: those of CartLines; confirm: CheckoutButton; secret: none.
+`bridge`: `rp-dialog` actions `open`, `close` ([10-components-interactive.md](10-components-interactive.md), Drawer); the embedded `rp-cart` roots expose the actions of CartLines. No `checkout` action exists (D-050). Confirm: the CheckoutButton inside (`data-agent-confirm`). Secret: none.
 
 ### Checker rules
 
@@ -2623,12 +2749,12 @@ RP104 (`id`), RP114 (`<id>-title`, `<id>-list`), RP201 (dialog name), RP204, RP3
 
 ### Acceptance tests
 
-1. Tier 2: fixtures `default`, `two-lines`, `start`, `children`, `class`, `invalid-enum-falls-back` (hydrogen hosts) and `liquid`, `liquid-two-lines` (Liquid shim) are canonical-equal to the reference with the masks of the embedded components.
+1. Tier 2: fixtures `default`, `two-lines`, `start`, `children`, `class`, `invalid-enum-falls-back` (hydrogen hosts) and `liquid-default`, `liquid-two-lines` (Liquid shim) are canonical-equal to the reference with the masks of the embedded components.
 2. Tier 5: [05-commerce.md](05-commerce.md) test C-02: after an add, `#cart-drawer` is open and the status part contains `Added to cart`.
 3. Tier 5: removing the focused line inside the open drawer leaves the dialog open and `document.activeElement` inside the dialog.
 4. Tier 5: `checkPattern(root, "dialog")` passes while open.
 5. Tier 6: with scripting disabled the panel is not rendered and the CartLink navigates.
-6. Tier 4 (Liquid): `ripple check` on a layout that renders the block inside a `{% partial %}` reports RP404.
+6. Tier 5 (checker, Liquid source): `ripple check` on a layout that renders the block inside a `{% partial %}` reports RP404.
 
 ### Evidence and UNVERIFIED
 
@@ -2682,12 +2808,12 @@ Nesting rules, hydrogen backend: root children in order: list, error, status. Li
 
 | Prop (TSX) | Liquid param | Type | Values | Default | Required | Responsive | Renders as |
 |---|---|---|---|---|---|---|---|
-| `id` | `id` | string | `^[a-zA-Z][a-zA-Z0-9_-]*$` | none | yes | no | `id` on root; `<id>-form` on the Liquid form |
+| `id` | `id` | id | any id | none | yes | no | `id` on root; `<id>-form` on the Liquid form |
 | `cart` | `cart` | object | `RippleCart` / Liquid `cart` drop | Liquid: the global `cart` | yes (TSX) | no | the lines, or the empty text |
 | `refresh` | `refresh` | string | region names | `rp-cart-lines rp-cart-summary` | no | no | `data-rp-refresh` on root |
 | `locale` | none | string | BCP 47 tag | `en-US` | no | no | passed to CartLine (CV-1) |
 
-The region part takes `cart` and `locale` only.
+The region part takes `cart` and `locale` only (Liquid: the snippet `rp-cart-lines-list` takes exactly `cart`; D-091 item 4).
 
 ### Content model
 
@@ -2712,14 +2838,14 @@ Fixture `default` (`id`: `cart`, `cart`: `cart.two-lines`; hosts `html`, `react`
 
 The two comments stand for the complete reference HTML of the named CartLine fixtures; the fixture file contains that HTML, not the comments.
 
-Fixture `liquid` (same props; host `liquid`):
+Fixture `liquid-default` (same props; host `liquid`):
 
 ```html
 <rp-cart class="rp-cart-lines" data-slot="rp-cart" id="cart" data-rp-refresh="rp-cart-lines rp-cart-summary">
   <form class="rp-cart-lines-form" id="cart-form" method="post" action="/cart">
     <div class="rp-cart-lines-list" data-rp-region="rp-cart-lines">
       <ul class="rp-cart-lines-items">
-        <!-- CartLine fixture `liquid` (line.basic) -->
+        <!-- CartLine fixture `liquid-default` (line.basic) -->
         <!-- CartLine fixture `liquid-sale` -->
       </ul>
     </div>
@@ -2742,11 +2868,11 @@ Fixture `empty` (`id`: `cart`, `cart`: `cart.empty`; hosts `html`, `react`, `rem
 </rp-cart>
 ```
 
-Fixture `liquid-empty` (same props; host `liquid`): the `liquid` fixture with the `<ul>` replaced by `<p class="rp-cart-lines-empty">Your cart is empty.</p>`. The form and the update button are still printed (the note and checkout controls of other components reference the form by id).
+Fixture `liquid-empty` (same props; host `liquid`): the `liquid-default` fixture with the `<ul>` replaced by `<p class="rp-cart-lines-empty">Your cart is empty.</p>`. The form and the update button are still printed (the note and checkout controls of other components reference the form by id).
 
 Further required fixtures (both variants): `class` (root class `rp-cart-lines custom-a custom-b`); `refresh` (`refresh`: `rp-cart-lines`; `data-rp-refresh="rp-cart-lines"`); `children` (children `<div data-rp-region="rp-cart-lines"></div>`; that element is printed in place of the list part).
 
-Host-owned regions and masks: the line actions are host-owned through CartLine. Masks: those of CartLine, plus `{ "select": "form.rp-cart-lines-form", "op": "attr", "name": "action" }` in the `liquid` fixtures.
+Host-owned regions and masks: the line actions are host-owned through CartLine. Masks: those of CartLine, plus `{ "select": "form.rp-cart-lines-form", "op": "attr", "name": "action" }` in the `liquid-*` fixtures.
 
 ### State and attributes
 
@@ -2758,7 +2884,7 @@ Host-owned regions and masks: the line actions are host-owned through CartLine. 
 | `aria-busy` | list | commerce adapter | region `rp-cart-lines` is refreshing (`"true"`) | absent |
 | `hidden` | error | `rp-cart` | no cart-scope error to show | present |
 
-Upgrade allow-list (mutations permitted when the element upgrades): `{ "select": ":scope", "attributes": ["data-pending", "aria-busy"] }`, `{ "select": "[data-rp-region]", "attributes": ["aria-busy"], "replace": true }`, `{ "select": "[data-rp-line]", "attributes": ["data-pending", "aria-busy"] }`, `{ "select": "[data-rp-part=\"error\"]", "text": true, "attributes": ["hidden"] }`, `{ "select": "[data-rp-part=\"status\"]", "text": true }`, `{ "select": "input[data-rp-field=\"quantity\"]", "properties": ["value"] }`. This is the commerce allow-list of [05-commerce.md](05-commerce.md) section 7 restricted to the parts this component prints; if the entry format of [02-html-contract.md](02-html-contract.md) section 7.2 names a key differently, the meaning stated in doc 05 is binding.
+Upgrade allow-list (mutations permitted when the element upgrades): `{ "select": "rp-cart", "attrs": ["data-pending", "aria-busy"], "reason": "The store may already hold a pending mutation when the element upgrades." }`, `{ "select": "[data-rp-region]", "attrs": ["aria-busy"], "childList": true, "text": true, "subtree": true, "reason": "A refresh that completes during upgrade replaces the region content." }`, `{ "select": "[data-rp-line]", "attrs": ["data-pending", "aria-busy"], "reason": "A line can have a pending mutation when the element upgrades." }`, `{ "select": "[data-rp-part=\"error\"]", "attrs": ["hidden"], "text": true, "reason": "The error part shows the result of a mutation that completed during upgrade." }`, `{ "select": "[data-rp-part=\"status\"]", "text": true, "reason": "The status part announces a mutation that completed during upgrade." }`. This is the commerce allow-list of [05-commerce.md](05-commerce.md) section 7 restricted to the parts this component prints. The element also sets the `value` PROPERTY of a quantity input from the store; a property write is not a DOM mutation and needs no entry.
 
 ### Behaviour with JavaScript
 
@@ -2812,9 +2938,9 @@ Required rules: root `display: block`; `.rp-cart-lines-items { list-style: none;
 ### Host notes
 
 - HTML: copy the `default` contract; per-line forms post to `/api/cart`.
-- React: file `cart-lines.tsx`, first line `"use client";`. Exports `CartLines(props: { id: string; cart: RippleCart; refresh?: string; locale?: string; className?: string; children?: ReactNode })`, `CartLinesList(props: { cart: RippleCart; locale?: string })`, and the pure helpers `toRippleCart(cart: HydrogenCart): RippleCart` and `toRippleLine(line: HydrogenCartLine): RippleLine` (`import type` of the cart types from `@shopify/hydrogen`). `CartLinesList` reads the live cart with `useCart` ([06-bindings.md](06-bindings.md) rule R-12; the exact selector signature is owned by doc 06), using the `cart` prop as the server value, and maps it with `toRippleCart`. Each `<li>` uses `key={line.id}`. Error and status parts carry `suppressHydrationWarning`.
+- React: file `cart-lines.tsx`, first line `"use client";`. Exports `CartLines(props: { id: string; cart: RippleCart; refresh?: string; locale?: string; className?: string; children?: ReactNode })`, `CartLinesList(props: { cart: RippleCart; locale?: string })`, The pure helpers `toRippleCart(cart: HydrogenCart): RippleCart` and `toRippleLine(line: HydrogenCartLine): RippleLine` (`import type` of the cart types from `@shopify/hydrogen`) are NOT in this file: a `"use client"` file exports components only (D-094). They live in `cart-lines.data.ts` (file key `data`, no directive; CV-10), imported here as `./cart-lines.data` and by blueprints as `@components/cart-lines.data`. `CartLinesList` reads the live cart with `useCart` ([06-bindings.md](06-bindings.md) rule R-12; the exact selector signature is owned by doc 06), using the `cart` prop as the server value, and maps it with `toRippleCart`. Each `<li>` uses `key={line.id}`. Error and status parts carry `suppressHydrationWarning`.
 - Remix: `data-rmx-key="<id>"` on root; default body renders `CartLinesList` inline (RS-5).
-- Liquid: root, form, update button, error and status are in `snippets/rp-cart-lines.liquid`; the list in `snippets/rp-cart-lines-list.liquid`, which loops `cart.items` and renders `rp-cart-line` with `line: item`. No schema settings. Locale keys: `ripple.cart-lines.empty` = `Your cart is empty.`; `ripple.cart-lines.update` = `Update cart`; `ripple.cart-lines.updated`, `ripple.cart-lines.removed`, `ripple.cart-lines.error` as in [05-commerce.md](05-commerce.md) section 4.3.
+- Liquid: root, form, update button, error and status are in `snippets/rp-cart-lines.liquid`; the list in `snippets/rp-cart-lines-list.liquid`, which loops `cart.items` and renders `rp-cart-line` with `line: item`. The update button composes Button by contract (D-070; class pair `rp-button rp-cart-lines-update`): the snippet prints the `<button>` itself with `data-rp-part="submit" data-rp-js="fallback"`; it is the FIRST submit button of the cart form (D-092). The cart form is a plain `<form class="rp-cart-lines-form" id="{{ id }}-form" method="post" action="{{ routes.cart_url }}">` (not `{% form %}`); it is the ONE Liquid cart form (D-092). The block's `{{ attributes }}` go on the `rp-cart` root, printed last (D-035). The region-part snippet is always called as `{% render 'rp-cart-lines-list', cart: cart %}` (D-091 item 4). No schema settings. Locale keys: `ripple.cart-lines.empty` = `Your cart is empty.`; `ripple.cart-lines.update` = `Update cart`; `ripple.cart-lines.updated`, `ripple.cart-lines.removed`, `ripple.cart-lines.error` as in [05-commerce.md](05-commerce.md) section 4.3.
 
 `toRippleLine` mapping (fields of `HydrogenCartFragment`, `hydrogen/packages/hydrogen/src/core/cart/queries.ts`):
 
@@ -2827,7 +2953,7 @@ Required rules: root `display: block`; `.rp-cart-lines-items { list-style: none;
 | `url` | `/products/<line.merchandise.product.handle>?<buildProductSelectionSearchParams(line.merchandise.selectedOptions)>`; the project MAY replace the path template |
 | `image` | `line.merchandise.image` or `null` |
 | `totalPrice` | `line.cost.totalAmount` |
-| `compareAtTotalPrice` | `line.cost.subtotalAmount` when its amount is greater than `totalAmount`, else `null` (Ledger issues, item 17) |
+| `compareAtTotalPrice` | `line.cost.subtotalAmount` when its amount is greater than `totalAmount`, else `null` (D-049) |
 | `attributes` | `line.attributes` |
 
 ```tsx
@@ -2856,15 +2982,15 @@ Required rules: root `display: block`; `.rp-cart-lines-items { list-style: none;
 
 ### Agent surface
 
-`bridge`; actions: `set-quantity` (arguments `lineId`, `quantity`), `remove` (argument `lineId`), as registered for `rp-cart` in [04-elements.md](04-elements.md); confirm: none; secret: none.
+`bridge`; component `rp-cart`. The manifest `agent.actions` of every `rp-cart` component is `["setQuantity", "remove"]` ([08-agent-kit-and-evals.md](08-agent-kit-and-evals.md) section 7.2, D-095): `setQuantity(line: string, quantity: number): void` and `remove(line: string): void`, where `line` is the value of a `data-rp-line` attribute, and `items: (api) => api.lines()` returns `Array<{ value: string; label: string }>`. Each label is the line title. There is no `checkout` action and no discount, note or locale action (D-050; doc 08 rule A-5). Confirm: none. Secret: none.
 
 ### Checker rules
 
-RP104 (`id`, `cart`), RP114 (`<id>-form`), RP301, RP305 (dialect of every form), RP308, RP403 (Liquid: partials `rp-cart-lines` and `rp-cart-summary` declared), and the two form-order checks of [05-commerce.md](05-commerce.md) section 13. Manifest `rules[]`: `cart-lines-region` (`requires-descendant`, selector `:scope`, target `[data-rp-region="rp-cart-lines"]`); `cart-lines-error` (`requires-descendant`, selector `:scope`, target `[data-rp-part="error"]`); `cart-lines-status` (`requires-descendant`, selector `:scope`, target `[data-rp-part="status"][role="status"]`); `cart-lines-items-only-lines` (`forbids-descendant`, selector `.rp-cart-lines-items`, target `:scope > :not(li.rp-cart-line)`).
+RP104 (`id`, `cart`), RP114 (`<id>-form`), RP301, RP305 (dialect of every form), RP308 (the `rp-cart` root MUST be outside the region it refreshes: an error, D-102), RP403 (Liquid: partials `rp-cart-lines` and `rp-cart-summary` declared), and the two form-order checks of [05-commerce.md](05-commerce.md) section 13. Manifest `rules[]`: `cart-lines-region` (`requires-descendant`, selector `:scope`, target `[data-rp-region="rp-cart-lines"]`); `cart-lines-error` (`requires-descendant`, selector `:scope`, target `[data-rp-part="error"]`); `cart-lines-status` (`requires-descendant`, selector `:scope`, target `[data-rp-part="status"][role="status"]`); `cart-lines-items-only-lines` (`forbids-descendant`, selector `.rp-cart-lines-items`, target `:scope > :not(li.rp-cart-line)`).
 
 ### Acceptance tests
 
-1. Tier 2: `default`, `empty`, `class`, `refresh`, `children` (hydrogen hosts) and `liquid`, `liquid-empty` and the Liquid variants (shim) are canonical-equal with the masks above.
+1. Tier 2: `default`, `empty`, `class`, `refresh`, `children` (hydrogen hosts) and `liquid-default`, `liquid-empty` and the Liquid variants (shim) are canonical-equal with the masks above.
 2. Tier 3: upgrade produces no mutation outside the allow-list.
 3. Tier 5: [05-commerce.md](05-commerce.md) tests C-03 (Liquid quantity, remove link, Enter), C-04 (line error part), C-06 (failed partial fetch reloads), C-10 (hydrogen quantity and remove; focus after refresh).
 4. Tier 5 (React): setting a quantity to 0 removes the `<li>` without a network refresh of the document; no hydration warning is logged ([05-commerce.md](05-commerce.md) test C-23).
@@ -2889,7 +3015,7 @@ None. (SPIKE-01 of [05-commerce.md](05-commerce.md) covers `item.key` as line id
 | Id | `cart-line` |
 | Kind | `static` |
 | Category | `cart` |
-| Custom elements | none of its own (it embeds QuantityInput, whose root is `rp-quantity`; Ledger issues, item 11) |
+| Custom elements | none of its own (it embeds QuantityInput, whose root is `rp-quantity`; the kind stays `static` per ledger section 8.3) |
 | Root element and class | `li` `.rp-cart-line` |
 | Liquid tier | `resource` |
 | No-JS level | `full` |
@@ -2941,7 +3067,7 @@ Fixture `default` (`line`: `line.basic`; hosts `html`, `react`, `remix`):
 ```html
 <li class="rp-cart-line" data-rp-line="gid://shopify/CartLine/1?cart=c1">
   <div class="rp-cart-line-media">
-    <img class="rp-image" src="https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=200" srcset="https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=100 100w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=200 200w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=300 300w" sizes="6rem" alt="Linen shirt on a hanger" width="1200" height="1200" loading="lazy" data-ratio="1/1" data-fit="cover">
+    <img class="rp-image" src="https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=800" srcset="https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=200 200w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=400 400w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=600 600w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=800 800w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=1200 1200w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=1600 1600w" sizes="6rem" alt="Linen shirt on a hanger" width="1200" height="1200" loading="lazy" decoding="async" data-ratio="1/1" data-fit="cover" data-radius="none">
   </div>
   <div class="rp-cart-line-details">
     <a class="rp-cart-line-title" href="/products/linen-shirt?variant=11">Linen Shirt</a>
@@ -2951,13 +3077,13 @@ Fixture `default` (`line`: `line.basic`; hosts `html`, `react`, `remix`):
     <form class="rp-cart-line-form" method="post" action="/api/cart">
       <input type="hidden" name="lineId" value="gid://shopify/CartLine/1?cart=c1" data-rp-field="line-id">
       <button type="submit" name="intent" value="set" hidden></button>
-      <rp-quantity class="rp-quantity" data-slot="rp-quantity">
-        <button type="button" class="rp-quantity-button" data-rp-part="decrement" data-rp-js="inflow" aria-label="Decrease quantity">-</button>
-        <input class="rp-quantity-input" data-rp-part="input" data-rp-field="quantity" type="number" inputmode="numeric" name="quantity" min="0" step="1" value="2" aria-label="Quantity for Linen Shirt">
-        <button type="button" class="rp-quantity-button" data-rp-part="increment" data-rp-js="inflow" aria-label="Increase quantity">+</button>
+      <rp-quantity class="rp-quantity" data-size="md" data-slot="rp-quantity">
+        <button class="rp-quantity-button" type="button" aria-label="Decrease quantity" data-rp-part="decrement" data-rp-js="inflow"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+        <input class="rp-quantity-input" type="number" inputmode="numeric" name="quantity" min="0" step="1" value="2" aria-label="Quantity for Linen Shirt" data-rp-part="input" data-rp-field="quantity">
+        <button class="rp-quantity-button" type="button" aria-label="Increase quantity" data-rp-part="increment" data-rp-js="inflow"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
       </rp-quantity>
       <button class="rp-button rp-cart-line-update" type="submit" name="intent" value="set" data-variant="outline" data-size="sm" data-rp-part="submit" data-rp-js="fallback">Update</button>
-      <button class="rp-icon-button rp-cart-line-remove" type="submit" name="intent" value="remove" data-variant="ghost" data-size="sm" aria-label="Remove Linen Shirt"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>
+      <button class="rp-icon-button rp-cart-line-remove" type="submit" name="intent" value="remove" data-variant="ghost" data-size="sm" aria-label="Remove Linen Shirt"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M4 7h16M10 7V4h4v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg></button>
     </form>
   </div>
   <div class="rp-cart-line-price">
@@ -2967,20 +3093,20 @@ Fixture `default` (`line`: `line.basic`; hosts `html`, `react`, `remix`):
 </li>
 ```
 
-Fixture `liquid` (same props; host `liquid`): identical to `default` except `data-rp-line="11:abc"` and the actions part:
+Fixture `liquid-default` (same props; host `liquid`): identical to `default` except `data-rp-line="11:abc"` and the actions part:
 
 ```html
   <div class="rp-cart-line-actions">
-    <rp-quantity class="rp-quantity" data-slot="rp-quantity">
-      <button type="button" class="rp-quantity-button" data-rp-part="decrement" data-rp-js="inflow" aria-label="Decrease quantity">-</button>
-      <input class="rp-quantity-input" data-rp-part="input" data-rp-field="quantity" type="number" inputmode="numeric" name="updates[]" min="0" step="1" value="2" aria-label="Quantity for Linen Shirt">
-      <button type="button" class="rp-quantity-button" data-rp-part="increment" data-rp-js="inflow" aria-label="Increase quantity">+</button>
+    <rp-quantity class="rp-quantity" data-size="md" data-slot="rp-quantity">
+      <button class="rp-quantity-button" type="button" aria-label="Decrease quantity" data-rp-part="decrement" data-rp-js="inflow"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+      <input class="rp-quantity-input" type="number" inputmode="numeric" name="updates[]" min="0" step="1" value="2" aria-label="Quantity for Linen Shirt" data-rp-part="input" data-rp-field="quantity">
+      <button class="rp-quantity-button" type="button" aria-label="Increase quantity" data-rp-part="increment" data-rp-js="inflow"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
     </rp-quantity>
-    <a class="rp-icon-button rp-cart-line-remove" href="/cart/change?id=11:abc&amp;quantity=0" data-variant="ghost" data-size="sm" data-rp-part="remove" aria-label="Remove Linen Shirt"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></a>
+    <a class="rp-icon-button rp-cart-line-remove" href="/cart/change?id=11:abc&amp;quantity=0" data-variant="ghost" data-size="sm" data-rp-part="remove" aria-label="Remove Linen Shirt"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M4 7h16M10 7V4h4v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg></a>
   </div>
 ```
 
-Fixture `sale` / `liquid-sale` (the second line of `cart.two-lines`): as `default` / `liquid` with line id `gid://shopify/CartLine/2?cart=c1` (Liquid `21:def`), the image of `product.sale`, title `Wool Socks` linking to `/products/wool-socks?variant=21`, NO variant part, quantity value `1`, labels `Quantity for Wool Socks` and `Remove Wool Socks`, and the price part:
+Fixture `sale` / `liquid-sale` (the second line of `cart.two-lines`): as `default` / `liquid-default` with line id `gid://shopify/CartLine/2?cart=c1` (Liquid `21:def`), the image of `product.sale`, title `Wool Socks` linking to `/products/wool-socks?variant=21`, NO variant part, quantity value `1`, labels `Quantity for Wool Socks` and `Remove Wool Socks`, and the price part:
 
 ```html
   <div class="rp-cart-line-price">
@@ -2988,15 +3114,15 @@ Fixture `sale` / `liquid-sale` (the second line of `cart.two-lines`): as `defaul
   </div>
 ```
 
-Fixture `attributes` / `liquid-attributes` (`line.basic` with attributes `Engraving` = `BEN` and `_bundle` = `7`): as `default` / `liquid`, with this element as the last child of details:
+Fixture `attributes` / `liquid-attributes` (`line.basic` with attributes `Engraving` = `BEN` and `_bundle` = `7`): as `default` / `liquid-default`, with this element as the last child of details:
 
 ```html
     <dl class="rp-cart-line-attributes"><div><dt>Engraving</dt><dd>BEN</dd></div></dl>
 ```
 
-Further required fixtures: `no-image` (image null; media contains `<div class="rp-placeholder" data-ratio="1/1"></div>`); `class` (root class `rp-cart-line custom-a custom-b`); `escaping` (title `Say "hi" & <go>`; text `Say "hi" &amp; &lt;go&gt;` and `aria-label="Remove Say &quot;hi&quot; &amp; &lt;go&gt;"`).
+Further required fixtures: `no-image` (image null; media contains `<div class="rp-placeholder" data-ratio="1/1" data-radius="none" aria-hidden="true"></div>`); `class` (root class `rp-cart-line custom-a custom-b`); `escaping` (title `Say "hi" & <go>`; text `Say "hi" &amp; &lt;go&gt;` and `aria-label="Remove Say &quot;hi&quot; &amp; &lt;go&gt;"`).
 
-Host-owned regions and masks: the actions part is dialect-owned (D-043, D-044), covered by the two fixture variants. Masks: `{ "select": "img", "op": "attr", "name": "src" }`, `{ "select": "img", "op": "srcset", "name": "srcset" }`, `{ "select": ".rp-price-current", "op": "text" }`, `{ "select": ".rp-price-compare", "op": "text" }`, `{ "select": ".rp-cart-line-title", "op": "attr", "name": "href" }`, `{ "select": ".rp-cart-line", "op": "attr", "name": "data-rp-line" }`, `{ "select": "[data-rp-field=\"line-id\"]", "op": "attr", "name": "value" }`, `{ "select": ".rp-cart-line-form", "op": "attr", "name": "action" }`, `{ "select": "a.rp-cart-line-remove", "op": "attr", "name": "href" }`.
+Host-owned regions and masks: the actions part is dialect-owned (D-043, D-044), covered by the two fixture variants. Masks: `{ "select": "img", "op": "attr", "name": "src" }`, `{ "select": "img", "op": "srcset", "name": "srcset" }`, `{ "select": ".rp-price-current", "op": "text" }`, `{ "select": ".rp-price-compare", "op": "text" }`, `{ "select": ".rp-cart-line-title", "op": "attr", "name": "href" }`, `{ "select": "[data-rp-field=\"line-id\"]", "op": "attr", "name": "value" }`, `{ "select": ".rp-cart-line-form", "op": "attr", "name": "action" }`, `{ "select": "a.rp-cart-line-remove", "op": "attr", "name": "href" }`. `data-rp-line` is a Ripple-owned attribute and is NOT masked (D-074): each backend-scoped fixture states its own value (`gid://shopify/CartLine/1?cart=c1` on hydrogen hosts, `11:abc` on Liquid), and the resource data of doc 13 provides exactly those ids.
 
 ### State and attributes
 
@@ -3057,8 +3183,8 @@ Required rules: root `display: grid; grid-template-columns: var(--rp-cart-line-m
 ### Host notes
 
 - HTML: copy the `default` contract per line.
-- React: `CartLine(props: { line: RippleLine; disabled?: boolean; locale?: string; className?: string })`. No hook, no directive. Image: `imageUrl(src, { width: 200 })`, `imageSrcSet(src, [100, 200, 300])`, `sizes="6rem"`. Sale test: `line.compareAtTotalPrice !== null`.
-- Remix: no `data-rmx-*` attribute on the `li`; the form carries no `data-rmx-document` (the element intercepts it; without JavaScript it is a native post).
+- React: `CartLine(props: { line: RippleLine; disabled?: boolean; locale?: string; className?: string })`. No hook, no directive. Image: the embedded Image, `<Image image={line.image} sizes="6rem" ratio="1/1" />` (Image prints `src` and `srcset`, doc 09). Sale test: `line.compareAtTotalPrice !== null`. The remove control and the update button compose IconButton and Button by contract (D-070; class pairs `rp-icon-button rp-cart-line-remove` and `rp-button rp-cart-line-update`, section 0.2): the binding prints both elements itself. The quantity control is the embedded QuantityInput.
+- Remix: no `data-rmx-*` attribute on the `li`; the actions form prints `data-rmx-document` (a cart form, D-034 item 3).
 - Liquid: `line` is a `line_item` drop. Title `line.product.title`; variant `line.variant.title` unless `line.product.has_only_default_variant`; attributes `line.properties` (skip a key whose first character is `_` and a blank value); price `line.final_line_price`, compare-at `line.original_line_price` when greater. No schema settings. Locale keys: `ripple.cart-line.remove` = `Remove {{ title }}`; `ripple.cart-line.quantity` = `Quantity for {{ title }}`; `ripple.cart-line.update` = `Update`.
 
 ```tsx
@@ -3083,14 +3209,14 @@ RP104 (`line`), RP110, RP203 (image), RP301 (every button has a form ancestor or
 
 ### Acceptance tests
 
-1. Tier 2: `default`, `sale`, `attributes`, `no-image`, `class`, `escaping` (hydrogen hosts) and the `liquid` variants (shim) are canonical-equal with the masks above.
+1. Tier 2: `default`, `sale`, `attributes`, `no-image`, `class`, `escaping` (hydrogen hosts) and the `liquid-*` variants (shim) are canonical-equal with the masks above.
 2. Tier 5: in the hydrogen fixture the first `button[type="submit"]` of the form is `name="intent" value="set"` with `hidden`.
 3. Tier 5: an attribute with key `_bundle` is not in the DOM.
 4. Tier 6: hydrogen dev server, scripting disabled: pressing the remove button yields a page without the line.
 
 ### Evidence and UNVERIFIED
 
-- Evidence: [05-commerce.md](05-commerce.md) section 6.2 (line forms, hidden first `set` button, `updates[]`, remove link); [04-elements.md](04-elements.md) section 8.1 (`rp-quantity`); Liquid `line_item` drop members listed in section 0.6.
+- Evidence: [05-commerce.md](05-commerce.md) section 6.2 (line forms, hidden first `set` button, `updates[]`, remove link); [10-components-interactive.md](10-components-interactive.md), QuantityInput (the embedded `rp-quantity` contract; D-069); Liquid `line_item` drop members listed in section 0.6.
 - UNVERIFIED: the exact URL shape of `item.url_to_remove` (shown as `/cart/change?id=<key>&quantity=0`; masked in the fixture).
 
 ### Fallback (SPIKE-nn)
@@ -3133,10 +3259,10 @@ The cart totals: subtotal, applied discount codes (each removable), total, the t
 | remove form | printed by totals | same | `form` | `rp-cart-summary-remove` | liquid: `data-rp-js="inflow"` | one per discount row | none |
 | note | printed by totals | same | `p` | `rp-cart-summary-note` | none | when the cart has lines | none |
 | checkout | printed by totals | same | CheckoutButton | `rp-button rp-checkout-button` | see CheckoutButton | when the cart has lines | none |
-| accelerated | printed by root | same | `div` | `rp-cart-summary-accelerated` | none | when `acceleratedCheckout` is true and the cart has lines | none |
+| accelerated | printed by root | same | `div` | `rp-cart-summary-accelerated` | `data-agent-confirm` | when `acceleratedCheckout` is true and the cart has lines | none |
 | status | printed by root | same | `p` | `rp-visually-hidden` | `data-rp-part="status"`, `role="status"` | yes | none |
 
-Nesting rules: root children in order: totals, accelerated, status. Totals children in order: rows, note, checkout. Rows children in order: one `subtotal` row, one `discount` row per applied code, one `total` row. When the cart has no lines (`totalQuantity` is 0) the totals part is printed with NO children and the accelerated part is not printed. The checkout button is INSIDE the region so that a changed checkout URL (first add creates the cart) and the empty state are re-rendered. The accelerated part is outside the region (its content is injected by Shopify scripts and MUST NOT be replaced). The root MUST NOT contain an error part ([05-commerce.md](05-commerce.md) section 9.2). Children (`{{ content }}`) replace the default rendering of the totals part (RS-2).
+Nesting rules: root children in order: totals, accelerated, status. Totals children in order: rows, note, checkout. Rows children in order: one `subtotal` row, one `discount` row per applied code, one `total` row. When the cart has no lines (`totalQuantity` is 0) the totals part is printed with NO children and the accelerated part is not printed. The checkout button is INSIDE the region so that a changed checkout URL (first add creates the cart) and the empty state are re-rendered (D-050 item b). For an empty cart CartSummary prints no CheckoutButton at all, so the inert form of D-050 item d (CheckoutButton prop `disabled`) is used only where a caller prints a CheckoutButton directly. The accelerated part is outside the region (its content is injected by Shopify scripts and MUST NOT be replaced; D-050 item b). The root MUST NOT contain an error part ([05-commerce.md](05-commerce.md) section 9.2). Children (`{{ content }}`) replace the default rendering of the totals part (RS-2).
 
 ### Props
 
@@ -3147,7 +3273,7 @@ Nesting rules: root children in order: totals, accelerated, status. Totals child
 | `acceleratedCheckout` | `accelerated_checkout` | boolean | `true false` | `false` | no | no | the accelerated part (D-050) |
 | `locale` | none | string | BCP 47 tag | `en-US` | no | no | money text (CV-1) |
 
-The region part takes `cart`, `cartLines` and `locale`.
+The region part takes `cart`, `cartLines` and `locale` (Liquid: the snippet `rp-cart-summary-totals` takes exactly `cart` and `cart_lines`; EVERY call passes both, D-091 item 4).
 
 ### Content model
 
@@ -3174,16 +3300,16 @@ Fixture `default` (`cart`: `cart.discounted`; hosts `html`, `react`, `remix`):
       <div class="rp-cart-summary-row" data-row="total"><dt>Total</dt><dd><bdi>$97.20</bdi></dd></div>
     </dl>
     <p class="rp-cart-summary-note">Taxes and shipping calculated at checkout.</p>
-    <a class="rp-button rp-checkout-button" href="/checkout" data-variant="primary" data-size="lg" data-full-width="" data-agent-confirm="Go to checkout to pay for the items in the cart.">Check out</a>
+    <a class="rp-button rp-checkout-button" href="/checkout" data-variant="primary" data-size="lg" data-full-width="" data-agent-confirm="Goes to checkout with this cart">Check out</a>
   </div>
   <p class="rp-visually-hidden" data-rp-part="status" role="status"></p>
 </rp-cart>
 ```
 
-Fixture `liquid` (`cart`: `cart.discounted`, `cart_lines`: `cart`; host `liquid`): identical except (a) the remove form is `<form class="rp-cart-summary-remove" method="post" action="/cart" data-rp-js="inflow">` with the same children, and (b) the checkout part is:
+Fixture `liquid-default` (`cart`: `cart.discounted`, `cart_lines`: `cart`; host `liquid`): identical except (a) the remove form is `<form class="rp-cart-summary-remove" method="post" action="/cart" data-rp-js="inflow">` with the same children, and (b) the checkout part is:
 
 ```html
-    <button class="rp-button rp-checkout-button" type="submit" name="checkout" form="cart-form" data-variant="primary" data-size="lg" data-full-width="" data-agent-confirm="Go to checkout to pay for the items in the cart.">Check out</button>
+    <button class="rp-button rp-checkout-button" type="submit" name="checkout" form="cart-form" data-variant="primary" data-size="lg" data-full-width="" data-agent-confirm="Goes to checkout with this cart">Check out</button>
 ```
 
 Fixture `empty` (`cart`: `cart.empty`; all four hosts, one file):
@@ -3195,7 +3321,7 @@ Fixture `empty` (`cart`: `cart.empty`; all four hosts, one file):
 </rp-cart>
 ```
 
-Fixture `accelerated` / `liquid-accelerated` (`cart`: `cart.two-lines`, `acceleratedCheckout`: true): the `two-lines` HTML with `<div class="rp-cart-summary-accelerated"></div>` between the totals part and the status part; its children are host-owned.
+Fixture `accelerated` / `liquid-accelerated` (`cart`: `cart.two-lines`, `acceleratedCheckout`: true): the `two-lines` HTML with `<div class="rp-cart-summary-accelerated" data-agent-confirm="Pays for this cart now with an express checkout"></div>` between the totals part and the status part; its children are host-owned.
 
 Further required fixtures: `two-lines` / `liquid-two-lines` (`cart`: `cart.two-lines`: no discount row; subtotal `$108.00`; total `$108.00`); `class` (root class `rp-cart-summary custom-a custom-b`); `children` (children `<div data-rp-region="rp-cart-summary"></div>` printed in place of the totals part).
 
@@ -3211,7 +3337,7 @@ Host-owned regions and masks: the accelerated part's children (`{ "select": ".rp
 | `aria-busy` | totals | commerce adapter | region `rp-cart-summary` is refreshing (`"true"`) | absent |
 | `data-row` | row | server | always | `subtotal`, `discount` or `total` |
 
-Upgrade allow-list (mutations permitted when the element upgrades): `{ "select": ":scope", "attributes": ["data-pending", "aria-busy"] }`, `{ "select": "[data-rp-region]", "attributes": ["aria-busy"], "replace": true }`, `{ "select": ".rp-cart-summary-accelerated", "children": true }`, `{ "select": "[data-rp-part=\"status\"]", "text": true }`.
+Upgrade allow-list (mutations permitted when the element upgrades): `{ "select": "rp-cart", "attrs": ["data-pending", "aria-busy"], "reason": "The store may already hold a pending mutation when the element upgrades." }`, `{ "select": "[data-rp-region]", "attrs": ["aria-busy"], "childList": true, "text": true, "subtree": true, "reason": "A refresh that completes during upgrade replaces the region content." }`, `{ "select": ".rp-cart-summary-accelerated", "attrs": ["style", "class"], "childList": true, "text": true, "subtree": true, "reason": "Platform wallet scripts build the express checkout buttons on the client." }`, `{ "select": "[data-rp-part=\"status\"]", "text": true, "reason": "The status part announces a mutation that completed during upgrade." }`.
 
 ### Behaviour with JavaScript
 
@@ -3261,9 +3387,9 @@ Required rules: root `display: block`; totals `display: flex; flex-direction: co
 ### Host notes
 
 - HTML: copy the `default` contract.
-- React: file `cart-summary.tsx`, `"use client";`. `CartSummary(props: { cart: RippleCart; cartLines?: string; acceleratedCheckout?: boolean; locale?: string; className?: string; children?: ReactNode })` and `CartSummaryTotals(props: { cart: RippleCart; locale?: string })`. `CartSummaryTotals` reads the live cart with `useCart` (server value: the `cart` prop) and `toRippleCart` from `./cart-lines`. Discount rows: `cart.discountCodes.filter((d) => d.applicable)`. Accelerated part: `<div className="rp-cart-summary-accelerated" suppressHydrationWarning dangerouslySetInnerHTML={{ __html: renderShopPayButton({}) }} />` with `renderShopPayButton` imported from `@shopify/hydrogen` (`hydrogen/packages/hydrogen/skills/hydrogen-shop-pay/SKILL.md`; value import, Ledger issues item 4).
-- Remix: `data-rmx-key="cart-summary"` on root. The checkout link carries `data-rmx-document` (CheckoutButton).
-- Liquid: discount rows: `{% for d in cart.cart_level_discount_applications %}{% if d.type == 'discount_code' %}` with code `d.title`. Subtotal `cart.items_subtotal_price | money`; total `cart.total_price | money`. Empty test: `cart.item_count == 0`. Accelerated part: `{% if additional_checkout_buttons %}{{ content_for_additional_checkout_buttons }}{% endif %}` (both added to the Liquid subset, Ledger issues item 14). No schema settings. Locale keys: `ripple.cart-summary.subtotal` = `Subtotal`; `ripple.cart-summary.discount` = `Discount`; `ripple.cart-summary.total` = `Total`; `ripple.cart-summary.note` = `Taxes and shipping calculated at checkout.`; `ripple.cart-summary.remove_discount` = `Remove discount {{ code }}`.
+- React: file `cart-summary.tsx`, `"use client";`. `CartSummary(props: { cart: RippleCart; cartLines?: string; acceleratedCheckout?: boolean; locale?: string; className?: string; children?: ReactNode })` and `CartSummaryTotals(props: { cart: RippleCart; cartLines?: string; locale?: string })`. `CartSummaryTotals` reads the live cart with `useCart` (server value: the `cart` prop) and `toRippleCart` from `./cart-lines.data` (CV-10). Discount rows: `cart.discountCodes.filter((d) => d.applicable)`. Accelerated part: `<div className="rp-cart-summary-accelerated" data-agent-confirm={strings?.agentConfirmAccelerated ?? "Pays for this cart now with an express checkout"} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: renderShopPayButton({}) }} />` with `renderShopPayButton` imported from `@shopify/hydrogen` (`hydrogen/packages/hydrogen/skills/hydrogen-shop-pay/SKILL.md`; a value import allowed by D-094, CV-9). `CartSummary` also takes `strings?: { agentConfirmAccelerated?: string }` (CV-2).
+- Remix: prop `rmxKey?: string` prints `data-rmx-key` on root (omitted when unset; CV-5, D-034). The checkout link carries `data-rmx-document` (CheckoutButton).
+- Liquid: discount rows: `{% for d in cart.cart_level_discount_applications %}{% if d.type == 'discount_code' %}` with code `d.title`. Subtotal `cart.items_subtotal_price | money`; total `cart.total_price | money`. Empty test: `cart.item_count == 0`. Accelerated part: `{% if additional_checkout_buttons %}<div class="rp-cart-summary-accelerated" data-agent-confirm="{{ 'ripple.cart-summary.agent_confirm_accelerated' | t }}">{{ content_for_additional_checkout_buttons }}</div>{% endif %}` (both objects are in the component scope of the Liquid subset, D-097). The root is not printed by `{% form %}`, so it prints `{{ attributes }}` last (D-035). The region-part snippet `rp-cart-summary-totals` takes exactly the params `cart` and `cart_lines`; EVERY call passes both (D-091 item 4), `cart_lines` being the `cart_lines` param of the block (blank when there is no CartLines on the page). No schema settings. Locale keys: `ripple.cart-summary.subtotal` = `Subtotal`; `ripple.cart-summary.discount` = `Discount`; `ripple.cart-summary.total` = `Total`; `ripple.cart-summary.note` = `Taxes and shipping calculated at checkout.`; `ripple.cart-summary.remove_discount` = `Remove discount {{ code }}`; `ripple.cart-summary.agent_confirm_accelerated` = `Pays for this cart now with an express checkout`.
 
 ```tsx
 <CartSummary cart={cart} cartLines="cart" />
@@ -3292,15 +3418,15 @@ Required rules: root `display: block`; totals `display: flex; flex-direction: co
 
 ### Agent surface
 
-`bridge`; actions: `remove-discount` (argument `code`) as registered for `rp-cart`; confirm: the CheckoutButton inside (`data-agent-confirm`); secret: none.
+`bridge`; component `rp-cart`. The manifest `agent.actions` of every `rp-cart` component is `["setQuantity", "remove"]` ([08-agent-kit-and-evals.md](08-agent-kit-and-evals.md) section 7.2, D-095): `setQuantity(line: string, quantity: number): void` and `remove(line: string): void`, where `line` is the value of a `data-rp-line` attribute, and `items: (api) => api.lines()` returns `Array<{ value: string; label: string }>`. This root prints no line, so both actions throw `"rp-cart: nothing to setQuantity here"` / `"rp-cart: nothing to remove here"` and `items` is empty. Discount removal has no bridge action (doc 08 rule A-5); an agent uses the remove button through the accessibility tree. Confirm: the CheckoutButton inside (`data-agent-confirm`, REQUIRED); in fixture `accelerated` the wrapper `.rp-cart-summary-accelerated` carries `data-agent-confirm="Pays for this cart now with an express checkout"` (doc 08 section 7.3; locale key `ripple.cart-summary.agent_confirm_accelerated`). The attribute is never on the `rp-cart` root. Secret: none.
 
 ### Checker rules
 
-RP104 (`cart`), RP301, RP305, RP306, RP308, RP320, RP403 (Liquid: partial `rp-cart-summary`). Manifest `rules[]`: `cart-summary-region` (`requires-descendant`, selector `:scope`, target `[data-rp-region="rp-cart-summary"]`); `cart-summary-no-error` (`forbids-descendant`, selector `:scope`, target `[data-rp-part="error"]`); `cart-summary-accelerated-outside-region` (`forbids-descendant`, selector `[data-rp-region]`, target `.rp-cart-summary-accelerated`).
+RP104 (`cart`), RP301, RP305, RP306, RP308 (the root is outside the region it refreshes: an error for `rp-cart`, D-102), RP320, RP403 (Liquid: partial `rp-cart-summary`). Manifest `rules[]`: `cart-summary-region` (`requires-descendant`, selector `:scope`, target `[data-rp-region="rp-cart-summary"]`); `cart-summary-no-error` (`forbids-descendant`, selector `:scope`, target `[data-rp-part="error"]`); `cart-summary-accelerated-outside-region` (`forbids-descendant`, selector `[data-rp-region]`, target `.rp-cart-summary-accelerated`).
 
 ### Acceptance tests
 
-1. Tier 2: `default`, `two-lines`, `accelerated`, `class`, `children` (hydrogen hosts), the `liquid` variants (shim) and `empty` (all hosts) are canonical-equal with the masks above.
+1. Tier 2: `default`, `two-lines`, `accelerated`, `class`, `children` (hydrogen hosts), the `liquid-*` variants (shim) and `empty` (all hosts) are canonical-equal with the masks above.
 2. Tier 5: submitting a remove form produces one store call with intent `discount-remove` and the code, one refresh of `rp-cart-summary`, and the status part text `Discount removed`.
 3. Tier 5: starting from `cart.empty`, after an add and the refresh the region contains a checkout control whose `href` (hydrogen) equals the store's `checkoutUrl`.
 4. Tier 5: a click on the checkout control is not prevented (`defaultPrevented` is false) in both backends.
@@ -3357,7 +3483,7 @@ Nesting rules: root children in order: the form part, status. Form children in o
 
 | Prop (TSX) | Liquid param | Type | Values | Default | Required | Responsive | Renders as |
 |---|---|---|---|---|---|---|---|
-| `id` | `id` | string | `^[a-zA-Z][a-zA-Z0-9_-]*$` | none | yes | no | `id` on the field; `for` on the label |
+| `id` | `id` | id | any id | none | yes | no | `id` on the field; `for` on the label |
 | `cart` | `cart` | object | `RippleCart` / Liquid `cart` drop | Liquid: the global `cart` | yes (TSX) | no | text content of the field (`cart.note`) |
 | `cartLines` | `cart_lines` | string | the `id` of the CartLines on the page | none | yes on Liquid | no | Liquid: `form="<value>-form"` on the field; ignored on hydrogen hosts |
 | `rows` | `rows` | number | integer 1 or greater | `3` | no | no | `rows` on the field |
@@ -3374,7 +3500,7 @@ Fixture `default` (`id`: `note`, `cart`: `cart.two-lines`; hosts `html`, `react`
 <rp-cart class="rp-cart-note" data-slot="rp-cart">
   <form class="rp-cart-note-form" method="post" action="/api/cart">
     <label class="rp-label" for="note">Order note</label>
-    <textarea class="rp-textarea" id="note" name="note" rows="3" data-rp-field="note"></textarea>
+    <textarea class="rp-textarea" id="note" name="note" rows="3" data-size="md" data-rp-field="note"></textarea>
     <button class="rp-button" type="submit" name="intent" value="note-update" data-variant="outline" data-size="sm" data-rp-part="submit" data-rp-js="fallback">Save note</button>
     <p class="rp-form-message" data-rp-part="error" data-tone="destructive" role="alert" hidden></p>
   </form>
@@ -3382,13 +3508,13 @@ Fixture `default` (`id`: `note`, `cart`: `cart.two-lines`; hosts `html`, `react`
 </rp-cart>
 ```
 
-Fixture `liquid` (`id`: `note`, `cart_lines`: `cart`; host `liquid`):
+Fixture `liquid-default` (`id`: `note`, `cart_lines`: `cart`; host `liquid`):
 
 ```html
 <rp-cart class="rp-cart-note" data-slot="rp-cart">
   <div class="rp-cart-note-form">
     <label class="rp-label" for="note">Order note</label>
-    <textarea class="rp-textarea" id="note" name="note" rows="3" form="cart-form" data-rp-field="note"></textarea>
+    <textarea class="rp-textarea" id="note" name="note" rows="3" form="cart-form" data-size="md" data-rp-field="note"></textarea>
     <p class="rp-form-message" data-rp-part="error" data-tone="destructive" role="alert" hidden></p>
   </div>
   <p class="rp-visually-hidden" data-rp-part="status" role="status"></p>
@@ -3407,7 +3533,7 @@ Host-owned regions and masks: none beyond the two variants. Mask: `{ "select": "
 | `aria-busy` | root | `rp-cart` | the cart store is busy (`"true"`) | absent |
 | `hidden` | error | `rp-cart` | no cart-scope error | present |
 
-Upgrade allow-list (mutations permitted when the element upgrades): `{ "select": ":scope", "attributes": ["data-pending", "aria-busy"] }`, `{ "select": "[data-rp-part=\"error\"]", "text": true, "attributes": ["hidden"] }`, `{ "select": "[data-rp-part=\"status\"]", "text": true }`.
+Upgrade allow-list (mutations permitted when the element upgrades): `{ "select": "rp-cart", "attrs": ["data-pending", "aria-busy"], "reason": "The store may already hold a pending mutation when the element upgrades." }`, `{ "select": "[data-rp-part=\"error\"]", "attrs": ["hidden"], "text": true, "reason": "The error part shows the result of a mutation that completed during upgrade." }`, `{ "select": "[data-rp-part=\"status\"]", "text": true, "reason": "The status part announces a mutation that completed during upgrade." }`.
 
 ### Behaviour with JavaScript
 
@@ -3454,9 +3580,9 @@ Required rules: root `display: block`; `.rp-cart-note-form { display: flex; flex
 ### Host notes
 
 - HTML: copy the `default` contract.
-- React: `CartNote(props: { id: string; cart: RippleCart; cartLines?: string; rows?: number; className?: string; children?: ReactNode })`. No hook, no directive. The field is uncontrolled: `defaultValue={cart.note}`. The error part carries `suppressHydrationWarning`.
+- React: `CartNote(props: { id: string; cart: RippleCart; cartLines?: string; rows?: number; className?: string; children?: ReactNode })`. No hook, no directive. The field is the embedded Textarea: `<Textarea id={id} name="note" rows={rows} defaultValue={cart.note} rpField="note" />` (uncontrolled; `data-rp-field` through `rpField`, section 0.2). The save button is printed by the binding itself (section 0.2). The error part carries `suppressHydrationWarning`.
 - Remix: `data-rmx-key="<id>"` on root.
-- Liquid: field content `{{ cart.note }}` (escaped). `cart_lines` is required; when it is blank the binding prints the field without a `form` attribute and `ripple check` reports the rule below. No schema settings. Locale keys: `ripple.cart-note.label` = `Order note`; `ripple.cart-note.save` = `Save note`; `ripple.cart-note.saved` = `Note saved`.
+- Liquid: the field is `{% render 'rp-textarea', id: id, name: 'note', rows: rows, default_value: cart.note, rp_field: 'note', form_id: form_id %}` with `form_id` assigned as `cart_lines | append: '-form'`; `form_id` prints the native `form` attribute (D-020) and `rp_field` prints `data-rp-field`; neither is passed through `attributes`. Field content is `{{ cart.note }}` (escaped by Textarea). The root prints `{{ attributes }}` last (D-035). `cart_lines` is required; when it is blank the binding prints the field without a `form` attribute and `ripple check` reports the rule below. No schema settings. Locale keys: `ripple.cart-note.label` = `Order note`; `ripple.cart-note.save` = `Save note`; `ripple.cart-note.saved` = `Note saved`.
 
 ```tsx
 <CartNote id="note" cart={cart} />
@@ -3489,7 +3615,7 @@ RP104 (`id`, `cart`), RP301, RP305. Manifest `rules[]`: `cart-note-field` (`requ
 
 ### Acceptance tests
 
-1. Tier 2: `default`, `with-note`, `children`, `rows`, `class` (hydrogen hosts) and the `liquid` variants (shim) are canonical-equal with the mask above.
+1. Tier 2: `default`, `with-note`, `children`, `rows`, `class` (hydrogen hosts) and the `liquid-*` variants (shim) are canonical-equal with the mask above.
 2. Tier 5: [05-commerce.md](05-commerce.md) test C-08 (note `change` sends one call carrying the note); the status part then contains `Note saved`.
 3. Tier 5 (Liquid shim): the textarea's `form` property is the element `#cart-form`, and a change of the note leads to exactly one `updateCart` call carrying `note`.
 4. Tier 6: hydrogen dev server, scripting disabled: typing a note and pressing `Save note` re-renders the page with the note in the textarea.
@@ -3515,7 +3641,7 @@ None.
 | Custom elements | `rp-cart` |
 | Root element and class | `rp-cart` `.rp-discount-code` |
 | Liquid tier | `resource` |
-| No-JS level | `full` on the hydrogen backend; `degraded` on the liquid backend (the form is hidden without JavaScript; codes are entered at checkout). Manifest value: `degraded`. |
+| No-JS level | `degraded` (manifest `noJs.level`, D-005). On the liquid backend the form is hidden without JavaScript and codes are entered at checkout (D-092); on the hydrogen backend the form posts natively. |
 | Requires `id` | yes (printed on the input) |
 | Depends on | `label`, `input`, `button`, `form-message` |
 | Milestone | M3 |
@@ -3546,7 +3672,7 @@ Nesting rules: root children in order: the form, status. Form children in order:
 
 | Prop (TSX) | Liquid param | Type | Values | Default | Required | Responsive | Renders as |
 |---|---|---|---|---|---|---|---|
-| `id` | `id` | string | `^[a-zA-Z][a-zA-Z0-9_-]*$` | none | yes | no | `id` on the field; `for` on the label |
+| `id` | `id` | id | any id | none | yes | no | `id` on the field; `for` on the label |
 | `placeholder` | `placeholder` | string | any text | none | no | no | `placeholder` on the field |
 
 The component takes no `cart` prop: it prints nothing that depends on the cart.
@@ -3557,14 +3683,14 @@ The component takes no `cart` prop: it prints nothing that depends on the cart.
 
 ### HTML contract
 
-Fixture `default` (`id`: `discount`; all four hosts; the Liquid-only attribute is masked):
+Fixture `default` (`id`: `discount`; hosts `html`, `react`, `remix`):
 
 ```html
 <rp-cart class="rp-discount-code" data-slot="rp-cart">
   <form class="rp-discount-code-form" method="post" action="/api/cart">
     <label class="rp-label" for="discount">Discount code</label>
     <div class="rp-discount-code-row">
-      <input class="rp-input" type="text" data-size="md" id="discount" name="discountCode" autocomplete="off" autocapitalize="characters" spellcheck="false" required data-rp-field="discount-code">
+      <input class="rp-input" id="discount" type="text" name="discountCode" autocomplete="off" required data-size="md" data-rp-field="discount-code" autocapitalize="characters" spellcheck="false">
       <button class="rp-button" type="submit" name="intent" value="discount-apply" data-variant="outline" data-size="md" data-rp-part="submit">Apply</button>
     </div>
     <p class="rp-form-message" data-rp-part="error" data-tone="destructive" role="alert" hidden></p>
@@ -3573,11 +3699,17 @@ Fixture `default` (`id`: `discount`; all four hosts; the Liquid-only attribute i
 </rp-cart>
 ```
 
-The Liquid binding prints the same markup with `action="/cart"` and `data-rp-js="inflow"` on the `<form>`.
+Fixture `liquid-default` (`id`: `discount`; host `liquid`): identical to `default` except the opening tag of the form, which is:
 
-Further required fixtures: `placeholder` (`placeholder`: `SAVE10`); `children` (children `Promo code`); `class` (root class `rp-discount-code custom-a custom-b`); `escaping` (`placeholder`: `Say "hi" & <go>`).
+```html
+  <form class="rp-discount-code-form" method="post" action="/cart" data-rp-js="inflow">
+```
 
-Host-owned regions and masks: `{ "select": "form.rp-discount-code-form", "op": "attr", "name": "action" }`, `{ "select": "form.rp-discount-code-form", "op": "drop-attr", "name": "data-rp-js" }` (matches Liquid output only; F-19 exemption, Ledger issues item 5).
+`data-rp-js` is a Ripple-owned attribute and MUST NOT be masked (D-074); that is why the fixture is backend-scoped (FX-2).
+
+Further required fixtures, each in the two backend variants (`<name>` and `liquid-<name>`): `placeholder` (`placeholder`: `SAVE10`); `children` (children `Promo code`); `class` (root class `rp-discount-code custom-a custom-b`); `escaping` (`placeholder`: `Say "hi" & <go>`).
+
+Host-owned regions and masks: `{ "select": "form.rp-discount-code-form", "op": "attr", "name": "action" }`. No other mask.
 
 ### State and attributes
 
@@ -3588,7 +3720,7 @@ Host-owned regions and masks: `{ "select": "form.rp-discount-code-form", "op": "
 | `hidden` | error | `rp-cart` | no discount-scope error | present |
 | `data-rp-js` | form | server | liquid backend only | `inflow` |
 
-Upgrade allow-list (mutations permitted when the element upgrades): `{ "select": ":scope", "attributes": ["data-pending", "aria-busy"] }`, `{ "select": "[data-rp-part=\"error\"]", "text": true, "attributes": ["hidden"] }`, `{ "select": "[data-rp-part=\"status\"]", "text": true }`.
+Upgrade allow-list (mutations permitted when the element upgrades): `{ "select": "rp-cart", "attrs": ["data-pending", "aria-busy"], "reason": "The store may already hold a pending mutation when the element upgrades." }`, `{ "select": "[data-rp-part=\"error\"]", "attrs": ["hidden"], "text": true, "reason": "The error part shows the result of a mutation that completed during upgrade." }`, `{ "select": "[data-rp-part=\"status\"]", "text": true, "reason": "The status part announces a mutation that completed during upgrade." }`.
 
 ### Behaviour with JavaScript
 
@@ -3638,9 +3770,9 @@ Required rules: root `display: block`; `.rp-discount-code-form { display: flex; 
 ### Host notes
 
 - HTML: copy the contract.
-- React: `DiscountCode(props: { id: string; placeholder?: string; className?: string; children?: ReactNode })`. No hook, no directive. Uncontrolled input. Error part with `suppressHydrationWarning`.
+- React: `DiscountCode(props: { id: string; placeholder?: string; strings?: { label?: string; apply?: string }; className?: string; children?: ReactNode })`. No hook, no directive. The field is the embedded Input: `<Input id={id} name="discountCode" autoComplete="off" required rpField="discount-code" placeholder={placeholder} autoCapitalize="characters" spellCheck={false} />` (`data-rp-field` through `rpField`; `autoCapitalize` and `spellCheck` are native attributes passed as rest props). Uncontrolled input. The apply button is printed by the binding itself (section 0.2). Error part with `suppressHydrationWarning`.
 - Remix: `data-rmx-key="<id>"` on root.
-- Liquid: `action="{{ routes.cart_url }}"`; `data-rp-js="inflow"` on the form. No schema settings. Locale keys: `ripple.discount-code.label` = `Discount code`; `ripple.discount-code.apply` = `Apply`; `ripple.discount-code.applied` = `Discount applied`; `ripple.discount-code.removed` = `Discount removed`.
+- Liquid: a plain `<form class="rp-discount-code-form" method="post" action="{{ routes.cart_url }}" data-rp-js="inflow">` (not `{% form %}`); `data-rp-js="inflow"` is on the `<form>` itself and the submitter carries `name="intent"` (D-092, ledger 4.4). The field is `{% render 'rp-input', id: id, name: 'discountCode', auto_complete: 'off', required: true, rp_field: 'discount-code', placeholder: placeholder, attributes: 'autocapitalize="characters" spellcheck="false"' %}`. The root prints `{{ attributes }}` last (D-035). No schema settings. Locale keys: `ripple.discount-code.label` = `Discount code`; `ripple.discount-code.apply` = `Apply`; `ripple.discount-code.applied` = `Discount applied`; `ripple.discount-code.removed` = `Discount removed`.
 
 ```tsx
 <DiscountCode id="discount" />
@@ -3665,7 +3797,7 @@ Required rules: root `display: block`; `.rp-discount-code-form { display: flex; 
 
 ### Agent surface
 
-`bridge`; actions: `apply-discount` (argument `code`) as registered for `rp-cart`; confirm: none; secret: none.
+`bridge`; component `rp-cart`. The manifest `agent.actions` of every `rp-cart` component is `["setQuantity", "remove"]` ([08-agent-kit-and-evals.md](08-agent-kit-and-evals.md) section 7.2, D-095): `setQuantity(line: string, quantity: number): void` and `remove(line: string): void`, where `line` is the value of a `data-rp-line` attribute, and `items: (api) => api.lines()` returns `Array<{ value: string; label: string }>`. This root prints no line, so both actions throw `"rp-cart: nothing to setQuantity here"` / `"rp-cart: nothing to remove here"` and `items` is empty. Applying a code has no bridge action (doc 08 rule A-5); an agent fills the field and presses Apply through the accessibility tree. Confirm: none. Secret: none.
 
 ### Checker rules
 
@@ -3673,15 +3805,15 @@ RP104 (`id`), RP301, RP305. Manifest `rules[]`: `discount-code-field` (`requires
 
 ### Acceptance tests
 
-1. Tier 2: `default`, `placeholder`, `children`, `class`, `escaping` are canonical-equal in all four hosts with the masks above.
+1. Tier 2: `default`, `placeholder`, `children`, `class`, `escaping` (hydrogen hosts) and their `liquid-*` variants (shim) are canonical-equal with the mask above.
 2. Tier 5: [05-commerce.md](05-commerce.md) test C-03 (Liquid discount form sends `{ discountCodes: ["SAVE10"] }`); the status part then contains `Discount applied`. A rejected code shows its message in this error part and the CartLines cart-scope error part stays hidden.
 3. Tier 5 (Liquid shim): the form has `data-rp-js="inflow"`; with scripting disabled its computed `display` is `none`.
 4. Tier 6: hydrogen dev server, scripting disabled: applying `SAVE10` re-renders the page with a discount row in CartSummary.
 
 ### Evidence and UNVERIFIED
 
-- Evidence: [05-commerce.md](05-commerce.md) sections 6.2 (discount forms), 9.2 (discount scope); D-043; `ripple/theme/snippets/cart-discount-code.liquid`.
-- UNVERIFIED: the form reset after a successful apply (see above).
+- Evidence: [05-commerce.md](05-commerce.md) sections 6.2 (discount forms), 9.2 (discount scope); D-043, D-092; `ripple/theme/snippets/cart-discount-code.liquid`.
+- UNVERIFIED: the form reset after a successful apply (see above); the discount application type on Liquid (SPIKE-02, D-092).
 
 ### Fallback (SPIKE-nn)
 
@@ -3706,7 +3838,7 @@ None.
 
 ### Purpose
 
-The control that takes the buyer to Shopify checkout (D-050). It is a Button with the backend's checkout semantics and the agent confirmation sentence.
+The control that takes the buyer to Shopify checkout (D-050). It composes Button by contract (D-070; class pair `rp-button rp-checkout-button`, section 0.2) and adds the backend's checkout semantics and the agent confirmation sentence.
 
 - Use when: leaving the cart for checkout. CartSummary prints it; use it directly only in a custom summary.
 - Do not use when: adding to cart (AddToCartButton) or for accelerated wallets (`acceleratedCheckout` on ProductForm and CartSummary).
@@ -3724,13 +3856,18 @@ Nesting rules: hydrogen backend: no restriction except that it MUST NOT be insid
 
 | Prop (TSX) | Liquid param | Type | Values | Default | Required | Responsive | Renders as |
 |---|---|---|---|---|---|---|---|
-| `href` | none | string | the cart's `checkoutUrl` | none | yes (hydrogen hosts) | no | `href`; TSX and HTML hosts only |
+| `href` | none | url | the cart's `checkoutUrl` | none | yes (hydrogen hosts) | no | `href`; TSX and HTML hosts only |
 | none | `cart_lines` | string | the `id` of the CartLines on the page | none | no | no | `form="<value>-form"`; Liquid only |
 | `variant` | `variant` | enum | `primary secondary outline ghost link destructive` | `primary` | no | no | `data-variant` |
 | `size` | `size` | enum | `sm md lg` | `lg` | no | no | `data-size` |
 | `fullWidth` | `full_width` | boolean | `true false` | `true` | no | no | `data-full-width=""` |
+| `disabled` | `disabled` | boolean | `true false` | `false` | no | no | the control is inert (D-050 item d). `button`: `disabled`, printed directly before `data-variant`. `a`: NO `href`, and `aria-disabled="true"` printed directly after the class. The caller sets it when the cart is empty (CartSummary prints no CheckoutButton for an empty cart) |
 
-Fixed attributes: `data-agent-confirm="<confirm sentence>"`; liquid backend: `type="submit" name="checkout"`; Remix: `data-rmx-document` on the link (D-034; checkout is not an app route).
+Fixed attributes: `data-agent-confirm="Goes to checkout with this cart"` (REQUIRED in every host and both forms; D-050, D-095), printed last; liquid backend: `type="submit" name="checkout"`; Remix: `data-rmx-document` on the link (D-034; checkout is not an app route).
+
+Attribute order (Button's order, [09-components-foundation.md](09-components-foundation.md), with the additions of this component): link: `class`, `href`, `aria-disabled`, `data-variant`, `data-size`, `data-full-width`, `data-rmx-document`, `data-agent-confirm`. Button: `class`, `type`, `name`, `form`, `disabled`, `data-variant`, `data-size`, `data-full-width`, `data-agent-confirm`.
+
+The inert link differs on purpose from Button's own `disabled` link (which keeps `href` and adds `tabindex="-1"`): a link without `href` is not focusable and cannot navigate, so no `tabindex` is printed (D-050 item d).
 
 ### Content model
 
@@ -3741,21 +3878,33 @@ Fixed attributes: `data-agent-confirm="<confirm sentence>"`; liquid backend: `ty
 Fixture `default` (`href`: `/checkout`; hosts `html`, `react`, `remix`):
 
 ```html
-<a class="rp-button rp-checkout-button" href="/checkout" data-variant="primary" data-size="lg" data-full-width="" data-agent-confirm="Go to checkout to pay for the items in the cart.">Check out</a>
+<a class="rp-button rp-checkout-button" href="/checkout" data-variant="primary" data-size="lg" data-full-width="" data-agent-confirm="Goes to checkout with this cart">Check out</a>
 ```
 
-Fixture `liquid` (`cart_lines`: `cart`; host `liquid`):
+Fixture `liquid-default` (`cart_lines`: `cart`; host `liquid`):
 
 ```html
-<button class="rp-button rp-checkout-button" type="submit" name="checkout" form="cart-form" data-variant="primary" data-size="lg" data-full-width="" data-agent-confirm="Go to checkout to pay for the items in the cart.">Check out</button>
+<button class="rp-button rp-checkout-button" type="submit" name="checkout" form="cart-form" data-variant="primary" data-size="lg" data-full-width="" data-agent-confirm="Goes to checkout with this cart">Check out</button>
 ```
 
 Fixture `liquid-standalone` (no params; host `liquid`):
 
 ```html
 <form class="rp-checkout-button-form" method="post" action="/cart">
-  <button class="rp-button rp-checkout-button" type="submit" name="checkout" data-variant="primary" data-size="lg" data-full-width="" data-agent-confirm="Go to checkout to pay for the items in the cart.">Check out</button>
+  <button class="rp-button rp-checkout-button" type="submit" name="checkout" data-variant="primary" data-size="lg" data-full-width="" data-agent-confirm="Goes to checkout with this cart">Check out</button>
 </form>
+```
+
+Fixture `disabled` (`href`: `/checkout`, `disabled`: true; hosts `html`, `react`, `remix`):
+
+```html
+<a class="rp-button rp-checkout-button" aria-disabled="true" data-variant="primary" data-size="lg" data-full-width="" data-agent-confirm="Goes to checkout with this cart">Check out</a>
+```
+
+Fixture `liquid-disabled` (`cart_lines`: `cart`, `disabled`: true; host `liquid`):
+
+```html
+<button class="rp-button rp-checkout-button" type="submit" name="checkout" form="cart-form" disabled data-variant="primary" data-size="lg" data-full-width="" data-agent-confirm="Goes to checkout with this cart">Check out</button>
 ```
 
 Further required fixtures (both variants): `children` (children `Pay now`); `inline` (`fullWidth`: false, `size`: `md`, `variant`: `secondary`; no `data-full-width`, `data-size="md"`, `data-variant="secondary"`); `class` (class `rp-button rp-checkout-button custom-a custom-b`); `invalid-enum-falls-back` (`size`: `huge`; equals the default of the variant).
@@ -3766,14 +3915,16 @@ Host-owned regions and masks: `{ "select": "a.rp-checkout-button", "op": "attr",
 
 | Attribute | On | Written by | When | Initial value printed by server |
 |---|---|---|---|---|
-| `data-agent-confirm` | root | server | always | the confirm sentence |
+| `data-agent-confirm` | root | server | always | `Goes to checkout with this cart` |
+| `disabled` (button), `aria-disabled` and absent `href` (link) | root | server | prop `disabled` is true | absent |
 
 Upgrade allow-list (mutations permitted when the element upgrades): None.
 
 ### Behaviour with JavaScript
 
 1. None. `rp-cart` never intercepts a submitter named `checkout` and never intercepts links; the navigation is native in every host.
-2. The agent shell asks the user for confirmation before activating an element with `data-agent-confirm` (D-050; [04-elements.md](04-elements.md)).
+2. A host agent MUST ask the user for confirmation before activating an element with `data-agent-confirm` (D-050, D-095; [08-agent-kit-and-evals.md](08-agent-kit-and-evals.md) section 7.3). Whether the UI SDK bridge enforces this is UNVERIFIED (SPIKE-08).
+3. With `disabled` the control does nothing: a disabled button does not submit; a link without `href` does not navigate.
 
 ### Behaviour without JavaScript
 
@@ -3809,14 +3960,15 @@ hydrogen backend: the link navigates to `checkoutUrl`. liquid backend: the butto
 |---|---|
 | None | |
 
-Required rule: `.rp-checkout-button-form { display: contents }`.
+Required rule: `.rp-checkout-button-form { display: contents }`. This is allowed by D-080 because a `<form>` is not a custom element root; D-080 forbids `display: contents` only on `rp-*` roots. Inert link: `.rp-checkout-button[aria-disabled="true"]` gets the disabled visuals of `button.css` (`pointer-events: none`).
 
 ### Host notes
 
 - HTML: use the `default` contract with the cart's checkout URL.
-- React: `CheckoutButton(props: { href: string; variant?: ButtonVariant; size?: "sm" | "md" | "lg"; fullWidth?: boolean; strings?: { label?: string; confirm?: string }; className?: string; children?: ReactNode })`. Renders `<Button href={href} data-agent-confirm={confirm} className={cx("rp-checkout-button", className)} ...>`. No hook. The app MUST NOT wrap it in a router `<Link>`.
-- Remix: adds `data-rmx-document`.
-- Liquid: `snippets/rp-checkout-button.liquid` calls `{% render 'rp-button', type: 'submit', name: 'checkout', ... %}` with `attributes` holding `form="<cart_lines>-form"` (when given) and `data-agent-confirm`. Schema settings: `variant`, `size`. Locale keys: `ripple.checkout-button.label` = `Check out`; `ripple.checkout-button.confirm` = `Go to checkout to pay for the items in the cart.`.
+- React: `CheckoutButton(props: { href: string; variant?: ButtonVariant; size?: "sm" | "md" | "lg"; fullWidth?: boolean; disabled?: boolean; strings?: { label?: string; agentConfirm?: string }; className?: string; children?: ReactNode })`. Compose by contract (D-070): the binding prints the `<a>` itself, `<a className={cx("rp-button", "rp-checkout-button", className)} href={disabled ? undefined : href} aria-disabled={disabled ? "true" : undefined} data-variant={variant} data-size={size} data-full-width={fullWidth ? "" : undefined} data-agent-confirm={agentConfirm} {...rest}>`; it does NOT render `<Button>`. No hook. The app MUST NOT wrap it in a router `<Link>`.
+- Remix: the same element, with `data-rmx-document` (D-034).
+- Liquid: `snippets/rp-checkout-button.liquid` prints the `<button>` itself (compose by contract, D-070; it does NOT call `{% render 'rp-button' %}`): `type="submit" name="checkout"`, then `form="{{ cart_lines }}-form"` when `cart_lines` is given (D-050 item c, D-092), then `disabled` when `disabled` is true, then Button's `data-*` attributes, then `data-agent-confirm`, then `{{ attributes }}` last (D-035). When `cart_lines` is blank it wraps the button in `<form class="rp-checkout-button-form" method="post" action="{{ routes.cart_url }}">`. Schema settings: `variant`, `size`. Locale keys: `ripple.checkout-button.label` = `Check out`; `ripple.checkout-button.agent_confirm` = `Goes to checkout with this cart`.
+- Manifest: `root.class` is `rp-button rp-checkout-button`; `dependencies.components` is `["button"]`; `agent.confirm[]` as under Agent surface.
 
 ```tsx
 <CheckoutButton href={cart.checkoutUrl} />
@@ -3832,18 +3984,19 @@ None. (No element. The backend difference is D-050: link to `checkoutUrl` versus
 
 ### Agent surface
 
-`accessibility-tree`; actions: none of its own (the shell's `checkout` action activates this control); confirm: `a.rp-checkout-button`, `button[name="checkout"]`; secret: none.
+`accessibility-tree`; actions: none. No bridge action named `checkout` exists (D-050; SPIKE-08). Confirm: REQUIRED. The root carries `data-agent-confirm="Goes to checkout with this cart"` in every host and both forms (locale key `ripple.checkout-button.agent_confirm`; doc 08 section 7.3). Manifest `agent.confirm[]`: `{ "select": "a.rp-checkout-button" }` and `{ "select": "button[name=\"checkout\"]" }`, each with that sentence (checker RP320). Secret: none.
 
 ### Checker rules
 
-RP101 (`variant`, `size`), RP104 (`href` on hydrogen hosts), RP110 (class on `a` or `button` only), RP306 (Liquid: `name="checkout"`), RP320 (`data-agent-confirm` non-empty). Manifest `rules[]`: `checkout-button-not-nested` (`forbids-ancestor`, selector `a.rp-checkout-button`, target `a, button`); `checkout-button-form-target` (`requires-attribute`, selector `button.rp-checkout-button:not(form button)`, attribute `form`; "A Liquid CheckoutButton outside a form needs cart_lines so that it submits the cart form.").
+RP101 (`variant`, `size`), RP104 (`href` on hydrogen hosts), RP110 (class on `a` or `button` only), RP306 (Liquid: `name="checkout"`), RP320 (`data-agent-confirm` non-empty). Manifest `rules[]`: `checkout-button-not-nested` (`forbids-ancestor`, selector `a.rp-checkout-button`, target `a, button`); `checkout-button-form-target` (`requires-attribute`, selector `button.rp-checkout-button:not(form button)`, target `form`; "A Liquid CheckoutButton outside a form needs cart_lines so that it submits the cart form.").
 
 ### Acceptance tests
 
-1. Tier 2: `default`, `children`, `inline`, `class`, `invalid-enum-falls-back` (hydrogen hosts) and `liquid`, `liquid-standalone` and the Liquid variants (shim) are canonical-equal with the masks above.
+1. Tier 2: `default`, `disabled`, `children`, `inline`, `class`, `invalid-enum-falls-back` (hydrogen hosts) and `liquid-default`, `liquid-standalone`, `liquid-disabled` and the other `liquid-*` variants (shim) are canonical-equal with the masks above.
 2. Tier 5: [05-commerce.md](05-commerce.md) test C-07: a click on the Liquid button inside an `rp-cart` page produces a native submit whose submitter name is `checkout` and no `updateCart` call.
 3. Tier 5: `ripple check` on HTML with the `data-agent-confirm` attribute removed reports RP320.
 4. Tier 6: scripting disabled: hydrogen dev server navigates to the checkout URL; Liquid shim receives a POST to `/cart` containing `checkout`.
+5. Tier 2 and tier 5: fixture `disabled` has no `href` and is skipped by Tab; fixture `liquid-disabled` matches `:disabled` and a click sends no request.
 
 ### Evidence and UNVERIFIED
 
@@ -3893,9 +4046,9 @@ Nesting rules: root contains only the form. Form children in order: groups, subm
 
 | Prop (TSX) | Liquid param | Type | Values | Default | Required | Responsive | Renders as |
 |---|---|---|---|---|---|---|---|
-| `id` | `id` | string | `^[a-zA-Z][a-zA-Z0-9_-]*$` | none | yes | no | `id` on the form |
-| `filters` | none | array | `RippleFilter[]` (below) | none | yes (TSX) | no | one FilterGroup each |
-| `action` | none | string | the page path without query (`/collections/summer`, `/search`) | none | yes (TSX) | no | `action` on the form |
+| `id` | `id` | id | any id | none | yes | no | `id` on the form |
+| `filters` | none | object | `RippleFilter[]` (below) | none | yes (TSX) | no | one FilterGroup each |
+| `action` | none | url | the page path without query (`/collections/summer`, `/search`) | none | yes (TSX) | no | `action` on the form |
 | `sortBy` | none | string | the current `sort_by` value, or empty for the default sort | empty | no | no | hidden input `sort_by` |
 | `query` | none | string | the search terms, on a search page | empty | no | no | hidden input `q` |
 | none | `collection` | object | Liquid `collection` drop | the global `collection` | no | no | filters, action, sort |
@@ -3903,29 +4056,25 @@ Nesting rules: root contains only the form. Form children in order: groups, subm
 | `refresh` | `refresh` | string | region names | `rp-collection-results rp-collection-filters rp-collection-toolbar` | no | no | `data-rp-refresh` on root (CV-3) |
 | `open` | `open` | boolean | `true false` | `true` | no | no | passed to every FilterGroup |
 
-The region part takes `filters`, `sortBy`, `query`, `open` (Liquid: `collection`, `search`, `open`). A search page MUST pass `refresh` = `rp-search-results rp-collection-filters rp-collection-toolbar`.
+The region part takes `filters`, `sortBy`, `query`, `open` (Liquid: the snippet `rp-filters-groups` takes exactly `collection`, `search`, `open`; every call passes all three, D-091 item 4). A search page MUST pass `refresh` = `rp-search-results rp-collection-filters rp-collection-toolbar`.
 
-Types exported from `filters.tsx` (not part of [05-commerce.md](05-commerce.md) section 11.1; Ledger issues, item 9):
+`RippleFilter` and `RippleFilterValue` are defined in [05-commerce.md](05-commerce.md) section 11.1 and imported as `import type { RippleFilter, RippleFilterValue } from "<pkg>"` (D-094). This component declares no type. Fields read:
 
-```ts
-export interface RippleFilterValue {
-  label: string;
-  name: string;            // URL parameter name, for example "filter.v.availability"
-  value: string;           // URL parameter value, for example "1"
-  count: number;
-  active: boolean;
-  swatch: { color: string | null; image: RippleImage | null } | null;
-}
-export interface RippleFilter {
-  label: string;
-  type: "list" | "price_range";
-  values: RippleFilterValue[];                 // empty for "price_range"
-  price: { minName: string; maxName: string; min: string; max: string; rangeMax: string } | null; // null for "list"; "" means not set
-  removeUrl: string;       // URL that removes every value of this filter
-}
-```
+| Type | Field | TS type | Meaning |
+|---|---|---|---|
+| `RippleFilter` | `label` | `string` | group label |
+| `RippleFilter` | `type` | `"list" \| "price_range"` | which body the FilterGroup prints |
+| `RippleFilter` | `values` | `RippleFilterValue[]` | empty for `price_range` |
+| `RippleFilter` | `price` | `{ minName: string; maxName: string; min: string; max: string; rangeMax: string } \| null` | `null` for `list`; `""` means not set |
+| `RippleFilter` | `removeUrl` | `string` | URL that removes every value of this filter |
+| `RippleFilterValue` | `label` | `string` | value label |
+| `RippleFilterValue` | `name` | `string` | URL parameter name, for example `filter.v.availability` |
+| `RippleFilterValue` | `value` | `string` | URL parameter value, for example `1` |
+| `RippleFilterValue` | `count` | `number` | number of results |
+| `RippleFilterValue` | `active` | `boolean` | the value is applied |
+| `RippleFilterValue` | `swatch` | `{ color: string \| null; image: RippleImage \| null } \| null` | swatch data |
 
-`toRippleFilters(filters: Filter[], searchParams: URLSearchParams, pathname: string): RippleFilter[]`, exported from `filters.tsx`, builds them from the Storefront API `filters` field (fragment `RippleFilter`, section 0.6). It is a pure function and uses these `@shopify/hydrogen` exports (`hydrogen/packages/hydrogen/src/core/collection/url.ts`; value import, Ledger issues item 4): `parseCollectionParams`, `serializeCollectionParams`, `isFilterInputActive`, `getFilterRemovalUrl`. Algorithm, per Storefront filter `f`:
+`toRippleFilters(filters: Filter[], searchParams: URLSearchParams, pathname: string): RippleFilter[]`, exported from `filters.data.ts` (CV-10; imported by the binding as `./filters.data` and by blueprints as `@components/filters.data`), builds them from the Storefront API `filters` field (fragment `RippleFilter`, section 0.6). It is a pure function and uses these `@shopify/hydrogen` exports (`hydrogen/packages/hydrogen/src/core/collection/url.ts`; value imports allowed by D-094, CV-9): `parseCollectionParams`, `serializeCollectionParams`, `isFilterInputActive`, `getFilterRemovalUrl`. Algorithm, per Storefront filter `f`:
 
 1. `const active = parseCollectionParams(searchParams).filters`.
 2. If `f.type === "PRICE_RANGE"`: `type: "price_range"`, `values: []`, `price: { minName: "filter.v.price.gte", maxName: "filter.v.price.lte", min: searchParams.get("filter.v.price.gte") ?? "", max: searchParams.get("filter.v.price.lte") ?? "", rangeMax: "" }`. `removeUrl` is `pathname` plus the current params without the two price params and without `before` and `after`.
@@ -3984,7 +4133,7 @@ Host-owned regions and masks: none. In Remix the root carries `data-rmx-key="<id
 | `aria-busy` | root | `rp-live` | same (`"true"`) | absent |
 | `aria-busy` | groups | commerce adapter | region `rp-collection-filters` is refreshing | absent |
 
-Upgrade allow-list (mutations permitted when the element upgrades): `{ "select": ":scope", "attributes": ["data-pending", "aria-busy"] }`, `{ "select": "[data-rp-region]", "attributes": ["aria-busy"], "replace": true }`.
+Upgrade allow-list (mutations permitted when the element upgrades): `{ "select": "rp-live", "attrs": ["data-pending", "aria-busy"], "reason": "A refresh can be in flight when the element upgrades after a back or forward navigation." }`, `{ "select": "[data-rp-region]", "attrs": ["aria-busy"], "childList": true, "text": true, "subtree": true, "reason": "A refresh that completes during upgrade replaces the region content." }`.
 
 ### Behaviour with JavaScript
 
@@ -3993,7 +4142,7 @@ Upgrade allow-list (mutations permitted when the element upgrades): `{ "select":
 3. The groups part is replaced by the refresh; the adapter restores focus to the control with the same position when focus was lost (step 9 of [05-commerce.md](05-commerce.md) section 8.2). Because checkboxes have no `id`, restoration falls to the first focusable element of the region; to keep focus on the changed control a project MAY give controls ids in a custom groups part.
 4. The submit button is hidden when the document is ready (`data-rp-js="fallback"`).
 5. The page parameter is not carried: a filter change returns to the first page.
-6. React host: `refresh` calls the app's `navigate(url)`; the router re-renders the page.
+6. React host (D-090): for reason `filter` the adapter calls the app's `navigate(url, { replace: false })` when `navigate` is configured, and the router re-renders the page; otherwise it calls `location.assign(url)`.
 
 ### Behaviour without JavaScript
 
@@ -4038,9 +4187,9 @@ Required rules: root `display: block`; form and groups `display: flex; flex-dire
 ### Host notes
 
 - HTML: copy the contract; write names and values from the URL scheme `filter.v.*` / `filter.p.*`.
-- React: `Filters(props: { id: string; filters: RippleFilter[]; action: string; sortBy?: string; query?: string; refresh?: string; open?: boolean; strings?: { apply?: string }; className?: string; children?: ReactNode })`, `FiltersGroups(props: { filters: RippleFilter[]; sortBy?: string; query?: string; open?: boolean })`, plus `toRippleFilters` and the two types. No hook, no directive. Checkboxes are uncontrolled (`defaultChecked`); the loader's data is the truth after each navigation, so each FilterGroup uses `key={filter.label}` and each input `key={name + "=" + value + ":" + active}` to reset on navigation.
+- React: `Filters(props: { id: string; filters: RippleFilter[]; action: string; sortBy?: string; query?: string; refresh?: string; open?: boolean; strings?: { apply?: string }; className?: string; children?: ReactNode })`, `FiltersGroups(props: { filters: RippleFilter[]; sortBy?: string; query?: string; open?: boolean })`. `toRippleFilters` is in `filters.data.ts` (CV-10) and the two types come from `<pkg>` (D-094). No hook, no directive. The submit button composes Button by contract (D-070; class pair `rp-button rp-filters-submit`, section 0.2): the binding prints the `<button>` itself. Checkboxes are uncontrolled (`defaultChecked`); the loader's data is the truth after each navigation, so each FilterGroup uses `key={filter.label}` and each input `key={name + "=" + value + ":" + active}` to reset on navigation.
 - Remix: `data-rmx-key="<id>"` on root; the form carries no `data-rmx-*` attribute (the element intercepts it).
-- Liquid: source `search.filters` when `search` is given, else `collection.filters`. Action: `routes.search_url` or `collection.url`. `sort_by` hidden input when `source.sort_by != blank and source.sort_by != source.default_sort_by`. `q` hidden input `search.terms` on search. No schema settings. Locale key: `ripple.filters.apply` = `Apply filters`.
+- Liquid: source `search.filters` when `search` is given, else `collection.filters`. Action: `routes.search_url` or `collection.url`. `sort_by` hidden input when `source.sort_by != blank and source.sort_by != source.default_sort_by`. `q` hidden input `search.terms` on search. No schema settings. Locale key: `ripple.filters.apply` = `Apply filters`. The submit button is printed by the snippet itself (compose by contract, D-070). The root prints `{{ attributes }}` last (D-035).
 
 ```tsx
 <Filters id="filters" filters={toRippleFilters(collection.products.filters, url.searchParams, url.pathname)} action={url.pathname} sortBy={url.searchParams.get("sort_by") ?? ""} />
@@ -4048,7 +4197,7 @@ Required rules: root `display: block`; form and groups `display: flex; flex-dire
 
 ```liquid
 {% block 'filters', id: 'filters' %}
-  {% partial 'rp-collection-filters' %}{% render 'rp-filters-groups', collection: collection %}{% endpartial %}
+  {% partial 'rp-collection-filters' %}{% render 'rp-filters-groups', collection: collection, search: search, open: true %}{% endpartial %}
 {% endblock %}
 ```
 
@@ -4072,15 +4221,15 @@ Required rules: root `display: block`; form and groups `display: flex; flex-dire
 
 ### Checker rules
 
-RP104 (`id`, `filters`, `action`), RP114, RP301 (the submit button is in a form), RP308 (W: names without a region), RP403 (Liquid: partials for every name in `refresh`). Manifest `rules[]`: `filters-get-form` (`requires-descendant`, selector `:scope`, target `form[method="get"]`); `filters-fallback-submit` (`requires-descendant`, selector `form`, target `button[type="submit"][data-rp-js="fallback"]`; "The filter form has no submit button for use without JavaScript."); `filters-region` (`requires-descendant`, selector `form`, target `[data-rp-region="rp-collection-filters"]`); `filters-not-in-form` (`forbids-ancestor`, selector `:scope`, target `form`).
+RP104 (`id`, `filters`, `action`), RP114, RP301 (the submit button is in a form), RP308 (a `data-rp-refresh` name with no region on the page; this root MAY be inside the region it refreshes, D-102), RP403 (Liquid: partials for every name in `refresh`). Manifest `rules[]`: `filters-get-form` (`requires-descendant`, selector `:scope`, target `form[method="get"]`); `filters-fallback-submit` (`requires-descendant`, selector `form`, target `button[type="submit"][data-rp-js="fallback"]`; "The filter form has no submit button for use without JavaScript."); `filters-region` (`requires-descendant`, selector `form`, target `[data-rp-region="rp-collection-filters"]`); `filters-not-in-form` (`forbids-ancestor`, selector `:scope`, target `form`).
 
 ### Acceptance tests
 
 1. Tier 2: `default`, `search-sorted`, `empty`, `closed`, `class`, `children`, `escaping` are canonical-equal in all four hosts.
-2. Tier 1: `toRippleFilters` with the `filters.basic` Storefront data and `?filter.v.availability=1&filter.v.price.lte=50` returns names, values, `active` flags and price fields equal to the resource table of section 0.5.
+2. Tier 5 (unit test): `toRippleFilters` with the `filters.basic` Storefront data and `?filter.v.availability=1&filter.v.price.lte=50` returns names, values, `active` flags and price fields equal to the resource table of section 0.5.
 3. Tier 5: checking `Out of stock` produces exactly one `rp:refresh` with `reason: "filter"`, one new history entry whose URL contains `filter.v.availability=0`, and no `page`, `before` or `after` parameter ([05-commerce.md](05-commerce.md) test C-13 covers the sort variant).
 4. Tier 5: a price input with an empty value contributes no parameter to the URL.
-5. Tier 6: with scripting disabled the submit button is displayed and submitting navigates to the same URL as test 3.
+5. Tier 6: with scripting disabled the submit button is displayed and submitting navigates to the same URL as AT-3.
 6. Tier 5: Back after a filter change reloads the previous URL.
 
 ### Evidence and UNVERIFIED
@@ -4328,13 +4477,13 @@ Nesting rules: when no filter is active the root is printed with NO children. Ot
 
 | Prop (TSX) | Liquid param | Type | Values | Default | Required | Responsive | Renders as |
 |---|---|---|---|---|---|---|---|
-| `chips` | none | array | `Array<{ label: string; url: string }>` | none | yes (TSX) | no | one chip each |
-| `clearUrl` | none | string | URL without any filter parameter | none | yes (TSX) | no | `href` of clear |
+| `chips` | none | object | `Array<{ label: string; url: string }>` | none | yes (TSX) | no | one chip each |
+| `clearUrl` | none | url | URL without any filter parameter | none | yes (TSX) | no | `href` of clear |
 | none | `collection` | object | Liquid `collection` drop | the global `collection` | no | no | chips and clear URL |
 | none | `search` | object | Liquid `search` drop | none | no | no | replaces `collection` as the source |
 | `refresh` | `refresh` | string | region names | `rp-collection-results rp-collection-filters rp-collection-toolbar` | no | no | `data-rp-refresh` (CV-3) |
 
-`toFilterChips(filters: RippleFilter[], options: { pathname: string; searchParams: URLSearchParams; formatPrice: (amount: string) => string }): { chips: Array<{ label: string; url: string }>; clearUrl: string }` is exported from `filter-chips.tsx`. Per active list value: `label` = the value label, `url` = `pathname` + `getFilterRemovalUrl(searchParams, JSON.parse(<the value's input>))`; because `RippleFilterValue` does not keep `input`, the helper rebuilds the URL by deleting the pair `(name, value)` and the `before` / `after` params from a copy of `searchParams`. For an active price range: one chip with the label of the rule below and `url` = `filter.removeUrl`. `clearUrl` = `pathname` plus only the `sort_by` and `q` params.
+`toFilterChips(filters: RippleFilter[], options: { pathname: string; searchParams: URLSearchParams; formatPrice: (amount: string) => string }): { chips: Array<{ label: string; url: string }>; clearUrl: string }` is exported from `filter-chips.data.ts` (CV-10). The chip shape `{ label: string; url: string }` is the chip shape of [05-commerce.md](05-commerce.md) section 11.1 (D-094). Per active list value: `label` = the value label, `url` = `pathname` + `getFilterRemovalUrl(searchParams, JSON.parse(<the value's input>))`; because `RippleFilterValue` does not keep `input`, the helper rebuilds the URL by deleting the pair `(name, value)` and the `before` / `after` params from a copy of `searchParams`. For an active price range: one chip with the label of the rule below and `url` = `filter.removeUrl`. `clearUrl` = `pathname` plus only the `sort_by` and `q` params.
 
 Price chip label rule (both backends): both bounds set: `<min> - <max>`; only max: `Up to <max>`; only min: `From <min>`; where `<min>` and `<max>` are money text (TSX: `formatPrice`; Liquid: `filter.min_value.value | money`, `filter.max_value.value | money`).
 
@@ -4374,7 +4523,7 @@ Host-owned regions and masks: none host-owned. Masks: `{ "select": ".rp-filter-c
 | `data-pending` | root | `rp-live` | a refresh it started is running | absent |
 | `aria-busy` | root | `rp-live` | same (`"true"`) | absent |
 
-Upgrade allow-list (mutations permitted when the element upgrades): `{ "select": ":scope", "attributes": ["data-pending", "aria-busy"] }`.
+Upgrade allow-list (mutations permitted when the element upgrades): `{ "select": "rp-live", "attrs": ["data-pending", "aria-busy"], "reason": "A refresh can be in flight when the element upgrades after a back or forward navigation." }`.
 
 ### Behaviour with JavaScript
 
@@ -4418,13 +4567,13 @@ Chips and the clear link are ordinary links; they navigate to the URL without th
 |---|---|
 | `.rp-filter-chips[data-pending]` | nothing; reserved for project CSS |
 
-Required rules: root `display: flex; flex-wrap: wrap; align-items: center; gap: var(--rp-filter-chips-gap)`; `.rp-filter-chips:empty { display: none }`; list `display: contents; list-style: none`; list items `display: contents`; chip `display: inline-flex; align-items: center; gap: calc(var(--spacing) * 1); min-block-size: calc(var(--spacing) * 8); padding-inline: calc(var(--spacing) * 3); border-radius: var(--rp-filter-chips-radius); background: var(--rp-filter-chips-bg); text-decoration: none`. Because `list-style: none` removes list semantics in WebKit, the `ul` carries the fixed attribute `role="list"`.
+Required rules: root `display: flex; flex-wrap: wrap; align-items: center; gap: var(--rp-filter-chips-gap)`; the root MUST NOT get `display: none` when it is empty (D-080 forbids `display: none` on a custom element root): an empty root is a flex box with no content and zero block size; list `display: contents; list-style: none`; list items `display: contents`; chip `display: inline-flex; align-items: center; gap: calc(var(--spacing) * 1); min-block-size: calc(var(--spacing) * 8); padding-inline: calc(var(--spacing) * 3); border-radius: var(--rp-filter-chips-radius); background: var(--rp-filter-chips-bg); text-decoration: none`. Because `list-style: none` removes list semantics in WebKit, the `ul` carries the fixed attribute `role="list"`.
 
 ### Host notes
 
 - HTML: copy the contract; compute each URL by removing the parameter.
 - React: `FilterChips(props: { chips: Array<{ label: string; url: string }>; clearUrl: string; refresh?: string; strings?: { remove?: string; clear?: string }; className?: string })` plus `toFilterChips`. No hook. `key={chip.url}`.
-- Remix: `data-rmx-key="filter-chips"` on root; links carry no `data-rmx-*` attribute.
+- Remix: prop `rmxKey?: string` prints `data-rmx-key` on root (omitted when unset; CV-5, D-034); links carry no `data-rmx-*` attribute.
 - Liquid: source `search.filters` or `collection.filters`. For each `filter`: for each `value` in `filter.active_values`: chip with `value.label` and `value.url_to_remove`; for `price_range` with a set bound: one chip with `filter.url_to_remove`. Clear URL: collection: `collection.url`, plus `?sort_by=<value>` when the sort is not the default; search: `routes.search_url` + `?q=` + `search.terms | url_encode`, plus `&sort_by=<value>` when not the default. No schema settings. Locale keys: `ripple.filter-chips.remove` = `Remove filter: `; `ripple.filter-chips.clear` = `Clear all`; `ripple.filter-chips.up_to` = `Up to {{ max }}`; `ripple.filter-chips.from` = `From {{ min }}`.
 
 ```tsx
@@ -4440,7 +4589,7 @@ Required rules: root `display: flex; flex-wrap: wrap; align-items: center; gap: 
 - Store fields read: none.
 - Adapter methods called: `refresh`, `usable` (through `rp-live`).
 - Regions refreshed: the names in `data-rp-refresh`; `reason: "filter"`; history push.
-- Pending and error behaviour: root flags; failed refresh navigates.
+- Pending and error behaviour: root flags; a failed refresh ends in `location.assign(url)` (D-090).
 
 | Meaning | hydrogen backend | liquid backend |
 |---|---|---|
@@ -4452,12 +4601,12 @@ Required rules: root `display: flex; flex-wrap: wrap; align-items: center; gap: 
 
 ### Checker rules
 
-RP104 (`chips`, `clearUrl`), RP308 (W), RP403 (Liquid). Manifest `rules[]`: `filter-chips-links` (`forbids-descendant`, selector `:scope`, target `.rp-filter-chips-chip:not(a[href])`; "A filter chip is not a link; it cannot work without JavaScript.").
+RP104 (`chips`, `clearUrl`), RP308 (a `data-rp-refresh` name with no region on the page; this root MAY be inside the region it refreshes, D-102), RP403 (Liquid). Manifest `rules[]`: `filter-chips-links` (`forbids-descendant`, selector `:scope`, target `.rp-filter-chips-chip:not(a[href])`; "A filter chip is not a link; it cannot work without JavaScript.").
 
 ### Acceptance tests
 
 1. Tier 2: `default`, `empty`, `refresh`, `class`, `escaping` are canonical-equal in all four hosts with the masks above.
-2. Tier 1: `toFilterChips` for `filters.basic` returns two chips; the first URL has no `filter.v.availability` parameter and keeps `filter.v.price.lte=50`; `clearUrl` is `/collections/summer`.
+2. Tier 5 (unit test): `toFilterChips` for `filters.basic` returns two chips; the first URL has no `filter.v.availability` parameter and keeps `filter.v.price.lte=50`; `clearUrl` is `/collections/summer`.
 3. Tier 5: a click on the first chip yields one `rp:refresh` (`reason: "filter"`), one history entry, and afterwards `document.activeElement` is inside the toolbar region.
 4. Tier 6: with scripting disabled the same click navigates to the chip's `href`.
 
@@ -4604,7 +4753,7 @@ Required rules: root `display: grid; grid-template-columns: repeat(2, minmax(0, 
 - HTML: copy the contract.
 - React: `PriceRange(props: { minName?: string; maxName?: string; min?: string; max?: string; rangeMax?: string; size?: "sm" | "md" | "lg"; strings?: { from?: string; to?: string }; className?: string })`. No hook. Uncontrolled inputs (`defaultValue`), with `key={min + ":" + max}` set by FilterGroup so that navigation resets them.
 - Remix: None.
-- Liquid: names `filter.min_value.param_name` and `filter.max_value.param_name`; values from `filter.min_value.value` and `filter.max_value.value` (cents; blank when not set); `rangeMax` from `filter.range_max` (cents). Filters `divided_by` and `modulo` are added to the Liquid subset (section 0.6). No schema settings. Locale keys: `ripple.price-range.from` = `From`; `ripple.price-range.to` = `To`.
+- Liquid: names `filter.min_value.param_name` and `filter.max_value.param_name`; values from `filter.min_value.value` and `filter.max_value.value` (cents; blank when not set); `rangeMax` from `filter.range_max` (cents). Filters `divided_by` and `modulo` are in the component scope of the Liquid subset (D-097). The two inputs are the embedded Input with `inputmode="decimal"` passed through `attributes` (a native attribute, not a hook). No schema settings. Locale keys: `ripple.price-range.from` = `From`; `ripple.price-range.to` = `To`.
 
 ```tsx
 <PriceRange min={filter.price.min} max={filter.price.max} />
@@ -4629,7 +4778,7 @@ RP101 (`size`), RP110. Manifest `rules[]`: `price-range-in-get-form` (`requires-
 ### Acceptance tests
 
 1. Tier 2: `default`, `bounded`, `empty`, `class`, `invalid-enum-falls-back` are canonical-equal in all four hosts with the mask above.
-2. Tier 4 (Liquid shim): cents `5000` prints `50`, `5005` prints `50.05`, `5050` prints `50.50`, blank prints no `value` attribute.
+2. Tier 2 (Liquid shim, unit): cents `5000` prints `50`, `5005` prints `50.05`, `5050` prints `50.50`, blank prints no `value` attribute.
 3. Tier 5: accessible names of the inputs are `From` and `To`.
 4. Tier 5: inside a Filters fixture, typing `20` in `From` and pressing Enter produces a URL containing `filter.v.price.gte=20` and no `filter.v.price.lte` when `To` is empty.
 
@@ -4682,11 +4831,11 @@ Nesting rules: root contains only the form. Form children in order: the carried 
 
 | Prop (TSX) | Liquid param | Type | Values | Default | Required | Responsive | Renders as |
 |---|---|---|---|---|---|---|---|
-| `id` | `id` | string | `^[a-zA-Z][a-zA-Z0-9_-]*$` | none | yes | no | `id` on the select; `for` on the label |
-| `options` | none | array | `Array<{ value: string; label: string }>` | none | yes (TSX) | no | one `<option>` each |
+| `id` | `id` | id | any id | none | yes | no | `id` on the select; `for` on the label |
+| `options` | none | object | `Array<{ value: string; label: string }>` | none | yes (TSX) | no | one `<option>` each |
 | `value` | none | string | one of the option values | the first option's value | no | no | `selected` on that option |
-| `action` | none | string | the page path without query | none | yes (TSX) | no | `action` on the form |
-| `params` | none | array | `Array<[name: string, value: string]>`: the active filter parameters and `q` | empty | no | no | hidden inputs, in the given order |
+| `action` | none | url | the page path without query | none | yes (TSX) | no | `action` on the form |
+| `params` | none | object | `Array<[name: string, value: string]>`: the active filter parameters and `q` | empty | no | no | hidden inputs, in the given order |
 | none | `collection` | object | Liquid `collection` drop | the global `collection` | no | no | options, value, action, params |
 | none | `search` | object | Liquid `search` drop | none | no | no | replaces `collection` as the source |
 | `refresh` | `refresh` | string | region names | `rp-collection-results rp-collection-filters rp-collection-toolbar` | no | no | `data-rp-refresh` (CV-3) |
@@ -4694,7 +4843,7 @@ Nesting rules: root contains only the form. Form children in order: the carried 
 
 `rp-collection-filters` is in the default refresh list because the Filters form carries the sort as a hidden input inside that region.
 
-`sortParams(searchParams: URLSearchParams): Array<[string, string]>`, exported from `sort-select.tsx`, returns every pair whose name starts with `filter.` plus the pair `q` when present, in URL order. hydrogen sort values are those produced by `getSortByValue(sortKey, reverse)` of `@shopify/hydrogen` (`hydrogen/packages/hydrogen/src/core/collection/url.ts`): `manual`, `best-selling`, `title-ascending`, `title-descending`, `price-ascending`, `price-descending`, `created-ascending`, `created-descending`, and on search `relevance`. The app supplies the option list (the Storefront API returns none).
+`sortParams(searchParams: URLSearchParams): Array<[string, string]>`, exported from `sort-select.data.ts` (CV-10), returns every pair whose name starts with `filter.` plus the pair `q` when present, in URL order. hydrogen sort values are those produced by `getSortByValue(sortKey, reverse)` of `@shopify/hydrogen` (`hydrogen/packages/hydrogen/src/core/collection/url.ts`): `manual`, `best-selling`, `title-ascending`, `title-descending`, `price-ascending`, `price-descending`, `created-ascending`, `created-descending`, and on search `relevance`. The app supplies the option list (the Storefront API returns none).
 
 ### Content model
 
@@ -4723,7 +4872,7 @@ Fixture `search` (`action`: `/search`, `value`: `price-ascending`, `params`: `[[
 
 Further required fixtures: `children` (children `Order`; label text `Order`); `sm` (`size`: `sm`); `class` (root class `rp-sort-select custom-a custom-b`); `invalid-enum-falls-back` (`size`: `huge`; equals `default`); `escaping` (an option label `Say "hi" & <go>`).
 
-Host-owned regions and masks: none. In Remix the root carries `data-rmx-key="<id>"`. If doc 09's Select contract wraps the `<select>` in an element, the wrapper is printed as doc 09 specifies (section 0.2).
+Host-owned regions and masks: none. In Remix the root carries `data-rmx-key="<id>"`.
 
 ### State and attributes
 
@@ -4734,7 +4883,7 @@ Host-owned regions and masks: none. In Remix the root carries `data-rmx-key="<id
 | `aria-busy` | root | `rp-live` | same (`"true"`) | absent |
 | `selected` | option | server | the option is the current sort | on one option |
 
-Upgrade allow-list (mutations permitted when the element upgrades): `{ "select": ":scope", "attributes": ["data-pending", "aria-busy"] }`.
+Upgrade allow-list (mutations permitted when the element upgrades): `{ "select": "rp-live", "attrs": ["data-pending", "aria-busy"], "reason": "A refresh can be in flight when the element upgrades after a back or forward navigation." }`.
 
 ### Behaviour with JavaScript
 
@@ -4782,7 +4931,7 @@ Required rules: root `display: inline-block`; form `display: inline-flex; align-
 ### Host notes
 
 - HTML: copy the contract.
-- React: `SortSelect(props: { id: string; options: Array<{ value: string; label: string }>; value?: string; action: string; params?: Array<[string, string]>; refresh?: string; size?: "sm" | "md" | "lg"; strings?: { submit?: string }; className?: string; children?: ReactNode })` plus `sortParams`. No hook. Uncontrolled select: `defaultValue={value}` with `key={value}`.
+- React: `SortSelect(props: { id: string; options: Array<{ value: string; label: string }>; value?: string; action: string; params?: Array<[string, string]>; refresh?: string; size?: "sm" | "md" | "lg"; strings?: { submit?: string }; className?: string; children?: ReactNode })`. `sortParams` is in `sort-select.data.ts` (CV-10). The fallback submit button is printed by the binding itself (section 0.2). No hook. Uncontrolled select: `defaultValue={value}` with `key={value}`.
 - Remix: `data-rmx-key="<id>"` on root.
 - Liquid: options `source.sort_options` (`option.value`, `option.name`); current value `source.sort_by | default: source.default_sort_by`; action `collection.url` or `routes.search_url`; hidden inputs: for each `filter` in `source.filters`, each `value` in `filter.active_values` gives `value.param_name` / `value.value`; a `price_range` filter gives `filter.min_value.param_name` and `filter.max_value.param_name` with the number text of PriceRange when set; on search also `q` = `search.terms`. Schema settings: `size`. Locale keys: `ripple.sort-select.label` = `Sort by`; `ripple.sort-select.submit` = `Sort`.
 
@@ -4799,7 +4948,7 @@ Required rules: root `display: inline-block`; form `display: inline-flex; align-
 - Store fields read: none.
 - Adapter methods called: `refresh`, `usable` (through `rp-live`).
 - Regions refreshed: the names in `data-rp-refresh`; `reason: "filter"`; history push.
-- Pending and error behaviour: root flags; failed refresh navigates.
+- Pending and error behaviour: root flags; a failed refresh ends in `location.assign(url)` (D-090).
 
 | Meaning | hydrogen backend | liquid backend |
 |---|---|---|
@@ -4812,7 +4961,7 @@ Required rules: root `display: inline-block`; form `display: inline-flex; align-
 
 ### Checker rules
 
-RP101 (`size`), RP104 (`id`, `options`, `action`), RP114, RP301, RP308 (W), RP403 (Liquid). Manifest `rules[]`: `sort-select-fallback-submit` (`requires-descendant`, selector `form[method="get"]`, target `button[type="submit"][data-rp-js="fallback"]`); `sort-select-name` (`requires-descendant`, selector `:scope`, target `select[name="sort_by"]`); `sort-select-not-in-form` (`forbids-ancestor`, selector `:scope`, target `form`; "A SortSelect is inside another form; nested forms are invalid HTML.").
+RP101 (`size`), RP104 (`id`, `options`, `action`), RP114, RP301, RP308 (a `data-rp-refresh` name with no region on the page; this root MAY be inside the region it refreshes, D-102), RP403 (Liquid). Manifest `rules[]`: `sort-select-fallback-submit` (`requires-descendant`, selector `form[method="get"]`, target `button[type="submit"][data-rp-js="fallback"]`); `sort-select-name` (`requires-descendant`, selector `:scope`, target `select[name="sort_by"]`); `sort-select-not-in-form` (`forbids-ancestor`, selector `:scope`, target `form`; "A SortSelect is inside another form; nested forms are invalid HTML.").
 
 ### Acceptance tests
 
@@ -4862,14 +5011,14 @@ A search form: one search input and a submit button, sending `q` to the search p
 | input | printed by root | same | `input` | `rp-input rp-search-form-input` | `data-rp-part="input"` when `predictive` | yes | none |
 | submit | printed by root | same | `button` | `rp-icon-button rp-search-form-submit` | none | yes | none |
 
-Nesting rules: root children in order: children (extra hidden fields), input, submit. The root MUST NOT be inside another `<form>`. The markup lives in a snippet because PredictiveSearch embeds it.
+Nesting rules: root children in order: children (extra hidden fields), input, submit. The root MUST NOT be inside another `<form>`. The markup lives in a snippet because PredictiveSearch embeds it. The input and the submit button compose Input and IconButton by contract (D-070, section 0.2): the generated binding prints both elements itself; manifest part classes `rp-input rp-search-form-input` and `rp-icon-button rp-search-form-submit`; `dependencies.components` contains `input`, `icon-button`, `icon`. The root is a plain `<form>` (not printed by `{% form %}`), so on Liquid it prints `{{ attributes }}` last (D-035).
 
 ### Props
 
 | Prop (TSX) | Liquid param | Type | Values | Default | Required | Responsive | Renders as |
 |---|---|---|---|---|---|---|---|
-| `action` | `action` | string | the search route | `/search` (Liquid: `routes.search_url`) | no | no | `action` |
-| `defaultValue` | `value` | string | the current search terms | none | no | no | `value` on the input (omitted when empty) |
+| `action` | `action` | url | the search route | `/search` (Liquid: `routes.search_url`) | no | no | `action` |
+| `defaultValue` | `default_value` | string | the current search terms | none | no | no | `value` on the input (omitted when empty) |
 | `placeholder` | `placeholder` | string | any text | none | no | no | `placeholder` on the input |
 | `ariaLabel` | `aria_label` | string | any text | `Search` | no | no | `aria-label` on the input |
 | `size` | `size` | enum | `sm md lg` | `md` | no | no | `data-size` on the input and on the submit button |
@@ -4886,7 +5035,7 @@ Fixture `default` (no props):
 ```html
 <form class="rp-search-form" method="get" action="/search" role="search">
   <input class="rp-input rp-search-form-input" type="search" data-size="md" name="q" aria-label="Search">
-  <button class="rp-icon-button rp-search-form-submit" type="submit" data-variant="ghost" data-size="md" aria-label="Search"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM20 20l-4-4"/></svg></button>
+  <button class="rp-icon-button rp-search-form-submit" type="submit" data-variant="ghost" data-size="md" aria-label="Search"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
 </form>
 ```
 
@@ -4896,7 +5045,7 @@ Fixture `predictive` (`predictive`: true, `defaultValue`: `shirt`, `placeholder`
 <form class="rp-search-form" method="get" action="/search" role="search">
   <input type="hidden" name="type" value="product">
   <input class="rp-input rp-search-form-input" type="search" data-size="md" name="q" value="shirt" placeholder="Search products" aria-label="Search" autocomplete="off" data-rp-part="input">
-  <button class="rp-icon-button rp-search-form-submit" type="submit" data-variant="ghost" data-size="md" aria-label="Search"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM20 20l-4-4"/></svg></button>
+  <button class="rp-icon-button rp-search-form-submit" type="submit" data-variant="ghost" data-size="md" aria-label="Search"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
 </form>
 ```
 
@@ -4958,14 +5107,14 @@ Required rules: root `display: flex; align-items: center; gap: var(--rp-search-f
 - HTML: copy the contract.
 - React: generated. `SearchForm(props: { action?: string; defaultValue?: string; placeholder?: string; ariaLabel?: string; size?: "sm" | "md" | "lg"; predictive?: boolean; className?: string; children?: ReactNode })`. The input is uncontrolled (`defaultValue`).
 - Remix: generated; the form carries no `data-rmx-*` attribute (a GET navigation is handled by the router as a document or client navigation; both are correct).
-- Liquid: generated snippet; the block wrapper applies `action | default: routes.search_url`. Schema settings: `placeholder`, `size`. Locale key: `ripple.search-form.label` = `Search`.
+- Liquid: generated snippet; params `action`, `default_value`, `placeholder`, `aria_label`, `size`, `predictive` (the mechanical mapping of ledger section 4.2: TSX `defaultValue` is Liquid `default_value`); the block wrapper applies `action | default: routes.search_url`. Schema settings: `placeholder`, `size` (labels `t:ripple.props.placeholder`, `t:ripple.props.size`; block name `t:ripple.search-form.name`; D-038). Locale key: `ripple.search-form.label` = `Search`.
 
 ```tsx
 <SearchForm defaultValue={terms} placeholder="Search products" />
 ```
 
 ```liquid
-{% block 'search-form', value: search.terms, placeholder: 'Search products' %}{% endblock %}
+{% block 'search-form', default_value: search.terms, placeholder: 'Search products' %}{% endblock %}
 ```
 
 ### Commerce
@@ -5038,15 +5187,15 @@ Nesting rules: root children in order: form, panel. The panel contains only the 
 
 | Prop (TSX) | Liquid param | Type | Values | Default | Required | Responsive | Renders as |
 |---|---|---|---|---|---|---|---|
-| `id` | `id` | string | `^[a-zA-Z][a-zA-Z0-9_-]*$` | none | yes | no | `id` on root; `<id>-content` on the panel |
-| `action` | `action` | string | the search route | `/search` (Liquid: `routes.search_url`) | no | no | `action` of the form; `href` base of the all link |
+| `id` | `id` | id | any id | none | yes | no | `id` on root; `<id>-content` on the panel |
+| `action` | `action` | url | the search route | `/search` (Liquid: `routes.search_url`) | no | no | `action` of the form; `href` base of the all link |
 | `results` | none | object | `{ terms: string; products: RippleProduct[]; total: number } \| null` | `null` | no | no | the results part |
 | none | `search` | object | Liquid `search` drop | the global `search` | no | no | the results part (`search.performed`, `search.terms`, `search.results`, `search.results_count`) |
 | `placeholder` | `placeholder` | string | any text | none | no | no | passed to SearchForm |
 | `limit` | `limit` | number | integer 1 to 10 | `6` | no | no | maximum number of cards |
 | `locale` | none | string | BCP 47 tag | `en-US` | no | no | passed to ProductCard (CV-1) |
 
-The form always contains `<input type="hidden" name="type" value="product">`, so that the fetched URL returns products only. The region part takes `results`, `action`, `limit`, `locale` (Liquid: `search`, `action`, `limit`).
+The form always contains `<input type="hidden" name="type" value="product">`, so that the fetched URL returns products only. The region part takes `results`, `action`, `limit`, `locale` (Liquid: the snippet `rp-predictive-search-results` takes exactly `search`, `action`, `limit`; every call passes all three, D-091 item 4).
 
 ### Content model
 
@@ -5061,7 +5210,7 @@ Fixture `default` (`id`: `psearch`; no results):
   <form class="rp-search-form" method="get" action="/search" role="search">
     <input type="hidden" name="type" value="product">
     <input class="rp-input rp-search-form-input" type="search" data-size="md" name="q" aria-label="Search" autocomplete="off" data-rp-part="input">
-    <button class="rp-icon-button rp-search-form-submit" type="submit" data-variant="ghost" data-size="md" aria-label="Search"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM20 20l-4-4"/></svg></button>
+    <button class="rp-icon-button rp-search-form-submit" type="submit" data-variant="ghost" data-size="md" aria-label="Search"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
   </form>
   <div class="rp-predictive-search-panel" id="psearch-content" data-rp-part="results" hidden>
     <div class="rp-predictive-search-results" data-rp-region="rp-predictive-results"></div>
@@ -5106,7 +5255,7 @@ Host-owned regions and masks: none host-owned. Masks: those of ProductCard insid
 | `aria-busy` | root | `rp-predictive-search` | same (`"true"`) | absent |
 | `aria-busy` | results | commerce adapter | the region is refreshing | absent |
 
-Upgrade allow-list (mutations permitted when the element upgrades): `{ "select": ":scope", "attributes": ["data-pending", "aria-busy"] }`, `{ "select": "[data-rp-part=\"results\"]", "attributes": ["hidden"] }`, `{ "select": "[data-rp-region]", "attributes": ["aria-busy"], "replace": true }`.
+Upgrade allow-list (mutations permitted when the element upgrades): `{ "select": "rp-predictive-search", "attrs": ["data-pending", "aria-busy"], "reason": "The browser can restore a typed query, which starts a request at upgrade." }`, `{ "select": "[data-rp-part=\"results\"]", "attrs": ["hidden"], "reason": "The panel opens when a restored query has results." }`, `{ "select": "[data-rp-region]", "attrs": ["aria-busy"], "childList": true, "text": true, "subtree": true, "reason": "A refresh that completes during upgrade replaces the region content." }`.
 
 ### Behaviour with JavaScript
 
@@ -5145,7 +5294,7 @@ A plain search form: the panel stays `hidden`; submitting navigates to the searc
 ### Styling
 
 - File: `components/predictive-search/predictive-search.css` (layer `rp.components`).
-- Tokens used: `--spacing`, `--color-popover`, `--color-popover-foreground`, `--color-border`, `--radius-surface`, `--shadow-lg`, `--z-popover`.
+- Tokens used: `--spacing`, `--color-popover`, `--color-popover-foreground`, `--color-border`, `--radius-surface`, `--shadow-lg`, `--rp-z-overlay`.
 
 | Custom property | Default | Purpose |
 |---|---|---|
@@ -5157,12 +5306,97 @@ A plain search form: the panel stays `hidden`; submitting navigates to the searc
 |---|---|
 | `.rp-predictive-search[data-pending]` | nothing; reserved for project CSS |
 
-Required rules: root `position: relative; display: block`; panel `position: absolute; inset-inline: 0; inset-block-start: 100%; z-index: var(--z-popover); max-block-size: var(--rp-predictive-search-panel-max-height); overflow-y: auto; background: var(--color-popover); color: var(--color-popover-foreground); border: 1px solid var(--color-border); border-radius: var(--radius-surface); box-shadow: var(--shadow-lg); padding: var(--rp-predictive-search-gap)`; `.rp-predictive-search-panel[hidden] { display: none }`; list `list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(var(--rp-predictive-search-columns), minmax(0, 1fr)); gap: var(--rp-predictive-search-gap)`. The panel is positioned with CSS only (no anchor positioning, no JavaScript).
+Required rules: root `position: relative; display: block`; panel `position: absolute; inset-inline: 0; inset-block-start: 100%; z-index: var(--rp-z-overlay); max-block-size: var(--rp-predictive-search-panel-max-height); overflow-y: auto; background: var(--color-popover); color: var(--color-popover-foreground); border: 1px solid var(--color-border); border-radius: var(--radius-surface); box-shadow: var(--shadow-lg); padding: var(--rp-predictive-search-gap)`; `.rp-predictive-search-panel[hidden] { display: none }`; list `list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(var(--rp-predictive-search-columns), minmax(0, 1fr)); gap: var(--rp-predictive-search-gap)`. The panel is positioned with CSS only (no anchor positioning, no JavaScript).
 
 ### Host notes
 
 - HTML: copy the `default` contract; the server that answers `<action>?q=` MUST render the same component with the region filled.
-- React: `PredictiveSearch(props: { id: string; action?: string; results?: { terms: string; products: RippleProduct[]; total: number } | null; placeholder?: string; limit?: number; locale?: string; className?: string; children?: ReactNode })` and `PredictiveSearchResults(props: { results: ...; action?: string; limit?: number; locale?: string })`. No hook, no directive. On `react` the adapter's refresh calls `navigate(url)`; because that would navigate to the search page, the React app MUST handle `rp:refresh` with `reason: "predictive"`: call `event.preventDefault()`, fetch its own results route, and render `PredictiveSearchResults` into state ([05-commerce.md](05-commerce.md) section 8.2 step 2). The recipe is printed in the `ripple-commerce` skill.
+- React: `PredictiveSearch(props: { id: string; action?: string; results?: { terms: string; products: RippleProduct[]; total: number } | null; placeholder?: string; limit?: number; locale?: string; className?: string; children?: ReactNode })` and the region part `PredictiveSearchResults` (complete code below). The file starts with `"use client";` because the region part calls a hook, and it exports components only (D-094). On `react` the adapter's strategy for reason `predictive` fetches the URL, takes the inner HTML of the region `rp-predictive-results` from the response and publishes it; `PredictiveSearchResults` reads it with `useRegionHtml("rp-predictive-results")` from `<pkg>/react` (D-090). While the hook returns `null` the part renders its server children from the `results` prop; afterwards it renders the HTML string with `dangerouslySetInnerHTML` on the region root. There is no navigation. UNVERIFIED (SPIKE-10); see `Fallback (SPIKE-10)`.
+
+  `components/predictive-search/react/predictive-search.tsx` MUST contain this region part unchanged (`__PKG__` is replaced by the package name at install):
+
+  ```tsx
+  "use client";
+
+  import type { RippleProduct } from "__PKG__";
+  import { useRegionHtml } from "__PKG__/react";
+  import { ProductCard } from "./product-card";
+
+  export interface PredictiveSearchResultsProps {
+    results?: { terms: string; products: RippleProduct[]; total: number } | null;
+    action?: string;
+    limit?: number;
+    locale?: string;
+    strings?: {
+      resultsOne?: string;
+      resultsOther?: string;
+      viewOne?: string;
+      viewAll?: string;
+      empty?: string;
+      none?: string;
+    };
+  }
+
+  export function PredictiveSearchResults(props: PredictiveSearchResultsProps) {
+    const { results = null, action = "/search", limit = 6, locale = "en-US", strings = {} } = props;
+    const html = useRegionHtml("rp-predictive-results");
+
+    if (html !== null) {
+      return (
+        <div
+          className="rp-predictive-search-results"
+          data-rp-region="rp-predictive-results"
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      );
+    }
+
+    if (results === null) {
+      return <div className="rp-predictive-search-results" data-rp-region="rp-predictive-results" />;
+    }
+
+    const count = String(results.total);
+    if (results.products.length === 0) {
+      return (
+        <div className="rp-predictive-search-results" data-rp-region="rp-predictive-results">
+          <p className="rp-predictive-search-empty">
+            {(strings.empty ?? "No results for “{{ terms }}”").replace("{{ terms }}", results.terms)}
+          </p>
+          <p className="rp-visually-hidden" data-rp-part="status">
+            {strings.none ?? "No results"}
+          </p>
+        </div>
+      );
+    }
+
+    const status =
+      results.total === 1
+        ? strings.resultsOne ?? "1 result"
+        : (strings.resultsOther ?? "{{ count }} results").replace("{{ count }}", count);
+    const all =
+      results.total === 1
+        ? strings.viewOne ?? "View 1 result"
+        : (strings.viewAll ?? "View all {{ count }} results").replace("{{ count }}", count);
+
+    return (
+      <div className="rp-predictive-search-results" data-rp-region="rp-predictive-results">
+        <ul className="rp-predictive-search-list" role="list">
+          {results.products.slice(0, limit).map((product) => (
+            <li key={product.id}>
+              <ProductCard product={product} level={3} ratio="1/1" sizes="6rem" locale={locale} />
+            </li>
+          ))}
+        </ul>
+        <a className="rp-predictive-search-all" href={`${action}?q=${encodeURIComponent(results.terms)}`}>
+          {all}
+        </a>
+        <p className="rp-visually-hidden" data-rp-part="status">
+          {status}
+        </p>
+      </div>
+    );
+  }
+  ```
 - Remix: `data-rmx-key="<id>"` on root.
 - Liquid: the results snippet prints content only when `search.performed`; it loops `search.results` with `limit: <limit>` and renders `rp-product-card` for items whose `object_type == 'product'`; total `search.results_count`. The LAYOUT MUST wrap the region part in the partial (RS-3), as in the usage below. No schema settings. Locale keys: `ripple.predictive-search.results_one` = `1 result`; `ripple.predictive-search.results_other` = `{{ count }} results`; `ripple.predictive-search.view_one` = `View 1 result`; `ripple.predictive-search.view_all` = `View all {{ count }} results`; `ripple.predictive-search.empty` = `No results for “{{ terms }}”`; `ripple.predictive-search.none` = `No results`.
 
@@ -5174,7 +5408,7 @@ Hydrogen data: on a request whose URL has a `q` parameter, the loader of the lay
 
 ```liquid
 {% block 'predictive-search', id: 'psearch' %}
-  {% partial 'rp-predictive-results' %}{% render 'rp-predictive-search-results', search: search %}{% endpartial %}
+  {% partial 'rp-predictive-results' %}{% render 'rp-predictive-search-results', search: search, action: routes.search_url, limit: 6 %}{% endpartial %}
 {% endblock %}
 ```
 
@@ -5192,7 +5426,7 @@ Hydrogen data: on a request whose URL has a `q` parameter, the loader of the lay
 
 ### Agent surface
 
-`accessibility-tree`; actions: none; confirm: none; secret: none.
+`accessibility-tree` (the input and the result links). Bridge: component `rp-predictive-search`, manifest `agent.actions`: `["setQuery", "clear"]` ([08-agent-kit-and-evals.md](08-agent-kit-and-evals.md) section 7.2, D-095): `setQuery(query: string): void` sets the input value and starts the request of behaviour item 1; `clear(): void` empties the input and hides the panel. Confirm: none. Secret: none.
 
 ### Checker rules
 
@@ -5210,11 +5444,15 @@ RP104 (`id`), RP114 (`<id>-content`), RP115 (no `role="combobox"`), RP308 (one r
 ### Evidence and UNVERIFIED
 
 - Evidence: D-048; [05-commerce.md](05-commerce.md) section 7.4; `ripple/docs/research/hydrogen-core.md` (predictive search store not usable on Liquid).
-- UNVERIFIED: Storefront API `predictiveSearch` arguments and result fields (section 0.6); Liquid `search.results` item member `object_type` and that `type=product` restricts `search.results` to products; that `search.results` without `{% paginate %}` returns at least `limit` items.
+- UNVERIFIED: `useRegionHtml` on the `react` host (SPIKE-10; D-090 item 4); Storefront API `predictiveSearch` arguments and result fields (section 0.6); Liquid `search.results` item member `object_type` and that `type=product` restricts `search.results` to products; that `search.results` without `{% paginate %}` returns at least `limit` items.
 
-### Fallback (SPIKE-nn)
+### Fallback (SPIKE-10)
 
-None. (The refresh strategies it relies on are covered by SPIKE-02 and SPIKE-10 in their owning documents.)
+Applies only to the `react` host and only when SPIKE-10 fails (`useRegionHtml` cannot publish fetched region HTML into the React tree; D-090 item 4). Nothing changes in the other hosts.
+
+1. `PredictiveSearchResults` does not call `useRegionHtml`; it always renders its `results` prop (the second `return` of the code above).
+2. The React app handles `rp:refresh` on `document`: when `event.detail.reason === "predictive"` it calls `event.preventDefault()`, fetches its own results route with `event.detail.url`, and stores the result in state that it passes as the `results` prop of `PredictiveSearch` ([05-commerce.md](05-commerce.md) section 8.2 step 2). The recipe is printed in the `ripple-commerce` skill.
+3. The element then opens the panel on the next render in which the region has children (behaviour item 2 is unchanged).
 
 ---
 
@@ -5246,7 +5484,7 @@ A wrapper that turns the GET forms and links inside it into in-place refreshes o
 |---|---|---|---|---|---|---|---|
 | root | `LiveForm` | `blocks/live-form.liquid` | `rp-live` | `rp-live-form` | `data-slot="rp-live"`, `data-rp-refresh` | yes | none |
 
-Nesting rules: the root MUST NOT be inside another `rp-live` root. Its content MUST work without JavaScript: only `<form method="get">` elements and `<a href>` links are enhanced. A GET form whose controls submit on change MUST contain a submit button with `data-rp-js="fallback"`. The root is `display: contents` by default, so it does not affect layout.
+Nesting rules: the root MUST NOT be inside another `rp-live` root. Its content MUST work without JavaScript: only `<form method="get">` elements and `<a href>` links are enhanced. A GET form whose controls submit on change MUST contain a submit button with `data-rp-js="fallback"`. The root is a block box (`display: block` from `base.css`, D-080). When a layout needs the form's children as grid or flex items, the caller places the grid or flex container INSIDE the LiveForm, never around it.
 
 ### Props
 
@@ -5285,7 +5523,7 @@ Fixture `form` (`refresh`: `rp-collection-results rp-collection-toolbar`; childr
 
 Further required fixtures: `class` (root class `rp-live-form custom-a custom-b`); `escaping` (`refresh`: `a"b`; attribute `a&quot;b`).
 
-Host-owned regions and masks: none. In Remix the root carries `data-rmx-key="live-form"`.
+Host-owned regions and masks: none. In Remix the root also carries `data-rmx-key="<rmxKey>"` when the prop `rmxKey` is set (CV-5); the canonicaliser removes it.
 
 ### State and attributes
 
@@ -5295,7 +5533,7 @@ Host-owned regions and masks: none. In Remix the root carries `data-rmx-key="liv
 | `data-pending` | root | `rp-live` | a refresh it started is running | absent |
 | `aria-busy` | root | `rp-live` | same (`"true"`) | absent |
 
-Upgrade allow-list (mutations permitted when the element upgrades): `{ "select": ":scope", "attributes": ["data-pending", "aria-busy"] }`.
+Upgrade allow-list (mutations permitted when the element upgrades): `{ "select": "rp-live", "attrs": ["data-pending", "aria-busy"], "reason": "A refresh can be in flight when the element upgrades after a back or forward navigation." }`.
 
 ### Behaviour with JavaScript
 
@@ -5338,13 +5576,13 @@ Forms and links navigate natively.
 |---|---|
 | None | |
 
-Required rule: `.rp-live-form { display: contents }`.
+Required rules: none. `live-form.css` MUST NOT set `display` on the root: every `rp-*` root is `display: block` from `base.css`, and `display: contents` is forbidden on a custom element root (D-080). The file exists with an empty `@layer rp.components` block so that the manifest file key `css` resolves.
 
 ### Host notes
 
 - HTML: copy the contract.
-- React: `LiveForm(props: { refresh: string; className?: string; children?: ReactNode })`. No hook. On `react` the refresh calls the app's `navigate(url)`.
-- Remix: `data-rmx-key="live-form"`; when a page has several LiveForms the caller passes `key` to make it unique ([06-bindings.md](06-bindings.md)).
+- React: `LiveForm(props: { refresh: string; className?: string; children?: ReactNode })`. No hook. On `react` the adapter's strategy for reasons `variant` and `filter` is `navigate(url, { replace })` when the app configured `navigate`, otherwise `location.assign(url)` (D-090).
+- Remix: prop `rmxKey?: string` prints `data-rmx-key` on root; the attribute is omitted when the prop is unset (CV-5, D-034). A page with several LiveForms that are reordered between renders MUST give each a distinct `rmxKey` ([06-bindings.md](06-bindings.md)).
 - Liquid: `blocks/live-form.liquid` prints the root around `{{ content }}`. No schema settings. No locale keys. Every name in `refresh` MUST have a `{% partial %}` in the template or layout (RP403).
 
 ```tsx
@@ -5364,7 +5602,7 @@ Required rule: `.rp-live-form { display: contents }`.
 - Store fields read: none.
 - Adapter methods called: `refresh`, `usable` (through `rp-live`).
 - Regions refreshed: the names in `data-rp-refresh`.
-- Pending and error behaviour: root flags; failed refresh navigates.
+- Pending and error behaviour: root flags; a failed refresh ends in `location.assign(url)` (D-090).
 
 | Meaning | hydrogen backend | liquid backend |
 |---|---|---|
@@ -5376,7 +5614,7 @@ Required rule: `.rp-live-form { display: contents }`.
 
 ### Checker rules
 
-RP104 (`refresh`), RP301 (buttons inside need a form), RP308 (W: names without a region), RP403 (Liquid). Manifest `rules[]`: `live-form-not-nested` (`forbids-ancestor`, selector `:scope`, target `rp-live`); `live-form-no-post` (`forbids-descendant`, selector `:scope`, target `form[method="post" i]`; "A LiveForm contains a POST form; rp-live only enhances GET forms and links.").
+RP104 (`refresh`), RP301 (buttons inside need a form), RP308 (a `data-rp-refresh` name with no region on the page; this root MAY be inside the region it refreshes, D-102), RP403 (Liquid). Manifest `rules[]`: `live-form-not-nested` (`forbids-ancestor`, selector `:scope`, target `rp-live`); `live-form-no-post` (`forbids-descendant`, selector `:scope`, target `form[method="post" i]`; "A LiveForm contains a POST form; rp-live only enhances GET forms and links.").
 
 ### Acceptance tests
 
@@ -5399,28 +5637,4 @@ None.
 
 ## Ledger issues
 
-Each item states what the ledger (or a sibling document) says or omits, and what this document does. None of these changes a ledger decision; items marked "needs ledger text" should be added to [00-decisions.md](00-decisions.md) by its owner.
-
-1. **Hand-written static bindings (D-003).** D-003 says static bindings are generated from the manifest contract template, which has no loops and no expressions. ProductCard, CollectionCard, ArticleCard, Price, AddToCartButton, CartLine, FilterGroup, PriceRange and CheckoutButton need a loop, a derived value or a backend-dependent tag. This document marks them `hand` (section 0.1); they still pass tier 2. Only Swatch and SearchForm are generated. Needs ledger text.
-2. **`rpField` prop on form controls.** The commerce elements find fields by `data-rp-field` ([05-commerce.md](05-commerce.md) section 6.2), but no ledger prop prints it. This document requires Input, Textarea, Select and QuantityInput (docs 09, 10) to accept `rpField` / `rp_field` (section 0.2).
-3. **Backend-scoped fixtures.** D-043 and D-050 make the two backends print different tags and form structures, which masks cannot equalise. This document uses two fixtures per state, scoped with `hosts` (FX-2), for CartLines, CartLine, CartSummary, CartNote, CheckoutButton and CartDrawer.
-4. **Value imports of `@shopify/hydrogen` in scaffolded bindings.** [06-bindings.md](06-bindings.md) section 1 allows `import type` only, and [05-commerce.md](05-commerce.md) section 13 forbids value imports outside the adapters. D-049 requires `formatMoney`; D-050 requires the Shop Pay markup; the URL helpers are the only verified way to build filter parameters. This document allows value imports of exactly these pure functions in TSX bindings: `formatMoney`, `renderShopPayButton`, `buildProductSelectionSearchParams`, `parseCollectionParams`, `serializeCollectionParams`, `isFilterInputActive`, `getFilterRemovalUrl`. Needs ledger text and a checker exception.
-5. **Mask rule F-19.** [02-html-contract.md](02-html-contract.md) requires every mask to match the reference HTML. `drop-attr` and `remove` masks that exist only for Liquid output (form `data-rp-js`, Liquid-only hidden inputs) cannot. [13-testing.md](13-testing.md) MUST exempt these two operations.
-6. **Self-contained resource blocks versus partials (D-037, D-046, L-13, RP403).** D-037 wants a resource block to render its default body; partials may be declared only in templates and layouts. This document resolves it with region parts (section 0.3): the default body renders the region part, and the template passes the same snippet wrapped in `{% partial %}` as content.
-7. **Required ids beyond D-020.** D-020 lists CartDrawer, ProductForm, PredictiveSearch and Carousel. This document also requires `id` on ProductGallery, VariantPicker, CartLines, CartNote, DiscountCode, Filters and SortSelect (label association, derived form id, focus restoration), and uses the extra suffix `-form` defined by doc 05. Needs ledger text for `-form`.
-8. **Props and attributes not in ledger section 6.** Added props: `refresh`, `layout`, `fill`, `showVendor`, `from`, `locale`, `strings`, `search`, `collection`, `cartLines`, `drawer`, `count`, `action`, `predictive`, `open`, `params`, `chips`, `clearUrl`, `sortBy`, `query`, `limit`, `rows`. Added attributes: `data-sold-out`, `data-swatch`, `data-layout`, `data-show-vendor`, `data-row`.
-9. **Shapes not in doc 05 section 11.1.** VariantPicker needs options and adjacent variants beyond `RippleProduct`; Filters, FilterChips and SortSelect need `RippleFilter`, `RippleFilterValue`, chip and option arrays. They are defined here, next to the helpers `variantPickerOptions`, `toRippleFilters`, `toFilterChips`, `sortParams`, `toRippleCart`, `toRippleLine`. VariantPicker values are links with `aria-current`, not radios.
-10. **ProductForm examples in docs 06 and 07.** The worked fixture of [07-manifest-registry-cli.md](07-manifest-registry-cli.md) prints `data-rp-refresh` on `rp-product-form` and no dialect attributes on the button; [06-bindings.md](06-bindings.md) uses the key `ripple.product-form.add_to_cart` and a plain button as default body. This document follows doc 05: no `data-rp-refresh` on the root, default body QuantityInput plus AddToCartButton, key `ripple.add-to-cart-button.label`.
-11. **Kinds and roots.** CartLine embeds `rp-quantity`; the D-006 rule would make it `native`, the ledger table says `static`; kept `static`. ProductGallery's root is a `div` holding two elements (`rp-carousel` region and `rp-dialog`).
-12. **`rp-view-event`.** Not printed by ProductForm or CartDrawer; placement is left to the blueprints (doc 12).
-13. **ProductGallery lightbox.** Opens at the first image (V1 limit); its opener is a D-009 link whose fallback `href` is the image URL.
-14. **Liquid subset additions (L-13).** Filters `divided_by`, `modulo`, `date`, `url_encode`, `payment_button`; objects `content_for_additional_checkout_buttons`, `additional_checkout_buttons`. The shim of doc 13 MUST implement them.
-15. **DiscountCode no-JS level.** `full` on the hydrogen backend, `degraded` on Liquid (D-043 gives Liquid no no-JS discount form). The manifest has one value per component; this document sets `degraded`.
-16. **Status parts.** Doc 05 requires a status part only in CartDrawer. Because an `rp-cart` root announces through its own status part and any of them can sit inside the modal drawer, CartLines, CartSummary, CartNote and DiscountCode each always print one.
-17. **Compare-at total of a cart line.** Doc 05 names `cost.compareAtAmountPerQuantity` and passes `null` when absent. This document uses `cost.subtotalAmount` when it is greater than `cost.totalAmount`, which is a line total and needs no multiplication.
-18. **SPIKE-09.** The research quote on recommendations suggests the default path (region fetch of the product URL) may not return the section on Liquid; the fallback is specified under ProductRecommendations.
-19. **`form` as a prop name.** D-020 lists `form` among root-named props while D-038 reserves `form` in Liquid. This document uses `cartLines` / `cart_lines` and never a prop named `form`.
-20. **RP308 is broader than the ledger.** [07-manifest-registry-cli.md](07-manifest-registry-cli.md) reports an error for ANY element inside a region whose `data-rp-refresh` names that region. Doc 05 section 13 restricts the rule to `rp-cart`. VariantPicker (inside `rp-product-buy`), SortSelect and FilterChips (inside `rp-collection-toolbar`) are `rp-live` roots that MUST be inside the region they refresh, so that their selected state is re-rendered. RP308 MUST be limited to `rp-cart` roots.
-21. **CheckoutButton inside the summary region.** D-050 does not say where the button sits. This document prints it inside `rp-cart-summary`, so that the checkout URL and the empty state follow the cart; accelerated checkout markup stays outside the region.
-22. **Applied discount codes on Liquid.** Doc 05 leaves the drop UNVERIFIED and assigns it to doc 14. This document reads `cart.cart_level_discount_applications` filtered by `type == 'discount_code'` and marks the type value UNVERIFIED.
-23. **Predictive search on the `react` host.** The adapter's `react` strategy calls `navigate(url)`, which would leave the page. This document requires the React app to cancel `rp:refresh` with `reason: "predictive"` and render the results itself. Needs ledger text or an adapter change in doc 05.
+None open. See `00-decisions.md` section 13.2.

@@ -1,6 +1,6 @@
 # 08 - Agent kit and evals
 
-Status: specification. Follows `00-decisions.md` (the ledger): D-059, D-060, D-061, D-065, and SPIKE-08. Date: 2026-11-21.
+Status: specification. Follows `00-decisions.md` (the ledger): D-059, D-060, D-061, D-065, D-095, D-102, D-106, and SPIKE-08. Date: 2026-11-21.
 
 Normative words: MUST, MUST NOT, SHOULD, MAY. "UNVERIFIED" marks a fact nobody ran or read in source.
 
@@ -14,7 +14,7 @@ This document owns:
 | Package documentation: `docs/INDEX.md`, `docs/llms.txt`, `docs/components/<id>.md`, `docs/guides/<topic>.md`, `docs/rules/<RULE>.md` | 2 |
 | The generated Ripple section of a project's `AGENTS.md` | 3 |
 | The 14 skills: format, sidecar, exact frontmatter, outline of each | 4 |
-| Checker output: the exact message format, how `fix` is computed, and the text of every rule (problem, fix, why) | 5 |
+| Checker: the `problem`, `fix` and `why` text of each of the 55 rules, the placeholder list, and the rule pages | 5, 2.6 |
 | Development-mode warnings | 6 |
 | The in-page agent bridge surface: actions, labels, confirmation, SPIKE-08 | 7 |
 | The eval suite: tasks, harness adapters, scoring, thresholds, and how results gate API decisions | 8 |
@@ -23,17 +23,23 @@ This document does NOT own (link, do not restate):
 
 | Topic | Owner |
 |---|---|
-| Manifest schema, generator entry (`pnpm gen`), CLI commands and flags, trailers, `skills sync` / `skills check` algorithm, checker engine and how each rule detects | `07-manifest-registry-cli.md` |
+| Manifest schema, generator entry (`pnpm gen`), CLI commands and flags, trailers, `skills sync` / `skills check` algorithm | `07-manifest-registry-cli.md` |
+| Checker: rule ids, severity, layer, hosts, detection, `fix` computation (section 9.5), and the text and JSON output FORMAT (section 9.4) | `07-manifest-registry-cli.md` section 9 |
 | What each element declares in its primitive `agent` key (non-commerce) | `04-elements.md` section 12 |
 | Commerce elements and the adapter | `05-commerce.md` |
 | `rv()`, `cx()`, `useElement` and their development warnings | `06-bindings.md` |
-| Test tiers, the Liquid shim, canonicaliser, size budgets | `13-testing.md` |
+| Test tiers, the Liquid shim, `serveTheme`, size budgets | `13-testing.md` |
+| The canonicaliser | `02-html-contract.md` section 12 |
 | Blueprints and the example projects under `examples/` | `12-components-chrome-and-blueprints.md`, `14-liquid-theme.md` |
 
 Conventions used below:
 
 - `<pkg>` is the package name. In files under `skills/` and `guides/` the name is written as the build token `__PKG__` (`01-architecture.md` section 6.3). Skill and guide text MUST NOT contain the literal placeholder name.
-- "The CLI" is `npx <pkg> <command>` in a project and `ripple <command>` in prose.
+- "The CLI" is written `ripple <command>` in prose.
+- `<command form>` is how a command is spelled for the person or agent who must run it. It is defined by `07-manifest-registry-cli.md` section 7.1 rule 12: `npx <pkg>@<running version>` on Liquid and where no `package.json` exists; `<pm> exec ripple` otherwise (`npx ripple` when the package manager is npm). Two cases:
+  - Text produced INSIDE a project by the CLI (checker output, the `AGENTS.md` section, CLI messages) prints the resolved command form.
+  - STATIC files that ship in the package (skills, guides, `docs/INDEX.md`, component pages, rule pages) cannot know the project. In them `<command form>` is always written `npx <pkg>` (`npx __PKG__` in sources), which runs in every host. No static file may hard-code a package manager.
+- Split of the checker between two documents (ledger section 12, D-059): `07-manifest-registry-cli.md` owns rule ids, severity, layer, detection, `fix` computation and the output format. This document owns the WORDS of each rule (`problem`, `fix`, `why`) and the rule pages, and MUST NOT restate the format.
 - Paths that start with `uisdk/`, `hydrogen/`, `remix/`, `tobi/`, `ripple/` are evidence paths relative to the directory holding the local clones.
 
 ---
@@ -52,7 +58,7 @@ Surfaces available to a coding agent, by situation. A surface marked "always" MU
 | Ripple section of `AGENTS.md` (section 3) | always | always | always |
 | Generated TypeScript prop types | always | no | no |
 | `{% doc %}` header of each installed block | no | always | always |
-| `node_modules/<pkg>/docs/` (section 2) | yes | no (`npx <pkg> docs <component>` prints the page) | no |
+| `node_modules/<pkg>/docs/` (section 2) | yes | no (`<command form> docs <component id>` prints the page) | no |
 | Skills in `.claude/skills`, `.agents/skills` (section 4) | yes, after `ripple skills sync` | yes, locally; not stored by Shopify (`ripple/docs/research/agent-kit-and-distribution.md` conclusion 1) | no |
 | Skills loaded from the package as a pi package | yes | yes (`pi -e npm:<pkg>`) | UNVERIFIED |
 | `ripple check` (section 5) | yes | yes (layers S and P; H and B need rendered HTML) | no |
@@ -78,7 +84,7 @@ docs/
   llms.txt                 generated by src/gen/docs.ts
   components/<id>.md       generated by src/gen/docs.ts, one per manifest component (84 files)
   guides/<topic>.md        copied from guides/<topic>.md in the repository (hand-written, 12 files, section 2.5)
-  rules/<RULE>.md          generated by src/gen/docs.ts from the rule registry, one per rule id of section 5.5
+  rules/<RULE>.md          generated by src/gen/docs.ts from the rule registry, one per rule id of section 5.5 (55 files)
 ```
 
 `src/gen/docs.ts` exports exactly these functions. They are pure (input in, string out) so that tests need no file system.
@@ -87,17 +93,21 @@ docs/
 import type { Manifest, ManifestComponent, ManifestBlueprint } from "../types.ts";
 
 export interface GuideMeta { topic: string; title: string; summary: string }   // read from guide frontmatter, 2.5
-export interface RuleMeta {                                                    // exported by each src/check/rules/<RULE>.ts as `meta`, 5.5
+export interface RuleDoc {                                                     // one per rule id; built from each rule file, 5.5
+  // the six fields of RuleMeta (type owned by 07-manifest-registry-cli.md section 9.3; the `meta` of the rule file's Rule object)
   id: string; severity: "error" | "warning"; layers: Array<"S" | "H" | "B" | "P">;
-  title: string; problem: string; fix: string; why: string; allowed: string | null;
-  bad: string; good: string; hosts: Array<"html" | "react" | "remix" | "liquid">;
+  hosts: Array<"html" | "react" | "remix" | "liquid">; title: string; why: string;
+  // the four fields of RuleText (type declared in src/check/report.ts; exported by the rule file as `text`, 5.5)
+  problem: string; fix: string; bad: string; good: string;
 }
 
-export function renderIndex(manifest: Manifest, guides: GuideMeta[], rules: RuleMeta[]): string;      // docs/INDEX.md
-export function renderLlmsTxt(manifest: Manifest, guides: GuideMeta[], rules: RuleMeta[]): string;    // docs/llms.txt
-export function renderComponentDoc(component: ManifestComponent, manifest: Manifest): string;         // docs/components/<id>.md
-export function renderRuleDoc(rule: RuleMeta): string;                                                // docs/rules/<RULE>.md
+export function renderIndex(manifest: Manifest, guides: GuideMeta[], rules: RuleDoc[]): string;      // docs/INDEX.md
+export function renderLlmsTxt(manifest: Manifest, guides: GuideMeta[], rules: RuleDoc[]): string;    // docs/llms.txt
+export function renderComponentDoc(component: ManifestComponent, manifest: Manifest): string;        // docs/components/<id>.md
+export function renderRuleDoc(rule: RuleDoc): string;                                                // docs/rules/<RULE>.md
 ```
+
+The build script assembles each `RuleDoc` as `{ ...rule.meta, ...text }` from the two exports of `src/check/rules/<RULE>.ts`. `src/gen/docs.ts` declares `RuleDoc` structurally and imports nothing from `src/check/`.
 
 Sorting rule used everywhere in generated docs: components by `category` in the order of the ledger's `category` list (`layout`, `typography`, `media`, `actions`, `forms`, `feedback`, `navigation`, `overlays`, `disclosure`, `product`, `cart`, `discovery`, `chrome`, `utilities`), then by `name` in byte order. Blueprints in manifest order. Guides in the order of the table in 2.5. Rules by id in byte order (`RP101` before `RP110`; `TC:` entries are not listed).
 
@@ -112,7 +122,7 @@ Purpose: the one file an agent greps first. One row per component, blueprint, gu
 
 Search this file first, for example `grep -i "cart" node_modules/<pkg>/docs/INDEX.md`. Then read only the pages you need. These installed docs match the installed version and are canonical.
 
-Print a page without opening files: `npx <pkg> docs <component>`.
+Print a page without opening files: `<command form> docs <component id>`. A checker rule: `<command form> docs <RULE>`. A guide: `<command form> docs guide <topic>`.
 
 ## Components
 
@@ -141,7 +151,7 @@ Print a page without opening files: `npx <pkg> docs <component>`.
 
 Rules:
 
-- **I-1** `<version>` is `VERSION` from `src/identity.ts`.
+- **I-1** `<version>` is `VERSION` from `src/identity.ts`. `<command form>` is `npx <pkg>` here and in every other static file (section 0).
 - **I-2** Components with `status: "planned"` MUST be omitted. Components with `status: "beta"` have ` (beta)` appended to the Summary cell.
 - **I-3** A `|` inside any cell text MUST be written `\|`. Summaries are printed unchanged otherwise (the manifest schema limits `summary` to 140 characters and forbids newlines).
 - **I-4** The Hosts cell of a blueprint lists the hosts for which `blueprints/<id>/<host>/` exists, in the order `html, react, remix, liquid`.
@@ -186,7 +196,7 @@ Generated from one manifest entry. Section order and headings are fixed. A secti
 
 - Id: `<name>` | Kind: <kind> | Category: <category> | Status: <status> | Since: <since>
 - Works without JavaScript: <noJs.level>. <noJs.behavior>
-- Install: `npx <pkg> add <name>`
+- Install: `<command form> add <name>`
 
 ## Use when
 
@@ -266,7 +276,7 @@ Rules:
 - **C-1** The Examples section prints every fixture whose `generated` is `template` or `hand`, at most 4, in manifest order. The `default` fixture is always first. Fixtures with `generated: "upgrade-snapshot"` are printed only when no other fixture exists.
 - **C-2** The TSX and Liquid calls are produced by the same emitters that generate bindings and conformance inputs (`07-manifest-registry-cli.md`); `renderComponentDoc` MUST NOT format calls itself. Consequence: every example in a component page is a tested fixture.
 - **C-3** For a prop with `hosts` that excludes a host, the Description cell starts with `(<hosts> only) `.
-- **C-4** The optional hand-written file `components/<id>/notes.md` is appended under `## Notes` unchanged. It MUST NOT contain a heading of level 1 or 2. This is the only hand-written text in a component page. (New file in the repository tree; see Ledger issues.)
+- **C-4** The optional hand-written file `components/<id>/notes.md` is appended under `## Notes` unchanged. It MUST NOT contain a heading of level 1 or 2. This is the only hand-written text in a component page (D-060; ledger sections 4.6 and 5.1).
 - **C-5** No page may contain a Tailwind utility class in a Liquid example (`ripple/docs/research/agent-kit-and-distribution.md` section 3: `{% doc %}` and docs are scanned for class names by the theme compiler). The generator enforces this by construction because fixtures contain no utilities (D-024 item 5).
 
 ### 2.5 `docs/guides/<topic>.md`
@@ -287,19 +297,19 @@ The 12 guides, in index order. Each guide is at most 250 lines. Each fact in a g
 | 1 | `getting-started` | Getting started | What Ripple is (hosts, backends, kinds). Install per host (`init`, `add`, `add --blueprint`). The first page. Where files land. How to find docs. | `01-architecture.md`, `07-manifest-registry-cli.md` |
 | 2 | `layout-props` | Layout and responsive props | Container, Stack, Inline, Grid. The prop list of ledger 6.2. The responsive grammar with exactly these six examples: `gap="4"`, `gap="2 md:6"`, `columns="1 sm:2 lg:4"`, `direction="column md:row"`, `hidden="true md:false"`, `span="full md:2"`. Space steps. No margin props. | `03-styling-and-tokens.md`, ledger D-028, 6.1, 6.2 |
 | 3 | `tokens-and-dials` | Tokens, dials and schemes | The dials of D-026. Colour roles of D-027. Scales of D-029. Schemes and `data-scheme`. How to change a scale. Contrast rule. | `03-styling-and-tokens.md` |
-| 4 | `progressive-enhancement` | Working without JavaScript | The three `noJs` levels. Forms and links. The opener pattern (`data-rp-open`). `data-rp-js` values. What breaks the contract. | `02-html-contract.md`, ledger D-005, D-009, D-021 |
-| 5 | `commerce` | Cart, product form and regions | The adapter in one paragraph. The two form dialects (table of D-043). Regions and `data-rp-refresh`. Pending and error display. Checkout. | `05-commerce.md` |
-| 6 | `overlays-and-ids` | Overlays, ids and openers | Dialog, Drawer, Popover, Tooltip, Toast. Required ids and derived ids (D-020). `commandFor` / `command`. Feedback inside an open dialog. | `04-elements.md`, `10-components-interactive.md` |
-| 7 | `hosts-liquid` | Ripple in a Liquid theme | Tiers. Rules L-1 to L-11 as a numbered list. Partials. Locale keys. CSS asset and the compiler. | `06-bindings.md`, `14-liquid-theme.md` |
-| 8 | `hosts-react` | Ripple in React | Rules R-1 to R-5. `useElement`. Callbacks and the four controlled props. Store hooks. | `06-bindings.md` |
-| 9 | `hosts-remix` | Ripple in Remix 3 | Server components only. `data-rmx-*`. Frames as regions. `data-rmx-document`. | `06-bindings.md` |
-| 10 | `hosts-html` | Ripple in plain HTML | Two tags. Reference files. Region refresh by document fetch. | `06-bindings.md`, `05-commerce.md` |
+| 4 | `progressive-enhancement` | Working without JavaScript | The three `noJs` levels. Forms and links. The opener pattern: the `dialog` prop of Link, and of Button and IconButton with `href`; it prints `data-rp-open`, which is never written through rest props or `attributes`. `data-rp-js` values. Behaviour on browsers below a feature's first version (the table of D-081). What breaks the contract. | `02-html-contract.md`, `01-architecture.md` section 10, ledger D-005, D-009, D-021, D-081 |
+| 5 | `commerce` | Cart, product form and regions | The adapter in one paragraph. The config element `#rp-commerce` and `configureCommerce`. The two form dialects (table of D-043); the props `formId`, `rpField`, `cartLines`. Regions, region parts (table of D-091) and `data-rp-refresh`. Refresh strategy per host (table of D-090). Pending and error display. Checkout. `rp-view-event` is printed only by the product, collection, search and cart blueprints. | `05-commerce.md`, `11-components-commerce.md` section 0 |
+| 6 | `overlays-and-ids` | Overlays, ids and openers | Dialog, Drawer, Popover, Tooltip, Toast, Tabs, Accordion. Required ids and derived ids (D-020). `commandFor` / `command` for button openers and closers; the `dialog` prop for link openers. Tooltip: the trigger is a Button or IconButton with the prop `tooltip="<tooltip id>"`, never a link. Toast: `toast(message, options?)` imported from `<pkg>/elements` (Liquid: the `ripple` specifier; prebuilt pages: `ripple.js`). Tabs is horizontal only and has no `orientation` prop; content that must be readable without JavaScript goes in Accordion. Accordion `type` is `single` or `multiple`. Feedback inside an open dialog. | `04-elements.md`, `10-components-interactive.md` |
+| 7 | `hosts-liquid` | Ripple in a Liquid theme | Tiers. The Liquid rules of `06-bindings.md` (every `L-` rule) as a numbered list, including: `{{ attributes }}` is printed last, and the Liquid subset with its three scopes (table of D-097). Region parts and `{% partial %}` (only in templates and layouts, at most once per name per page). Layout and templates are blueprint files. `rp-head` and the six import-map entries. Locale keys. CSS asset and the compiler. | `06-bindings.md`, `14-liquid-theme.md`, `12-components-chrome-and-blueprints.md` |
+| 8 | `hosts-react` | Ripple in React | Rules R-1 to R-5. `useElement`. Callbacks and the four controlled props. `useCart(selector, serverValue)` and `useRegionHtml(name)`. A file that starts with `"use client"` exports components only; data helpers live in `<id>.data.ts`. | `06-bindings.md` |
+| 9 | `hosts-remix` | Ripple in Remix 3 | Server components only. `data-rmx-*` and `rmxKey`. A region is a plain element with `data-rp-region`; no Frame is needed. The opt-in `configureCommerce` options `reloadFrames` and `navigate` (see `Fallback (SPIKE-11)` in 4.5.13). `data-rmx-document`. | `06-bindings.md`, `05-commerce.md` |
+| 10 | `hosts-html` | Ripple in plain HTML | Two tags (one stylesheet, one module script). The config element `#rp-commerce` and the Hydrogen script tags on commerce pages. Reference files and the fixture delimiter line. Region refresh by document fetch. | `06-bindings.md`, `05-commerce.md` |
 | 11 | `customize-and-upgrade` | Customising and upgrading | Library versus scaffolded. What a scaffolded edit may change. Trailers, `status`, `diff`, `upgrade`, conflicts. | `07-manifest-registry-cli.md` |
 | 12 | `agent-ready` | In-page agents | Section 7 of this document as steps. | this document |
 
 ### 2.6 `docs/rules/<RULE>.md`
 
-Generated from `RuleMeta` (section 5.5). Exact shape:
+Generated from `RuleDoc` (2.1; texts in section 5.5). One page per rule id: 55 pages. Exact shape:
 
 ```markdown
 # <id>: <title>
@@ -331,29 +341,30 @@ The fence language is `liquid` when `hosts` is exactly `["liquid"]`, `css` for R
 
 ### 2.7 Access commands
 
-These CLI behaviours are specified by `07-manifest-registry-cli.md`; this document states what the documentation relies on:
+The command is specified by `07-manifest-registry-cli.md` section 7.11 (D-057). `ripple docs` takes positionals only and has no flags of its own. These four forms are the only ones that any document, skill, message or generated file may print:
 
 | Command | Output |
 |---|---|
-| `npx <pkg> docs` (no argument) | `docs/INDEX.md` |
-| `npx <pkg> docs <component id>` | `docs/components/<id>.md` |
-| `npx <pkg> docs <RULE>` (argument matches `/^RP\d{3}$/`) | `docs/rules/<RULE>.md` |
-| `npx <pkg> docs guide <topic>` | `docs/guides/<topic>.md` |
+| `<command form> docs` (no argument) | `docs/INDEX.md` |
+| `<command form> docs <component id>` | `docs/components/<id>.md` |
+| `<command form> docs <RULE>` (the argument matches `/^RP\d{3}$/`) | `docs/rules/<RULE>.md` |
+| `<command form> docs guide <topic>` | `docs/guides/<topic>.md` |
 
-Unknown argument: exit code 2 and the line `Unknown component "<arg>". Did you mean "<nearest id>"? Run \`npx <pkg> docs\` for the index.` (nearest by Levenshtein distance over component ids; the "Did you mean" sentence is omitted when the distance is above 3). The forms other than `docs <component>` extend D-057 (see Ledger issues).
+An unknown component id, rule id or topic exits with code 2; the message is owned by `07-manifest-registry-cli.md` section 7.11.
 
 ### 2.8 Acceptance (documentation)
 
 | Id | Test (file `src/gen/docs.test.ts` unless stated) | Pass condition |
 |---|---|---|
 | K-01 | Build, then list `pkg/docs/components/`. | The set of file names equals `{ <name>.md }` for every manifest component whose status is not `planned`. |
-| K-02 | Parse `pkg/docs/INDEX.md`. | Row counts equal: components (as K-01), blueprints (manifest `blueprints` length), guides 12, rules = number of files matching `src/check/rules/RP*.ts`. Every link target exists. |
+| K-02 | Parse `pkg/docs/INDEX.md`. | Row counts equal: components (as K-01), blueprints (manifest `blueprints` length), guides 12, rules 55 (and 55 equals the number of files matching `src/check/rules/RP*.ts` that are not `*.test.ts`). Every link target exists. |
 | K-03 | Compare the entry sets of `INDEX.md` and `llms.txt`. | Component, guide and rule sets are equal. |
 | K-04 | `renderIndex` with a manifest of 150 synthetic components with 140-character summaries. | Throws the I-5 error. |
 | K-05 | For every component page, extract each fenced `html` block under `## Examples`. | Each is byte-equal to a file `components/<id>/fixtures/<fixture>.html`. |
 | K-06 | Grep `pkg/docs/` and `pkg/skills/` for `__PKG__` and for the regular expression `\bTBD\b`. | Zero matches. |
 | K-07 | Every guide. | Has the frontmatter of 2.5, at most 250 lines, and every relative link resolves inside `pkg/docs/`. |
 | K-08 | `renderRuleDoc` for every rule. | `bad` and `good` are non-empty and differ. |
+| K-09 | Grep every file under `pkg/docs/` and `pkg/skills/` for `docs --rule`, `pnpm exec ripple`, `yarn ripple` and `bunx`. | Zero matches (2.7; section 0 rule for static files). |
 
 ---
 
@@ -376,6 +387,7 @@ Unknown argument: exit code 2 and the line `Unknown component "<arg>". Did you m
   ```ts
   export interface AgentsSectionInput {
     pkg: string;                                   // resolved package name
+    command: string;                               // the resolved command form (section 0), for example "pnpm exec ripple" or "npx ripple-kit@0.1.0"
     version: string;
     host: "html" | "react" | "remix" | "liquid";
     installed: Array<{ name: string; title: string; kind: string; summary: string; liquidBlock: string | null }>;  // sorted as in 2.1
@@ -386,9 +398,11 @@ Unknown argument: exit code 2 and the line `Unknown component "<arg>". Did you m
   export const AGENTS_SECTION_MAX_BYTES = 12000;
   ```
 
+- `07-manifest-registry-cli.md` section 7.6.5 (patch `core/patch:agents`) is the caller: it builds `AgentsSectionInput` from the manifest, the detected host, the installed component ids and the command form, and writes the returned text.
+
 ### 3.2 Exact content
 
-The region is the concatenation of blocks A to E in this order, separated by one blank line. `<...>` are substitutions.
+The region is the concatenation of blocks A to E in this order, separated by one blank line. `<...>` are substitutions; `<command form>` is `input.command`.
 
 Block A (identity), all hosts:
 
@@ -397,11 +411,11 @@ Block A (identity), all hosts:
 ## Ripple
 
 This project uses Ripple <version> (`<pkg>`), a component library for Shopify storefronts. Host: <host>.
-This section is generated. Do not edit between the markers; run `npx <pkg> add` or `npx <pkg> upgrade` to refresh it.
-Docs for one component: `npx <pkg> docs <component>`. Index of everything: `npx <pkg> docs`.
+This section is generated. Do not edit between the markers; run `<command form> upgrade` to refresh it.
+Docs for one component: `<command form> docs <component id>`. For one checker rule: `<command form> docs <RULE>`. Index of everything: `<command form> docs`.
 ```
 
-Block B (rules for every task), all hosts. These ten lines are also the "Rules" section of the `ripple` skill (4.5.1) and MUST be byte-identical there; both are produced from the constant `UNIVERSAL_RULES` in `src/gen/agents-md.ts`.
+Block B (rules for every task), all hosts. These ten lines are also the "Rules" section of the `ripple` skill (4.5.1). Both are produced from the constant `UNIVERSAL_RULES` in `src/gen/agents-md.ts`, which holds the ten lines with the token `{command}` in line 10. `AGENTS.md` replaces `{command}` with `input.command`; the skill replaces it with `npx __PKG__`. Apart from that token the two texts MUST be byte-identical.
 
 ```markdown
 ### Rules for every task
@@ -411,11 +425,11 @@ Block B (rules for every task), all hosts. These ten lines are also the "Rules" 
 3. Prop values are enumerated. Use only values from the component's doc. A responsive value is one string: `"2 md:6"`.
 4. Never hand-roll a dialog, drawer, popover, tabs, tooltip, accordion, carousel or quantity stepper. Use the component.
 5. Content is in the server HTML. Every action is a real `<form>` or `<a href>`. Pages must work with JavaScript off.
-6. Components whose parts are linked by id need an explicit `id`. A part gets it through the prop named after its root (`dialog`, `drawer`, `tabs`, `popover`, `field`, `form`).
-7. An overlay that has a page (cart, search, menu) opens from a link: `<a href="/cart" data-rp-open="cart-drawer">`.
+6. Components whose parts are linked by id need an explicit `id`. A part gets it through the prop named after its root (`dialog`, `drawer`, `tabs`, `popover`, `field`, `tooltip`, `accordion`, `cartLines`).
+7. An overlay that has a page (cart, search, menu) opens from a Link, or a Button with `href`, that has the `dialog` prop (`href="/cart"`, `dialog="cart-drawer"`). A tooltip trigger is a Button or IconButton with the `tooltip` prop. Never write `data-rp-open` or the tooltip attributes by hand.
 8. Do not invent or rename `rp-` classes, `rp-*` or `ui-*` tags, or `data-rp-*` attributes. Style with `rp-` classes only.
 9. Ripple JavaScript is library code: never copy or edit it. Component CSS and bindings are yours to edit, after tokens and props cannot do the job.
-10. After every change run `npx <pkg> check`, fix the first error, and repeat until it prints `No problems`.
+10. After every change run `<command form> check`, fix the first error, and repeat until it prints `No problems`.
 ```
 
 Block C (host rules). Exactly one of the four variants.
@@ -431,12 +445,15 @@ Block C (host rules). Exactly one of the four variants.
 4. A component made of parts is one block per part (`dialog`, `dialog-title`); pass the root id to each part: `{% block 'dialog-title', dialog: 'size-guide' %}`.
 5. A resource block takes the resource and renders itself: `{% block 'product-card', product: product %}{% endblock %}`. Give it a body only to replace its default content.
 6. Icons are a snippet: `{% render 'rp-icon', name: 'cart' %}`.
-7. Regions are partials declared in a template or layout with fixed names, for example `{% partial 'rp-cart-lines' %}`. Never put a Dialog or Drawer root inside the partial it refreshes.
+7. A region is a `{% partial %}` with a fixed name, written only in `templates/` or `layout/`, at most once per name per page, around the component's region snippet inside the block body: `{% partial 'rp-cart-lines' %}{% render 'rp-cart-lines-list', cart: cart %}{% endpartial %}`. Never put a Dialog or Drawer root inside the partial it refreshes.
 8. Cart forms use the platform field names (`id`, `quantity`, `updates[]`, `name="update"`, `name="checkout"`). No Ajax Cart API, no Section Rendering API, no `Shopify.actions.updateCart.configure`.
 9. Every visible string is a locale key: `{{ 'ripple.<component>.<key>' | t }}`. Links use `routes.*`.
 10. No sections, no JSON templates, no `{% javascript %}`, no `{% stylesheet %}`.
 11. The reference for a block is the `{% doc %}` header at the top of `blocks/<name>.liquid`.
 12. Component CSS is `assets/ripple.css` (editable). Utility classes work only after the Canvas or Sidekick compile of `config/styles.css`.
+13. `form`, `for`, `content`, `block`, `section` and `settings` are never param names. Use `form_id` for the native `form` attribute, `cart_lines` for the id of the cart lines, `rp_field` for a cart field, `html_for` on a label.
+14. `attributes` adds extra attributes only; it is printed last and cannot replace an attribute Ripple prints. Openers use the `dialog` param, tooltip triggers the `tooltip` param.
+15. `layout/*.liquid` and `templates/*.liquid` come from blueprints (`<command form> add --blueprint layout`). `snippets/rp-head.liquid` loads the CSS, tokens, cart configuration and `ripple.js`; do not load them again. For a toast: `import { toast } from "ripple"`.
 ```
 
 `react`:
@@ -449,8 +466,9 @@ Block C (host rules). Exactly one of the four variants.
 3. Never render a custom element (`<rp-*>`, `<ui-*>`) yourself and never pass it `on*` props; use the binding. Listen through the binding's callbacks (`onOpenChange`, `onValueChange`, `onIndexChange`, `onAction`).
 4. Only these are controllable: `open` on Dialog and Drawer, `value` on Tabs and QuantityInput. Everything else is uncontrolled (`defaultOpen`, `defaultValue`, `defaultChecked`).
 5. Do not use `useId` for Ripple ids; write explicit ids.
-6. Cart state comes from the hooks in `<pkg>/react`. Do not mount `CartProvider` and do not import `@ui-sdk/react`.
-7. Import `<pkg>/elements` and `<pkg>/commerce` once, in the client entry.
+6. Cart state comes from `useCart(selector, serverValue)` in `<pkg>/react`; a fetched region (predictive search, recommendations) from `useRegionHtml(name)`. Do not mount `CartProvider` and do not import `@ui-sdk/react`.
+7. Import `<pkg>/elements` and `<pkg>/commerce` once, in the client entry. For a toast: `import { toast } from "<pkg>/elements"`.
+8. A file that starts with `"use client"` exports components only. Put data helpers in `<id>.data.ts`.
 ```
 
 `remix`:
@@ -461,9 +479,10 @@ Block C (host rules). Exactly one of the four variants.
 1. Import components from `<paths.components>`. Parts are flat exports: `DialogTitle`, not `Dialog.Title`.
 2. Ripple components are server components. Do not wrap them in `clientEntry`, and do not use `on()`, `ref()`, `css()` or `@remix-run/ui` with them.
 3. Components are uncontrolled and have no callback props. Listen to DOM events (`openchange`, `valuechange`, `indexchange`, `action`) on the element.
-4. Use `class`, not `className`. Text is children.
-5. Regions are named blocking Frames. Cart forms, checkout links and account links carry `data-rmx-document`.
-6. `ripple.js` is served from `public/ripple/`; do not import it through the asset server.
+4. Use `class`, not `className`. Text is children. Import a sibling binding with its extension: `./button.tsx`.
+5. A region is a plain element with `data-rp-region`. Do not create a `<Frame>` for a region. Cart forms, checkout links and account links carry `data-rmx-document`.
+6. `ripple.js` is served from `public/ripple/`; do not import it through the asset server. For a toast: `import { toast } from "/ripple/ripple.js"` in a module script.
+7. A component with a custom element root and no required `id` takes `rmxKey` (a stable, unique string) when it must keep its state across navigations.
 ```
 
 `html`:
@@ -475,9 +494,11 @@ Block C (host rules). Exactly one of the four variants.
 2. Load exactly one stylesheet and one module script: `ripple.css` and `ripple.js`.
 3. Print the default value of every enumerated prop as its `data-` attribute (`data-variant="primary"`).
 4. Cart forms post to `/api/cart` with the Hydrogen field names (`merchandiseId`, `quantity`, `lineId`, submit `name="intent"`).
+5. A page with cart or product-form markup needs, in `<head>` before `ripple.js`: the Hydrogen script tags and `<script type="application/json" id="rp-commerce">`. The `layout` blueprint prints both.
+6. A region is the element with `data-rp-region="<name>"`; a form or link names the regions it refreshes in `data-rp-refresh`. For a toast: `import { toast } from "/ripple/ripple.js"`.
 ```
 
-In blocks C, `<paths.components>` is `paths.components` from `ripple.json`.
+In blocks C, `<paths.components>` is `paths.components` from `ripple.json`, and `/ripple/ripple.js` is the URL of `paths.public` (default `public/ripple`) plus `/ripple.js`.
 
 Block D (installed index), all hosts:
 
@@ -487,7 +508,7 @@ Block D (installed index), all hosts:
 <one line per installed component>
 
 Blueprints installed: <comma-separated blueprint ids, or "none">.
-Not installed yet? `npx <pkg> add <component>`. Full list: `npx <pkg> docs`.
+Not installed yet? `<command form> add <component id>`. Full list: `<command form> docs`.
 ```
 
 Line format: `- <call name> (<kind>): <summary>` where `<call name>` is the Liquid block name (`liquidBlock`; for Icon the text `rp-icon snippet`) on `liquid`, and the component `title` on other hosts.
@@ -497,8 +518,8 @@ Block E (done rule), all hosts:
 ```markdown
 ### Done means
 
-With a shell: `npx <pkg> check` prints `No problems`, and the project's own build and typecheck pass.
-Without a shell, check by hand: (1) every prop value appears in the component's doc; (2) every component with parts has an `id` and its parts receive it; (3) no `{% block %}` inside `blocks/` or `snippets/`; (4) every button is inside a form or has `commandfor` or `popovertarget`; (5) every image has `alt`, `width` and `height`; (6) no hand-written colour values.
+With a shell: `<command form> check` prints `No problems`, and the project's own build and typecheck pass.
+Without a shell, check by hand: (1) every prop value appears in the component's doc; (2) every component with parts has an `id` and its parts receive it; (3) no `{% block %}` inside `blocks/` or `snippets/`; (4) every button is inside a form or has `command_for` / `commandFor` or `popover_target` / `popoverTarget`; (5) every Image gets an `image` object that has a URL, alt text, width and height; (6) no hand-written colour values.
 <!-- ripple:end agents -->
 ```
 
@@ -523,9 +544,10 @@ Checker rule RP406 (section 5.5) reports a project `AGENTS.md` above 50,000 byte
 |---|---|---|
 | K-10 | Render for each host with all 84 components installed. | Byte length at most 12,000; starts with `<!-- ripple:start agents -->\n`; ends with `<!-- ripple:end agents -->\n`. |
 | K-11 | Render for `liquid` with 20 installed components. | Step 1 is used (all summaries complete). |
-| K-12 | Block B. | Equals `UNIVERSAL_RULES` with `<pkg>` substituted; has exactly 10 numbered lines. |
+| K-12 | Block B. | Equals `UNIVERSAL_RULES` with `{command}` replaced by `input.command`; has exactly 10 numbered lines; contains none of the strings `data-rp-open=`, `npx <pkg>`. |
 | K-13 | Apply the region to: no file; a file with no markers; a file with a stale region. | Results: region only; original text + blank line + region; original text with only the region replaced. Bytes outside the markers unchanged. |
-| K-14 | Block C for `liquid`. | At most 15 lines of rules (D-060 intent; research 9.5 item 3). |
+| K-14 | Block C for each host. | `liquid`: exactly 15 numbered rules; `react`: 8; `remix`: 7; `html`: 6. No variant contains the words `named blocking Frames`. |
+| K-16 | Render with `command: "pnpm exec ripple"`. | The output contains `pnpm exec ripple check` and does not contain `npx`. |
 | K-15 | Eval task T11 run with skills removed from the workspace (section 8.5, arm `no-skills`). | Recorded, not gating: pass rate with only `AGENTS.md` and `{% doc %}`. This measures K-1. |
 
 ---
@@ -543,7 +565,7 @@ Rules for every skill:
 
 - **S-1** `SKILL.md` is at most 300 lines (D-060). Lines are counted with the frontmatter.
 - **S-2** Written for the consumer project. It MUST NOT mention a path that exists only in the Ripple repository (`src/`, `components/<id>/`, `docs/00-decisions.md`), a ledger decision id (`D-0nn`), or a spike id.
-- **S-3** Package name is written `__PKG__`; commands are written `npx __PKG__ <command>`.
+- **S-3** Package name is written `__PKG__`; commands are written `npx __PKG__ <command>` (the static spelling of the command form, section 0). The only `docs` forms a skill may print are the four of 2.7.
 - **S-4** A skill states rules and steps and points to `node_modules/__PKG__/docs/` pages by relative name (for example `docs/guides/layout-props.md`). It MUST NOT list components, prop values or rule ids beyond the examples named in its outline (K-3). Exception: `ripple-check-and-fix` names the rule ids listed in 4.5.9.
 - **S-5** It names another package's skill by its `name` and states the boundary in one sentence. It MUST NOT copy text from another package's skill.
 - **S-6** Every skill uses this heading skeleton, in this order. Headings marked (fixed) are literal.
@@ -612,7 +634,7 @@ Verified to exist: `hydrogen/packages/hydrogen/skills/<name>/SKILL.md`; `uisdk/p
 | `hydrogen-smoke-test` | yes | no | After `npx __PKG__ check` passes, use the `hydrogen-smoke-test` skill for the data wiring checklist. |
 | `migrate-to-hydrogen-2026-10` | only when Hydrogen itself is migrated | no | Use the `migrate-to-hydrogen-2026-10` skill only when the Hydrogen version itself changes. |
 | `ui-sdk` | new `rp-*` elements only | same | Use the `ui-sdk` skill at `node_modules/@ui-sdk/core/skills/ui-sdk/SKILL.md` for `definePrimitive` and the agent bridge. |
-| `remix` | remix host | no | Use the `remix` skill for routing, actions and Frames. |
+| `remix` | remix host | no | Use the `remix` skill for routing and actions; Ripple regions need no Frame. |
 
 The statements "Do NOT create a product form store" and "Do NOT use the `hydrogen-predictive-search` skill" follow D-047 and D-048. `hydrogen-variant-form` and `hydrogen-markets` teach `createProductFormStore` (verified by grep of `hydrogen/packages/hydrogen/skills/*/SKILL.md`), so the boundary sentence is required wherever those skills are named.
 
@@ -643,11 +665,11 @@ For each skill: the exact `description`, then the sections in order with the con
 - description: `Builds storefront UI with Ripple components, tokens and blueprints in html, react, remix and Liquid projects. Use when a project contains Ripple files (classes or tags starting with rp-, a ripple.json file, or a Ripple section in AGENTS.md) or when the task is to build or change storefront pages.`
 - Line budget: 90.
 - `## When to use`: the two triggers of the description as bullets; one sentence: "Read this skill first; it routes to the others."
-- `## Rules`: the ten lines of `UNIVERSAL_RULES` (3.2 block B), byte-identical.
+- `## Rules`: the ten lines of `UNIVERSAL_RULES` (3.2 block B) with `{command}` replaced by `npx __PKG__`, otherwise byte-identical.
 - `## Steps`: (1) Find the host: `ripple.json` key `host`, or a Liquid theme when `layout/theme.liquid` exists. (2) Find the component: `grep -i "<word>" node_modules/__PKG__/docs/INDEX.md`, or `npx __PKG__ docs`; on Liquid read the `{% doc %}` header of `blocks/<name>.liquid`. (3) Not installed: `npx __PKG__ add <component>`. (4) Start pages from a blueprint: `npx __PKG__ add --blueprint <id>`. (5) Write the code. (6) Run the checker.
 - `## What Ripple is`: at most 8 lines: one HTML contract per component printed by the server; four hosts; three kinds of markup (native elements with `rp-` classes, `rp-*` elements, `ui-*` elements for Tabs, Tooltip, Toast); props become `data-` attributes; tokens are CSS variables; JavaScript is optional enhancement.
 - `## Pick your path`: the table of 4.4.
-- `## Where things are`: table with rows docs (`node_modules/__PKG__/docs/INDEX.md`), bindings (`paths.components`), CSS (`paths.styles`), Liquid files (`blocks/`, `snippets/rp-*.liquid`, `assets/ripple.css`), configuration (`ripple.json`).
+- `## Where things are`: table with rows docs (`node_modules/__PKG__/docs/INDEX.md`), bindings (`paths.components`), blueprint pages (`paths.pages`), CSS (`paths.styles`), browser files on `html` and `remix` (`paths.public`), Liquid files (`blocks/`, `snippets/rp-*.liquid`, `assets/ripple.css`, `assets/ripple*.js`), configuration (`ripple.json`; a Liquid theme has none).
 - Defers to: none (names Ripple skills only).
 - `## Done when`: every changed page renders; no hand-rolled widget; the fixed last item.
 
@@ -656,9 +678,9 @@ For each skill: the exact `description`, then the sections in order with the con
 - description: `Installs Ripple into a project: init, styles, tokens, head wiring, first components and skills. Use when the project has no Ripple files yet, when npx __PKG__ status reports a missing patch, or when adding Ripple to a new host.`
 - Line budget: 160.
 - `## Rules`: MUST run `init` before `add`; MUST NOT hand-copy files from `node_modules/__PKG__/registry`; MUST NOT add Tailwind unless the project already compiles it; the CSS entry MUST import `ripple.css` before `tailwindcss`; MUST NOT load `@shopify/hydrogen` a second time on Liquid; MUST NOT install `@ui-sdk/react`.
-- `## Steps`: (1) `npx __PKG__ init` (detects the host; `--host <host>` to force). (2) `npx __PKG__ status` and confirm zero missing patches. (3) `npx __PKG__ add --blueprint layout` then the page blueprints needed. (4) `npx __PKG__ skills sync`. (5) Start the app or preview the theme and load the home page. (6) `npx __PKG__ check`.
+- `## Steps`: (1) `npx __PKG__ init` (detects the host; `--host <host>` to force). (2) `npx __PKG__ status` and confirm zero missing patches. (3) `npx __PKG__ add --blueprint layout` then the page blueprints needed. On Liquid the layout and every template are blueprint files: `layout/theme.liquid` comes from the `layout` blueprint, and `init` only patches a layout file that already exists. (4) `npx __PKG__ skills sync`. (5) Start the app or preview the theme and load the home page. (6) `npx __PKG__ check`.
 - `## What init changes`: one table per host listing the files written and the lines patched. Source: `07-manifest-registry-cli.md`, ledger 5.3.
-- `## Host notes`: four subsections (`### html`, `### react`, `### remix`, `### liquid`), each at most 12 lines: where `ripple.css` and `ripple.js` load, what the server must mount (`/api/cart` on the hydrogen backend), what MUST NOT exist (Liquid: `snippets/standard-actions-config.liquid`, `assets/standard-actions-override.js`). Source: `01-architecture.md`, `05-commerce.md` section 10, `14-liquid-theme.md`.
+- `## Host notes`: four subsections (`### html`, `### react`, `### remix`, `### liquid`), each at most 12 lines: where `ripple.css` and `ripple.js` load (`react`: import `__PKG__/elements` and `__PKG__/commerce` once in the client entry; `html` and `remix`: the six files `init` copies to `paths.public`; `liquid`: `snippets/rp-head.liquid`, rendered after the import map and before `{{ content_for_header }}`, which prints the stylesheet tag, the tokens, the config element `<script type="application/json" id="rp-commerce">`, the commands polyfill and the module script, plus `snippets/rp-import-map-entries.liquid`, which adds six import-map entries); what the server must provide on the hydrogen backend (the cart handlers at `/api/cart`, the Hydrogen script tags and the config element in `<head>` before `ripple.js`; the `layout` blueprint prints both); the CSS entry order (`ripple.css`, then `tailwindcss`, then `theme.css`); what MUST NOT exist (Liquid: `snippets/standard-actions-config.liquid`, `assets/standard-actions-override.js`; any host: a second Ripple runtime on one page). Source: `01-architecture.md`, `05-commerce.md`, `14-liquid-theme.md`.
 - `## If init stops`: the three failure messages of `init` (collision with an untrailered file, unsupported theme with `sections/` or JSON templates, patch not applied) and the fix for each. Source: `07-manifest-registry-cli.md`.
 - Defers to: `hydrogen-setup`, `hydrogen-request-handlers` (boundary sentences of 4.3).
 - `## Done when`: `status` exits 0; the home page renders with styles; with JavaScript disabled the page is readable; last item: `- [ ] \`npx __PKG__ check\` prints \`No problems\` (run it after the first page exists).`
@@ -667,13 +689,14 @@ For each skill: the exact `description`, then the sections in order with the con
 
 - description: `Composes pages and page areas from Ripple layout and content components and blueprints. Use when building or changing a home, collection, product, search, cart, blog, article, contact or content page, or when adding a new area to a page.`
 - Line budget: 220.
-- `## Rules`: start from a blueprint when one exists; one Container per full-width band (Container owns the page gutter); spacing only through `gap`, `p`, `px`, `py`, `pt`, `pb` (there are no margin props); headings in order with `level` for the element and `size` for the look; every Image has `alt`, `width`, `height`; the first image of a page uses `loading="eager"` and `fetchPriority="high"`; no horizontal overflow at 375 px; `start` / `end`, never left / right.
+- `## Rules`: start from a blueprint when one exists; one Container per full-width band (Container owns the page gutter); spacing only through `gap`, `p`, `px`, `py`, `pt`, `pb` (there are no margin props); headings in order with `level` for the element and `size` for the look; every Image gets an `image` object (URL, alt text, width, height); the first image of a page uses `loading="eager"` and `fetchPriority="high"`; no horizontal overflow at 375 px; `start` / `end`, never left / right; content that must be reachable without JavaScript MUST NOT be placed in Tabs, use Accordion; Tabs is horizontal only (there is no `orientation` prop); MUST NOT write an `rp-view-event` tag: the product, collection, search and cart blueprints print it and no other page has one.
 - `## Steps`: (1) List blueprints: `npx __PKG__ docs`. (2) `add --blueprint <id>`. (3) Replace sample data with store data. (4) Add or remove areas. (5) Check at 375, 768 and 1440 px. (6) Checker.
 - `## Layout components`: table with one row each for Container, Stack, Inline, Grid, Card, Separator: "use for" and the props it accepts (ledger 6.2).
 - `## Responsive values`: the grammar in three lines, and exactly the six examples of guide `layout-props` (2.5 row 2), each in TSX and in Liquid.
-- `## Spacing rhythm`: the fixed recommendations: band padding `py="12 md:20"`; gap between areas inside a band `gap="8 md:12"`; gap inside a group `gap="2"` to `gap="4"`; grid gap `gap="4 md:6"`. These four values are the ones used by every blueprint (`12-components-chrome-and-blueprints.md` MUST use them; see Ledger issues).
+- `## Spacing rhythm`: the fixed recommendations: band padding `py="12 md:20"`; gap between areas inside a band `gap="8 md:12"`; gap inside a group `gap="2"` to `gap="4"`; grid gap `gap="4 md:6"`. The four values are not changed by this document; they are normative for every blueprint (D-106, D-107 item 4), so a page an agent adds matches the pages it started from.
 - `## When a prop is missing`: order: another component; a utility class through `class` (only when the project compiles Tailwind); a small CSS rule using tokens in the project's own stylesheet; then the `ripple-new-component` skill.
 - `## Page checklists`: one checklist of at most 6 items per blueprint id (`home`, `collection`, `product`, `search`, `cart`, `article`, `page`), naming the components each page needs.
+- `## Overlays on a page`: at most 12 lines: a button opener is a Button with `commandFor` and `command="show-modal"`; a closer is a Button with `commandFor` and `command="close"`; an opener that has a page equivalent is a Link (or a Button with `href`) with the `dialog` prop; a Dialog needs a DialogTitle; a tooltip trigger is a Button or IconButton with the `tooltip` prop and its own accessible name; Accordion `type` is `single` (needs an `id`) or `multiple`; a toast is shown with `toast()` and never while a dialog is open. Pointer: `docs/guides/overlays-and-ids.md`.
 - Defers to: `hydrogen-routing`, `hydrogen-storefront-client` (hydrogen backend); `ripple-commerce`, `ripple-discovery`.
 - `## Done when`: landmarks `header`, `main`, `footer` present; one `h1`; no overflow at 375 px; fixed last item.
 
@@ -681,13 +704,13 @@ For each skill: the exact `description`, then the sections in order with the con
 
 - description: `Wires Ripple product and cart components: product form, variant picker, add to cart, cart drawer, cart lines, discount code, cart note and checkout. Use when adding to cart, selecting variants, showing or editing the cart, or sending the shopper to checkout.`
 - Line budget: 260.
-- `## Rules`: every cart action is a form post that works with JavaScript off; variant selection is a link or GET form that changes the URL, the server renders the selected variant; MUST NOT write cart fetch calls, a cart store, or client-side line templates; MUST NOT disable controls while pending; money text is formatted on the server; the checkout control carries `data-agent-confirm`; feedback raised while a dialog is open is shown inside that dialog; the cart opener is a link to the cart page with `data-rp-open`.
-- `## Steps`: (1) Product page: ProductGallery, Price, VariantPicker, ProductForm with QuantityInput and AddToCartButton. (2) Layout: CartLink in the header and one CartDrawer in the layout. (3) Cart page: CartLines, CartSummary, DiscountCode, CartNote, CheckoutButton. (4) Declare the regions. (5) Test with JavaScript off, then on.
+- `## Rules`: every cart action is a form post that works with JavaScript off; variant selection is a link or GET form that changes the URL, the server renders the selected variant; MUST NOT write cart fetch calls, a cart store, or client-side line templates; MUST NOT disable controls while pending; money text is formatted on the server; the checkout control carries `data-agent-confirm`; feedback raised while a dialog is open is shown inside that dialog; the cart opener is a link to the cart page with the `dialog` prop (CartLink: the `drawer` prop), never a hand-written `data-rp-open`; MUST NOT pass `form` or `for` as a prop: the native `form` attribute is `formId` (Liquid `form_id`), a cart field is marked with `rpField` (Liquid `rp_field`), and cart parts receive the cart lines id through `cartLines` (Liquid `cart_lines`); MUST NOT print `rp-view-event` outside the product, collection, search and cart blueprints.
+- `## Steps`: (1) Product page: ProductGallery, Price, VariantPicker (outside the ProductForm, never inside it), ProductForm with QuantityInput and AddToCartButton. (2) Layout: CartLink in the header and one CartDrawer (id `cart-drawer`) in the layout, omitted on the cart page, where the CartLink has no `drawer` and navigates. (3) Cart page: CartLines, CartSummary, DiscountCode, CartNote, CheckoutButton. (4) Declare the regions through the region parts. (5) Test with JavaScript off, then on.
 - `## Form field names`: the dialect table of D-043, verbatim columns, with one sentence: "Use the column of your backend; the components print these for you."
-- `## Regions`: the region names used by commerce (`rp-cart-lines`, `rp-cart-summary`, `rp-product-buy`, `rp-product-media`, `rp-product-recommendations`), what declares them per host (Liquid `{% partial %}`, Remix Frame, `data-rp-region` everywhere), and the rule that an overlay root is never inside the region it refreshes.
+- `## Regions`: the region names used by commerce (`rp-cart-lines`, `rp-cart-summary`, `rp-product-buy`, `rp-product-media`, `rp-product-recommendations`); the region parts as a table (CartLines `CartLinesList` / snippet `rp-cart-lines-list`; CartSummary `CartSummaryTotals` / `rp-cart-summary-totals`; ProductGallery `ProductGalleryMedia` / `rp-product-gallery-media`; ProductRecommendations `ProductRecommendationsList` / `rp-product-recommendations-list`); what declares a region per host (every host: the element with `data-rp-region`; Liquid additionally `{% partial '<region>' %}` written in a template or layout around the region snippet; Remix and `html`: nothing more, no Frame; React: nothing more); `rp-product-buy` is declared by the product blueprint on a layout component through rest props or `attributes: 'data-rp-region="rp-product-buy"'` (the only hook attribute that may be passed that way); a region name appears at most once per page; and the rule that an overlay root is never inside the region it refreshes.
 - `## What updates without a reload`: table "what the element changes" (pending attributes, count text, error text) versus "what the server re-renders" (lines, money, structure). React exception in one sentence.
 - `## Errors and pending`: the error element `<p class="rp-form-message" data-rp-part="error" data-tone="destructive" role="alert" hidden></p>` and that the server prints it empty.
-- `## Checkout`: the two forms of the checkout control (D-050) and `acceleratedCheckout`.
+- `## Checkout`: the two forms of the checkout control (Liquid: a submit button `name="checkout"` joined to the cart form with `form_id`; hydrogen backend: a link to the checkout URL), both with `data-agent-confirm`; inert when the cart is empty; `acceleratedCheckout` on ProductForm and CartSummary. Source: ledger D-050, `11-components-commerce.md`.
 - Defers to: `hydrogen-cart-ui`, `hydrogen-cart-drawer`, `hydrogen-variant-form`, `hydrogen-money`, `hydrogen-shop-pay` (boundary sentences of 4.3, including which apply on Liquid).
 - `## Done when`: with JavaScript off, add to cart, quantity change, remove and checkout work; with JavaScript on, add to cart does not navigate and the count changes; fixed last item.
 
@@ -695,11 +718,11 @@ For each skill: the exact `description`, then the sections in order with the con
 
 - description: `Builds collection and search pages with Ripple: filters, active filter chips, sorting, pagination, search form and predictive search. Use when working on a collection page, a search results page or a search field with suggestions.`
 - Line budget: 180.
-- `## Rules`: filters and sort are ONE GET form whose URL fully describes the state; active filters are links; pagination is links; the search field is a real GET form to the search route; predictive search is a search field plus a list of links, never an ARIA combobox; MUST NOT keep filter state in JavaScript; reloading a filtered URL MUST render the same state.
-- `## Steps`: (1) `add --blueprint collection` / `search`. (2) Filters, FilterGroup, PriceRange, SortSelect inside the one form. (3) FilterChips above results. (4) Regions `rp-collection-results`, `rp-collection-filters`, `rp-collection-toolbar`, `rp-search-results`, `rp-predictive-results`. (5) Pagination. (6) PredictiveSearch in the header. (7) Test back and forward, and with JavaScript off.
+- `## Rules`: filters and sort are GET forms and links whose URL fully describes the state (Filters is one GET form; SortSelect is its own GET form); active filters are links; pagination is links; the search field is a real GET form to the search route; predictive search is a search field plus a list of links, never an ARIA combobox; MUST NOT keep filter state in JavaScript; reloading a filtered URL MUST render the same state.
+- `## Steps`: (1) `add --blueprint collection` / `search`. (2) Filters with FilterGroup and PriceRange, rendered inline; SortSelect in the toolbar. (3) FilterChips above results. (4) Regions: `rp-collection-filters` (Filters part `groups`), `rp-predictive-results` (PredictiveSearch part `results`), and the blueprint-owned `rp-collection-results`, `rp-collection-toolbar`, `rp-search-results`, each a layout component that receives `data-rp-region`. (5) Pagination. (6) PredictiveSearch inside the search Dialog that the `layout` blueprint prints. (7) Test back and forward, and with JavaScript off.
 - `## URL params`: `filter.*`, `sort_by`, `page`, `q`; one example URL.
-- `## How live updates work`: `rp-live` intercepts the submit, updates the URL, refreshes the regions named in `data-rp-refresh`; without JavaScript the form navigates.
-- `## Mobile filters`: Filters inside a Drawer; the region is inside the drawer body, the drawer root is outside the region.
+- `## How live updates work`: `rp-live` intercepts the submit or click, updates the URL, refreshes the regions named in `data-rp-refresh`; without JavaScript the form or link navigates. On React, predictive results arrive through `useRegionHtml("rp-predictive-results")`, which the PredictiveSearch binding already uses.
+- `## Where filters go`: Filters is rendered inline on the page at every width, as the `collection` blueprint does. MUST NOT place Filters inside a Drawer, Dialog or Popover: it would not be reachable without JavaScript.
 - Defers to: `hydrogen-collection-browser` (boundary sentence); the "Do NOT use `hydrogen-predictive-search`" sentence.
 - `## Done when`: filter, sort and page changes work with JavaScript off; removing one chip keeps the other params; fixed last item.
 
@@ -707,12 +730,12 @@ For each skill: the exact `description`, then the sections in order with the con
 
 - description: `Changes the look of a Ripple storefront through tokens, dials, schemes and scales. Use for brand colour, dark or custom colour schemes, radius, density, typography, or exposing design tokens as Liquid theme settings.`
 - Line budget: 200.
-- `## Rules`: change a dial before a derived token, a token before component CSS; token values are written only in `tokens.css` (Liquid: theme settings, then `assets/ripple.css` token block); any element that sets a dial MUST also carry `data-scheme="<name>"`; MUST NOT write hex, rgb or oklch values in component CSS or markup; body text contrast MUST be at least 4.5:1; MUST NOT rename a token.
-- `## Steps`: (1) Decide which dials change. (2) Edit them. (3) For a dark or custom scheme add a `[data-scheme="<name>"]` block. (4) Check contrast: `npx __PKG__ check --browser --url <url> --rule RP609`. (5) Look at home, product and cart at three widths.
+- `## Rules`: change a dial before a derived token, a token before component CSS; token values are written only in `tokens.css` (Liquid: theme settings, then the token region `core/tokens` of `assets/ripple.css`); after editing a token MUST run `npx __PKG__ upgrade`, which regenerates `props.css` and `theme.css`; any element that sets a dial MUST also carry `data-scheme="<name>"`; MUST NOT write hex, rgb or oklch values in component CSS or markup; body text contrast MUST be at least 4.5:1; MUST NOT rename a token.
+- `## Steps`: (1) Decide which dials change. (2) Edit them. (3) For a dark or custom scheme add a `[data-scheme="<name>"]` block. (4) `npx __PKG__ upgrade` (regenerates the derived CSS; the checker reports stale derived CSS as RP508). (5) Check contrast: `npx __PKG__ check --browser --url <url> --rule RP609`. (6) Look at home, product and cart at three widths.
 - `## Dials`: table of the ten dials of D-026 with default and effect.
 - `## Colour roles`: the role names of D-027 in one table with "used for"; the note that the red role is always `destructive`.
-- `## Scales`: how to change breakpoints, space steps, type ratio, radius (edit `tokens.css`; `props.css` must be regenerated only when breakpoints or space steps change, with the command named in `03-styling-and-tokens.md`; names never change).
-- `## Liquid theme settings`: the setting ids of D-026 item 5 and the palette slot mapping.
+- `## Scales`: how to change breakpoints, space steps, type ratio, radius (edit `tokens.css`, then run `npx __PKG__ upgrade`; names never change).
+- `## Liquid theme settings`: the setting ids of D-026 item 5 (`rp_palette`, `rp_radius`, `rp_density`, `rp_text_scale`, `rp_font_body`, `rp_font_heading`), the palette slot mapping, and the ranges of D-098 (`rp_radius` 0 to 24 px, default 8; `rp_density` 75 to 125 percent, default 100; `rp_text_scale` 113 to 133, default 120; fonts default to the system font).
 - `## Do not`: raw colour in a `style` attribute; editing component CSS to change a colour; `@tailwindcss/browser`.
 - Defers to: none.
 - `## Done when`: no component CSS file is modified (`npx __PKG__ status` shows none as modified); contrast passes; fixed last item.
@@ -744,10 +767,10 @@ For each skill: the exact `description`, then the sections in order with the con
 - description: `Runs Ripple's checker and fixes what it reports. Use after any change to storefront UI, before saying the work is done, and whenever output contains a rule id such as RP101.`
 - Line budget: 200.
 - `## Rules`: fix the FIRST diagnostic, then run again; apply the `fix` line literally when it is replacement text; MUST NOT silence a rule by deleting the component or by replacing it with raw markup; MUST NOT edit library files to satisfy a rule; warnings do not block but MUST be read.
-- `## Steps`: (1) `npx __PKG__ check`. (2) Read the first diagnostic. (3) Apply `fix`. (4) Repeat until `No problems`. (5) With a running app: `npx __PKG__ check --browser --url <url>`. (6) Then the project's build and typecheck.
-- `## Reading a diagnostic`: the six-line format of 5.1 with the Button example of 5.1 and one sentence per line label.
+- `## Steps`: (1) `npx __PKG__ check`. (2) Read the first diagnostic. (3) Apply `fix`. (4) Repeat until the last line starts with `No problems`. (5) With a running app: `npx __PKG__ check --browser --url <url>`. (6) Then the project's build and typecheck.
+- `## Reading a diagnostic`: the text format and the example of `07-manifest-registry-cli.md` section 9.4.1, copied byte for byte, and one sentence per line label (`found`, `allowed`, `fix`, `why`, `docs`). A structure finding ends with the manifest rule id in square brackets, for example `[dialog-needs-title]`.
 - `## Commands`: table of `check` flags: `--json`, `--url`, `--browser`, `--rule <id>`, `--max-warnings <n>` (D-057).
-- `## Common fixes`: a table of exactly these rules with a one-line fix each: RP101, RP103, RP104, RP105, RP110, RP111, RP113, RP115, RP201, RP203, RP301, RP302, RP402, RP404, RP505, RP601. For any other id: `npx __PKG__ docs <RULE>`.
+- `## Common fixes`: a table of exactly these rules with a one-line fix each: RP101, RP103, RP104, RP105, RP110, RP111, RP113, RP115, RP201, RP203, RP301, RP302, RP308, RP309, RP402, RP404, RP505, RP508, RP601. For any other id: `npx __PKG__ docs <RULE>`.
 - `## Browser checks`: what `--browser` adds (upgrade stability, layout shift, console errors, no-JS flows, overflow, contrast) and that it needs Playwright.
 - Defers to: `hydrogen-smoke-test` (boundary sentence).
 - `## Done when`: fixed last item; `--browser` run clean when a URL is available.
@@ -767,38 +790,44 @@ For each skill: the exact `description`, then the sections in order with the con
 
 - description: `Rules for using Ripple in a Shopify Liquid theme built with blocks and partials. Use for any change to templates, layouts, blocks or snippets in a theme that has Ripple blocks.`
 - Line budget: 260.
-- `## Rules`: the twelve Liquid rules of 3.2 block C (same meaning; wording may be longer).
-- `## Steps`: (1) Read the theme's `AGENTS.md`. (2) Find the block: `blocks/<name>.liquid` `{% doc %}`. (3) Compose in a template or layout. (4) Declare partials for regions. (5) Add locale keys. (6) `npx __PKG__ check` (when a shell exists).
+- `## Rules`: the Liquid rules of 3.2 block C, merged into at most 12 items (S-7; same meaning, none dropped; rules 13 to 15 are merged into the items on params and files).
+- `## Steps`: (1) Read the theme's `AGENTS.md`. (2) Find the block: `blocks/<name>.liquid` `{% doc %}`. (3) Compose in a template or layout (both are blueprint files; a missing one is added with `npx __PKG__ add --blueprint <id>`). (4) For a region, write `{% partial '<region>' %}` in the template around the component's region snippet. (5) Add locale keys. (6) `npx __PKG__ check` (when a shell exists).
 - `## Three kinds of component`: block (one outlet), parts (one block per part, ids passed), resource (self-contained, body replaces default). One example each, taken from fixtures: Button, Dialog with DialogTitle, ProductCard.
-- `## Params`: snake_case mapping; booleans; quoted scale strings; `class` and `attributes`; reserved names that are never params (`true false nil blank empty content block section form settings for`).
-- `## Partials and regions`: fixed names; where they are declared; overlay root outside the region.
+- `## Params`: snake_case mapping; booleans; quoted scale strings; `class` and `attributes` (`{{ attributes }}` is printed last in the root's opening tag, so it cannot replace an attribute Ripple prints; a root printed by `{% form %}` accepts only `id` and `class`); reserved names that are never params (`true false nil blank empty content block section form settings for`) and their replacements (`form_id`, `cart_lines`, `rp_field`, `html_for`); the hook params `dialog` (openers) and `tooltip` (tooltip triggers). The sentence required by 6.3: "A wrong value renders the default silently. Run the checker."
+- `## Partials and regions`: fixed names; `{% partial %}` only in `templates/` and `layout/`, at most once per name per rendered page (so the layout omits the CartDrawer when `template.name == 'cart'`); the six region snippets (`rp-cart-lines-list`, `rp-cart-summary-totals`, `rp-product-gallery-media`, `rp-product-recommendations-list`, `rp-filters-groups`, `rp-predictive-search-results`), each rendered with the same params everywhere; blueprint-owned regions through `attributes: 'data-rp-region="<name>"'` on a layout block; overlay root outside the region.
+- `## Files Ripple owns`: `layout/theme.liquid`, `layout/password.liquid` and `templates/*.liquid` are blueprint files; `snippets/rp-head.liquid` prints, in this order, the `ripple.css` stylesheet tag, `{% render 'rp-tokens' %}`, the config element `<script type="application/json" id="rp-commerce">`, the inline commands polyfill and the `ripple.js` module script; `snippets/rp-import-map-entries.liquid` adds six entries (`ripple`, `ripple/tabs`, `ripple/tooltip`, `ripple/toast`, `ripple/shared`, `ripple/agent`) to the theme's one import map; theme code imports from `ripple` and never loads `@shopify/hydrogen` itself; the theme has no JavaScript module of its own.
+- `## Liquid subset`: the three scopes as a table (component files; templates and layouts; infrastructure snippets) with the tags and filters of each, copied from `06-bindings.md`; `block`, `partial`, `paginate` and `layout` are legal only in templates and layouts; the checker reports a tag or filter outside its scope.
 - `## Cart and product forms`: platform field names (Liquid column of D-043); quantity is absolute; no discount form without JavaScript.
 - `## Strings and settings`: locale keys `ripple.<component>.<key>`; schema labels `t:ripple.*`; at most three styling settings per block.
-- `## CSS`: `assets/ripple.css` is loaded before `styles.min.css`; utilities need the compiler; tokens as theme settings.
+- `## CSS`: `assets/ripple.css` is loaded before `styles.min.css`; utilities need the compiler; tokens as theme settings. Utilities name Ripple tokens through the `@theme reference` region in `config/styles.css` (`bg-primary`).
 - `## Which Hydrogen skills apply here`: the Liquid column of 4.3, by name.
 - Defers to: the theme's own `AGENTS.md` and `DESIGN.md`; `ripple-commerce`, `ripple-theming`.
 - `## Done when`: Theme Check clean (when available); no `{% block %}` under `blocks/` or `snippets/`; fixed last item.
+- Fallback (SPIKE-03): when the Canvas compiler rejects the `@theme reference` region, the last sentence of `## CSS` is replaced by: "Utilities name Ripple tokens with arbitrary values, for example `bg-(--color-primary)`."
+- Fallback (SPIKE-02): when `as` is not a legal block argument, every mention of the param `as` in this skill becomes `tag`.
 
 #### 4.5.12 `ripple-react`
 
 - description: `Rules for Ripple's React bindings: server rendering, hydration, events, controlled props and cart hooks. Use when writing or changing React components that render Ripple components in a React project.`
 - Line budget: 200.
-- `## Rules`: the seven React rules of 3.2 block C, plus: MUST NOT conditionally render a part that the binding always prints; MUST NOT pass `id={undefined}`; text children of a Ripple component MUST be a single string or elements, not adjacent expressions.
+- `## Rules`: the eight React rules of 3.2 block C, plus: MUST NOT conditionally render a part that the binding always prints; MUST NOT pass `id={undefined}`; text children of a Ripple component MUST be a single string or elements, not adjacent expressions.
 - `## Steps`: (1) Import the binding. (2) Give required ids. (3) Use `default*` props for initial state. (4) Add a callback only when the app needs the value. (5) Hydrate and confirm zero hydration warnings.
 - `## Events`: table event to callback (`openchange` to `onOpenChange`, `valuechange` to `onValueChange`, `indexchange` to `onIndexChange`, `action` to `onAction`), signature `(value, detail)`.
 - `## Controlled props`: the four of D-036 with one example (Dialog `open` + `onOpenChange`).
-- `## Cart data`: the hooks exported by `<pkg>/react` (names from `06-bindings.md`); React may render cart structure from store state.
+- `## Cart data`: `<pkg>/react` exports exactly `useElement`, `useCart(selector, serverValue)` and `useRegionHtml(name)`. `useCart` returns `serverValue` on the server, during hydration and when the store is unusable. `useRegionHtml` returns `null` until the first refresh publishes HTML for that region. React may render cart structure from store state; counts, error text and pending attributes are written by the elements, so the nodes that hold them are rendered with constant props. A `"use client"` file exports components only; mapping functions such as `toRippleCart` are imported from `./<id>.data`.
+- Fallback (SPIKE-10): when `useRegionHtml` cannot be hydrated without a mismatch, the `useRegionHtml` sentences are replaced by: "For predictive search and recommendations, cancel the `rp:refresh` event (`event.preventDefault()`) and render the results yourself."
 - `## Editing a binding`: rules R-1 to R-5 in one line each, and "use `useElement`; never attach listeners as props on a custom element".
 - Defers to: `hydrogen-storefront-client`, `hydrogen-routing`; `ripple-commerce`.
 - `## Done when`: no hydration warning in the console; server HTML equals client HTML for the changed route; fixed last item.
 
 #### 4.5.13 `ripple-remix`
 
-- description: `Rules for Ripple's Remix 3 bindings: server components, required ids, Frames as regions and document navigations. Use when writing or changing Remix 3 components that render Ripple components.`
+- description: `Rules for Ripple's Remix 3 bindings: server components, required ids, regions and document navigations. Use when writing or changing Remix 3 components that render Ripple components.`
 - Line budget: 160.
-- `## Rules`: the six Remix rules of 3.2 block C, plus: every `ui-*` and `rp-*` root keeps its `data-rmx-key`; RichText uses `innerHTML={unsafeHTML(html)}`.
-- `## Steps`: (1) Import the binding. (2) Give required ids. (3) Wrap each region in its named blocking Frame. (4) Mark cart forms and checkout links `data-rmx-document`. (5) Navigate between two pages and confirm open state and focus behave.
-- `## Regions as Frames`: region names and the Frame that reloads on `rp:refresh`.
+- `## Rules`: the seven Remix rules of 3.2 block C, plus: every `ui-*` and `rp-*` root keeps its `data-rmx-key`; RichText uses `innerHTML={unsafeHTML(html)}`; MUST NOT create a `<Frame>` for a region.
+- `## Steps`: (1) Import the binding. (2) Give required ids. (3) Leave each region as the plain element the binding prints (it carries `data-rp-region`). (4) Mark cart forms and checkout links `data-rmx-document`. (5) Navigate between two pages and confirm open state and focus behave.
+- `## Regions`: region names; a region is a plain element with `data-rp-region`, and after a cart action, a variant change or a filter change Ripple fetches the page and replaces each named region. No Frame, no client code. Then one paragraph headed "Opt-in": an app MAY pass `reloadFrames` (reload named Frames instead of fetching the document, used when a refresh has no URL) and `navigate` (used for variant and filter changes) to `configureCommerce`; with `reloadFrames` the app passes a `<Frame>` as the children of the region part. Neither is needed and no blueprint uses them.
+- Fallback (SPIKE-11): when the spike fails, the "Opt-in" paragraph is deleted from this skill and from guide `hosts-remix`.
 - `## Listening to events`: a 6-line example of `addEventListener("openchange", ...)` in the app's own client code.
 - Defers to: `remix` (boundary sentence); `ripple-commerce`.
 - `## Done when`: morph navigation keeps overlays closed and state attributes intact; fixed last item.
@@ -807,13 +836,13 @@ For each skill: the exact `description`, then the sections in order with the con
 
 - description: `Makes a Ripple storefront usable and safe for in-page AI agents through accessible names, the UI SDK agent bridge and confirmation marks. Use when asked for WebMCP, agent actions, an embedded shopping assistant, or agent safety on a storefront.`
 - Line budget: 160.
-- `## Rules`: every control has an accessible name; every action is a real form or link (this is what agents outside the page use); the bridge is opt-in and MUST NOT be loaded by default; controls that start checkout carry `data-agent-confirm` with a full sentence; password and payment fields carry `data-agent-secret`; an in-page agent MUST ask the person before any step whose `confirm` is set; only three `data-agent-*` attributes exist.
+- `## Rules`: every control has an accessible name; every action is a real form or link (this is what agents outside the page use); the bridge is opt-in and MUST NOT be loaded by default; controls that start checkout carry `data-agent-confirm` with a full sentence; password and payment fields carry `data-agent-secret`; an in-page agent MUST ask the person before any step whose `confirm` is set; there is no `checkout` action: an agent reaches checkout only by pressing the checkout control, which is gated by `data-agent-confirm`; only three `data-agent-*` attributes exist. The skill MUST contain the sentence of 7.3 item 6.
 - `## Steps`: (1) Checker clean (names: RP201, RP202). (2) Load the bridge (the per-host snippet of 7.4). (3) Create the agent with an `allow` that asks the person. (4) `registerTools` for WebMCP. (5) Run the agent test of 7.6.
 - `## What an agent can see`: table of 7.1.
 - `## Actions`: the action table of 7.2 by element.
-- `## Confirmation`: 7.3 in five lines.
+- `## Confirmation`: 7.3 in at most seven lines.
 - Defers to: `ui-sdk` (boundary sentence; `references/agent-ready.md`).
-- `## Done when`: `snapshot()` has no entry without a label among commerce and `ui-*` entries; a checkout step with no approval is refused; fixed last item.
+- `## Done when`: every commerce root on the page that declares actions has an entry in `snapshot()`; pressing the checkout control with no approval is refused; fixed last item.
 
 ### 4.6 Acceptance (skills)
 
@@ -825,123 +854,46 @@ For each skill: the exact `description`, then the sections in order with the con
 | K-23 | Each sidecar. | Deep-equals `{ hosts: [...] }` with the hosts of 4.2. |
 | K-24 | Grep all skills for `D-0\d\d`, `SPIKE-`, `src/`, `00-decisions`, and the literal placeholder package name. | Zero matches. |
 | K-25 | Every skill name written in backticks inside a skill that starts with `hydrogen-`, or equals `ui-sdk`, `remix`, `migrate-to-hydrogen-2026-10`. | Appears in the table of 4.3. Every `ripple-*` name appears in 4.2. |
-| K-26 | `ripple` skill "Rules" section. | Byte-equal to `UNIVERSAL_RULES` with `__PKG__`. |
+| K-26 | `ripple` skill "Rules" section. | Byte-equal to `UNIVERSAL_RULES` with `{command}` replaced by `npx __PKG__`. |
+| K-28 | Grep all skills for `data-rp-open=`, `named blocking Frame`, the regular expression `(?<!data-)orientation=`, `docs --rule`, `form:` used as a Liquid param (regular expression `[,{%]\s*form:\s`), and `references/`. | Zero matches, except `data-rp-open=` inside a fenced `html` block (rendered markup). |
 | K-27 | In a temp project per host run `ripple skills sync`. | `.claude/skills` and `.agents/skills` each contain exactly the skills whose sidecar lists that host (liquid: 12; react: 12; remix: 12; html: 11). |
 
 ---
 
-## 5. Checker output and rule text
+## 5. Checker rule text
 
-`ripple check` has four layers (D-059): S (source), H (rendered HTML), B (browser), P (project state). The engine, the per-rule detection algorithms, flags and exit codes are owned by `07-manifest-registry-cli.md`. This section fixes what an agent reads: the output format and the text of every rule. Rule ids are stable public API.
+`ripple check` has four layers (D-059): S (source), H (rendered HTML), B (browser), P (project state). `07-manifest-registry-cli.md` section 9 owns the engine, the rule ids, each rule's severity, layers, hosts and detection, the `fix` computation, flags, exit codes and the output format. This section owns the words an agent reads in each diagnostic: `problem`, `fix` and `why` for all 55 rule ids, and through them the rule pages of 2.6. Rule ids are stable public API.
 
 ### 5.1 Text format
 
-Each diagnostic is printed exactly as:
-
-```text
-<RULE> <severity>  <location>  <component>: <problem>
-  found:   <the exact source text or opening tag>
-  allowed: <the enumeration, or the expected structure>
-  fix:     <literal replacement text, or one imperative sentence>
-  why:     <one sentence>
-  docs:    npx <pkg> docs <component or RULE>
-```
-
-Rules:
-
-- **M-1** `<RULE>` is `RP` + three digits, or `TC:<CheckName>` for a Theme Check finding.
-- **M-2** `<severity>` is `error` or `warning`.
-- **M-3** Separators on the first line: one space after `<RULE>`; two spaces after `<severity>`; two spaces after `<location>`; `: ` after `<component>`.
-- **M-4** `<location>` is `<file>:<line>:<col>` (path relative to the project root, POSIX separators, 1-based line and column) for layers S, P and for layer H on files; `<url> <css selector>` for layer B and for layer H on HTML captured from a URL. A layer-P finding with no file uses the literal `project` as location.
-- **M-5** `<component>` is the component id (`button`). When no component applies it is the literal `project`.
-- **M-6** Detail lines are indented two spaces. Labels are padded with spaces to 9 characters including the colon: `found:   `, `allowed: `, `fix:     `, `why:     `, `docs:    `. Order is fixed. A line is omitted only when it has no value. A multi-line `found` is cut to its first line plus ` ...`. `found` and `allowed` longer than 200 characters are cut to 197 characters plus `...`.
-- **M-7** `docs` names the component when `<component>` is a component id, otherwise the rule id (`npx <pkg> docs RP505`).
-- **M-8** `fix` MUST be text that can replace `found` character for character whenever the checker can compute it; otherwise one imperative sentence.
-- **M-9** One diagnostic per root cause. Diagnostics are sorted by file (byte order), then line, then column, then rule id; layer-B diagnostics follow, sorted by URL then selector. A blank line separates diagnostics.
-- **M-10** At most 50 diagnostics are printed, then the line `... and <N> more`.
-- **M-11** The last line is `<N> problems in <M> files. Fix the first one and run \`npx <pkg> check\` again.` or `No problems in <M> files.` `<N>` counts errors and warnings. With `<N>` equal to 1 the word is `problem`; with `<M>` equal to 1 the word is `file`.
-- **M-12** No colour codes, no Unicode symbols, no spinner. Output is the same with and without a TTY.
-- **M-13** Text is English. Rule text is not localised.
-
-Reference output (from the prototype, `ripple/docs/research/spikes/agent-kit/`, and a golden file for test K-30):
-
-```text
-RP101 error  templates/index.liquid:3:3  button: unknown value "outlined" for prop "variant"
-  found:   variant: 'outlined'
-  allowed: primary | secondary | outline | ghost | link | destructive
-  fix:     variant: 'outline'
-  why:     Prop values are enumerated. An unknown value matches no CSS rule, so the component silently renders its default.
-  docs:    npx ripple-kit docs button
-
-RP201 error  out/page.html:5:1  icon-button: IconButton has no accessible name
-  found:   <button class="rp-icon-button" type="button" data-variant="ghost" data-size="md">
-  allowed: aria-label
-  fix:     add ariaLabel (Liquid: aria_label)
-  why:     Screen readers and agents find a control by its accessible name.
-  docs:    npx ripple-kit docs icon-button
-
-2 problems in 2 files. Fix the first one and run `npx ripple-kit check` again.
-```
+The text format is defined only in `07-manifest-registry-cli.md` section 9.4.1 (first line `<RULE> <severity>  <location>  <component>: <problem>`, with `<component>: ` omitted when the finding has no component; then the `found`, `allowed`, `fix`, `why` and `docs` lines; `docs` is `<command form> docs <RULE>`).
 
 ### 5.2 JSON format (`--json`)
 
-One object on stdout, nothing else:
-
-```json
-{
-  "version": 1,
-  "ok": false,
-  "counts": { "error": 2, "warning": 0 },
-  "files": 2,
-  "diagnostics": [
-    {
-      "rule": "RP101", "severity": "error", "layer": "S",
-      "file": "templates/index.liquid", "line": 3, "col": 3,
-      "url": null, "selector": null,
-      "component": "button",
-      "problem": "unknown value \"outlined\" for prop \"variant\"",
-      "found": "variant: 'outlined'",
-      "allowed": "primary | secondary | outline | ghost | link | destructive",
-      "fix": "variant: 'outline'",
-      "why": "Prop values are enumerated. An unknown value matches no CSS rule, so the component silently renders its default.",
-      "docs": "npx ripple-kit docs button"
-    }
-  ]
-}
-```
-
-- Every key is always present; a missing value is `null`. `ok` is `true` when `counts.error` is 0 and warnings do not exceed `--max-warnings`.
-- `diagnostics` is NOT truncated to 50 in JSON.
-- The eval harness (section 8) and the `ripple-check-and-fix` skill read only this shape.
+The JSON format is the `Report` object defined only in `07-manifest-registry-cli.md` sections 9.3 and 9.4.2; the eval harness (section 8) and the `ripple-check-and-fix` skill read only that shape.
 
 ### 5.3 How `fix` is computed
 
-1. Enumerations: the allowed value with the smallest Levenshtein distance to the found value, when the distance is at most 2 (ties: the earlier value in manifest order); otherwise the prop's default; when the prop has no default, the first allowed value.
-2. Numeric scales (space steps, columns): the scale value numerically nearest to the found number; ties go to the smaller.
-3. Named size scales (`sm md lg`, the text sizes): when the found value is a known size word outside the set (`xs`, `xl`, `2xl`, `3xl`), the nearest end of the scale; otherwise rule 1.
-4. Duplicate breakpoint in a responsive string: keep the LAST token for that breakpoint and delete the earlier ones.
-5. Unknown breakpoint prefix: the breakpoint with Levenshtein distance at most 1 (`medium:` has none; `mdd:` gives `md:`); otherwise delete the token.
-6. Synonym table, applied BEFORE rule 1. When the found value is a key, the fix is the mapped value if the prop allows it:
+The algorithm is defined only in `07-manifest-registry-cli.md` section 9.5.1; in the tables of 5.5 the word "computed" in a `fix` cell means "the text that algorithm returns".
 
-   | Found | Fix |
-   |---|---|
-   | `critical`, `danger`, `error`, `red` | `destructive` |
-   | `default`, `filled`, `solid` (Button `variant`) | `primary` |
-   | `outlined`, `bordered` | `outline` |
-   | `text`, `plain` (Button `variant`) | `ghost` |
-   | `small`, `s` | `sm` |
-   | `medium`, `m`, `default` (size) | `md` |
-   | `large`, `l` | `lg` |
-   | `left` | `start` |
-   | `right` | `end` |
-   | `middle` | `center` |
-   | `space-between` | `between` |
-   | `vertical` (prop `direction`) | `column` |
-   | `horizontal` (prop `direction`) | `row` |
-   | `grey`, `gray`, `subtle` (prop `tone`) | `muted` |
+One input to that algorithm is word data and is kept here: the synonym table. `07-manifest-registry-cli.md` section 9.5.1 does not contain it today; it MUST gain one step, placed before its rule 1: "when the found value is a key of `FIX_SYNONYMS` and the mapped value is allowed for the prop, the fix is the mapped value". The table is the constant `FIX_SYNONYMS` in `src/check/report.ts`. Additions to it are decided by eval data (section 8.13, rule G-1).
 
-   The table is the constant `FIX_SYNONYMS` in `src/check/report.ts`. Additions to it are decided by eval data (section 8.13, rule G-1).
-7. A fix in a Liquid source location is written in Liquid syntax (`variant: 'outline'`); a fix in an HTML location is written as the attribute (`data-variant="outline"`).
+| Found | Fix |
+|---|---|
+| `critical`, `danger`, `error`, `red` | `destructive` |
+| `default`, `filled`, `solid` (Button `variant`) | `primary` |
+| `outlined`, `bordered` | `outline` |
+| `text`, `plain` (Button `variant`) | `ghost` |
+| `small`, `s` | `sm` |
+| `medium`, `m`, `default` (prop `size`) | `md` |
+| `large`, `l` | `lg` |
+| `left` | `start` |
+| `right` | `end` |
+| `middle` | `center` |
+| `space-between` | `between` |
+| `vertical` (prop `direction`) | `column` |
+| `horizontal` (prop `direction`) | `row` |
+| `grey`, `gray`, `subtle` (prop `tone`) | `muted` |
 
 ### 5.4 Placeholders
 
@@ -949,9 +901,31 @@ Rule text uses `{name}` placeholders filled by the rule: `{prop}`, `{value}`, `{
 
 ### 5.5 Rule registry
 
-Each rule is one file `src/check/rules/<RULE>.ts` (ledger 5.1) that exports its detection function (owned by `07-manifest-registry-cli.md`) and `export const meta: RuleMeta` (type in 2.1). The table below is the normative content of `meta.severity`, `meta.layers`, `meta.problem`, `meta.fix`, `meta.why`. `meta.title` is the "Reports" cell. `allowed` is computed by the rule (the enumeration, or the expected structure) unless stated. Ids not listed (RP106 to RP109, RP119 to RP199, RP205 to RP299, RP308 to RP319, RP322 to RP399, RP407 to RP499, RP507 to RP509, RP513 to RP599, RP610 to RP699) are unassigned and reserved.
+Each rule is one file `src/check/rules/<RULE>.ts` (ledger 5.1). Besides the `Rule` object with `meta: RuleMeta` that `07-manifest-registry-cli.md` section 9.3 requires, the file exports the rule's words:
 
-Rewrites required by D-059 are applied: RP204 no longer names Menu; RP303 no longer names a drawer viewport; RP320 no longer names Shop Pay. RP111 also reports a prohibited `ui-*` tag (D-022). RP118 is the rule added by the ledger.
+```ts
+// src/check/report.ts
+export interface RuleText {
+  problem: string;   // the `problem` cell; several forms are separated by " | " in the order of the table
+  fix: string;       // the `fix` cell; the literal string "computed" when 07 section 9.5.1 computes it
+  bad: string;       // smallest example that triggers the rule (shown in the rule page)
+  good: string;      // the same example, fixed
+}
+
+// src/check/rules/RP306.ts (shape of every rule file's second export)
+export const text: RuleText = {
+  problem: 'checkout button has no name="checkout"',
+  fix: 'name="checkout"',
+  bad: '<button class="rp-button rp-checkout-button" type="submit">Check out</button>',
+  good: '<button class="rp-button rp-checkout-button" type="submit" name="checkout">Check out</button>',
+};
+```
+
+The table below is the normative content of `text.problem`, `text.fix` and `meta.why`; `meta.title` is the "Reports" cell. The "Sev" and "Layers" columns are COPIES of `07-manifest-registry-cli.md` section 9.6, shown for reading; when they differ, section 9.6 wins and this table is corrected. `allowed` is computed by the rule (the enumeration, or the expected structure). A rule builds the `problem` and `fix` strings of a diagnostic by filling the placeholders of 5.4 in these texts; it MUST NOT print wording that is not in this table. Every command inside a `fix` is printed in the command form (section 0).
+
+The V1 set is exactly 55 ids (D-059): RP101 to RP105, RP110 to RP118, RP201 to RP204, RP301 to RP309, RP320, RP321, RP401 to RP406, RP501 to RP508, RP510 to RP512, RP601 to RP609. Every other number is reserved; `RP000` (internal error) and `RP509` are reserved by `07-manifest-registry-cli.md` and have no text here. No component document may introduce an `RPnnn` id.
+
+Rewrites required by D-059 are applied: RP204 does not name Menu; RP303 does not name a drawer viewport; RP320 does not name Shop Pay. RP111 also reports a prohibited `ui-*` tag (D-022). RP118 is the rule added by the ledger; RP308, RP309, RP507 and RP508 are the rules added by the reconciliation (D-102).
 
 Usage and structure:
 
@@ -959,18 +933,18 @@ Usage and structure:
 |---|---|---|---|---|---|---|
 | RP101 | error | S (Liquid), H | A prop value outside its enumeration or scale | `unknown value "{value}" for prop "{prop}"` | computed (5.3) | Prop values are enumerated. An unknown value matches no CSS rule, so the component silently renders its default. |
 | RP102 | error | S (Liquid) | An argument that is not a prop | `unknown argument "{name}"` | `remove {name}, or use one of the props listed in allowed` | A block ignores arguments it does not declare, so the value has no effect. |
-| RP103 | error | S, H | Responsive value grammar | one of: `two values for breakpoint "{bp}" in prop "{prop}"`; `unknown breakpoint "{bp}" in prop "{prop}"`; `prop "{prop}" must be a quoted string in Liquid` | computed (5.3 rules 4, 5); for the third form: `{prop}: '{value}'` | A responsive value is one string of tokens; a token that matches no rule is ignored by the CSS. |
-| RP104 | error | S, H | A required prop or required id is missing | `{Component} requires "{prop}"` | `add {prop}` (for `id`: `add id: a unique, stable id such as "size-guide"`) | Parts are linked by ids derived from this value; without it they cannot be connected. |
+| RP103 | error | S, H | Responsive value grammar | one of: `two values for breakpoint "{bp}" in prop "{prop}"`; `unknown breakpoint "{bp}" in prop "{prop}"`; `prop "{prop}" must be a quoted string in Liquid` | computed (the duplicate-breakpoint and unknown-breakpoint steps of `07-manifest-registry-cli.md` section 9.5.1); for the third form: `{prop}: '{value}'` | A responsive value is one string of tokens; a token that matches no rule is ignored by the CSS. |
+| RP104 | error | S, H | A required prop or required id is missing or malformed | `{Component} requires "{prop}"` or `id "{id}" is not a valid id` | `add {prop}` (for `id`: `add id: a unique, stable id such as "size-guide"`); for a malformed id: `start with a letter; use only letters, digits, "-" and "_"` | Parts are linked by ids derived from this value; without it they cannot be connected. |
 | RP105 | error | S (Liquid) | A boolean prop given a string | `prop "{prop}" is a boolean but got the string {value}` | `{prop}: true` (or `remove {prop}` when the string is `'false'`) | In Liquid the string 'false' is truthy, so the prop would turn on. |
 | RP110 | error | H | A Ripple root class on the wrong element | `class "{class}" on <{tag}>` | `use the {Component} component, or remove the class` | Component CSS and scripts expect the documented element; other elements lose behaviour and semantics. |
 | RP111 | error | S, H | An unknown `rp-` class or tag, or a prohibited `ui-*` tag | `"{name}" is not a Ripple class or element` (prohibited ui tag: `<{tag}> is not allowed; Ripple uses native controls instead`) | nearest manifest name by Levenshtein distance at most 2 as `use "{name}"`; else `remove it; names starting with rp- are reserved for Ripple` (prohibited ui tag: `use the {Component} component`) | Names starting with rp- are reserved; an unknown one matches no CSS and no element. |
-| RP112 | error | H, P | A custom element tag whose component is not installed | `<{tag}> is used but {Component} is not installed` | `npx <pkg> add {component}` | Nothing defines the element, so it stays inert. |
-| RP113 | error | H | A structure rule of the manifest is violated | the manifest `rules[].message` | the manifest `rules[].fix` | the manifest `rules[].why`; default: The component's script and CSS depend on this structure. |
+| RP112 | error | H, P | A custom element tag whose component is not installed | `<{tag}> is used but {Component} is not installed` | `<command form> add {component}` | Nothing defines the element, so it stays inert. |
+| RP113 | error | H | A structure rule of the manifest (`rules[]`) is violated | the manifest `rules[].message`, followed by one space and the rule id in square brackets: `{value} [{name}]`, for example `Dialog needs a DialogTitle [dialog-needs-title]` | the manifest `rules[].fix` | The component's script and CSS depend on this structure. |
 | RP114 | error | H | Duplicate or mismatched ids | `duplicate id "{id}"` or `part id "{id}" does not match its root; expected "{value}"` | `rename one of them` or `id="{value}"` | Parts find each other by id; a duplicate or wrong id connects the wrong elements. |
-| RP115 | error | H | A hand-rolled ARIA widget | `role="{role}" outside a Ripple component` | `use the {Component} component` (mapping: `dialog`, `alertdialog` to Dialog; `tablist` to Tabs; `switch` to Switch; `radiogroup` to RadioGroup; `slider` to Input with `type="range"`; `menu`, `listbox`, `combobox` to Popover with links or Select; `toolbar`, `tree`: `remove the role and use buttons or links in a list`) | Widget roles promise keyboard behaviour that hand-written markup does not provide. |
+| RP115 | error | H | A hand-rolled ARIA widget | `role="{role}" outside a Ripple component` | `use the {Component} component` (mapping: `dialog`, `alertdialog` to Dialog; `tablist` to Tabs; `radiogroup` to RadioGroup; `menu`, `menubar` to Popover with links; `listbox`, `combobox` to Select; for `slider`: `remove the role and use a native <input type="range">`; for `toolbar`, `tree`: `remove the role and use buttons or links in a list`) | Widget roles promise keyboard behaviour that hand-written markup does not provide. |
 | RP116 | warning | S, H | A raw colour on or inside a Ripple root | `raw colour "{value}"` | `use a token, for example var(--color-primary)` | Raw colours ignore schemes and theme settings. |
 | RP117 | warning | S | A forbidden import | `import of "{name}"` | `import from "<pkg>" or its documented entry points` | Internal and React UI SDK entries print different markup and can load a second copy of the kernel. |
-| RP118 | error | H | `data-state`, or an unknown `data-rp-*` attribute | `attribute "{attr}" is not part of the Ripple contract` | for `data-state`: `use a state attribute such as data-open or aria-expanded`; else nearest known `data-rp-*` name as `use {attr}`, else `remove {attr}` | Scripts and tests read a fixed list of attributes; others are ignored. |
+| RP118 | error | H | `data-state`, an unknown `data-rp-*` attribute, or an unknown value of `data-rp-field` or `data-rp-js` | `attribute "{attr}" is not part of the Ripple contract` or `value "{value}" is not allowed for {attr}` | for `data-state`: `use a state attribute such as data-open or aria-expanded`; else nearest known `data-rp-*` name as `use {attr}`, else `remove {attr}`; for a value: computed (nearest allowed value) | Scripts and tests read a fixed list of attributes; others are ignored. |
 
 Accessibility (static):
 
@@ -986,12 +960,14 @@ Progressive enhancement, commerce, agent attributes:
 | Id | Sev | Layers | Reports | `problem` | `fix` | `why` |
 |---|---|---|---|---|---|---|
 | RP301 | error | H | A button that does nothing without JavaScript inside a commerce root | `button does nothing without JavaScript` | `put it in a <form>, or add commandfor / popovertarget, or mark it data-rp-js="inflow" if it only enhances` | Commerce actions must work as form posts when scripts do not load. |
-| RP302 | error | H | An opener that is not a link although a page exists | `{Component} opener is not a link` | `<a href="{value}" data-rp-open="{id}">` | Without JavaScript the link still reaches the page. |
-| RP303 | error | H (server HTML) | Wrong initial hidden state | one of: `unselected tab panel is not hidden`; `<dialog> is printed open`; `error message is not hidden` | `add hidden` / `remove open; use defaultOpen` / `add hidden` | The server prints the closed state so that nothing flashes or shifts when scripts load. |
+| RP302 | error | H | An opener that is not a link although a page exists | `{Component} opener is not a link` | `use a Link with href="{value}" and dialog="{id}"; it prints <a href="{value}" data-rp-open="{id}">` | Without JavaScript the link still reaches the page. |
+| RP303 | error | H (server HTML) | Wrong initial hidden state | one of: `unselected tab panel is not hidden`; `<dialog> is printed open`; `empty error or status message is not hidden`; `a no-JavaScript fallback control is hidden` | `add hidden` / `remove open; use defaultOpen (Liquid: default_open)` / `add hidden` / `remove hidden` | The server prints the closed state so that nothing flashes or shifts when scripts load. |
 | RP304 | warning | H | A component that must work without JavaScript inside one that does not | `{Component} is inside {name}, which needs JavaScript` | `move it outside, or use Accordion instead of Tabs` | Content inside a JavaScript-only container is unreachable when scripts do not load. |
-| RP305 | error | H | Wrong form field names for the backend | one of: `product form has no input named "id"`; `add form has no "merchandiseId" field`; `first submit button of a cart line form must be name="intent" value="set" hidden` | `add the field shown in allowed` | The cart endpoint reads exactly these field names. |
+| RP305 | error | H | Wrong form field names for the backend | one of: `product form has no input named "id"`; `add form has no "merchandiseId" field`; `first submit button of a cart line form must be name="intent" value="set" hidden`; `first submit button of the cart form must be name="update"`; `{n} updates[] inputs for {max} cart lines` | `add the field shown in allowed` (for the last form: `print one updates[] input per cart line, in line order`) | The cart endpoint reads exactly these field names. |
 | RP306 | error | H (Liquid) | A checkout submitter without `name="checkout"` | `checkout button has no name="checkout"` | `name="checkout"` | The platform's cart form goes to checkout only for a submitter with this name. |
 | RP307 | error | S (Liquid) | A second configuration of `Shopify.actions.updateCart`, or one of the two base-theme files | `{file} configures Shopify.actions.updateCart` | `delete {file}` (for an inline call: `remove the configure call`) | Only one configuration takes effect; a second one disables Ripple's cart. |
+| RP308 | warning / error | H | A refresh that names no region on the page (warning); an `rp-cart` inside the region it refreshes (error) | `region "{region}" is named in data-rp-refresh but is not on this page` or `rp-cart is inside region "{region}", which it refreshes` | `add an element with data-rp-region="{region}" (the component's region part), or remove "{region}" from the refresh prop` / `move the {Component} root outside the region; only its region part belongs inside` | A refresh replaces the region's markup: a region that is absent cannot update, and an element inside its own region is destroyed while it works. Only `rp-cart` roots are checked for containment; an `rp-live` root (VariantPicker, SortSelect, FilterChips) MAY be inside the region it refreshes. |
+| RP309 | error | H | Commerce elements on a page with no commerce configuration | `<{tag}> is on a page with no commerce configuration` | `print <script type="application/json" id="rp-commerce"> in <head> before ripple.js (Liquid: {% render 'rp-head' %}; other hosts: the layout blueprint), or call configureCommerce(options) before the first commerce element connects` | Without its options the commerce runtime cannot find the cart endpoint or the cart drawer, so cart forms fall back to full page loads. |
 | RP320 | error | H | An irreversible control without `data-agent-confirm` | `{Component} has no data-agent-confirm` | `data-agent-confirm="Goes to checkout with this cart"` | In-page agents must ask a person before actions that cannot be undone. Applies to the controls listed in manifest `agent.confirm` (CheckoutButton). |
 | RP321 | warning | H | An unknown `data-agent-*` attribute | `attribute "{attr}" is not an agent attribute` | `use data-agent-confirm, data-agent-secret or data-agent-hidden` | The agent bridge reads only these three. |
 
@@ -1000,22 +976,24 @@ Liquid source:
 | Id | Sev | Layers | Reports | `problem` | `fix` | `why` |
 |---|---|---|---|---|---|---|
 | RP401 | error | S | `{% block %}` inside `blocks/` or `snippets/` | `{% block %} in {file}` | `{% render 'rp-{name}' %}` when that snippet exists; else `move the block call to a template or layout` | The platform allows block calls only in templates and layouts. |
-| RP402 | error | S, P | A block call with no block file | `block "{name}" does not exist` | `npx <pkg> add {name}` when `{name}` is a manifest block; else nearest block name as `'{name}'` | The call renders nothing. |
-| RP403 | error | S | A region name with no partial, or a partial declared twice | `region "{region}" has no {% partial %}` or `partial "{region}" is declared twice` | `add {% partial '{region}' %} around the region in the template` / `remove one declaration` | A refresh fetches a partial by name; a missing or duplicate name cannot be refreshed. |
+| RP402 | error | S, P | A block call with no block file | `block "{name}" does not exist` | `<command form> add {name}` when `{name}` is a manifest block; else nearest block name as `'{name}'` | The call renders nothing. |
+| RP403 | error | S | A region name with no partial, or a partial declared twice | `region "{region}" has no {% partial %}` or `partial "{region}" is declared twice` | `add {% partial '{region}' %} around the region snippet in the template or layout` / `remove one declaration` | A refresh fetches a partial by name; a missing or duplicate name cannot be refreshed. |
 | RP404 | error | S | An overlay root inside the partial it refreshes | `{Component} root is inside partial "{region}"` | `move the partial inside the {Component} body` | A refresh replaces the partial's markup, which would close the overlay. |
 | RP405 | error | P | Block file budget exceeded | `{n} block files; limit {max}` | `remove unused blocks` | The platform limits a theme to 300 block files; Ripple may use 150. |
-| RP406 | error / warning | P | `AGENTS.md` too large (error); Ripple section missing or stale (warning) | `AGENTS.md is {n} bytes; limit 50000` or `the Ripple section of AGENTS.md is missing or out of date` | `shorten the text outside the Ripple markers` / `npx <pkg> add` | Shopify stores at most 50 kB; the section is the only guide an agent has in the theme editor. |
+| RP406 | error / warning | P | `AGENTS.md` too large (error); Ripple section missing or stale (warning) | `AGENTS.md is {n} bytes; limit 50000` or `the Ripple section of AGENTS.md is missing or out of date` | `shorten the text outside the Ripple markers` / `<command form> upgrade` | Shopify stores at most 50 kB; the section is the only guide an agent has in the theme editor. |
 
 Project state:
 
 | Id | Sev | Layers | Reports | `problem` | `fix` | `why` |
 |---|---|---|---|---|---|---|
-| RP501 | error | P | A missing dependency or file of an installed component | `{Component} needs {name}, which is not installed` | `npx <pkg> add {name}` | Components embed each other; a missing file renders nothing. |
-| RP502 | warning | P | Files from more than one package version | `{n} files are from version {version}` | `npx <pkg> upgrade` | Mixed versions can disagree about the contract. |
+| RP501 | error | P | A missing dependency or file of an installed component | `{Component} needs {name}, which is not installed` | `<command form> add {name}` | Components embed each other; a missing file renders nothing. |
+| RP502 | warning | P | Installed files older than the running package (file state `outdated`) | `{n} installed files are older than the package` | `<command form> upgrade` | Mixed versions can disagree about the contract. |
 | RP503 | error | P | More than one copy or a wrong version of a pinned package | `{n} copies of {name} are installed` or `{name} is {version}; expected {value}` | `install exactly {name}@{value} and remove the duplicate` | Two copies of the kernel or of Hydrogen do not share state. |
 | RP504 | error | P | A file at a registry path with no trailer | `{file} has no Ripple trailer` | `rename your file, or restore the trailer line` | Without the trailer Ripple cannot tell its file from yours and will not upgrade it. |
-| RP505 | error | S | CSS layer order | `the layer statement is not the first statement` or `ripple.css is imported after tailwindcss` | `move @import "./ripple.css" to the first line of the CSS entry` | Layer order decides that utilities override components; it is fixed by the first statement. |
-| RP506 | warning | P | Skills out of date | `skills are from version {version}` | `npx <pkg> skills sync` | Old skills describe an old API. |
+| RP505 | error | S | CSS layer order | one of: `the layer statement is not the first statement`; `ripple.css is imported after tailwindcss`; `theme.css is imported before tailwindcss`; `@tailwindcss/browser is used` | `import ripple.css first, then tailwindcss, then theme.css` (for the last form: `remove @tailwindcss/browser; compile Tailwind in the project's build`) | Layer order decides that utilities override components; it is fixed by the first statement. |
+| RP506 | warning | P | Skills out of date | `skills are from version {version}` | `<command form> skills sync` | Old skills describe an old API. |
+| RP507 | error | H | More than one Ripple runtime on the page | `{n} Ripple runtimes are loaded: {value}` | `load exactly one of ripple.js, ripple.elements.js, or the bundled imports` | Two runtimes define each element twice and can load a second copy of the kernel, which does not share state with the first. |
+| RP508 | warning | P | `props.css` or `theme.css` older than `tokens.css` | `{file} is older than tokens.css` | `<command form> upgrade` | props.css and theme.css are derived from tokens.css; a stale copy applies the old scales and breakpoints. |
 | RP510 | error | P | A patch that `init` could not apply is absent | `{file} is missing {value}` | `add the line {value}` | Without this line Ripple's styles or scripts do not load. |
 | RP511 | error | S | Merge conflict markers | `unresolved merge conflict` | `keep both changes where possible, then delete the marker lines` | A file with conflict markers does not parse. |
 | RP512 | warning | P | Two files with the same trailer id | `{file} duplicates {name}` | `delete the copy you do not use` | Only one of them will be upgraded. |
@@ -1027,35 +1005,38 @@ Browser (`--browser`):
 | RP601 | error | B | Markup changed when scripts loaded | `{Component} markup changed on upgrade: {attr}` | `print {attr} on the server, as in the component's reference HTML` | Server HTML must already be the final markup, or hydration and layout break. |
 | RP602 | error | B | Layout shift on upgrade | `layout shifted by {value} when scripts loaded` | `give the element its final size in server HTML` | Content must not move after first paint. |
 | RP603 | error | B | A console error, page error, failed same-origin request or hydration warning | `{value}` (the first line of the message) | `fix the error shown in found` | A storefront page must load cleanly. |
-| RP604 | error | B | A custom element never defined | `<{tag}> was not defined after 2 seconds` | `load ripple.js once, or npx <pkg> add {component}` | An undefined element has no behaviour. |
+| RP604 | error | B | A custom element never defined | `<{tag}> was not defined after 2 seconds` | `load ripple.js once, or <command form> add {component}` | An undefined element has no behaviour. |
 | RP605 | error | B | An ARIA pattern violation | `{Component}: {value}` (one problem reported by `checkPattern`) | `use the component's reference HTML unchanged` | The pattern defines the roles, states and keys users rely on. |
 | RP606 | error | B | A no-JavaScript flow fails | `{Component} does not work with JavaScript off: {value}` | `make the action a form post or a link` | The storefront must work when scripts do not load. |
-| RP607 | warning | B | Agent snapshot gaps | `{Component} has no label in the agent snapshot` or `{Component} is missing from the agent snapshot` | `add an accessible name` / `load <pkg>/commerce before creating the agent` | In-page agents address components by label. |
+| RP607 | warning | B | Agent snapshot gaps, for roots that declare actions | `{Component} is missing from the agent snapshot` or `{n} {Component} roots cannot be told apart in the agent snapshot` | `load <pkg>/commerce (or ripple.js) before creating the agent` / `add ariaLabel (Liquid: aria_label) to each` | In-page agents address a component by its snapshot entry; a missing or ambiguous entry cannot be addressed. |
 | RP608 | error | B | Horizontal overflow | `page is {value}px wider than the viewport at {n}px` | `remove the fixed width, or use the responsive props` | Horizontal scrolling hides content on phones. |
-| RP609 | warning | B | Low text contrast | `contrast {value}:1 is below {max}:1` | `change the token, not the component` | Text must be readable (WCAG 2.2 AA). |
+| RP609 | warning | B | Low text contrast, including a dial colour outside sRGB that yields an unreadable foreground | `contrast {value}:1 is below {max}:1` | `change the token, not the component` | Text must be readable (WCAG 2.2 AA). |
 
 Notes:
 
-- RP607 "no label" applies only to snapshot entries of components whose manifest `kind` is `commerce` or `ui` (section 7.5).
-- Theme Check findings are printed in the same format with `<RULE>` = `TC:<CheckName>`; `why` and `docs` lines are omitted; `fix` is omitted unless Theme Check supplies one. When Theme Check ran, RP102 and RP401 are suppressed (they duplicate `UnrecognizedBlockArguments` and `ValidBlockTagPlacement`).
-- `bad` and `good` examples for `docs/rules/<RULE>.md` are written in each rule file. They MUST be the smallest example that triggers the rule and the same example fixed, and each rule file's unit test MUST assert that `bad` produces exactly one diagnostic of this rule and `good` produces none.
+- RP113 reports the component-specific structure rules, which are manifest `rules[]` entries with kebab-case ids (D-059). Their `message` and `fix` are written by the owning component document; this document owns only the bracket form and the `why`. Eval task T08 depends on two of them: `variant-picker-outside-form` (`11-components-commerce.md`) and `dialog-needs-title` (`10-components-interactive.md`).
+- RP607 applies only to roots whose manifest `agent.actions` is non-empty (D-095). It never reports a missing label on `rp-dialog`, `rp-quantity` or `rp-navigation-menu` (section 7.5).
+- RP308 and RP406 have two severities; which finding has which is stated in the "Reports" cell.
+- Theme Check findings (`TC:<CheckName>`) carry Theme Check's own message. This document supplies no text for them; how they are merged and printed is `07-manifest-registry-cli.md` section 9.5.4.
+- `bad` and `good` examples for `docs/rules/<RULE>.md` are written in each rule file's `text` export. They MUST be the smallest example that triggers the rule and the same example fixed, and each rule file's unit test MUST assert that `bad` produces exactly one diagnostic of this rule and `good` produces none.
 
 ### 5.6 Acceptance (checker text)
 
 | Id | Test | Pass condition |
 |---|---|---|
-| K-30 | Golden file `src/check/report.test.ts`: format the two diagnostics of 5.1 with package name `ripple-kit`. | Output is byte-equal to the reference block of 5.1. |
-| K-31 | For every file `src/check/rules/RP*.ts`. | `meta.id` equals the file name; `severity`, `layers`, `problem`, `fix`, `why` equal the tables of 5.5 (the test reads this document's tables from a JSON copy, `src/check/rules/meta.expected.json`, generated once from 5.5 and committed). |
-| K-32 | The set of rule files. | Equals exactly the 51 ids of 5.5: RP101 to RP105, RP110 to RP118, RP201 to RP204, RP301 to RP307, RP320, RP321, RP401 to RP406, RP501 to RP506, RP510 to RP512, RP601 to RP609. |
-| K-33 | `fix` computation unit tests. | `outlined` gives `outline`; `xl` on `sm md lg` gives `lg`; `critical` on `tone` gives `destructive`; `gap: '99'` gives `gap: '32'`; `gap: '2 md:4 md:6'` gives `gap: '2 md:6'`; `gap: '2 mdd:6'` gives `gap: '2 md:6'`; `align: 'middle'` gives `align: 'center'`. |
+| K-30 | Retired: the output-format golden test belongs to `07-manifest-registry-cli.md` section 12. The id is not reused. | Not applicable. |
+| K-31 | For every file `src/check/rules/RP*.ts`. | `meta.id` equals the file name; `text.problem`, `text.fix` and `meta.why` equal the tables of 5.5 (the test reads a JSON copy of those three columns, `src/check/rules/meta.expected.json`, written by hand from 5.5 and committed: an object keyed by rule id with the keys `problem`, `fix`, `why`). Severity and layers are tested by `07-manifest-registry-cli.md`. |
+| K-32 | The set of rule files (and the key set of `meta.expected.json`). | Equals exactly the 55 ids of D-059: RP101 to RP105, RP110 to RP118, RP201 to RP204, RP301 to RP309, RP320, RP321, RP401 to RP406, RP501 to RP508, RP510 to RP512, RP601 to RP609. |
+| K-33 | `FIX_SYNONYMS` unit tests (the other `fix` cases are tested by `07-manifest-registry-cli.md`). | `critical` on `tone` gives `destructive`; `align: 'middle'` gives `align: 'center'`; `justify: 'space-between'` gives `justify: 'between'`; `size: 'large'` gives `size: 'lg'`; `variant: 'solid'` on Button gives `variant: 'primary'`; `variant: 'solid'` on Badge (where `solid` is allowed) produces no finding. |
 | K-34 | Each rule's `bad` / `good`. | As stated in the last note of 5.5. |
-| K-35 | Run `check --json` on the T08 start state (section 8.6). | Valid JSON of shape 5.2; `counts.error` is 9 and `counts.warning` is 1; the rule ids are those listed for T08 in 8.6. |
+| K-35 | Run `check --json` on the T08 start state (section 8.6). | Valid JSON of the `Report` shape (`07-manifest-registry-cli.md` section 9.3); `counts.error` is 9 and `counts.warning` is 1; the rule ids are those listed for T08 in 8.6; the two RP113 findings end with `[variant-picker-outside-form]` and `[dialog-needs-title]`. |
+| K-36 | Scan every `text.fix` and every `fix` string a rule module builds. | None contains `npx ` followed by the package name; each command is produced by the command-form helper of `07-manifest-registry-cli.md` section 7.1 rule 12. |
 
 ---
 
 ## 6. Development-mode warnings
 
-A development-mode warning is a `console` message that Ripple library code prints to help a coding agent while the project runs. The checker is the primary tool; warnings exist so that a mistake is visible in the terminal or browser console of a running dev server before the agent runs `check`.
+There is no in-page development overlay and no development-only browser file (D-060). A development-mode warning is a `console` message that Ripple library code prints to help a coding agent while the project runs. The checker is the primary tool; warnings exist so that a mistake is visible in the terminal or browser console of a running dev server before the agent runs `check`.
 
 ### 6.1 Invariants (apply to every message Ripple prints, in any mode)
 
@@ -1063,7 +1044,7 @@ A development-mode warning is a `console` message that Ripple library code print
 - **W-2** Library code MUST NOT throw because of a usage mistake. A mistake degrades to native behaviour (forms post, links navigate) and prints a message.
 - **W-3** A development-only warning uses `console.warn`, is printed at most once per distinct message text per page load or server process, and MUST NOT change any return value or any printed markup. Development output and production output are byte-identical.
 - **W-4** "Development" means `process.env.NODE_ENV !== "production"` evaluated as in `06-bindings.md` (rule V-2); where `process` does not exist the mode is production. The prebuilt browser files (`browser/*.js`, Liquid assets) are production builds and contain no development-only warnings.
-- **W-5** A NEW message family about a mistake that a checker rule also reports SHOULD end with ` (<RULE>)`, for example ` (RP103)`, so that an agent can run `npx <pkg> docs RP103`. The families already fixed by other documents (table 6.2) keep the text their owner defines; this rule does not change them.
+- **W-5** A NEW message family about a mistake that a checker rule also reports SHOULD end with ` (<RULE>)`, for example ` (RP103)`, so that an agent can run `<command form> docs RP103`. The families already fixed by other documents (table 6.2) keep the text their owner defines; this rule does not change them.
 - **W-6** Messages are English and not localised.
 
 ### 6.2 Catalogue
@@ -1085,7 +1066,7 @@ This document adds no new browser file and no new package entry for warnings (th
 
 ### 6.3 Liquid: silent fallback is reported by the checker
 
-On Liquid an invalid enumeration falls back to the default at render time (D-038 item 4) and prints nothing, because a block cannot log and MUST NOT print extra markup. The mistake is reported by RP101 in layer S (literal arguments) and layer H (rendered `data-` attributes cannot show the invalid value, because the fallback replaced it; therefore layer S is the only detector for literals, and values that come from variables are NOT detectable). The `ripple-liquid` skill MUST state: "A wrong value renders the default silently. Run the checker."
+An invalid enumerated value falls back to the default in every host (D-073). In the TSX hosts `rv()` also warns in development. On Liquid the fallback (D-038 item 4) prints nothing, because a block cannot log and MUST NOT print extra markup. The mistake is reported by RP101 in layer S (literal arguments) and layer H (rendered `data-` attributes cannot show the invalid value, because the fallback replaced it; therefore layer S is the only detector for literals, and values that come from variables are NOT detectable). The `ripple-liquid` skill MUST state: "A wrong value renders the default silently. Run the checker."
 
 ### 6.4 Acceptance (warnings)
 
@@ -1099,7 +1080,7 @@ On Liquid an invalid enumeration falls back to the default at render time (D-038
 
 ## 7. In-page agent surface
 
-Section 12 of `04-elements.md` fixes what non-commerce elements declare and how the bridge is loaded. This section fixes the rest: what an in-page agent can see and do, the commerce actions, confirmation, labels, and SPIKE-08.
+Section 12 of `04-elements.md` fixes what non-commerce elements declare and how the bridge is loaded. This section fixes the rest: what an in-page agent can see and do, the commerce actions, confirmation, labels, and SPIKE-08. It is the owner of the commerce `agent.actions` list (D-095): `05-commerce.md` and `11-components-commerce.md` copy 7.2 verbatim.
 
 Facts this section relies on (evidence):
 
@@ -1121,30 +1102,49 @@ Rule A-1: no storefront function may be reachable ONLY through the bridge. Every
 
 ### 7.2 Commerce actions
 
-Each commerce primitive declares `agent.actions` exactly as below. Method names use the bridge's verb vocabulary (`set<Key>`, `add`, `remove`, `submit`, `clear`) so they read naturally. (`05-commerce.md` does not define these; see Ledger issues.)
+Each commerce primitive declares `agent.actions` exactly as below. Method names use the bridge's verb vocabulary (`set<Key>`, `add`, `remove`, `submit`, `clear`) so they read naturally.
 
-| Element | `agent.actions` | Method signature | Implementation (the same code path as the user's control) |
+| Element | `agent.actions` (primitive) | Method signature | Implementation (the same code path as the user's control) |
 |---|---|---|---|
 | `rp-product-form` | `["setQuantity", "add"]` | `setQuantity(quantity: number): void`; `add(): void` | `setQuantity`: set `value` of `input[data-rp-field="quantity"]` in the root and dispatch a bubbling `change` event on it. `add`: `form.requestSubmit(<[data-rp-part="submit"]>)` on the root's add form. |
-| `rp-cart` | `["setQuantity", "remove"]` and, after SPIKE-08 passes, `"checkout"` (7.3) | `setQuantity(line: string, quantity: number): void`; `remove(line: string): void`; `checkout(): void` | `setQuantity`: find `[data-rp-line="<line>"]` in the root; set its quantity input's `value`; dispatch a bubbling `change` event. `remove`: `click()` on that line's `a[data-rp-part="remove"]`; when the line has no such link (hydrogen backend), `requestSubmit` on the line form with its remove submit button. `checkout`: `click()` on the root's checkout control (`button[name="checkout"]` or `a[data-agent-confirm]`). |
-| `rp-live` | `["submit"]` | `submit(): void` | `requestSubmit()` on the first GET form in the root. Agents set field values with the native controls' own values through `press` and form filling; no per-field action in V1. |
-| `rp-predictive-search` | `["setQuery", "clear"]` | `setQuery(query: string): void`; `clear(): void` | Set the search input's `value` and dispatch a bubbling `input` event; `clear` sets the empty string. |
+| `rp-cart` | `["setQuantity", "remove"]` | `setQuantity(line: string, quantity: number): void`; `remove(line: string): void` | `setQuantity`: find `[data-rp-line="<line>"]` in the root; set the `value` of its `input[data-rp-field="quantity"]`; dispatch a bubbling `change` event on it. `remove`: `click()` on that line's `a[data-rp-part="remove"]` (liquid backend); when the line has no such link (hydrogen backend), `requestSubmit(<button>)` on the line form with its `button[name="intent"][value="remove"]`. |
+| `rp-live` | `["submit"]` | `submit(): void` | `requestSubmit()` on the first `form[method="get" i]` in the root. A root with no form (VariantPicker, FilterChips: links only) throws per A-3; agents follow its links through the accessibility tree. Agents set field values with the native controls; there is no per-field action in V1. |
+| `rp-predictive-search` | `["setQuery", "clear"]` | `setQuery(query: string): void`; `clear(): void` | Set the `value` of the root's search input (the first `input` that is not `type="hidden"` in the root's GET form) and dispatch a bubbling `input` event on it; `clear` sets the empty string, which also hides the results panel. |
 | `rp-recommendations` | `[]` with `shown: () => false` | none | Display only; hidden from agents (convention of `tobi/src/primitives/recommendations.ts`). |
+
+There is NO `checkout` action and no `checkout()` method on the default path (D-050, 7.7).
+
+Manifest form. Every component whose root (or, for CartDrawer, whose embedded root) is one of these elements records the same list in its manifest key `agent.actions[]`, as objects with the keys `name` and `description` (ledger 4.8), and `agent.surface: "bridge"`. The `description` texts are fixed:
+
+| Element | `name` | `description` |
+|---|---|---|
+| `rp-product-form` | `setQuantity` | `Set how many to add` |
+| `rp-product-form` | `add` | `Add the selected variant to the cart` |
+| `rp-cart` | `setQuantity` | `Set the quantity of one cart line` |
+| `rp-cart` | `remove` | `Remove one line from the cart` |
+| `rp-live` | `submit` | `Apply the form and update the results` |
+| `rp-predictive-search` | `setQuery` | `Type a search query and show suggestions` |
+| `rp-predictive-search` | `clear` | `Clear the search query` |
+
+No V1 action has a `confirm` key. Components by element: `rp-product-form`: ProductForm. `rp-cart`: CartLink, CartLines, CartSummary, CartNote, DiscountCode, and CartDrawer (through the `rp-cart` roots it contains). `rp-live`: VariantPicker, Filters, FilterChips, SortSelect, LiveForm. `rp-predictive-search`: PredictiveSearch. `rp-recommendations`: ProductRecommendations (`agent.actions: []`).
 
 Rules:
 
 - **A-2** An action MUST go through the same DOM event or form submission as the user's control, never a second implementation. Consequence: pending state, announcements, errors and region refresh behave identically.
-- **A-3** When the root does not contain the markup an action needs (for example `setQuantity` on the `rp-cart` root of a CartLink), the method throws `new Error("<tag>: nothing to <action> here")`. The bridge reports thrown messages to the agent.
-- **A-4** `line` is the value of `data-rp-line`. Agents read line ids from the snapshot `items` of the `rp-cart` entry: the primitive declares `items: (api) => api.lines()` where `api.lines()` returns `Array<{ value: string; label: string }>` built at call time from `[data-rp-line]` elements in the root (`value` = the attribute; `label` = the text content of the line's first link or heading, whitespace collapsed).
-- **A-5** No action may add a discount code, edit the note, or change the locale in V1; agents use the visible forms through `press` and the accessibility tree.
+- **A-3** When the root does not contain the markup an action needs (for example `setQuantity` on the `rp-cart` root of a CartLink, or `submit` on an `rp-live` root that has only links), the method throws `new Error("<tag>: nothing to <action> here")`. The bridge reports thrown messages to the agent.
+- **A-4** `line` is the value of `data-rp-line`. Agents read line ids from the snapshot `items` of the `rp-cart` entry: the primitive declares `items: (api) => api.lines()` where `api.lines()` returns `Array<{ value: string; label: string }>` built at call time from `[data-rp-line]` elements in the root (`value` = the attribute; `label` = the text content of the line's first link or heading, whitespace collapsed). `lines` is a getter and is not listed in `agent.actions`.
+- **A-5** No action may add a discount code, edit the note, change the locale or start checkout in V1; agents use the visible forms and links through `press` and the accessibility tree.
 - **A-6** Every public method that changes state is listed in `agent.actions`; getters are not (`04-elements.md` 12.2 rule 1).
 
 ### 7.3 Confirmation
 
-1. The controls that MUST carry `data-agent-confirm` in V1 are exactly: the CheckoutButton control (both backends), and any accelerated-checkout wrapper Ripple prints (the platform markup inside it is opaque, D-004; the attribute goes on Ripple's wrapper element around it). Manifest `agent.confirm` lists them; RP320 enforces it.
+On the default path confirmation rests on ONE mechanism: the attribute `data-agent-confirm` on the control (D-050). No bridge action starts checkout.
+
+1. The controls that MUST carry `data-agent-confirm` in V1 are exactly: the CheckoutButton control (both backends; REQUIRED, D-095), and the accelerated-checkout wrappers Ripple prints (`div.rp-product-form-accelerated`, `div.rp-cart-summary-accelerated`; the platform markup inside is opaque, D-004, so the attribute goes on Ripple's wrapper element around it). Manifest `agent.confirm[]` of CheckoutButton, ProductForm and CartSummary lists them. RP320 reports a CheckoutButton without the attribute; whether RP320 also checks the two wrappers is decided by the `agent.confirm[]` entries (`07-manifest-registry-cli.md` section 9.6).
 2. Default sentences (locale keys, D-066): `ripple.checkout-button.agent_confirm` = `Goes to checkout with this cart`; `ripple.product-form.agent_confirm_accelerated` = `Buys this product now with an express checkout`; `ripple.cart-summary.agent_confirm_accelerated` = `Pays for this cart now with an express checkout`.
-3. The attribute MUST be on the control itself or on a wrapper that contains ONLY that control. It MUST NOT be on an `rp-cart` or `rp-product-form` root (it would gate quantity changes too; `agent-ready.md`: "It covers the element and everything inside it").
-4. An in-page agent created by the storefront MUST pass `allow` and MUST ask the person whenever `step.confirm` is set. Reference implementation (the only one docs and skills show):
+3. With an empty cart the checkout control is inert (`disabled` on the button; `aria-disabled="true"` and no `href` on the link, D-050) and still carries the attribute.
+4. The attribute MUST be on the control itself or on a wrapper that contains ONLY that control. It MUST NOT be on an `rp-cart` or `rp-product-form` root (it would gate quantity changes too; `agent-ready.md`: "It covers the element and everything inside it").
+5. An in-page agent created by the storefront MUST pass `allow` and MUST ask the person whenever `step.confirm` is set. Reference implementation (the only one docs and skills show):
 
    ```js
    const agent = createAgent({
@@ -1153,8 +1153,8 @@ Rules:
    ```
 
    Storefronts SHOULD replace `window.confirm` with their own UI; the function returns `true`, `false` or a promise of either.
-5. Agents that drive the browser from outside (no bridge) are not constrained by the attribute. The `ripple-agent-ready` skill and guide `agent-ready` MUST contain this sentence: "A host agent that operates the page from outside MUST treat any control with `data-agent-confirm` as requiring the person's approval and MUST show them the attribute's sentence."
-6. `data-agent-secret` MUST be printed by Ripple on: Input with `type="password"`. `data-agent-hidden` is never printed by Ripple; projects MAY add it.
+6. Agents that drive the browser from outside (no bridge) are not constrained by the attribute. The `ripple-agent-ready` skill and guide `agent-ready` MUST contain this sentence: "A host agent that operates the page from outside MUST treat any control with `data-agent-confirm` as requiring the person's approval and MUST show them the attribute's sentence."
+7. `data-agent-secret` MUST be printed by Ripple on: Input with `type="password"`. `data-agent-hidden` is never printed by Ripple; projects MAY add it.
 
 ### 7.4 Enabling the bridge
 
@@ -1164,10 +1164,10 @@ The bridge is never loaded by default (D-065). The three ways to load it are tho
 // bundled app (react)
 import { createAgent, registerTools } from "<pkg>/agent"
 
-// html, remix
+// html, remix (the URL is paths.public + "/ripple.js"; default /ripple/ripple.js)
 const { createAgent, registerTools } = await (await import("/ripple/ripple.js")).loadAgent()
 
-// liquid
+// liquid (the import map resolves the specifier to assets/ripple-agent.js)
 const { createAgent, registerTools } = await import("ripple/agent")
 
 // all hosts, after the import
@@ -1177,12 +1177,14 @@ const unregister = registerTools(agent, { allow: () => true })   // WebMCP; a no
 
 `registerTools` "does nothing in a browser without `document.modelContext`" (`uisdk/packages/core/skills/ui-sdk/references/agent-ready.md`). The second `allow` returns `true` because the bridge's own `allow` already asks.
 
-### 7.5 Labels (resolves `04-elements.md` ledger issue L-11)
+### 7.5 Labels
 
-- A snapshot entry's `label` comes from the root's accessible name. Ripple contracts are NOT changed to add labels: `rp-dialog`, `rp-quantity`, `rp-navigation-menu` and the commerce roots appear with `component: "<tag>"` and no label, except `rp-carousel` (has `aria-label`).
-- An agent addresses such entries by `ref`, which the snapshot always provides.
-- RP607 therefore reports "no label" only for entries of kind `ui` and for kind `commerce` entries when more than one entry with the same `component` and no label exists on the page AND they are not distinguishable by `items` or `buttons` (two unlabeled `rp-product-form` roots on one page). Fix text: add `ariaLabel` to the component (commerce components accept the universal rest props, so `aria-label` can be passed without a contract change).
-- Recommendation recorded under Ledger issues: give commerce roots `role="group"` and a required `ariaLabel`. Not applied.
+Decision (D-095; `04-elements.md` section 12.2):
+
+- A snapshot entry's `label` comes from the root's own accessible name. `rp-dialog`, `rp-quantity` and `rp-navigation-menu` roots get NO label and no contract change is made for them. They, and the commerce roots, appear with `component: "<tag>"`; `rp-carousel` has a label because its contract has `aria-label`.
+- An agent addresses an unlabeled entry by `ref`, which the snapshot always provides.
+- Giving commerce roots `role="group"` and a required `ariaLabel` was considered and is NOT applied in V1.
+- RP607 applies only to roots whose manifest `agent.actions` is non-empty. It reports two things: such a root is missing from the snapshot; or two or more such roots on one page have the same `component`, no label, and identical `items` and `buttons` lists, so an agent cannot tell them apart (for example two unlabeled `rp-product-form` roots). It never reports `rp-dialog`, `rp-quantity` or `rp-navigation-menu` for a missing label. Fix text: add `ariaLabel` (Liquid `aria_label`) to each such component; where the root accepts rest props, `aria-label` needs no contract change.
 
 ### 7.6 The agent test
 
@@ -1190,30 +1192,42 @@ One test per element with a non-empty `agent.actions`, in the element's own test
 
 1. Mount the component's `default` fixture.
 2. `const entry = createAgent().snapshot().find((e) => e.component === "<tag>")`: it exists.
-3. `entry.actions` contains every name the manifest lists in `agent.actions` (it MAY also contain `press`).
+3. `entry.actions` contains every `name` the manifest lists in `agent.actions[]` (it MAY also contain `press`).
 4. For each action, `act({ steps: [{ ref: entry.ref, action, args }] })` resolves with `ok: true` and the documented state change is observed (for `rp-product-form` `add`: the adapter's `submitCart` was called once).
 5. For CartSummary and CartDrawer fixtures: `act` with `{ action: "press", args: ["<checkout control name>"] }` and no `allow` resolves with `ok: false` and `error.message` starting with `Needs a person:`; the page did not navigate.
 
-The manifest build additionally asserts, for every commerce component, that manifest `agent.actions` equals the primitive's declared list (read from `custom-elements.json` or by importing the primitive in the test).
+The manifest build additionally asserts, for every commerce component, that the `name` values of manifest `agent.actions[]` equal the primitive's declared list (read by importing the primitive in the test).
 
 ### 7.7 SPIKE-08 `agent-bridge-confirm`
 
-Question: does the bridge enforce confirmation for the METHOD step `checkout` on `rp-cart` when the checkout control inside the root carries `data-agent-confirm`?
+Question (ledger section 3): does the bridge refuse, without approval, an action declared in an `rp-*` primitive's `agent` key, and does it honour `data-agent-confirm` on a native control inside an `rp-*` root?
 
-Default path (implement now):
+Default path (specified in full above; implement this):
 
-1. Implement `checkout()` on the `rp-cart` api (7.2) but do NOT list it in `agent.actions` yet. The `press` path of 7.6 step 5 is already verified and is sufficient for agents.
-2. Write the spike as a test, `src/commerce/rp-cart.agent-confirm.test.ts`, with `checkout` temporarily added to `agent.actions` through a test-only primitive variant:
-   - (a) `act({ steps: [{ ref, action: "checkout" }] })` with no `allow`: MUST resolve `ok: false`, `error.message` starts with `Needs a person:`, and no navigation or form submission happened.
-   - (b) with `allow: () => false`: `ok: false`, message starts with `The person said no to`.
-   - (c) with `allow: () => true`: the checkout control was activated exactly once.
-3. When (a), (b) and (c) all pass: add `"checkout"` to `rp-cart`'s `agent.actions`, keep the test as a permanent regression test, write the result to `docs/research/spikes/agent-bridge-confirm/README.md`, and update the ledger line for SPIKE-08.
+1. `data-agent-confirm` on the checkout control ONLY (7.3). `rp-cart` declares no `checkout` action and has no `checkout()` method. Manifest `agent.actions[]` of every `rp-cart` component is the 7.2 list.
+2. Agents reach checkout by `press` on the control. That path is already verified to be refused without approval (7.6 step 5; `ripple/docs/research/spikes/elements-runtime/results-agent-confirm.txt`).
+3. The `ripple-agent-ready` skill and guide `agent-ready` contain the sentence of 7.3 item 6.
 
-Rule A-7: `"checkout"` MUST NOT appear in a published `agent.actions` unless test (a) passes in CI. An unconfirmed method that spends money is the one failure this section exists to prevent.
+The spike is a test that is written now and does not change shipped code: `src/commerce/rp-cart.agent-confirm.test.ts`. It defines a test-only variant of the `rp-cart` primitive that adds the method `checkout(): void` (implementation: `click()` on the root's checkout control, `button[name="checkout"]` or `a.rp-checkout-button`) and lists `"checkout"` in `agent.actions`. It mounts the CartSummary `two-lines` fixture and asserts:
+
+- (a) `act({ steps: [{ ref, action: "checkout" }] })` with no `allow`: resolves `ok: false`, `error.message` starts with `Needs a person:`, and no navigation or form submission happened.
+- (b) with `allow: () => false`: `ok: false`, and the message starts with `The person said no to`.
+- (c) with `allow: () => true`: the checkout control was activated exactly once.
+
+Addition when the spike passes (this is an addition, not a fallback: the default path is already the conservative one). When (a), (b) and (c) all pass in CI:
+
+1. Move `checkout(): void` from the test-only variant into `src/commerce/rp-cart.ts` and add `"checkout"` to the primitive's `agent.actions`.
+2. Add to the manifest `agent.actions[]` of CartSummary and CartDrawer (the components whose root contains a checkout control) the entry `{ "name": "checkout", "description": "Go to checkout with this cart", "confirm": "Goes to checkout with this cart" }`. The `confirm` sentence equals the control's `data-agent-confirm` default.
+3. On an `rp-cart` root with no checkout control the method throws per A-3.
+4. Add the row to the 7.2 tables, to `05-commerce.md` and to `11-components-commerce.md`; keep the test as a permanent regression test; write the result to `docs/research/spikes/agent-bridge-confirm/README.md`; update the ledger line for SPIKE-08 and non-goal 19 of ledger section 11.
+
+When any of (a), (b), (c) fails, nothing changes: the test-only variant stays in the test file, case (a) is marked as an expected failure with the observed message, and the result is written to the same README.
+
+Rule A-7: `"checkout"` MUST NOT appear in a published `agent.actions` (primitive or manifest) unless test (a) passes in CI. An unconfirmed method that spends money is the one failure this section exists to prevent.
 
 ### Fallback (SPIKE-08)
 
-When (a) fails: `checkout` stays out of `agent.actions` permanently and the `checkout()` api method is deleted. Agents reach checkout only through `press` on the control, which is gated (7.6 step 5). The `ripple-agent-ready` skill states the sentence of 7.3 item 5. Manifest `agent.actions` for the five `rp-cart` components omits `checkout`; `agent.confirm` is unchanged. No contract changes.
+None. The default path of 7.7 is the conservative path (ledger section 3: "Not a fallback but an addition"); a failed spike leaves it unchanged.
 
 ### 7.8 Acceptance (agent surface)
 
@@ -1224,7 +1238,8 @@ When (a) fails: `checkout` stays out of `agent.actions` permanently and the `che
 | K-52 | `snapshot()` on the `product` blueprint page. | No entry for `rp-recommendations`; one entry for `rp-product-form` with actions including `setQuantity` and `add`. |
 | K-53 | Bundle check. | `browser/ripple.js` and `browser/ripple.elements.js` do not contain the string `Needs a person` (the bridge is not in the main bundles). |
 | K-54 | RP320 on every blueprint for every host. | Zero findings. |
-| K-55 | SPIKE-08 test file. | Exists; its three cases are either all passing (and `checkout` is listed) or (a) is marked as an expected failure and `checkout` is not listed. Any other combination fails CI. |
+| K-55 | SPIKE-08 test file. | Exists. Either `checkout` is absent from every published `agent.actions` (primitive and manifest; the default path, whatever the three cases report), or it is present and (a), (b) and (c) all pass. `checkout` present with (a) not passing fails CI. |
+| K-56 | For every commerce component, compare manifest `agent.actions[].name` with the 7.2 table. | Equal, in the same order; every entry has a `description` equal to 7.2; no entry has `confirm`. |
 
 ---
 
@@ -1249,7 +1264,7 @@ evals/
     run.ts                      # CLI: runs a matrix (8.4)
     workspace.ts                # builds a start state (8.5)
     claude-code.ts  pi.ts  opencode.ts      # HarnessAdapter implementations (8.7)
-    serve.ts                    # starts the app or the Liquid shim server for a workspace
+    serve.ts                    # starts the app (npm hosts) or serveTheme from <pkg>/testing (liquid) for a workspace
     mockshop.ts                 # picks catalogue data from mock.shop for checks
     checks.ts                   # shared check helpers
     score.ts  outside.ts  friction.ts  judge.ts  report.ts  freeze-budgets.ts
@@ -1263,7 +1278,7 @@ evals/
   runs/                         # output, git-ignored: runs/<run id>/<task>-<host>-<arm>-<n>/
 ```
 
-Root `package.json` gains one script (see Ledger issues): `"eval": "node evals/adapters/run.ts"`.
+The root `package.json` has the script `"eval": "node evals/adapters/run.ts"` (D-061, D-103). `pnpm eval` is not part of `pnpm test`.
 
 ### 8.2 `task.json`
 
@@ -1289,7 +1304,16 @@ interface EvalTask {
 
 - npm hosts (`html`, `react`, `remix`) use `https://mock.shop/api` (Ben decision 10) through Hydrogen.
 - mock.shop cannot back a Liquid theme (`ripple/docs/research/hydrogen-core.md` S19). Liquid tasks are scored in two tiers:
-  - **local** (every run): Theme Check; `ripple check` layers S and P; the theme is rendered by the Liquid shim with fixture data and served by `serve.ts` with the Standard Actions emulation; layer H, layer B and `checks.spec.ts` run against that server. The shim, its fixture data and the emulation are specified in `13-testing.md` and `05-commerce.md` (the test double `fake-sa.js`); `serve.ts` MUST use the theme-serving function exported by `<pkg>/testing` and MUST NOT implement its own Liquid rendering.
+  - **local** (every run): Theme Check; `ripple check` layers S and P; the theme is served by `serveTheme` (D-104, D-106), which renders it through the Liquid shim with fixture data and emulates Standard Actions and partial rendering; layer H, layer B and `checks.spec.ts` run against that server. `serve.ts` MUST start a Liquid workspace with exactly this call and MUST NOT implement its own Liquid rendering:
+
+    ```ts
+    import { serveTheme } from "<pkg>/testing";
+
+    const server = await serveTheme({ themeRoot: workspaceDir });   // options: ServeThemeOptions, 13-testing.md section 4.5
+    // server.url is the base URL for checks; server.resetCart() empties the cart between checks; await server.close() at the end
+    ```
+
+    `serveTheme`, its options, the shim, its fixture data and the emulations are specified in `13-testing.md` section 4.5.
   - **live** (nightly, when a preview store exists; ledger Q5): the same checks against the store's preview URL. Until the store exists the live tier is skipped and reported as `skipped`, never as passed.
 - A check that cannot run in a tier declares so (`test.skip(tier === "local", "<reason>")`); skipped checks are excluded from the functional fraction and listed in the report.
 
@@ -1305,7 +1329,7 @@ For each (task, host, arm, run index), `run.ts` performs these steps in order:
 4. Start the container (`Dockerfile`: `node:24-bookworm-slim`, `git`, `ripgrep`, `pnpm`, the harness CLI at a pinned version, a non-root user; same layout as `hydrogen/scripts/storefront-benchmark-harness/Dockerfile`). Mount only the workspace. Network egress is limited to: the model endpoint, `registry.npmjs.org`, `mock.shop`. Environment: the model API key and `CI=1`.
 5. Run the adapter (8.7) with `task.prompt`. The prompt is passed unchanged; the harness adds no system prompt.
 6. Canary: before step 5 in the first run of an invocation only, run the adapter with the prompt `Which skill contains the phrase "ripple canary"? Answer with the skill name only.` in a workspace that contains `adapters/canary/SKILL.md` (name `benchmark-canary`). The answer MUST contain `benchmark-canary`; otherwise the invocation aborts with `skill discovery is not working in <adapter>`. (Method from Hydrogen's harness.)
-7. After the agent exits: stop the container; in a fresh container without model access run the project's install; start the app with `serve.ts` (npm hosts: the template's `start` script; Liquid: the shim server); wait up to 120 seconds for `routes` to answer.
+7. After the agent exits: stop the container; in a fresh container without model access run the project's install; start the app with `serve.ts` (npm hosts: the template's `start` script; Liquid: `serveTheme` from `<pkg>/testing`, 8.3); wait up to 120 seconds for `routes` to answer.
 8. Run gates, `checks.spec.ts`, `ripple check --browser --json --url <base>` for every route, build health commands, screenshots (8.9), outside-Ripple (8.10), friction extraction (8.13). Judge when `--judge`.
 9. Write `result.json` (8.8) and copy the transcript. Never delete a run directory.
 
@@ -1318,7 +1342,7 @@ Runs are independent; `run.ts` MAY run up to 4 in parallel (`--parallel <n>`, de
 | `start.base` | Content |
 |---|---|
 | `template` | `adapters/templates/<host>/`: a minimal project with the data layer already wired and Ripple NOT installed. `react` and `remix`: Hydrogen storefront client pointed at mock.shop, the cart handlers mounted at `/api/cart`, route files for every path in the table below that return a page with only an `<h1>`, Tailwind v4 compiled by the bundler, Hydrogen's skills synced, an `AGENTS.md` with the project's commands (`install`, `dev`, `build`, `typecheck`, `start`). `html`: an empty directory with a 20-line Node static server and the same cart handlers. `liquid`: the platform skeleton only (`layout/theme.liquid`, empty `templates/*.liquid` for every template name, `config/settings_schema.json`, `locales/en.default.json`, `AGENTS.md` with the platform rules that D-039 keeps). |
-| `initialised` | `template` + `ripple init` + `ripple add --blueprint layout` + `ripple skills sync`. |
+| `initialised` | `template` + `ripple init` + `ripple add --blueprint layout` + `ripple skills sync`. On `liquid`, `workspace.ts` first deletes the skeleton `layout/theme.liquid` and passes `--host liquid` to both commands: the `layout` blueprint writes that file, and a collision with a file that has no trailer aborts the command (D-057, D-107 item 5). The resulting layout prints the Header with CartLink, the CartDrawer, the MobileNav, the search Dialog with PredictiveSearch, the AnnouncementBar, the Footer and the toast region (ledger 8.5). Tasks whose prompt asks for one of these start from an overlay that removes it (T03, T05, T12, T16). |
 | `reference` | The complete example project `examples/<host>/` (all blueprints installed; for `liquid` the Ripple theme of `14-liquid-theme.md`) + `ripple skills sync`. |
 | `liquid-theme` | `examples/liquid/` (same as `reference` for the liquid host; a separate name so that task files read naturally). |
 
@@ -1345,7 +1369,7 @@ Core set: T01, T02, T03, T04, T06, T07, T08, T09, T10, T11. Extended: T05, T12, 
 
 **T01 home** (core). Hosts: react, remix, liquid. Start: `template`. Expected skills: `ripple`, `ripple-setup`, `ripple-compose-page`.
 Prompt: `Set up the storefront UI and build the home page: a header with the main navigation and a cart link, a large hero with a headline and a button, a grid of featured products from the store, and a footer.`
-Checks: C1 `npx <pkg> status --json` exits 0. C2 landmarks `header`, `main`, `footer` exist. C3 at least 4 product cards, each with an image (`alt`, `width`, `height`), a title that links to `/products/<handle>`, and a price. C4 every link inside `header nav` answers 200. C5 a link to `/cart` exists in the header. C6 JS off: C2 to C5 still pass. C7 no horizontal overflow at 375 px.
+Checks: C1 `<command form> status --json` exits 0. C2 landmarks `header`, `main`, `footer` exist. C3 at least 4 product cards, each with an image (`alt`, `width`, `height`), a title that links to `/products/<handle>`, and a price. C4 every link inside `header nav` answers 200. C5 a link to `/cart` exists in the header. C6 JS off: C2 to C5 still pass. C7 no horizontal overflow at 375 px.
 Screenshots: none extra.
 
 **T02 product page** (core). Hosts: react, remix, liquid. Start: `initialised`. Expected skills: `ripple`, `ripple-commerce`.
@@ -1353,17 +1377,18 @@ Prompt: `Build the product page: image gallery, title, price, option selection, 
 Checks: C1 each option value is a link or a GET form control; choosing a second value changes the URL. C2 reloading that URL shows the same value selected and the price of that variant. C3 an unavailable value is still selectable (not `disabled`). C4 JS off: submit the add form; then `/cart` lists the product. C5 JS on: click add; the URL path does not change; a cart count in the header becomes 1 after it settles. C6 the root that was submitted had `data-pending` at some time during C5 (observed with a `MutationObserver`). C7 the quantity input is `type="number"` with `min="1"`. C8 gallery images have `alt`, `width`, `height`.
 Screenshots: `second-variant` (after C1).
 
-**T03 cart** (core). Hosts: react, remix, liquid. Start: `initialised`, after T02. Expected skills: `ripple`, `ripple-commerce`.
+**T03 cart** (core). Hosts: react, remix, liquid. Start: `initialised`, after T02, + overlay `start/<host>/`: the layout file with the CartDrawer removed and the Header called without its `cartDrawer` prop (the cart link navigates to `/cart`). Expected skills: `ripple`, `ripple-commerce`.
 Prompt: `Add a cart drawer that opens from the cart link in the header, and a full cart page. Shoppers must be able to change quantities and remove items. Add a discount code field and a checkout button.`
-Checks: C1 the header cart opener is `a[href="/cart"]`. C2 JS on: clicking it opens a `dialog` (`:modal`) and does not navigate. C3 Escape closes it and focus returns to the opener. C4 with one line in the cart, click the increment control 5 times within 1 second; after it settles the quantity input shows 6 and reloading `/cart` shows 6. C5 removing the line empties the cart; an empty state is shown. C6 the checkout control has `data-agent-confirm` with at least 3 words. C7 JS off on `/cart`: change the quantity to 2 and submit; the page shows 2. C8 JS off: the remove control removes the line. C9 a discount code field exists on `/cart` (hydrogen backend: inside a POST form with a field named `discountCode`; liquid: present and hidden without JS). C10 after adding from the product page with the drawer open, an element with `role="status"` or `role="alert"` INSIDE the dialog has non-empty text.
+Checks: C1 the header cart opener is `a[href="/cart"]`. C2 JS on, on `/`: clicking it opens a `dialog` (`:modal`) and does not navigate. C3 Escape closes it and focus returns to the opener. C11 the rendered `/cart` page has no cart drawer `dialog`, and every `data-rp-region` value occurs at most once on `/` and on `/cart`. C4 with one line in the cart, click the increment control 5 times within 1 second; after it settles the quantity input shows 6 and reloading `/cart` shows 6. C5 removing the line empties the cart; an empty state is shown. C6 the checkout control has `data-agent-confirm` with at least 3 words. C7 JS off on `/cart`: change the quantity to 2 and submit; the page shows 2. C8 JS off: the remove control removes the line. C9 a discount code field exists on `/cart` (hydrogen backend: inside a POST form with a field named `discountCode`; liquid: present and hidden without JS). C10 after adding from the product page with the drawer open, an element with `role="status"` or `role="alert"` INSIDE the dialog has non-empty text.
 Screenshots: `drawer-open`, `cart-page-with-line`, `cart-empty`.
 
 **T04 collection** (core). Hosts: react, remix, liquid. Start: `initialised`. Expected skills: `ripple`, `ripple-discovery`.
 Prompt: `Build the collection page with product filters, sorting, chips for the active filters that can be removed, and pagination.`
-Checks: C1 filters and sort controls are inside ONE `form[method="get" i]` (or associated to it with the `form` attribute). C2 JS off: check one filter and submit; the URL has a `filter.` param and the product list changed or the result count is shown. C3 reloading the filtered URL renders the control checked. C4 JS on: checking a filter updates the URL without a document navigation (no `load` event) and the results region is replaced. C5 a chip exists for the active filter; with two filters active, clicking one chip keeps the other param. C6 browser Back restores the previous URL and results. C7 choosing a sort option adds `sort_by` to the URL. C8 pagination controls are links with `page` in `href`; JS off: following "next" shows different products.
-Screenshots: `filtered`, `mobile-filters-open` (375 px; steps open the filter drawer when one exists).
+Checks: C1 every filter control is inside ONE `form[method="get" i]` (or associated to it with the `form` attribute), and the sort control is inside a `form[method="get" i]` (the same form or its own). C2 JS off: check one filter and submit; the URL has a `filter.` param and the product list changed or the result count is shown. C3 reloading the filtered URL renders the control checked. C4 JS on: checking a filter updates the URL without a document navigation (no `load` event) and the results region is replaced. C5 a chip exists for the active filter; with two filters active, clicking one chip keeps the other param. C6 browser Back restores the previous URL and results. C7 choosing a sort option adds `sort_by` to the URL. C8 pagination controls are links with `page` in `href`; JS off: following "next" shows different products.
+C9 JS off at 375 px: at least one filter control is visible without any interaction (filters are inline, not inside a `dialog` or a `popover`).
+Screenshots: `filtered`, `mobile-filters` (375 px, scrolled to the filters).
 
-**T05 search** (extended). Hosts: react, remix. Start: `initialised`. Expected skills: `ripple`, `ripple-discovery`.
+**T05 search** (extended). Hosts: react, remix. Start: `initialised` + overlay `start/<host>/`: the layout file with the search Dialog and its PredictiveSearch removed and the Header called without its `searchDialog` prop. Expected skills: `ripple`, `ripple-discovery`.
 Prompt: `Add search: a search field in the header that shows suggestions while typing, and a search results page.`
 Checks: C1 the search field is inside `form[method="get" i]` whose action is `/search`. C2 JS off: submit `shirt`; the URL is `/search?q=shirt` and results or an empty state are shown. C3 JS on: typing 3 characters shows at least one suggestion link within 2 seconds. C4 ArrowDown moves focus to the first suggestion link; Escape hides the suggestions and returns focus to the field. C5 no element has `role="combobox"` or `role="listbox"`. C6 a live region announces the result count.
 Screenshots: `suggestions-open`.
@@ -1395,7 +1420,7 @@ Screenshots: none extra.
 
 Expected skills: `ripple`, `ripple-check-and-fix`.
 Prompt: `The Ripple checker is failing on this project. Fix everything it reports, including warnings, without changing how the pages look or work.`
-Checks: C1 `npx <pkg> check --json --max-warnings 0` exits 0. C2 checks T02-C4, T02-C5, T03-C2, T03-C7 pass. C3 for each task route at 1440 px, Playwright's screenshot comparison (`expect(page).toHaveScreenshot`) against the screenshot of the unseeded `reference` state passes with `maxDiffPixelRatio: 0.015` and `threshold: 0.1`. C4 no installed component was removed (`status --json` lists the same component ids as the start state).
+Checks: C1 `<command form> check --json --max-warnings 0` exits 0. C2 checks T02-C4, T02-C5, T03-C2, T03-C7 pass. C3 for each task route at 1440 px, Playwright's screenshot comparison (`expect(page).toHaveScreenshot`) against the screenshot of the unseeded `reference` state passes with `maxDiffPixelRatio: 0.015` and `threshold: 0.1`. C4 no installed component was removed (`status --json` lists the same component ids as the start state).
 
 **T09 upgrade** (core). Hosts: react, liquid. Start: `reference` installed from a PREVIOUS package, then edited. The harness builds the previous package `ripple-prev.tgz` by running the normal build in a temporary copy of the repository in which (a) `VERSION` in `src/identity.ts` is replaced by `0.0.9` and (b) the overlay `tasks/T09/prev/` is copied over (older versions of two files: the Button CSS and the Card CSS). The workspace is scaffolded from `ripple-prev.tgz`; `vendor/ripple.tgz` is the current package. Then: the Button CSS edited locally (one added declaration `letter-spacing: 0.02em` in the base rule) and the Card CSS edited on a line that the new version also changes. Expected skills: `ripple`, `ripple-upgrade`.
 Prompt: `Upgrade Ripple to the newest version available in vendor/ripple.tgz and keep our local changes to the button styles.`
@@ -1403,7 +1428,7 @@ Checks: C1 `status --json`: every file's version equals the new version. C2 the 
 
 **T10 dialog and accordion** (core). Hosts: react, remix, liquid. Start: `initialised`, after T02. Expected skills: `ripple`, `ripple-compose-page` (and the host skill).
 Prompt: `On the product page, add a size guide that opens in a pop-up window from a link near the size options, and a list of frequently asked questions under the description where each answer can be expanded.`
-Checks: C1 a control opens a `dialog` (`:modal`). C2 the dialog has an accessible name (its `aria-labelledby` target has text). C3 Escape closes it; focus returns to the opener. C4 while open, `checkPattern(dialogElement, "dialog")` from `@ui-sdk/core/testing` does not throw. C5 JS off: every FAQ answer's text is in the HTML and each item is a `details` element. C6 JS on: clicking a question toggles its `open` state. C7 no element other than a native `<dialog>` has `role="dialog"`, and no `ui-dialog` tag exists.
+Checks: C1 a control opens a `dialog` (`:modal`). C2 the dialog has an accessible name (its `aria-labelledby` target has text). C3 Escape closes it; focus returns to the opener. C4 while open, `checkPattern(dialogElement, "dialog")` from `@ui-sdk/core/testing` does not throw (UNVERIFIED on a native `<dialog>`, D-108: when the task's own reference solution fails C4 in test K-62, C4 is deleted from `checks.spec.ts` and the deletion is recorded in `rubric/api-decisions.md`). C5 JS off: every FAQ answer's text is in the HTML and each item is a `details` element. C6 JS on: clicking a question toggles its `open` state. C7 no element other than a native `<dialog>` has `role="dialog"`, and no `ui-dialog` tag exists.
 Screenshots: `size-guide-open`, `faq-one-open`.
 
 **T11 Liquid dialect** (core). Hosts: liquid. Start: `liquid-theme`. Expected skills: `ripple`, `ripple-liquid`, `ripple-commerce`.
@@ -1413,12 +1438,12 @@ Screenshots: `recommendations`.
 
 **T12 Liquid cart** (extended). Hosts: liquid. Start: `liquid-theme` with the cart template emptied and the CartDrawer removed from the layout (overlay). Expected skills: `ripple`, `ripple-liquid`, `ripple-commerce`.
 Prompt: `Build the cart page and a cart drawer that opens from the header cart link.`
-Checks: C1 the cart form has `updates[]` inputs, a submitter `name="update"`, a submitter `name="checkout"`, and remove links. C2 partials `rp-cart-lines` and `rp-cart-summary` are declared exactly once each in a template or layout. C3 no `<dialog>` is inside a `{% partial %}` that its own content refreshes (RP404 clean). C4 the theme contains no `updateCart.configure` (RP307 clean). C5 the header cart opener is `a[href]` with `data-rp-open`. C6 local tier, JS on with the Standard Actions emulation: changing a quantity sends one `updateCart` call with the absolute quantity.
+Checks: C1 the cart form has `updates[]` inputs, a submitter `name="update"`, a submitter `name="checkout"`, and remove links. C2 on the rendered cart page, exactly one element has `data-rp-region="rp-cart-lines"` and exactly one has `data-rp-region="rp-cart-summary"`; on the rendered home page each occurs at most once; in the source, every `{% partial 'rp-cart-lines' %}` and `{% partial 'rp-cart-summary' %}` is in a file under `templates/` or `layout/` (RP403 clean). The layout omits the cart drawer on the cart page. C3 no `<dialog>` is inside a `{% partial %}` that its own content refreshes (RP404 clean). C4 the theme contains no `updateCart.configure` (RP307 clean). C5 on the rendered home page the header cart opener is `a[href]` with a `data-rp-open` attribute whose value is the id of a `dialog` on the page; no source file under `templates/` or `layout/` contains the text `data-rp-open` (the `dialog` or `drawer` param prints it). C6 local tier, JS on with the Standard Actions emulation: changing a quantity sends one `updateCart` call with the absolute quantity.
 Screenshots: `drawer-open`.
 
 **T13 plain HTML** (extended). Hosts: html. Start: `template`. Expected skills: `ripple`, `ripple-setup`.
 Prompt: `Make a single landing page for one product from the store using Ripple, with no build step: product images, title, price, an add to cart button and a link to the cart.`
-Checks: C1 the page loads exactly one stylesheet whose URL ends with `ripple.css` and one module script whose URL ends with `ripple.js`; no other script with a `src`. C2 the project has no bundler configuration and no `build` script. C3 `check --browser` on the page reports no errors. C4 JS off: the add form posts to `/api/cart` with a `merchandiseId` field and the response is a redirect. C5 a link to `/cart` exists.
+Checks: C1 the page loads exactly one stylesheet whose URL ends with `ripple.css` and one module script whose URL ends with `ripple.js`; the only other `script` elements are the Hydrogen script tags and the config element `script#rp-commerce`, both of which MUST be present before the `ripple.js` script (D-088, D-087). C2 the project has no bundler configuration and no `build` script. C3 `check --browser` on the page reports no errors. C4 JS off: the add form posts to `/api/cart` with a `merchandiseId` field and the response is a redirect. C5 a link to `/cart` exists.
 
 **T14 markets** (extended). Hosts: react. Start: `reference`. Expected skills: `ripple`, `ripple-compose-page`.
 Prompt: `Add a country and language selector to the header, and make prices follow the selected country's currency.`
@@ -1428,7 +1453,7 @@ Checks: C1 the selector is a form or a list of links; JS off: choosing another c
 Prompt: `Add a size chart table to the product page with a header row that stays visible while scrolling and alternating row colours.`
 Checks: C1 a `table` with `thead` and at least 4 body rows exists. C2 the header cells compute `position: sticky`. C3 odd and even body rows compute different background colours. C4 the diff contains no colour literal (as T06-C6) and no physical property (`margin-left`, `margin-right`, `padding-left`, `padding-right`, `left:`, `right:`, `text-align: left`, `text-align: right`). C5 no widget role added. C6 new class names do not start with `rp-`. C7 `check` has no errors (warnings allowed).
 
-**T16 chrome** (extended). Hosts: react, liquid. Start: `initialised`. Expected skills: `ripple`, `ripple-compose-page`.
+**T16 chrome** (extended). Hosts: react, liquid. Start: `initialised` + overlay `start/<host>/`: the layout file with the AnnouncementBar removed and the Footer called with a body that contains only its LinkList (id `footer-menu`), so that no NewsletterForm is printed. Expected skills: `ripple`, `ripple-compose-page`.
 Prompt: `Add an announcement bar at the top of every page, a newsletter signup in the footer, and payment icons in the footer.`
 Checks: C1 an announcement region exists before the header on two different routes. C2 the newsletter field is `input[type="email"]` with a label, inside a POST form. C3 JS off: submitting a valid address returns a page that shows a success message; submitting an empty field is blocked by `required`. C4 payment icons are present, each with a text alternative, or the list has an accessible name.
 
@@ -1637,7 +1662,7 @@ The API (component names, prop names, enumerated values, the responsive grammar,
 
 **Friction data.** `friction.ts` extracts from each run's `toolOutputs`:
 
-- every checker diagnostic the agent saw: lines matching `/^(RP\d{3}|TC:\w+) (error|warning)  /m` with the following `found:` line; and every `--json` output of shape 5.2;
+- every checker diagnostic the agent saw: lines matching `/^(RP\d{3}|TC:\w+) (error|warning)  /m` with the following `found:` line (text format: `07-manifest-registry-cli.md` section 9.4.1); and every `--json` output that parses as a `Report` (section 9.3 there);
 - `firstCheck`: rule ids of the first `check` invocation;
 - `guessed`: for RP101, RP102, RP104, RP105, RP111, RP115 diagnostics, the tuple (rule, component, prop, found);
 - from `commands`: the number of `check` and `docs` invocations.
@@ -1678,8 +1703,37 @@ An entry with "ledger change required: yes" has status `needs-ben` until the led
 
 - **Release gate.** A release candidate MUST run the core set (arm `ripple`, bar adapter and model, 5 runs per cell, judged). Its pass rate MUST NOT be more than 5 points below the previous release's recorded run (`releaseMaxDrop`). The run's `report.md` is attached to the release.
 - **M3 (commerce milestone), D-061:** the harness exists (8.1 files, the `pi` adapter and one more adapter, scoring without the judge) and T01, T02 and T08 have been run at least once on react and liquid (local tier), with results committed as `docs/research/spikes/evals-baseline/README.md`. No threshold applies at M3; the purpose is to find harness and API problems early. Rules G-1 to G-5 apply from this first run.
-- **M4:** all 17 tasks have `task.json`, `checks.spec.ts` and a reference solution per host; every reference solution passes its own checks and scores at least 95 with efficiency and adherence components set to full (test K-62).
+- **M4 and M5:** by the end of M4 all 17 tasks have `task.json`, `checks.spec.ts` and a reference solution for each npm host they list; by the end of M5 (the Liquid theme, D-067) also for `liquid`. Every reference solution passes its own checks and scores at least 95 with efficiency and adherence components set to full (test K-62).
 - **M6:** judge calibrated; budgets frozen; the bar (8.12) run in full.
+- **Nightly job.** `13-testing.md` rule CI-8 leaves the eval job to this document. From M3 onward `.github/workflows/nightly.yml` contains this job in addition to the jobs of `13-testing.md` section 17.4. It runs the core set once without the judge and never gates a merge:
+
+  ```yaml
+    evals:
+      runs-on: ubuntu-24.04
+      timeout-minutes: 360
+      env:
+        RIPPLE_EVAL_API_KEY: ${{ secrets.RIPPLE_EVAL_API_KEY }}
+      steps:
+        - uses: actions/checkout@v4
+        - uses: pnpm/action-setup@v4
+        - uses: actions/setup-node@v4
+          with:
+            node-version: "24"
+            cache: pnpm
+        - run: pnpm install --frozen-lockfile
+        - run: pnpm exec playwright install --with-deps chromium
+        - run: pnpm build
+        - run: pnpm eval -- --tasks core --hosts all --adapter pi --arm ripple --runs 1
+          if: env.RIPPLE_EVAL_API_KEY != ''
+        - uses: actions/upload-artifact@v4
+          if: always()
+          with:
+            name: eval-runs
+            path: evals/runs/
+            if-no-files-found: warn
+  ```
+
+  `run.ts` reads the model API key from `RIPPLE_EVAL_API_KEY` and passes it to the adapter under the name the harness CLI expects. While the secret is unset the eval step is skipped and the job is green; its result is reported as `skipped`, never as passed.
 
 ### 8.15 Acceptance (evals)
 
@@ -1690,7 +1744,7 @@ An entry with "ledger change required: yes" has status `needs-ben` until the led
 | K-62 | `pnpm eval -- --reference --tasks all` (scores each task's `reference/<host>/` as if an agent produced it; no model call). | Every reference passes all its applicable checks, has zero checker errors, and passes the gates. |
 | K-63 | `score.ts` unit tests with fixed inputs. | The example of 8.8 yields the listed scores (to one decimal) and `passed: false`; changing `functional.passed` to 9 yields `passed: true`. |
 | K-64 | `outside.ts` on a fixture diff. | Counts equal hand-computed values for each of the five terms. |
-| K-65 | `friction.ts` on the two sample transcripts. | Extracts the diagnostics of 5.1 as `guessed` tuples. |
+| K-65 | `friction.ts` on the two sample transcripts (each contains the example diagnostic of `07-manifest-registry-cli.md` section 9.4.1 in a tool output). | Extracts one `guessed` tuple: rule `RP101`, component `button`, prop `variant`, found `outlined`. |
 | K-66 | `workspace.ts` for T08 on react and liquid, then `check --json`. | Test K-35. |
 | K-67 | Canary (8.4 step 6) with a stub adapter that cannot see skills. | The invocation aborts with the stated message. |
 | K-68 | `pnpm eval -- --bar` with any `null` model key. | Exit code 2 and the stated message. |
@@ -1722,32 +1776,12 @@ UNVERIFIED (each with what settles it):
 | Whether a METHOD step is gated by `data-agent-confirm` on a descendant control | SPIKE-08 (7.7) |
 | The whole eval design (no run executed) | M3 baseline (8.14) |
 | mock.shop catalogue shape assumed by `mockshop.ts` (a product with two or more variants; a collection with eight or more products) | First harness run; `mockshop.ts` exits with a clear message when no such product or collection exists |
-| The manifest rule ids `variant-picker-outside-form` and `dialog-needs-title` used by T08 | `10-components-interactive.md`, `11-components-commerce.md` (they MUST define manifest `rules[]` entries with these ids) |
+| `checkPattern(element, "dialog")` on a native `<dialog>` (T10-C4; D-108) | Test K-62 on the T10 reference solution |
+| Whether `<pm> exec ripple` and `npx <pkg>` both resolve the binary in every package manager (the static spelling of the command form, section 0) | First run of T01 on each npm host; `07-manifest-registry-cli.md` section 7.1 rule 12 |
+| The name of the environment variable each harness CLI reads its model key from | First real run of each adapter |
 
 ---
 
 ## Ledger issues
 
-Decisions this document had to make where the ledger is silent, and conflicts found. Each was resolved in the way most consistent with the ledger and applied above.
-
-| # | Issue | Applied here |
-|---|---|---|
-| 1 | Ledger section 12 gives "checker rules" to `07-manifest-registry-cli.md`, while this document was asked for the rules table and message format. | Split: 07 owns the engine and detection; this document owns the output format (5.1 to 5.3) and each rule's text (`RuleMeta`, 5.5). If 07 states different text for a rule, the two documents must be reconciled; ids, severities and layers here are copied from D-059 and research 7.3. |
-| 2 | D-059 says three rules "MUST be rewritten by doc 07". The rewritten text is needed for docs and skills. | Rewritten in 5.5: RP204 (Dialog, Drawer, Popover, Tooltip), RP303 (tab panel, `<dialog open>`, error message), RP320 (controls in `agent.confirm`). RP118 text added. |
-| 3 | D-059 lists "RP101 to RP117" and "RP501 to RP512" as ranges; the research defines only 101 to 105, 110 to 117, 501 to 506, 510 to 512. | The gaps are reserved and unassigned; 51 rule ids exist (K-32). |
-| 4 | D-057 has `docs <component>` only. Rule pages and guides exist in the package and messages point to docs. | 2.7 adds `docs` (index), `docs <RULE>`, `docs guide <topic>`. Requirement on doc 07. |
-| 5 | D-060 and the research describe skills with `references/`; `01-architecture.md` 6.1 closes the package tree at `SKILL.md` + `ripple.json` per skill. | No `references/` directories. Detail lives in `docs/guides/` (12 guides, 2.5); skills link to them. |
-| 6 | D-060 gives the `AGENTS.md` markers no name; D-056 marker regions are `<!-- ripple:start <name> -->`. | Markers are `<!-- ripple:start agents -->` / `<!-- ripple:end agents -->`. |
-| 7 | D-060 caps the `AGENTS.md` section at 12,000 bytes but 84 components with 140-character summaries exceed it. | Deterministic truncation steps (3.3). |
-| 8 | "Dev-mode warnings" are not in the ledger. An in-page development overlay would need a new browser file and package entry, which `01-architecture.md` 6.1 forbids. | No new file. Section 6 fixes invariants and a catalogue over the messages other documents already define; `html` and `liquid` hosts use the checker as the development loop. Recommendation for later: an opt-in `ripple-dev.js` that runs layer H in the page. |
-| 9 | On Liquid, D-038 item 4 makes an invalid enumeration fall back silently, so layer H cannot see it and a value from a variable is undetectable. | Stated in 6.3; RP101 layer S is the only detector for Liquid literals. |
-| 10 | Neither `04-elements.md` nor `05-commerce.md` defines `agent.actions` for commerce elements (05 mentions only `checkout`). | Defined in 7.2 (`rp-product-form`, `rp-cart`, `rp-live`, `rp-predictive-search`, `rp-recommendations`), including `api.lines()` for cart items. Docs 05 and 11 must adopt them. |
-| 11 | D-050 says checkout is "an `rp-cart` action `checkout` flagged for confirmation", but the UI SDK `agent` key has no per-action confirm option (`primitive.ts`). | Default path of SPIKE-08 implemented as a gated test (7.7): `checkout` is listed in `agent.actions` only after the test proves the bridge refuses it without approval. The verified `press` path covers agents meanwhile. |
-| 12 | `04-elements.md` ledger issue L-11: bridge labels for `rp-*` roots. | No contract change; RP607 narrowed (7.5). Recommendation, not applied: `role="group"` and a required `ariaLabel` on commerce roots. |
-| 13 | D-061 says the eval suite is "that of the research report", but several task checks there contradict later decisions (T05 combobox; T10 `ui-dialog`; T03 Shop Pay; T18). | Tasks rewritten to the ledger in 8.6: no combobox (D-048), native dialog (D-008), no ShopPayButton (D-050), T18 dropped. Core set is unchanged: T01 to T04, T06 to T10, T11. |
-| 14 | Ledger tree gives `evals/` only `tasks/T<nn>/`, `adapters/`, `rubric/`, `runs/`; the research used `templates/`, `judge/`, `score.ts` at the top. | All harness code and templates live under `evals/adapters/`; rubric, golden set, thresholds and the decision log under `evals/rubric/` (8.1). Root `package.json` gains the script `eval` (to be added to `01-architecture.md` section 4). |
-| 15 | The research leaves budgets "set from the median of 10 runs" with no value to implement first, and does not say how the control arm is scored without Ripple-only checks. | Provisional budgets (8.11) with a freeze script; control-arm scoring rule (8.12). |
-| 16 | Model ids for the weak and judge models are not known. | `bar.json` keys are `null` and the bar run refuses to start until set; `agentModel` defaults to Hydrogen's harness default. |
-| 17 | The ledger does not say how eval results change the API. | Rules G-1 to G-7, the A/B protocol, the change gate and the decision log (8.13). Renames of ledger-fixed names go to Ben. |
-| 18 | `components/<id>/notes.md` (optional hand-written notes for a component page, research 9.1) is not in the ledger's repository tree. | Added as optional (2.4, C-4). |
-| 19 | T08 relies on manifest rule ids `variant-picker-outside-form` and `dialog-needs-title`, and the skill `ripple-compose-page` fixes four spacing values that blueprints must use. | Cross-document requirements on docs 10, 11 and 12 (stated in section 9 and 4.5.3). |
+None open. See `00-decisions.md` section 13.2.

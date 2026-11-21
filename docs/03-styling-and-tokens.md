@@ -1,12 +1,14 @@
 # 03 - Styling and tokens
 
-Status: specification. Follows `00-decisions.md` D-024 to D-032, D-055, D-064, D-066 and sections 4.3, 4.5, 6.2. Where this document and the ledger disagree, the ledger wins; known gaps are listed in [Ledger issues](#ledger-issues).
+Status: specification. Follows `00-decisions.md` D-024 to D-032, D-055, D-064, D-066, D-080, D-081, D-105 and sections 4.3, 4.5, 6.2. Where this document and the ledger disagree, the ledger wins.
 
-Every CSS file and generator in this document was run in this environment (Chromium via Playwright, Node 22, `tailwindcss` 4.3.5, `lightningcss` 1.33). The exact files are stored, ready to copy, in `ripple/docs/research/spikes/styling-doc03/` (`css/`, `gen/`, `test.mjs`, `tw-test.mjs`, `measure.mjs`). Statements about WebKit and Gecko are UNVERIFIED (SPIKE-06).
+Every CSS file and generator in this document was run in this environment (Chromium via Playwright, Node 22, `tailwindcss` 4.3.5, `lightningcss` 1.33). The files are stored in `ripple/docs/research/spikes/styling-doc03/` (`css/`, `gen/`, `test.mjs`, `tw-test.mjs`, `measure.mjs`). Statements about WebKit and Gecko are UNVERIFIED (SPIKE-06).
+
+Three files in that directory predate the reconciliation decisions D-080 and D-105 and MUST NOT be copied: `css/base.css`, `gen/display-css.ts` and `gen/run-display.ts`. The versions printed in sections 4.1 and 4.3 of this document are normative. They were run on a copy of the directory: the generator reproduces the two regions of section 4.1 byte for byte from the `elements.json` of `07-manifest-registry-cli.md` section 1.5; `test.mjs` passes; `tokens.css` + `base.css` measure 2,174 bytes (section 14); and in Chromium the Tabs no-script block, the `rp-dialog` box (`display: block`, 0 by 0, `checkVisibility()` true) and the `scroll-padding-block-start` rule behave as specified.
 
 ## 0. Scope
 
-This document owns: cascade layers; every token and its default value; dials and derivation; schemes and dark mode; `base.css` (reset, `hidden` rule, focus ring, pre-upgrade display rules, script-state rules); Tailwind v4 integration and the no-build output; generation of `props.css` and `theme.css`; the component CSS authoring pattern and its lint rules; motion and reduced motion; logical properties and right-to-left; CSS size budgets; the browser floor for CSS features.
+This document owns: cascade layers; every token and its default value; dials and derivation; schemes and dark mode; `base.css` (reset, the two `!important` rules, focus ring, pre-upgrade display rules, script-state rules); Tailwind v4 integration and the no-build output; generation of `props.css` and `theme.css`; the component CSS authoring pattern and its lint rules; motion and reduced motion; logical properties and right-to-left; CSS size budgets and how CSS size is measured; the browser floor for CSS features and the CSS side of the capability tiers of D-081.
 
 This document does NOT own, and links instead:
 
@@ -37,7 +39,7 @@ Rules:
 
 1. Ripple MUST NOT ship a CSS rule outside a cascade layer. The only unlayered CSS on a Ripple page is the host's token bridge (section 3.8).
 2. Ripple CSS MUST be plain CSS. These MUST NOT appear in any file above: `@apply`, `@utility`, `@variant`, `@custom-variant`, `theme(`, `@import` (except in the scaffolded `ripple.css` of section 5.2), CSS nesting (`&` or a rule inside a style rule), Sass or Less syntax, `@property`.
-3. `!important` MUST appear exactly once in all Ripple CSS: the `[hidden]` rule in `css/base.css`.
+3. Ripple CSS contains exactly two `!important` rules, both in layer `ui-sdk` in `css/base.css` (D-021, D-025): the `[hidden]` rule, and the Tabs `@media (scripting: none)` block, which holds two `!important` declarations. `!important` MUST NOT appear anywhere else in Ripple CSS.
 4. The authored file is the shipped file. No build step transforms Ripple CSS: scaffolded files are copied, and the prebuilt `browser/ripple.css` is a plain concatenation (section 5.4).
 5. Generated files (`props.css`, `theme.css`, the two regions of `base.css`) are committed. `pnpm gen --check` MUST fail when a committed generated file differs from the generator output.
 
@@ -49,7 +51,7 @@ Defined by `00-decisions.md` D-055 and `07-manifest-registry-cli.md`. Summary us
 |---|---|
 | `react`, `remix`, `html` with a CSS entry | `<paths.styles>/ripple.css`, `tokens.css`, `theme.css`, `base.css`, `props.css`, `components/<id>.css` |
 | `html` without a build | prebuilt `browser/ripple.css` (all components, unminified concatenation) |
-| `liquid` | one file `assets/ripple.css` (unminified concatenation), plus a marker region holding the `@theme reference` block in `config/styles.css` |
+| `liquid` | one file `assets/ripple.css` (unminified concatenation of trailer-bearing regions, section 5.3), plus a marker region holding the `@theme reference` block in `config/styles.css` |
 
 ## 2. Cascade layers
 
@@ -76,11 +78,11 @@ Tailwind 4.3.5 emits one more statement, `@layer properties;`, before everything
 
 | Order | Layer | Owner | Content |
 |---:|---|---|---|
-| 1 | `ui-sdk` | UI SDK runtime; Ripple (one rule) | UI SDK's injected defaults (`uisdk/packages/core/src/foundation/platform/style.ts`); Ripple's `[hidden]` rule |
+| 1 | `ui-sdk` | UI SDK runtime; Ripple (two rules) | UI SDK's injected defaults (`uisdk/packages/core/src/foundation/platform/style.ts`); Ripple's two `!important` rules: the `[hidden]` rule and the Tabs `@media (scripting: none)` block (section 4.1) |
 | 2 | `theme` | Tailwind | Tailwind's `:root` variables |
 | 3 | `base` | Tailwind | Preflight |
 | 4 | `rp.tokens` | Ripple | `tokens.css` |
-| 5 | `rp.base` | Ripple | `base.css`: reset, scheme painting, focus ring, keyframes, static display rules |
+| 5 | `rp.base` | Ripple | `base.css`: reset, scroll padding, scheme painting, focus ring, keyframes, static display rules |
 | 6 | `rp.components` | Ripple | one file per component |
 | 7 | `rp.props` | Ripple | `props.css`; the script-state rules of `base.css` |
 | 8 | `components` | the project | project component CSS; beats Ripple |
@@ -95,7 +97,7 @@ Consequences that other documents rely on:
 4. Ripple component CSS overrides Tailwind preflight, so a component renders the same with and without Tailwind (acceptance test A-12).
 5. Unlayered CSS beats every layer. Project CSS that must not override Ripple MUST be placed in `@layer components` or `@layer utilities`.
 
-Ripple MUST write only in `ui-sdk` (the one `[hidden]` rule) and in the four `rp.*` sublayers. Ripple MUST NOT write in `theme`, `base`, `components`, `rmx` or `utilities`.
+Ripple MUST write only in `ui-sdk` and in the four `rp.*` sublayers. In `ui-sdk` Ripple writes exactly two `!important` rules, both in layer `ui-sdk`: the `[hidden]` rule of D-021 and the Tabs `@media (scripting: none)` block of D-012. The Tabs block cannot live in `rp.components`: the `[hidden]` rule is `!important` in the earlier layer `ui-sdk`, and for `!important` declarations an earlier layer wins over a later one (measured, `ripple/docs/research/spikes/components-interactive/`). Ripple MUST NOT write in `theme`, `base`, `components`, `rmx` or `utilities`.
 
 ## 3. Tokens
 
@@ -109,6 +111,7 @@ Ripple MUST write only in `ui-sdk` (the one `[hidden]` rule) and in the four `rp
 | Generator input | `--rp-space-steps`, `--breakpoint-*` | `tokens.css` section 1 | |
 | Component public variable | `--rp-<component id>-<name>` | the component's CSS file | `--rp-button-height` |
 | Component private variable | `--_<name>` | the component's CSS file | `--_bg` |
+| Component-set global variable | `--rp-header-block-size` (the only one) | `header.css`, on `:root:has(.rp-header[data-sticky])`; read by `base.css` (section 3.4) | |
 
 `tokens.css` is the only file in which a token value is written. A component CSS file MUST NOT declare a name from the first four rows.
 
@@ -377,7 +380,7 @@ Measured WCAG contrast of the defaults (computed colours, Chromium; `ripple/docs
 | ring on background | 17.72 | 17.55 | 3 |
 | border on background (decorative) | 1.40 | 1.32 | none |
 
-**Space.** `--spacing` is `calc(0.25rem * var(--rp-density))` (4 px). A space step `n` is `calc(var(--spacing) * n)`.
+**Space.** `--spacing` is `calc(0.25rem * var(--rp-density))` (4 px). A space step `n` is `calc(var(--spacing) * n)`. The list of steps is the generator input `--rp-space-steps` (default `0 0.5 1 1.5 2 3 4 5 6 8 10 12 16 20 24 32`); no CSS rule reads it.
 
 | Step | 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 | 20 | 24 | 32 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -455,6 +458,8 @@ The `weight` prop values `normal medium semibold bold` map one to one to the fou
 | `--shadow-md` | `0 4px 6px -1px oklch(0 0 0 / 0.1), 0 2px 4px -2px oklch(0 0 0 / 0.1)` |
 | `--shadow-lg` | `0 10px 15px -3px oklch(0 0 0 / 0.1), 0 4px 6px -4px oklch(0 0 0 / 0.1)` |
 
+There are exactly four shadow tokens. `--shadow-xl` does not exist (D-026, D-029).
+
 **Motion.**
 
 | Token | Value | Use |
@@ -483,6 +488,16 @@ The `weight` prop values `normal medium semibold bold` map one to one to the fou
 | `--rp-ring-offset` | `2px` | focus outline offset |
 | `--rp-dir` | `1`; `-1` inside `[dir="rtl"]` | sign for the few physical values CSS cannot express logically (section 10) |
 
+**Component-set global variable.** One custom property is read by `base.css` but is NOT declared in `tokens.css`: a component sets it.
+
+| Variable | Set by | Read by | Value when unset |
+|---|---|---|---|
+| `--rp-header-block-size` | `header.css`, in the rule `:root:has(.rp-header[data-sticky])` (a sticky Header; D-085; default `4rem`; contract in `12-components-chrome-and-blueprints.md`, "Header") | `base.css`: `html { scroll-padding-block-start: var(--rp-header-block-size, 0px); }` (D-105), so that a focused or targeted element is not hidden under the sticky bar | `0px` (the fallback inside the `var()`) |
+
+No other component may set a custom property outside its own root or parts, and no other file may read `--rp-header-block-size` without a fallback value.
+
+**Tokens added to the first proposal (D-026 item (d)).** All are declared in section 3.3 and listed above: `--color-link`, `--color-sale-foreground`, `--spacing-target-min`, `--font-weight-normal`, `--font-weight-medium`, `--font-weight-semibold`, `--font-weight-bold`, `--rp-heading-weight`, `--rp-ring-width`, `--rp-ring-offset`, `--rp-dir`, `--rp-space-steps`, `--breakpoint-sm`, `--breakpoint-md`, `--breakpoint-lg`, `--breakpoint-xl`, `--breakpoint-2xl`.
+
 ### 3.5 Derivation rules
 
 1. **Derived tokens are declared on `:root, [data-scheme]`.** A `var()` is resolved on the element that declares the property, and descendants inherit the resolved value. A derived token declared on `:root` alone would not change when a descendant changes a dial (verified counter-test, `ripple/docs/research/styling-spike.md` 3.2).
@@ -499,14 +514,14 @@ The `weight` prop values `normal medium semibold bold` map one to one to the fou
 5. **Status colours follow the scheme background.** Where relative colour syntax is supported, the lightness of `--color-destructive`, `--color-success`, `--color-warning`, `--color-info` and of `--color-destructive-foreground` switches at background lightness 0.6. Where it is not supported, section 3 of `tokens.css` gives the light values and section 4 gives the dark values for `[data-scheme="dark"]`.
 6. **Every feature above the browser floor is inside `@supports`, after a static declaration of the same tokens** (sections 5 and 6 of `tokens.css`).
 7. **The section order of `tokens.css` is fixed** (1 to 6). Sections 4, 5 and 6 override section 3 by source order at equal specificity; reordering breaks the fallbacks.
-8. A dial colour outside the sRGB gamut is not guaranteed to produce a readable `--color-primary-foreground`. The checker SHOULD warn (rule owned by `07-manifest-registry-cli.md`).
+8. A dial colour outside the sRGB gamut is not guaranteed to produce a readable `--color-primary-foreground`. The checker warns about it as part of rule RP609 (D-059, D-102; detection in `07-manifest-registry-cli.md`).
 
 ### 3.6 Schemes and dark mode
 
 1. A **scheme** is a named set of colour dial values applied with `data-scheme="<name>"` on any element, including `<html>`. Built-in names: `light` and `dark`. `light` is also the value of `:root`.
 2. Every scheme block MUST set these five declarations and MUST NOT set a derived token: `--rp-background`, `--rp-foreground`, `--rp-brand`, `--rp-brand-foreground`, `color-scheme`. `--rp-brand-foreground` is `initial` when the scheme wants the computed value. If any scheme block sets `--rp-accent`, every scheme block MUST set it (use `initial` for "unset"). Reason: a scheme nested inside another scheme inherits every dial it does not set.
 3. Schemes nest. `<div data-scheme="light">` inside `<section data-scheme="dark">` renders the light values (verified).
-4. Dark mode is opt-in. A page is dark when `<html data-scheme="dark">` is printed by the host. Ripple ships no scheme that follows the operating system setting.
+4. Dark mode is opt-in. A page is dark when `<html data-scheme="dark">` is printed by the host. Ripple ships no scheme that follows the operating system setting (D-026 item (c)).
 5. A project adds a scheme by adding ONE block to section 2 of `tokens.css`, with a literal value for each dial:
 
    ```css
@@ -549,11 +564,11 @@ The `weight` prop values `normal medium semibold bold` map one to one to the fou
 
 Token names MUST NOT change. `--rp-space-steps` is read only by the generator; no CSS consumes it.
 
-In the Ripple repository regeneration is `pnpm gen`. In a project, `ripple add` and `ripple upgrade` MUST regenerate `theme.css` and `props.css` from the project's own `tokens.css` on every run, using the generator functions of sections 5.1 and 6.3 (command behaviour is specified in `07-manifest-registry-cli.md`). `props.css` SHOULD stay at or below 100 rules per attribute name per file (currently 96 for a spacing prop); each added space step adds 48 rules.
+In the Ripple repository regeneration is `pnpm gen`. In a project, `ripple add` and `ripple upgrade` MUST regenerate `theme.css` and `props.css` from the project's own `tokens.css` on every run, using the generator functions of sections 5.1 and 6.3 (D-029; command behaviour is specified in `07-manifest-registry-cli.md`). After a token edit the instruction to the user is: run `ripple upgrade`. Checker rule RP508 reports `props.css` or `theme.css` that is older than `tokens.css` (D-102). On Liquid the same applies to the regions `core/props` and the `@theme reference` region, which derive from the region `core/tokens` (section 5.3). `props.css` SHOULD stay at or below 100 rules per attribute name per file (currently 96 for a spacing prop); each added space step adds 48 rules.
 
 ### 3.8 The host token bridge
 
-A host MAY set dials at run time by printing ONE unlayered `<style>` element after the Ripple stylesheet. This is the only unlayered CSS on a Ripple page. Its required shape:
+A host MAY set dials at run time by printing ONE unlayered `<style>` element after the Ripple stylesheet. This is the only unlayered CSS on a Ripple page. It holds exactly two rules (D-026 item 5 as amended): the non-colour dials on `:root`, and the colour dials on `:root, [data-scheme="light"]`. Its required shape:
 
 ```html
 <style>
@@ -577,26 +592,37 @@ A host MAY set dials at run time by printing ONE unlayered `<style>` element aft
 
 Rules:
 
-1. Non-colour dials go in the `:root` rule. Colour dials go in the `:root, [data-scheme="light"]` rule, so that a `scheme="light"` component inside a dark section shows the merchant's colours and not the stock ones.
+1. Non-colour dials go in the `:root` rule. Colour dials go in the `:root, [data-scheme="light"]` rule, so that a `scheme="light"` component inside a dark section shows the merchant's colours and not the stock ones (D-026 as amended, item (a)). The bridge sets the `light` scheme only; the `dark` scheme keeps the values of `tokens.css`.
 2. The bridge MUST print only dials, plus the three semantic radius tokens and `--color-muted` where the host has a setting for them. It MUST NOT print any other derived token.
 3. A declaration whose setting is blank MUST be omitted (not printed with an empty value).
 4. The bridge MAY print `--rp-brand-foreground` in the colour rule. When it does not, the computed value applies.
-5. On Liquid the bridge is `snippets/rp-tokens.liquid`. Setting ids and palette slots are fixed by D-026 item 5: `rp_palette.surface` to `--rp-background`, `rp_palette.on_surface` to `--rp-foreground`, `rp_palette.interactive` to `--rp-brand`, `rp_palette.surface_2` to `--color-muted`, `rp_palette.accent` to `--rp-accent`, `rp_radius` to `--rp-radius`, `rp_density` to `--rp-density`, `rp_text_scale` to `--rp-text-scale`, `rp_font_body` to `--rp-font-body`, `rp_font_heading` to `--rp-font-heading`. The values printed MUST be inside the "Allowed values" column of section 3.2. The Liquid source and the settings schema are specified in `14-liquid-theme.md`.
+5. On Liquid the bridge is `snippets/rp-tokens.liquid`. Setting ids and palette slots are fixed by D-026 item 5: `rp_palette.surface` to `--rp-background`, `rp_palette.on_surface` to `--rp-foreground`, `rp_palette.interactive` to `--rp-brand`, `rp_palette.surface_2` to `--color-muted`, `rp_palette.accent` to `--rp-accent`, `rp_radius` to `--rp-radius`, `rp_density` to `--rp-density`, `rp_text_scale` to `--rp-text-scale`, `rp_font_body` to `--rp-font-body`, `rp_font_heading` to `--rp-font-heading`. The values printed MUST be inside the "Allowed values" column of section 3.2. The Liquid source and the settings schema are specified in `14-liquid-theme.md` section 6, which owns these Liquid specifics (D-098):
+   - The three range settings are integers that `rp-tokens` divides: `rp_radius` 0 to 24, unit px, default 8, printed as `--rp-radius: <value / 16>rem`; `rp_density` 75 to 125, percent, default 100, printed as `--rp-density: <value / 100>`; `rp_text_scale` 113 to 133, hundredths, default 120, printed as `--rp-text-scale: <value / 100>`. The defaults equal the `tokens.css` defaults (`0.5rem`, `1`, `1.2`).
+   - `rp_font_body` and `rp_font_heading` default to `system_ui_n4`. When the chosen font is a system font (its `system?` member is true), `rp-tokens` prints NO font dial and no `@font-face` rule for it, so `tokens.css` supplies its system stack and the default Liquid look equals the other hosts.
+   - When the theme already has a `color_palette` setting with another id, the Ripple settings group has no `rp_palette` and `rp-tokens` prints no colour dial.
 
 ## 4. `css/base.css`
 
 ### 4.1 Complete file (normative)
 
-The two regions between `ripple:start` and `ripple:end` markers are generated (section 4.3). Everything else is hand-written.
+The two regions between `ripple:start` and `ripple:end` markers are generated (section 4.3). Everything else is hand-written. The `@media (scripting: none)` block is the block required by `10-components-interactive.md` section 0.3 item 1, indented by two spaces because it sits inside `@layer ui-sdk`.
 
 ```css
 /* base.css
-   Sections: 1 hidden rule (layer ui-sdk), 2 reset and scheme painting, 3 focus ring,
-   4 shared keyframes, 5 generated display rules (layer rp.base), 6 generated script-state
-   rules (layer rp.props). Sections 5 and 6 are rewritten by `pnpm gen`. */
+   Sections: 1 hidden rule and Tabs no-script block (layer ui-sdk), 2 reset and scheme
+   painting, 3 focus ring, 4 shared keyframes, 5 generated display rules (layer rp.base),
+   6 generated script-state rules (layer rp.props). Sections 5 and 6 are rewritten by `pnpm gen`. */
 @layer ui-sdk {
   :where([hidden]:not([hidden="until-found"])) {
     display: none !important;
+  }
+  @media (scripting: none) {
+    ui-tabs-panel[hidden] {
+      display: block !important;
+    }
+    ui-tabs-list {
+      display: none !important;
+    }
   }
 }
 
@@ -609,6 +635,9 @@ The two regions between `ripple:start` and `ripple:end` markers are generated (s
   :where(html) {
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+  }
+  html {
+    scroll-padding-block-start: var(--rp-header-block-size, 0px);
   }
   :where(body) {
     margin: 0;
@@ -649,24 +678,30 @@ The two regions between `ripple:start` and `ripple:end` markers are generated (s
   }
 
   /* ripple:start display */
-  :where(rp-dialog, rp-live, rp-product-form, ui-tabs-tab, ui-toast-action, ui-toast-close, ui-tooltip-trigger) {
+  :where(ui-tabs-tab, ui-toast-action, ui-toast-close, ui-tooltip-trigger) {
     display: contents;
   }
-  :where(rp-carousel, rp-cart, rp-navigation-menu, rp-predictive-search, rp-quantity, rp-recommendations, ui-tabs, ui-tabs-indicator, ui-tabs-list, ui-tabs-panel, ui-toast, ui-toast-description, ui-toast-region, ui-toast-title, ui-tooltip-arrow) {
+  :where(rp-carousel, rp-cart, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event, ui-tabs, ui-tabs-indicator, ui-tabs-list, ui-tabs-panel, ui-toast, ui-toast-description, ui-toast-region, ui-toast-title, ui-tooltip-arrow) {
     display: block;
+  }
+  rp-dialog {
+    display: block;
+    position: absolute;
+    inline-size: 0;
+    block-size: 0;
   }
   /* ripple:end display */
 }
 
 @layer rp.props {
   /* ripple:start script-state */
-  :where(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations):not(:defined) [data-rp-js="inflow"] {
+  :where(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event):not(:defined) [data-rp-js="inflow"] {
     visibility: hidden;
   }
-  :where(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations):not(:defined) [data-rp-js="overlay"] {
+  :where(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event):not(:defined) [data-rp-js="overlay"] {
     display: none;
   }
-  :where(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations):defined [data-rp-js="fallback"] {
+  :where(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event):defined [data-rp-js="fallback"] {
     display: none;
   }
   /* ripple:end script-state */
@@ -675,48 +710,59 @@ The two regions between `ripple:start` and `ripple:end` markers are generated (s
 
 ### 4.2 Rules
 
-1. **Hidden.** The `[hidden]` rule is in layer `ui-sdk` and is `!important`, so it beats every `display` declaration in every later layer, before and after element upgrade. Component CSS MUST NOT try to show an element that has the `hidden` attribute; the owner removes the attribute.
+1. **Hidden.** The `[hidden]` rule is in layer `ui-sdk` and is `!important`, so it beats every `display` declaration in every later layer, before and after element upgrade. Component CSS MUST NOT try to show an element that has the `hidden` attribute; the owner removes the attribute. The single exception is the Tabs block of rule 10, which is in the same layer and is also `!important`.
 2. **Reset.** `base.css` resets only what the list above shows. It MUST NOT grow into a full reset. Each component resets what it needs on its own root (`margin`, `padding`, `border`, `background`, `font`, `list-style`, `text-decoration`), so that it renders identically with and without Tailwind preflight.
 3. **Scheme painting.** `body` and every `[data-scheme]` element get `background-color` and `color` from the derived tokens.
 4. **Focus ring.** Section 11.
 5. **Shared keyframes.** `rp-spin` and `rp-pulse` are the only keyframes in `base.css`. A component that needs another animation defines `@keyframes rp-<component id>-<name>` in its own file.
-6. **Static display rules** (region `display`). An undefined custom element is `display: inline`. Without a static rule, layout changes when the element upgrades (measured: 50 px shift, CLS 0.014, `ripple/docs/research/styling-spike.md` 5.1). The region holds one rule per display value. Selectors are `:where(...)` so that a component class can override the value.
-7. **Script-state rules** (region `script-state`). They implement `data-rp-js` (`00-decisions.md` D-021 item 4). They are in layer `rp.props`, not `rp.base`: a control that carries `data-rp-js` usually also has a component class whose `display` is declared in `rp.components`, and a rule in the earlier layer `rp.base` would lose to it (verified: with the rules in `rp.props`, a `.rp-button` with `data-rp-js="overlay"` computes `display: none` before definition and `inline-flex` after).
-8. These three rules are the only CSS in Ripple that selects a `data-rp-*` attribute.
+6. **Static display rules** (region `display`). An undefined custom element is `display: inline`. Without a static rule, layout changes when the element upgrades (measured: 50 px shift, CLS 0.014, `ripple/docs/research/styling-spike.md` 5.1). The region holds one grouped rule per display value, then the rule of `rp-dialog`. Every `rp-*` tag is `display: block` (D-080). The values come from the manifest key `elements` (section 4.3). A component class can override the value (within the limit of CSS-30) because `rp.components` follows `rp.base`.
+7. **Script-state rules** (region `script-state`). They implement `data-rp-js` (`00-decisions.md` D-021 item 4). They are written in the file `base.css`, inside an `@layer rp.props` block, not in `rp.base`: a control that carries `data-rp-js` usually also has a component class whose `display` is declared in `rp.components`, and a rule in the earlier layer `rp.base` would lose to it (verified: with the rules in `rp.props`, a `.rp-button` with `data-rp-js="overlay"` computes `display: none` before definition and `inline-flex` after).
+8. These three rules are the only CSS in Ripple that selects a `data-rp-*` attribute. Their selectors match ANY descendant element that carries `data-rp-js`, not only controls: `data-rp-js` MAY sit on a `<form>` (the Liquid discount form carries `data-rp-js="inflow"` on the `<form>` itself, D-092). The generator MUST NOT add a tag name or any other restriction before `[data-rp-js=...]`.
 9. No rule may hide content or a working native control (link, submit button, input) before upgrade. A control hidden by `data-rp-js="inflow"` or `"overlay"` stays hidden when the script never loads; everything else works.
+10. **Tabs without JavaScript.** The `@media (scripting: none)` block in layer `ui-sdk` shows every `ui-tabs-panel` (also the ones with `hidden`) and hides the tab list (D-012, D-021 item (d)). It is the second and last `!important` rule of Ripple. It MUST stay in `base.css`: component CSS cannot override the `[hidden]` rule. On a browser without `@media (scripting: none)` the block is ignored and only the default panel is readable without JavaScript (D-081).
+11. **Scroll padding.** `html { scroll-padding-block-start: var(--rp-header-block-size, 0px); }` keeps focused and targeted elements clear of a sticky Header (D-105; variable defined in section 3.4). The rule is written with the plain selector `html`, exactly as shown.
+12. **Box sizing.** The rule is `*, ::before, ::after { box-sizing: border-box; }` (D-105). It MUST NOT be wrapped in `:where()`: pseudo-elements are invalid inside `:where()`, so that form never matched `::before` and `::after`.
+13. The only `!important` declarations in the file are the three shown: one in the `[hidden]` rule and two in the Tabs block.
 
 ### 4.3 Display values and the generator
 
-Every custom element tag used by any contract has a static display value of `block` or `contents`.
+The display value of a custom element tag is data. Every custom element tag that a contract or a blueprint may contain is a key of the manifest key `elements`; its source is `src/gen/elements.json` (complete content: `07-manifest-registry-cli.md` section 1.5). `elements.<tag>.display` is one of `block`, `contents`, `unset` (D-080 item 4, ledger section 4.8).
 
-- `contents`: a pure behaviour wrapper. It has no box, so it MUST NOT receive layout props, padding, a background or a border, and it cannot be a scroll container or be measured.
-- `block`: every other element. A component MAY override the value by class in its own CSS file (for example `.rp-quantity { display: inline-flex; }`).
+Rules:
 
-Initial values (the manifest is the source at build time; an element specification in `04-elements.md` or `05-commerce.md` that states a different display value wins and the manifest entry MUST be changed accordingly):
+1. Every `rp-*` tag is `display: block` (D-080 item 1). There is no `rp-*` tag with `display: contents`. A wrapper such as `rp-live` or `rp-product-form` is a block box; where a component needs its children laid out by an outer grid, the component root is the grid item. Reason: the agent bridge skips a root that has no box, and an `intersect` trigger needs a box (`04-elements.md`).
+2. `rp-dialog` is `display: block` and additionally `position: absolute; inline-size: 0; block-size: 0` (D-008 item (g), D-080 item 1). The root takes no space in the flow and still has a box. The three extra declarations are written by the generator (constant `EXTRA_DECLARATIONS`); they are not stored in the manifest.
+3. `rp-view-event` (the infrastructure element of D-089) is `display: block`.
+4. A `ui-*` tag keeps the value UI SDK gives it (D-080 item 2): `block` or `contents`, equal to the `display` given to `createParts` in the pinned UI SDK version. `unset` means UI SDK gives the tag no default display; such a tag is absent from the region and its layout is set by class in the component CSS. A UI SDK version bump MUST re-check the table below against `uisdk/packages/web/src/tabs.ts`, `tooltip.ts` and `toast.ts`.
+5. A component MAY override the display value by class in its own CSS file (for example `.rp-quantity { display: inline-flex; }`, `.rp-carousel { display: grid; }`). It MUST NOT set `display: contents` or `display: none` on a custom element root (lint rule CSS-30).
+6. The generator throws when an `rp-*` tag has a display value other than `block`.
 
-| Tag | Display | Source |
+Initial values (they MUST equal `src/gen/elements.json`):
+
+| Tag | `display` | Source |
 |---|---|---|
-| `rp-dialog` | `contents` | wrapper around one `<dialog>` (D-008) |
-| `rp-live` | `contents` | wrapper around a GET form |
-| `rp-product-form` | `contents` | wrapper around a form |
-| `rp-carousel` | `block` | |
-| `rp-cart` | `block` | |
-| `rp-navigation-menu` | `block` | |
-| `rp-predictive-search` | `block` | |
-| `rp-quantity` | `block` | |
-| `rp-recommendations` | `block` | |
+| `rp-carousel` | `block` | D-080 |
+| `rp-cart` | `block` | D-080 |
+| `rp-dialog` | `block`, plus `position: absolute; inline-size: 0; block-size: 0` | D-080, D-008 |
+| `rp-live` | `block` | D-080 |
+| `rp-navigation-menu` | `block` | D-080 |
+| `rp-predictive-search` | `block` | D-080 |
+| `rp-product-form` | `block` | D-080 |
+| `rp-quantity` | `block` | D-080 |
+| `rp-recommendations` | `block` | D-080 |
+| `rp-view-event` | `block` | D-080, D-089 |
 | `ui-tabs`, `ui-tabs-list`, `ui-tabs-indicator`, `ui-tabs-panel` | `block` | `uisdk/packages/web/src/tabs.ts` |
 | `ui-tabs-tab` | `contents` | `uisdk/packages/web/src/tabs.ts` |
+| `ui-tabs-tab-icon` | `unset` | `uisdk/packages/web/src/tabs.ts` |
 | `ui-tooltip-trigger` | `contents` | `uisdk/packages/web/src/tooltip.ts` |
 | `ui-tooltip-arrow` | `block` | `uisdk/packages/web/src/tooltip.ts` |
+| `ui-tooltip`, `ui-tooltip-content` | `unset` | `uisdk/packages/web/src/tooltip.ts` |
 | `ui-toast-region`, `ui-toast`, `ui-toast-title`, `ui-toast-description` | `block` | `uisdk/packages/web/src/toast.ts` |
 | `ui-toast-action`, `ui-toast-close` | `contents` | `uisdk/packages/web/src/toast.ts` |
 
-`ui-tooltip`, `ui-tooltip-content` and `ui-tabs-tab-icon` have no default display in UI SDK (same source files) and are therefore absent from the region; their layout is set by class in the Tooltip and Tabs component CSS.
+`pnpm gen` builds the `ElementDisplay[]` argument from `src/gen/elements.json` and from nothing else: every entry whose `display` is not `unset`, as `{ tag, display }`, in ascending byte order of tag. It then writes `generateBaseCss(<current css/base.css>, elements)` back to `css/base.css`.
 
-For `ui-*` tags the display value MUST equal the `display` given to `createParts` in the pinned UI SDK version. A UI SDK version bump MUST re-check this table.
-
-`src/gen/display-css.ts` (complete; verified to reproduce the regions of section 4.1 byte for byte):
+`src/gen/display-css.ts` (complete; run: with the `elements.json` of `07-manifest-registry-cli.md` section 1.5 it reproduces the two regions of section 4.1 byte for byte):
 
 ```ts
 // Generates the two marker regions of css/base.css from the list of custom elements.
@@ -724,25 +770,47 @@ For `ui-*` tags the display value MUST equal the `display` given to `createParts
 export interface ElementDisplay {
   /** Custom element tag, for example "rp-dialog" or "ui-tabs-panel". */
   tag: string
-  /** Static display value. Only these two values are allowed. */
+  /** Static display value. Only these two values are allowed; every rp-* tag MUST be "block". */
   display: "block" | "contents"
 }
 
 const INDENT = "  "
 
-function rule(selector: string, declaration: string): string {
-  return `${INDENT}${selector} {\n${INDENT}${INDENT}${declaration};\n${INDENT}}`
+/**
+ * Tags that get a rule of their own: `display`, then these declarations, in this order.
+ * rp-dialog takes no space in the flow but keeps a box (00-decisions D-080 item 1).
+ */
+const EXTRA_DECLARATIONS: Record<string, string[]> = {
+  "rp-dialog": ["position: absolute", "inline-size: 0", "block-size: 0"],
 }
 
-/** Body of the `display` region: one rule per display value, tags sorted by name. */
+function rule(selector: string, declarations: string[]): string {
+  const body = declarations.map((declaration) => `${INDENT}${INDENT}${declaration};\n`).join("")
+  return `${INDENT}${selector} {\n${body}${INDENT}}`
+}
+
+/**
+ * Body of the `display` region: one grouped rule per display value (tags sorted by name),
+ * then one rule per tag of EXTRA_DECLARATIONS (sorted by name).
+ */
 export function generateDisplayRegion(elements: ElementDisplay[]): string {
+  for (const element of elements) {
+    if (element.tag.startsWith("rp-") && element.display !== "block") {
+      throw new Error(`elements: ${element.tag} must be display "block" (00-decisions D-080)`)
+    }
+  }
   const rules: string[] = []
   for (const display of ["contents", "block"] as const) {
     const tags = elements
-      .filter((element) => element.display === display)
+      .filter((element) => element.display === display && !(element.tag in EXTRA_DECLARATIONS))
       .map((element) => element.tag)
       .sort()
-    if (tags.length > 0) rules.push(rule(`:where(${tags.join(", ")})`, `display: ${display}`))
+    if (tags.length > 0) rules.push(rule(`:where(${tags.join(", ")})`, [`display: ${display}`]))
+  }
+  const single = elements.filter((element) => element.tag in EXTRA_DECLARATIONS)
+  single.sort((a, b) => (a.tag < b.tag ? -1 : 1))
+  for (const element of single) {
+    rules.push(rule(element.tag, [`display: ${element.display}`, ...EXTRA_DECLARATIONS[element.tag]]))
   }
   return rules.join("\n")
 }
@@ -756,9 +824,9 @@ export function generateScriptStateRegion(elements: ElementDisplay[]): string {
   if (tags.length === 0) return ""
   const owners = `:where(${tags.join(", ")})`
   return [
-    rule(`${owners}:not(:defined) [data-rp-js="inflow"]`, "visibility: hidden"),
-    rule(`${owners}:not(:defined) [data-rp-js="overlay"]`, "display: none"),
-    rule(`${owners}:defined [data-rp-js="fallback"]`, "display: none"),
+    rule(`${owners}:not(:defined) [data-rp-js="inflow"]`, ["visibility: hidden"]),
+    rule(`${owners}:not(:defined) [data-rp-js="overlay"]`, ["display: none"]),
+    rule(`${owners}:defined [data-rp-js="fallback"]`, ["display: none"]),
   ].join("\n")
 }
 
@@ -778,11 +846,11 @@ export function generateBaseCss(baseCss: string, elements: ElementDisplay[]): st
 }
 ```
 
+Expected output: the `display` and `script-state` regions printed in section 4.1. The `script-state` rules name every `rp-*` key of `elements`, `rp-view-event` included; `rp-view-event` never contains a `data-rp-js` element, so naming it has no effect and keeps the generator free of special cases.
+
 #### Fallback (SPIKE-02)
 
-When SPIKE-02 finds that the Liquid platform wraps block or partial output in an element, ONE hand-written rule is added to `css/base.css` in layer `rp.base`, directly before the `display` region: `:where(<wrapper selector recorded by SPIKE-02 in 14-liquid-theme.md>) { display: contents; }`. Nothing else in this document changes.
-
-`pnpm gen` builds the `ElementDisplay[]` list from the manifest (every tag in every component's `root.elements` and parts, with its display value; the manifest key that stores the value is defined in `07-manifest-registry-cli.md`) and writes `generateBaseCss(<current css/base.css>, elements)` back to `css/base.css`.
+When SPIKE-02 finds that the Liquid platform wraps block or partial output in an element, ONE hand-written rule is added to `css/base.css` in layer `rp.base`, directly before the `display` region: `:where(<wrapper selector recorded by SPIKE-02 in 14-liquid-theme.md>) { display: contents; }`. The rule targets the platform's wrapper element only, never an `rp-*` tag. Nothing else in this document changes.
 
 ## 5. Tailwind v4 integration and the no-build output
 
@@ -1053,10 +1121,19 @@ Rules:
 
 ### 5.3 Liquid
 
-1. `assets/ripple.css` is one unminified file: the two layer statements, then the bodies of `tokens.css`, `base.css`, `props.css`, then one marker region per installed component (assembly and trailers: `14-liquid-theme.md`, `07-manifest-registry-cli.md`). It contains no `@import`.
-2. It MUST be linked before `styles.min.css`, so that its layer statements are the first the page parses.
-3. `config/styles.css` receives one marker region that contains the body of `theme.css` (the `@theme reference` block) and nothing else. Whether the Canvas / Sidekick compiler accepts `@theme reference` is UNVERIFIED (SPIKE-03).
-4. Ripple block and snippet files contain no utility classes, so a Ripple theme renders correctly when the compiler never runs.
+Liquid has exactly one CSS mode (D-055 as amended). There is no "compiled CSS mode".
+
+1. `assets/ripple.css` is ONE unminified, editable file with no `@import`, built by the CLI by concatenation, in this order:
+   1. the two layer statements of section 2.1;
+   2. the region `core/tokens`: the body of `tokens.css`;
+   3. the region `core/base`: the body of `base.css`;
+   4. the region `core/props`: the body of `props.css`;
+   5. one region per installed component, in ascending byte order of region id: the body of `<id>.css`.
+2. Every region, the three `core/*` regions included, is a marker region that carries its own provenance trailer, so that tokens, base and props are upgraded by three-way merge exactly like component regions. A region starts with the line `/* ripple:start <id> */` at column 0 and ends with the line `/* ripple:end <id> */`; the region ids are `core/tokens`, `core/base`, `core/props` and `<component id>/css` (format, trailers and assembly: `07-manifest-registry-cli.md`; theme file: `14-liquid-theme.md`). The indented markers `ripple:start display` and `ripple:start script-state` inside `base.css` are body text of the region `core/base`.
+3. The region `core/props` is derived: `ripple add` and `ripple upgrade` regenerate it with `generatePropsCss(<body of region core/tokens>)` (section 6.3; D-029).
+4. `assets/ripple.css` MUST be linked before `styles.min.css`, so that its layer statements are the first the page parses.
+5. `config/styles.css` receives one marker region that contains `generateThemeCss(<body of region core/tokens>)` (the `@theme reference` block of section 5.1) and nothing else. `config/styles.css` holds no Ripple component CSS. Whether the Canvas / Sidekick compiler accepts `@theme reference` is UNVERIFIED (SPIKE-03).
+6. Ripple block and snippet files contain no utility classes, so a Ripple theme renders correctly when the compiler never runs.
 
 #### Fallback (SPIKE-03)
 
@@ -1316,7 +1393,7 @@ For the default scales the output has 960 style rules (160 per block, 6 blocks).
 3. A layout prop overrides the component's own declaration of the same property (layer order). A utility class overrides the prop.
 4. A scoped attribute on an element outside its scope has no effect. The checker reports it.
 5. `data-hidden` and `data-span` work on any element, including component roots that are not layout primitives.
-6. An element whose static display is `contents` (section 4.3) MUST NOT carry a layout prop.
+6. An element whose static display is `contents` MUST NOT carry a layout prop. Only four `ui-*` tags have that value (section 4.3); no `rp-*` root does.
 
 ## 7. Component CSS
 
@@ -1324,13 +1401,14 @@ For the default scales the output has 960 style rules (160 per block, 6 blocks).
 
 Fixed by `00-decisions.md` D-024 and section 4.3; restated here only as far as CSS authors need it.
 
-- A component root has class `rp-<component id>`. A styled part has class `rp-<component id>-<part>`. Ripple prints no other class.
-- An enumerated prop is `data-<prop>="<value>"` and the default value is printed too. A boolean prop is `data-<prop>=""` when true and absent when false.
+- A component root has class `rp-<component id>`. A styled part has class `rp-<component id>-<part>`. Ripple prints no other class. The manifest `root.class` and `parts[].class` are authoritative (D-024 item (c)). The one exception to the pattern is QuantityInput: file `quantity-input.css`, root class `rp-quantity`, part classes `rp-quantity-button` and `rp-quantity-input` (D-015).
+- A component that composes another by contract prints the base component's class first, then its own (D-070): `class="rp-drawer rp-cart-drawer"`, `class="rp-button rp-add-to-cart-button"`. The base component's file styles the base class; the composing component's file styles only its own added class (CSS-25).
+- An enumerated prop is `data-<prop>="<value>"` and the default value is printed too (except where the component spec lists the attribute as "omitted at default"). A boolean prop is `data-<prop>=""` when true and absent when false.
 - State is expressed by the attributes of D-021: `open`, `hidden`, `disabled`, `checked`; `aria-expanded`, `aria-selected`, `aria-current`, `aria-invalid`, `aria-busy`, `aria-disabled`; `data-open`, `data-closed`, `data-disabled`, `data-pending`, `data-selected`, `data-checked`, `data-active`, `data-current`.
 
 ### 7.2 File skeleton
 
-Every `components/<id>/<id>.css` MUST have exactly this structure. A section with no rules keeps its comment line.
+Every `components/<id>/<id>.css` MUST have exactly this structure. A section with no rules keeps its comment line. In the skeleton, `.rp-<id>` stands for the component's root class and `.rp-<id>-<part>` for a part class, both read from the manifest (`root.class`, `parts[].class`); for a composing component it is the component's own added class (section 7.9, "own classes"). The file, minified, is at most 6,000 bytes (D-064; lint rule CSS-28).
 
 ```css
 /* <id>.css
@@ -1364,9 +1442,9 @@ Every `components/<id>/<id>.css` MUST have exactly this structure. A section wit
 | Section | Contains | Selector forms allowed |
 |---|---|---|
 | 1 ROOT | one rule; custom property declarations first (1a, 1b, 1c), then real declarations (1d) | `.rp-<id>` |
-| 2 PARTS | one rule per part; real declarations; MAY declare private custom properties | `.rp-<id>-<part>`; inside RichText-like components only: `.rp-<id> :where(<tag>)` |
-| 3 MODIFIERS | one rule per non-default prop value; custom property declarations ONLY | `.rp-<id>[data-<prop>="<value>"]`, `.rp-<id>[data-<prop>]` (boolean), and the same forms on a part class |
-| 4 STATES | real declarations that read slots; fixed order: hover, active, focus, disabled, pending, then other state attributes | `.rp-<id>:hover` (inside `@media (hover: hover)`), `:active`, `:focus-visible`, `:focus-within`, `:disabled`, `:checked`, `:placeholder-shown`, `:user-invalid`, `[open]`, `::backdrop`, `::after`, `::before`, `::marker`, `::placeholder`, an attribute from the state list of 7.1, and `:is()` / `:not()` over these; the same on a part class; a root state followed by a descendant part: `.rp-<id>[open] .rp-<id>-<part>` |
+| 2 PARTS | one rule per part; real declarations; MAY declare private custom properties | `.rp-<id>-<part>`; inside RichText-like components only: `.rp-<id> :where(<tag>)`; an own class compounded with a tag list: `.rp-<id>:where(<tag>)` (for example `.rp-heading:where(h1)`); in `toast.css` only: `.rp-toast :where(<tag>[<attribute>])` |
+| 3 MODIFIERS | one rule per non-default prop value; custom property declarations ONLY | `.rp-<id>[data-<prop>="<value>"]`, `.rp-<id>[data-<prop>]` (boolean), and the same forms on a part class. `<prop>` is a prop of the component's own manifest entry (section 7.7) |
+| 4 STATES | real declarations that read slots; MAY also declare private custom properties (`--_<name>`); fixed order: hover, active, focus, disabled, pending, then other state attributes | `.rp-<id>:hover` (inside `@media (hover: hover)`), `:active`, `:focus-visible`, `:focus-within`, `:disabled`, `:checked`, `:indeterminate`, `:placeholder-shown`, `:user-invalid`, `:popover-open`, `:dir(rtl)`, `[open]`, `::backdrop`, `::after`, `::before`, `::marker`, `::placeholder`, `::-webkit-inner-spin-button`, `::-webkit-progress-bar`, `::-webkit-progress-value`, `::-moz-progress-bar`, an attribute from the state list of 7.1, `[data-starting-style]` and `[data-ending-style]` (only in `tabs.css`, `tooltip.css`, `toast.css`), and `:is()` / `:not()` over these; the same on a part class; a root state followed by a descendant part: `.rp-<id>[open] .rp-<id>-<part>`. A rule whose selector contains `:popover-open`, `:dir(rtl)` or a vendor-prefixed pseudo-element MUST have that one selector only (no selector list): a browser that does not know the pseudo drops the whole rule |
 | 5 MOTION | one `@media (prefers-reduced-motion: no-preference) { ... }` block holding every `transition` and `animation`; `@keyframes rp-<id>-<name>` | any form allowed in sections 1 to 4 |
 | 6 ENVIRONMENT | `@supports`, `@media (min-width: ...)`, `@media (forced-colors: active)`, `@media (scripting: none)`, `@container` blocks | any form allowed in sections 1 to 4 |
 
@@ -1377,20 +1455,20 @@ Each rule has an id. Rules marked "lint" are enforced mechanically by `lintCompo
 | Id | Rule | Lint |
 |---|---|---|
 | CSS-01 | The file is one header comment followed by one `@layer rp.components { ... }` block. Nothing else at the top level (the provenance trailer is added at scaffold time and is ignored by the linter). | lint |
-| CSS-02 | Every selector begins with `.rp-<id>` or `.rp-<id>-<part>` of the file's own component. | lint |
-| CSS-03 | No class of another component, no utility class, no id selector, no bare tag selector. A tag selector MAY appear only inside `:where()` after the file's own class (`.rp-rich-text :where(h2)`). | lint |
+| CSS-02 | Every selector begins with one of the file's OWN classes: a class listed in the component's own manifest `root.class` or `parts[].class`, without the classes of a base component it composes (section 7.9). The class is read from the manifest, never derived from the id: `quantity-input.css` uses `.rp-quantity` (D-015). One exception: `header.css` MAY contain the rule `:root:has(.rp-header[data-sticky])`, which declares `--rp-header-block-size` and nothing else (section 3.4). | lint |
+| CSS-03 | No class of another component, no utility class, no id selector, no bare tag selector. A tag selector MAY appear only inside `:where()`: as a descendant after the file's own class (`.rp-rich-text :where(h2)`), or compounded with the file's own class (`.rp-heading:where(h1)`). In `toast.css` only, the tag inside `:where()` MAY carry attribute selectors (`.rp-toast :where(ui-toast[data-type="error"])`), because UI SDK creates the toast items and they carry no Ripple class (D-083). | lint |
 | CSS-04 | None of: `!important`, nesting, `@apply`, `@utility`, `@variant`, `theme(`, `@import`, `@property`, a second `@layer`. | lint |
-| CSS-05 | No selector contains `data-rp-`, `data-slot`, `data-state`, `data-agent-`, `data-rmx-` or `data-scheme`. | lint |
-| CSS-06 | A modifier rule (section 3 of the file) contains custom property declarations only. The base rule consumes them. | lint |
+| CSS-05 | No selector contains `data-rp-`, `data-slot`, `data-state`, `data-agent-`, `data-rmx-` or `data-scheme`. `data-starting-style` and `data-ending-style` are allowed only in `tabs.css`, `tooltip.css` and `toast.css` (D-021 item (e)); in any other file they are a CSS-05 finding. | lint |
+| CSS-06 | A modifier rule (section 3 of the file) contains custom property declarations only. The base rule consumes them (D-024 item 2, read literally: there is no "structural modifier" exception; a boolean prop works through a private variable). A state rule (section 4 of the file) MAY declare private custom properties in addition to real declarations, for example a `:checked` or `:dir(rtl)` rule that sets `--_<name>`. | lint |
 | CSS-07 | Every `data-<prop>` selected in a modifier rule is a prop of the component in the manifest, and every `"<value>"` is one of its values. The default value has no modifier rule: the root rule is the default. | lint |
-| CSS-08 | Colour slots: a component with `tone` or `variant` colours consumes exactly three private colour slots in its real declarations: `--_bg` (background), `--_fg` (text and icons), `--_border` (border colour). | lint (names) |
-| CSS-09 | Every private custom property a file reads is declared in that file's root rule. (Custom properties inherit; an undeclared slot would take the value of an enclosing component.) | lint |
+| CSS-08 | Colour slots (ledger section 4.5): a component with `tone` or `variant` colours always declares and consumes the three private slots `--_bg` (background), `--_fg` (text and icons), `--_border` (border colour), set by its modifier rules. A component that has BOTH `tone` and `variant` additionally declares `--_tone`, `--_on-tone` and `--_tone-text` (section 7.5). Non-colour private variables are allowed (`--_hover`, `--_display`, `--_decoration`, `--_shadow`, and any other the component needs). A private slot MAY have the value `initial`. The linter checks that a file whose manifest entry has a `tone` or `variant` prop declares the three slot names in its root rule, and the three tone inputs too when it has both props. | lint (names) |
+| CSS-09 | Every private custom property a file reads is declared in that file's root rule; the declared value MAY be `initial`. A private property read only by a part MAY instead be declared in that part's rule. (Custom properties inherit; an undeclared slot would take the value of an enclosing component.) | lint |
 | CSS-10 | A public custom property is named `--rp-<id>-<name>`, is declared in the root rule with a default built from tokens, and is listed on the `Public:` line of the header. The header list and the declared set are equal. | lint |
-| CSS-11 | Real declarations read only: the file's own public and private custom properties, and tokens declared in `tokens.css`. A `var()` naming any other custom property is an error. | lint |
-| CSS-12 | No colour literal (hex, `rgb(`, `hsl(`, `oklch(`, `oklab(`, `color(`, named colours). Allowed: `transparent`, `currentColor`, `color-mix()` over allowed values, and system colour keywords inside `@media (forced-colors: active)`. | lint |
-| CSS-13 | No length literal in `px`, `rem`, `vw`, `vh`. Allowed: `0`, `1px`, `2px` (borders and outlines), `9999px` (round), any `em`, `ch`, `%`, `fr`, `dvh` value, unitless numbers. Every other length is a token or a `calc()` over tokens. | lint |
+| CSS-11 | Real declarations read only: the file's own public and private custom properties, and tokens declared in `tokens.css`. A `var()` naming any other custom property is an error. (`header.css` reads its own `--rp-header-block-size`, always with a fallback value.) | lint |
+| CSS-12 | No colour literal (hex, `rgb(`, `hsl(`, `oklch(`, `oklab(`, `color(`, named colours). Allowed: `transparent`, `currentColor`, `color-mix()` over allowed values, and system colour keywords inside `@media (forced-colors: active)`. `url(...)` is allowed only as a data URI (`url("data:image/svg+xml,...")`) and only as the value of `mask-image` or `-webkit-mask-image`; the text inside that `url()` is not checked by CSS-12 or CSS-13 (a mask draws no colour). | lint |
+| CSS-13 | No length literal in `px`, `rem`, `vw`, `vh`. Allowed: `0`, `1px`, `2px` (borders and outlines), `9999px` (round), any `em`, `ch`, `%`, `fr`, `dvh` value, unitless numbers. Every other length is a token, or a `calc()` over tokens and allowed literals (`calc(1px * -1)` is allowed). | lint |
 | CSS-14 | Logical properties and values only (section 10). | lint |
-| CSS-15 | `transition`, `transition-*`, `animation`, `animation-*` and `scroll-behavior` appear only inside `@media (prefers-reduced-motion: no-preference)`. | lint |
+| CSS-15 | `transition`, `transition-*`, `animation`, `animation-*` and `scroll-behavior` appear only inside `@media (prefers-reduced-motion: no-preference)`. A transition names only the properties of section 8 rule 3; one file MAY contain at most ONE `transition` declaration that names `inline-size` (used by `progress.css` on `::-webkit-progress-value`). | lint |
 | CSS-16 | `@media (min-width: X)` is allowed only with `X` equal to a `--breakpoint-*` value of `tokens.css`. `max-width` media queries MUST NOT be used (mobile-first). | lint |
 | CSS-17 | `:hover` appears only inside `@media (hover: hover)`. | lint |
 | CSS-18 | `outline: none`, `outline: 0`, `outline-style: none` and `outline-width: 0` are prohibited, except in a `:focus-visible` rule of a part when the same file has a `:focus-within` rule that declares `outline` with `var(--color-ring)` (section 11 rule 4). | lint |
@@ -1400,11 +1478,13 @@ Each rule has an id. Rules marked "lint" are enforced mechanically by `lintCompo
 | CSS-22 | State selectors select both forms where both exist, so that server HTML and the upgraded element look the same: `:is(:disabled, [aria-disabled="true"])`, `:is([data-pending], [aria-busy="true"])`, `:is([data-selected], [aria-selected="true"])`, `:is([data-open], [open], [aria-expanded="true"])`. `:defined` MUST NOT be used in component CSS. | review |
 | CSS-23 | A state that replaces content MUST NOT change the size of the box (Button `pending` hides the label with `color: transparent` and draws the spinner in `::after`). | test A-07 |
 | CSS-24 | A component MUST NOT rely on Tailwind preflight. It resets on its own root whatever it needs. | test A-12 |
-| CSS-25 | A component MUST NOT style another component by selector. To adjust a child component it sets that component's PUBLIC custom property on its own root or part (for example a toolbar sets `--rp-button-height`). | lint (via CSS-02, CSS-03) |
+| CSS-25 | A component MUST NOT style another component by selector. To adjust a child component it sets that component's PUBLIC custom property on its own root or part (for example a toolbar sets `--rp-button-height`). Composition by contract (D-070): when an element carries a base class and an added class (`class="rp-drawer rp-cart-drawer"`), the base component's file styles the base class, and the composing component's file styles only its own added class and MUST NOT repeat the base component's rules. `cart-drawer.css` therefore contains no `.rp-drawer` selector. | lint (via CSS-02, CSS-03) |
 | CSS-26 | Every filled control has `border: 1px solid var(--_border)`, with `--_border: transparent` when it has no visible border. Reason: forced-colours mode draws transparent borders, which keeps the control's edge visible. | review |
 | CSS-27 | One declaration per line. One selector per line in a selector list. Two-space indent. (Keeps three-way merges on `ripple upgrade` small.) | lint |
-| CSS-28 | The file, minified with the options of section 5.4, is at most 6,000 bytes (section 14). | size runner |
+| CSS-28 | The file, minified with the options of section 5.4, is at most 6,000 bytes, not gzipped (D-064; `size-budget.json` entry `css-component`). | size runner |
 | CSS-29 | `:empty` MUST NOT be used (hosts differ in whitespace between elements; `02-html-contract.md`, canonicalisation). | lint |
+| CSS-30 | A component file MUST NOT set `display: contents` or `display: none` on a custom element root selector (D-080 item 3): a rule whose subject (the last compound selector) contains a class of `customElementRootClasses` (section 7.9) MUST NOT declare either value, inside or outside any at-rule. Other values (`grid`, `flex`, `inline-flex`) are allowed. | lint |
+| CSS-31 | Attribute names of section 7.7. (a) A layout-prop attribute name (the 16 names of `props.css`) MUST NOT appear in a selector, unless the attribute is a prop of the file's own component in the manifest (root or part) and the same compound selector contains one of the file's own classes (`.rp-popover[data-align="end"]`, `.rp-carousel[data-columns="3"]`; D-024 item (b)). (b) A reserved UI SDK attribute name MUST NOT appear in a selector, unless the same compound selector contains one of the file's own classes (`.rp-drawer-panel[data-side="start"]`, `.rp-tabs-tab[data-selected]`), or the selector has the `toast.css` form of CSS-03 (`.rp-toast :where(ui-toast[data-type="error"])`). | lint |
 
 ### 7.4 Complete example: `components/button/button.css`
 
@@ -1622,7 +1702,7 @@ A tone has three inputs, because a tone used as a fill, the text on that fill, a
 }
 ```
 
-**A component with `tone` and `variant`** (Badge, Banner; variants from `solid soft outline plain elevated`) uses two sets of modifier rules that write disjoint variables:
+**A component with `tone` and `variant`** (Badge and Banner, whose `variant` values are `solid soft outline`; the formulas for `plain` and `elevated` serve the other components that take values from `solid soft outline plain elevated`, ledger section 6.3) uses two sets of modifier rules that write disjoint variables:
 
 - a tone rule writes the three tone inputs `--_tone`, `--_on-tone`, `--_tone-text` (declared in section 1c of the root rule with the values of the component's default tone);
 - a variant rule writes the three colour slots from the tone inputs, with exactly these formulas:
@@ -1689,6 +1769,20 @@ Button has no `tone` (D-031); its `variant` rules write the colour slots directl
 
 A layout component declares its default layout in its root rule (for example `.rp-stack { display: flex; flex-direction: column; }`). Layout props then override single properties from layer `rp.props`. Component CSS MUST NOT contain rules for `data-gap`, `data-p`, `data-px`, `data-py`, `data-pt`, `data-pb`, `data-gap-x`, `data-gap-y`, `data-direction`, `data-wrap`, `data-align`, `data-justify`, `data-columns`, `data-text-align`, `data-span` or `data-hidden`: those belong to `props.css` only.
 
+Reserved UI SDK attribute names (ledger section 4.3): UI SDK writes `data-align`, `data-side`, `data-orientation`, `data-type`, `data-value`, `data-count`, `data-index`, `data-open`, `data-closed`, `data-disabled`, `data-pending`, `data-selected`, `data-checked`, `data-active`, `data-current` and `data-slot` on its own elements. Ripple CSS MUST NOT select one of them without a component class in the same selector, and MUST NOT select `data-slot` at all (CSS-05). In `toast.css` the component class is the `.rp-toast` ancestor of the `:where()` form (CSS-03).
+
+Exemption (D-024 item (b), D-105 item 3): a component MAY select an attribute from either list above when that attribute is one of its OWN manifest props (a prop of its root or of one of its parts), always with its own class in the same compound selector. The V1 uses are:
+
+| File | Own prop attributes selected | Example selector |
+|---|---|---|
+| `popover.css` | `data-side`, `data-align` | `.rp-popover[data-side="top"]` |
+| `drawer.css` | `data-side` (on the panel part) | `.rp-drawer-panel[data-side="start"]` |
+| `carousel.css` | `data-columns` | `.rp-carousel[data-columns="3"]` |
+| `accordion.css` | `data-type` | `.rp-accordion[data-type="single"]` |
+| `rating.css` | `data-value` | `.rp-rating[data-value="3.5"]` |
+
+Such a rule is a modifier rule and sets custom properties only (CSS-06). The rules of `props.css` for `data-align` and `data-columns` are scoped with `:where()` to the layout components and do not match these roots. Lint rule CSS-31 enforces this section.
+
 ### 7.8 Pre-upgrade parity
 
 1. The look before upgrade MUST equal the look after upgrade. This follows from CSS-22 (both state forms selected), the static display rules (section 4.3) and the upgrade-stable contract (`02-html-contract.md`).
@@ -1701,13 +1795,15 @@ A layout component declares its default layout in its root rule (for example `.r
 
 ```ts
 export interface CssLintContext {
-  /** Component id, for example "button". */
+  /** Component id, for example "button". Names the file (`<id>.css`) and the keyframes prefix (`rp-<id>-`). */
   id: string
-  /** Part names from the manifest, for example ["title", "panel"]. */
-  parts: string[]
+  /** The component's OWN classes, without the leading dot, for example ["rp-quantity", "rp-quantity-button", "rp-quantity-input"]. */
+  classes: string[]
+  /** The subset of `classes` that sits on a custom element root; [] when the root is a native element. */
+  customElementRootClasses: string[]
   /** Styled props from the manifest: prop attribute name (without data-) to allowed values; [] for a boolean prop. */
   props: Record<string, string[]>
-  /** Default value per prop attribute name. */
+  /** Default value per prop attribute name. A prop without a default has no key. */
   defaults: Record<string, string>
   /** Text of css/tokens.css (source of token names and breakpoint values). */
   tokensCss: string
@@ -1724,12 +1820,50 @@ export interface CssLintFinding {
 export function lintComponentCss(css: string, context: CssLintContext): CssLintFinding[]
 ```
 
+How `pnpm gen` builds the context from the manifest entry of the component (D-105 item 1; the class is never derived from the id):
+
+| Field | Value |
+|---|---|
+| `id` | `component.name` |
+| `classes` (the "own classes") | Split `root.class` and every `parts[].class` on spaces. Remove every token that is a token of `root.class` or of a `parts[].class` of a component listed in this component's `dependencies.components` (the base classes of D-070). The rest, in first-seen order, without duplicates. For `root.class` the result is its last token (`07-manifest-registry-cli.md`, check MB-19). Examples: `button` gives `["rp-button"]`; `quantity-input` gives `["rp-quantity", "rp-quantity-button", "rp-quantity-input"]`; `cart-drawer` with `root.class` `rp-drawer rp-cart-drawer` gives `rp-cart-drawer` and its own part classes, and never `rp-drawer` |
+| `customElementRootClasses` | The tokens of `root.class` that are in `classes`, when any tag in `root.elements` starts with `rp-` or `ui-`; otherwise `[]` |
+| `props` | For the root and every part: each prop whose rendered attribute starts with `data-`, keyed by the attribute name without `data-`; the value is the prop's `values` (`[]` for `type: "boolean"`) |
+| `defaults` | For each key of `props` whose prop has a `default`: that default as a string |
+| `tokensCss` | The text of `css/tokens.css` |
+
 Requirements:
 
 1. It implements every rule marked "lint" in 7.3. It has no dependency: it tokenises the file with a brace-and-semicolon scanner (the format rules CSS-04 and CSS-27 make this sufficient).
 2. It ignores a trailing provenance trailer comment.
 3. `pnpm gen --check` runs it over every `components/<id>/<id>.css` and exits 1 when any finding exists, printing `<file>:<line> <rule> <message>` per finding.
-4. Its own tests (`src/gen/css-lint.test.ts`) MUST include: the Button file of 7.4 produces zero findings; and for each lint rule one minimal failing file that produces exactly one finding with that rule id.
+4. It MUST accept every construct of the table below (D-105 item 2, D-021 item (e), D-024 item (b)). "Accept" means: a file that is otherwise valid and contains the construct produces zero findings.
+
+| # | Construct | Accepted where | Rule it qualifies |
+|---|---|---|---|
+| L-1 | `:popover-open` on an own class (`.rp-popover:popover-open`) | any file; the rule has that one selector only | 7.2 STATES |
+| L-2 | `::-webkit-inner-spin-button` on an own class | any file; the rule has that one selector only | 7.2 STATES |
+| L-3 | `[data-starting-style]` and `[data-ending-style]`, in a selector that contains an own class | only when `id` is `tabs`, `tooltip` or `toast`; a finding with rule `CSS-05` in any other file | 7.2 STATES, section 8 rule 5 |
+| L-4 | `.rp-toast :where(<tag>[<attribute>])`, for example `.rp-toast :where(ui-toast[data-type="error"])` | only when `id` is `toast` | CSS-03 |
+| L-5 | An own class compounded with `:where(<tag list>)`: `.rp-heading:where(h1)` | any file | CSS-03 |
+| L-6 | `:dir(rtl)` on an own class (`.rp-select:dir(rtl)`) | any file; the rule has that one selector only | 7.2 STATES, section 10 rule 1 |
+| L-7 | A state rule that declares a private custom property (`.rp-switch:checked { --_x: 100%; }`) | any file | CSS-06 |
+| L-8 | `:indeterminate` on an own class | any file | 7.2 STATES |
+| L-9 | The vendor progress pseudo-elements `::-webkit-progress-bar`, `::-webkit-progress-value`, `::-moz-progress-bar` on an own class | any file; each rule has that one selector only | 7.2 STATES |
+| L-10 | A private custom property declared with the value `initial` (`--_border: initial;`) | any file | CSS-08, CSS-09 |
+| L-11 | `mask-image: url("data:image/svg+xml,...")` | any file; `mask-image` and `-webkit-mask-image` only | CSS-12, CSS-13 |
+| L-12 | `calc(1px * -1)` | any file | CSS-13 |
+| L-13 | ONE `transition` declaration that names `inline-size`, inside the motion media query; a second one in the same file is a finding with rule `CSS-15` | any file | CSS-15, section 8 rule 3 |
+| L-14 | An attribute that is a prop of the file's own component, although its name is in a list of section 7.7: `.rp-popover[data-side="top"]`, `.rp-popover[data-align="end"]`, `.rp-carousel[data-columns="3"]`, `.rp-accordion[data-type="single"]`, `.rp-rating[data-value="3.5"]` | any file; for a layout-prop name (`data-align`, `data-columns`) only when `props` has that key | CSS-31 |
+| L-15 | The rule `:root:has(.rp-header[data-sticky])` declaring only `--rp-header-block-size` | only when `id` is `header` | CSS-02 |
+
+5. Its own tests (`src/gen/css-lint.test.ts`) MUST include:
+   1. the Button file of 7.4, with the context `{ id: "button", classes: ["rp-button"], customElementRootClasses: [], props: { variant: ["primary", "secondary", "outline", "ghost", "link", "destructive"], size: ["sm", "md", "lg"], "full-width": [] }, defaults: { variant: "primary", size: "md" }, tokensCss }`, produces zero findings;
+   2. for each rule of 7.3 that has its own lint check (CSS-01 to CSS-21, CSS-27, CSS-29, CSS-30, CSS-31; CSS-25 has none, it is enforced through CSS-02 and CSS-03) one minimal failing file that produces exactly one finding with that rule id;
+   3. for each row L-1 to L-15 one minimal file that contains the construct and produces zero findings (15 tests, named `accepts L-<n>`);
+   4. root class from the manifest: with `id: "quantity-input"` and `classes: ["rp-quantity", "rp-quantity-button", "rp-quantity-input"]`, a file whose selectors begin with `.rp-quantity` produces zero findings, and the same file with `.rp-quantity-input-root` (a class that is not in `classes`) produces one `CSS-02` finding;
+   5. composition: with `id: "cart-drawer"` and `classes: ["rp-cart-drawer"]`, a rule `.rp-drawer { ... }` produces one `CSS-02` finding;
+   6. CSS-30: with `customElementRootClasses: ["rp-live-form"]`, `.rp-live-form { display: contents; }` produces one `CSS-30` finding, `.rp-live-form { display: none; }` produces one, and `.rp-live-form { display: grid; }` produces none;
+   7. the restrictions of rows L-3, L-4 and L-15: the same construct with another `id` produces one finding.
 
 ## 8. Motion and reduced motion
 
@@ -1739,16 +1873,16 @@ Requirements:
    | Motion | Duration | Easing |
    |---|---|---|
    | hover, press, colour, border, opacity of a control | `var(--rp-duration-fast)` | `var(--ease-out)` |
-   | exit of an overlay, collapse, small reveal | `var(--rp-duration-base)` | `var(--ease-out)` |
+   | exit of an overlay, small reveal | `var(--rp-duration-base)` | `var(--ease-out)` |
    | entrance of a dialog, popover, tooltip, toast | `var(--rp-duration-slow)` | `var(--ease-out)` |
    | entrance and exit of a drawer or sheet | `var(--rp-duration-slow)` in, `var(--rp-duration-base)` out | `var(--ease-drawer)` |
    | an element moving between two positions (tab indicator, carousel) | `var(--rp-duration-base)` | `var(--ease-in-out)` |
    | spinner | `calc(var(--rp-duration-slow) * 2)`, `linear`, `infinite`, keyframes `rp-spin` | |
    | skeleton pulse | `calc(var(--rp-duration-slow) * 5)`, `var(--ease-in-out)`, `infinite`, keyframes `rp-pulse` | |
 
-3. **Properties.** Transitions and animations MUST be limited to `opacity`, `translate`, `scale`, `rotate`, `background-color`, `color`, `border-color`, `box-shadow`, `outline-color`, and, for top-layer elements, `display` and `overlay` with `transition-behavior: allow-discrete`. `transition: all` MUST NOT be used. Layout properties (`width`, `height`, `inline-size`, `block-size`, `margin`, `padding`, `inset`) MUST NOT be animated. The individual transform properties `translate`, `scale`, `rotate` MUST be used instead of `transform`.
+3. **Properties.** Transitions and animations MUST be limited to `opacity`, `translate`, `scale`, `rotate`, `background-color`, `color`, `border-color`, `box-shadow`, `outline-color`, and, for top-layer elements, `display` and `overlay` with `transition-behavior: allow-discrete`. `transition: all` MUST NOT be used. Layout properties (`width`, `height`, `inline-size`, `block-size`, `margin`, `padding`, `inset`) MUST NOT be animated, with one exception: `progress.css` has one `transition` on `inline-size` for the fill of the progress bar (`::-webkit-progress-value`; D-105; CSS-15 allows at most one per file). The individual transform properties `translate`, `scale`, `rotate` MUST be used instead of `transform`. There is no height animation for Accordion in V1 (D-011, D-105): an item opens and closes instantly.
 4. **Native overlays** (`<dialog>`, `[popover]`): entrance uses `@starting-style`; exit uses `transition-behavior: allow-discrete` on `display` and `overlay`. A browser that does not support these shows and hides the element instantly, which is the working fallback; no `@supports` is required.
-5. **UI SDK elements** (Tabs, Tooltip, Toast): entrance styles select `[data-starting-style]` and exit styles select `[data-ending-style]`, as documented by UI SDK (`uisdk/apps/docs/content/docs/web-components/styling-and-animation.mdx`: "Put exit styles on `data-ending-style`; `data-closed` describes state but doesn't wait for an exit"). These two attributes MAY be selected only in the CSS of those three components.
+5. **UI SDK elements** (Tabs, Tooltip, Toast): entrance styles select `[data-starting-style]` and exit styles select `[data-ending-style]`, as documented by UI SDK (`uisdk/apps/docs/content/docs/web-components/styling-and-animation.mdx`: "Put exit styles on `data-ending-style`; `data-closed` describes state but doesn't wait for an exit"). These two attributes MAY be selected only in the CSS of those three components, always with the component class in the selector (D-021 item (e); `.rp-tooltip-content[data-starting-style]`, `.rp-toast :where(ui-toast[data-starting-style])`).
 6. **Press feedback.** Button and IconButton scale to `0.97` while `:active`. No other component scales on press.
 7. **Scrolling.** `scroll-behavior: smooth` is allowed only inside the motion media query.
 8. **No box change.** A pending or loading state MUST NOT change the size of its box (CSS-23).
@@ -1793,7 +1927,7 @@ Physical quantities with no logical form use the token `--rp-dir` (`1`; `-1` ins
 
 Rules:
 
-1. Component CSS MUST NOT contain a `[dir]` selector or `:dir()`. Direction reaches CSS only through logical properties and `--rp-dir`.
+1. Component CSS MUST NOT contain a `[dir]` attribute selector. Direction reaches CSS through logical properties and `--rp-dir`. `:dir(rtl)` on the file's own class is allowed (D-105) only where neither can express the value, for example `background-position` of the Select chevron (`.rp-select:dir(rtl)`); such a rule has that one selector only (section 7.2) and SHOULD set private custom properties only. `:dir()` is above the browser floor in Chrome (section 12).
 2. Flex and grid follow the writing direction automatically; `row-reverse` MUST NOT be used to fake direction.
 3. `props.css` uses logical padding properties (section 6.1); `data-px` is inline padding in both directions.
 4. The host sets `dir` on `<html>` (or on any subtree). Bindings wrap user-generated text of unknown direction in `<bdi>` (`06-bindings.md`).
@@ -1834,7 +1968,7 @@ Rules:
 
 ## 12. Browser floor for CSS
 
-Floor (D-032): Chrome and Edge 111, Safari 16.4, Firefox 128. Version numbers below are from memory and are UNVERIFIED except "runs in Chromium here"; SPIKE-06 confirms them in WebKit and Gecko.
+The floor is fixed by D-032: Chrome and Edge 111, Safari 16.4, Firefox 128. It is not raised (Q15). A feature that is newer than the floor has a stated behaviour on floor browsers: the capability tiers of D-081 (`01-architecture.md` section 10 owns the full table; the CSS rows are repeated below). Version numbers below are from memory or compatibility tables and are UNVERIFIED except "runs in Chromium here"; SPIKE-06 confirms them in WebKit and Gecko.
 
 | Feature | Used for | Chrome | Safari | Firefox | Gate |
 |---|---|---|---|---|---|
@@ -1849,16 +1983,21 @@ Floor (D-032): Chrome and Edge 111, Safari 16.4, Firefox 128. Version numbers be
 | relative colour syntax with channel math | automatic brand foreground, status colours | 119 | 16.4 (channel math reported unreliable before 18) | 128 | `@supports (color: oklch(from red l c h))` + static values (`tokens.css` sections 3 to 5) |
 | `pow()` | type scale | 120 | 15.4 | 118 | `@supports (width: calc(1px * pow(2, 2)))` + static scale (`tokens.css` section 6) |
 | `@starting-style`, `transition-behavior`, `overlay` | overlay entrance and exit | 117 | 17.4 | 129 | none needed: ignored when unsupported; overlay appears instantly |
-| CSS anchor positioning | Popover placement | 125 | 26 | not yet | `@supports (anchor-name: --a)`; fallback in `10-components-interactive.md` |
-| `@media (scripting: none)` | Tabs without JS | 120 | 17 | 113 | ignored when unsupported; fallback in `10-components-interactive.md` |
-| `interpolate-size` | accordion height animation | 129 | not yet | not yet | `@supports (interpolate-size: allow-keywords)`; otherwise instant |
+| CSS anchor positioning | Popover placement | 125 | 26 | not yet | `@supports (anchor-name: --a)`; without it the panel uses the user-agent position (D-010, D-081) |
+| `@media (scripting: none)` | Tabs without JS (the block in `base.css`, section 4.2 rule 10) | 120 | 17 | 113 | ignored when unsupported; Tabs then shows only the default panel without JS (D-081) |
+| `:has()` | the one rule `:root:has(.rp-header[data-sticky])` of `header.css` | 105 | 15.4 | 121 | none (floor) |
+| `:dir()` | `.rp-select:dir(rtl)` and other `:dir(rtl)` rules (section 10 rule 1) | 120 | 16.4 | 49 | none needed: the rule is dropped when unsupported (it has one selector only); the value then stays at its left-to-right form |
+| unprefixed `mask-image` | Rating stars | 120 | 15.4 | 53 | fallback in `09-components-foundation.md`, "Rating" (prefixed declarations before the unprefixed ones) |
+| the `popover` attribute, `:popover-open` | Popover; panels of NavigationMenu and LocaleSelector | 114 | 17.0 | 125 | none. Below its first version (D-081, Q15): the panel is ordinary in-flow content, always visible; the opener button is present and does nothing; `rp-navigation-menu` does nothing; no polyfill. No CSS is needed for this fallback: the browser has no `[popover]` rule, so the panel renders as a normal block with its component styles, and every `:popover-open` rule is dropped (it has one selector only) |
+| exclusive `<details name>` | Accordion with `type="single"` | 120 | 17.2 | 130 | none. Below its first version (D-081, Q15): opening one item does not close the others, so a `single` accordion behaves as `multiple`. No CSS is needed for this fallback: `accordion.css` styles `open` and closed items the same way for both types |
 
-NOT used anywhere in Ripple CSS: CSS nesting, `@property`, typed `attr()`, `:has()` in base or token rules, `@scope`, `light-dark()`, container style queries.
+NOT used anywhere in Ripple CSS: CSS nesting, `@property`, typed `attr()`, `:has()` in base, token or props rules, `@scope`, `light-dark()`, container style queries, `interpolate-size` (there is no Accordion height animation in V1).
 
 Rules:
 
 1. A feature that is not in the "none" rows MUST be inside the gate shown, after a declaration that works without it.
 2. A new feature MAY be used in component CSS only by adding a row to this table with its gate.
+3. A test for a feature above the floor MUST feature-detect and skip, not fail, on an engine without it (D-081).
 
 ### Fallback (SPIKE-06)
 
@@ -1870,6 +2009,9 @@ Applied per feature when a WebKit or Gecko run fails. Each fallback is a change 
 | `pow()` is wrong or missing | Delete `tokens.css` section 6. The static type scale of section 3 remains; `--rp-text-scale` then has no effect and is removed from the dial table and from the Liquid settings. |
 | `revert-layer` is wrong or missing | No CSS fallback is specified (the feature is below the floor in all three engines by the version numbers above). Record the failing engine and version in the ledger and raise the floor. |
 | `[data-x~="md:6"]` matching fails | No fallback; raise the floor and record it in the ledger (the mechanism is CSS 2.1 attribute matching; failure is not expected). |
+| `@media (scripting: none)` is not supported or does not match with scripting disabled | Nothing changes in CSS: the block of `base.css` stays and is ignored. Tabs shows only the default panel without JS; component documentation directs content that must be reachable to Accordion (D-012). |
+| `::backdrop` does not inherit custom properties from its dialog | Nothing changes in CSS: the backdrop of Dialog and Drawer is transparent in that engine; the panel keeps its border and shadow and the dialog stays modal (`10-components-interactive.md`, "Dialog"). |
+| The `popover` attribute or `<details name>` behaves differently from the table above in an engine at the floor | No CSS fallback. Record the engine and version in the ledger; Ben decides whether to raise the floor (Q15). |
 
 ## 13. Tailwind utilities and Ripple CSS together
 
@@ -1881,25 +2023,24 @@ Applied per feature when a WebKit or Gecko run fails. Each fallback is a change 
 
 ## 14. Size budgets
 
-Budgets are gzip level 9 of the output of the measuring minifier of section 5.4 (the shipped files are unminified). They live in `size-budget.json` and fail CI when exceeded (runner: `13-testing.md`). The first three rows are fixed by D-064.
+Unit and method (fixed once, by D-064): 1 kB is 1000 bytes. CSS ships unminified and is measured as gzip (level 9) of a copy minified with the fixed `lightningcss` options of section 5.4; the copy is never shipped. The per-component cap is measured on the minified copy without gzip. The budgets live in `size-budget.json` and fail CI when exceeded (file and runner: `13-testing.md` section 15). The numbers below MUST equal that file; where they differ, D-064 wins and both documents are corrected.
 
-| Artifact | Budget (gzip) | Measured now | Notes |
-|---|---:|---:|---|
-| `tokens.css` + `base.css` (concatenated, then minified) | 2,200 bytes | 2,078 bytes | 122 bytes of headroom: a new token needs a deliberate budget change |
-| `props.css` | 5,200 bytes | 5,037 bytes | includes `data-text-align`; 163 bytes of headroom |
-| `browser/ripple.css` (all components) | 45,000 bytes | not yet measurable | |
-| one component file | 6,000 bytes minified (not gzip) | Button: 3,138 | lint rule CSS-28 |
-| all component files, median | 2,500 bytes minified | - | reported by the size runner; warning only |
+| `size-budget.json` entry | Artifact | Measure | Budget (D-064) | Measured now | Notes |
+|---|---|---|---:|---:|---|
+| `css-tokens-base` | `tokens.css` + `base.css` (concatenated in that order, then minified) | gzip of the minified copy | 2,200 bytes | 2,174 bytes | 26 bytes of headroom: any new token or base rule needs a ledger change of the budget first |
+| `css-props` | `props.css` | gzip of the minified copy | 5,200 bytes | 5,037 bytes | includes `data-text-align`; 163 bytes of headroom |
+| `css-ripple` | `browser/ripple.css` (all components) | gzip of the minified copy | 45,000 bytes | UNVERIFIED until all component files exist | |
+| `css-component` | each `components/<id>.css` on its own | minified, not gzipped | 6,000 bytes | Button: 3,138 bytes | lint rule CSS-28 |
 
 Rules:
 
-1. A budget MUST NOT be raised in the same change that exceeds it without a line in the change description stating the new number and the reason.
-2. The Liquid asset `assets/ripple.css` and `browser/ripple.css` are unminified; their budgets are measured after minifying a copy with the options of section 5.4.
+1. The four budgets above are D-064 values: raising one needs a ledger change first. A budget entry that is added later with another source MUST NOT be raised in the same change that exceeds it without a line in the change description of the form `Size budget: <id> <old> -> <new>: <reason>`.
+2. `browser/ripple.css` and the Liquid asset `assets/ripple.css` are unminified. `browser/ripple.css` is measured after minifying a copy with the options of section 5.4. `assets/ripple.css` has no budget entry of its own: it holds the same regions, for the installed components only.
 3. `props.css` SHOULD NOT gain a prop or a space step unless a component specification needs it.
 
 ## 15. Acceptance tests
 
-Each test is pass or fail. "Tier" refers to `00-decisions.md` D-063. Reference implementations of A-02 to A-09 exist in `ripple/docs/research/spikes/styling-doc03/test.mjs` and of A-10, A-11 in `tw-test.mjs`.
+Each test is pass or fail. "Tier" refers to `00-decisions.md` D-063. Reference implementations of A-02 to A-09 exist in `ripple/docs/research/spikes/styling-doc03/test.mjs` and of A-10, A-11 in `tw-test.mjs`. A-19, A-20 and A-21 were run in Chromium against the `base.css` of section 4.1 and pass.
 
 | Id | Tier | Test |
 |---|---|---|
@@ -1917,10 +2058,15 @@ Each test is pass or fail. "Tier" refers to `00-decisions.md` D-063. Reference i
 | A-12 | 2 | Preflight independence. Every component fixture is rendered twice, with `ripple.css` alone and with the Tailwind build of A-10; the bounding box of every element inside the component root is equal (tolerance 0.5 px) and the computed `color`, `background-color`, `font-size`, `font-weight`, `line-height` of each are equal. |
 | A-13 | 3 | No layout shift at upgrade. For every component with a custom element, the bounding box of the component root and of the element after it is equal before and after `ripple.js` loads (zero layout shift entries). |
 | A-14 | 5 | Right-to-left. Every component fixture rendered inside `<div dir="rtl">` mirrors: for each element, `inline-start` edge distance in LTR equals `inline-end` edge distance in RTL (tolerance 0.5 px). `--rp-dir` computes `-1` inside `[dir="rtl"]` and `1` inside a nested `[dir="ltr"]`. |
-| A-15 | 1 | No unlayered rule and one `!important`. Parsing `browser/ripple.css`: every style rule is inside `@layer`; the string `!important` occurs exactly once; the strings `@apply`, `@property`, `data-state` do not occur; the only selectors containing `data-rp-` are the three script-state rules. |
+| A-15 | 1 | No unlayered rule and two `!important` rules. Parsing `browser/ripple.css`: every style rule is inside `@layer`; the string `!important` occurs exactly three times, all inside the one `@layer ui-sdk` block (once in the `[hidden]` rule, twice in the `@media (scripting: none)` block); the strings `@apply`, `@property`, `data-state` do not occur; the only selectors containing `data-rp-` are the three script-state rules, and each of them ends with `[data-rp-js="inflow"]`, `[data-rp-js="overlay"]` or `[data-rp-js="fallback"]` with no tag name before the bracket. |
 | A-16 | 10 | Size budgets of section 14 hold. |
-| A-17 | 9 | A-02 to A-09 pass in WebKit and Gecko (SPIKE-06). |
+| A-17 | 9 | A-02 to A-09 and A-19 to A-22 pass in WebKit and Gecko (SPIKE-06). The job is non-blocking until SPIKE-06 reports (D-063). |
 | A-18 | 5 | Hidden. An element with class `rp-button` and the `hidden` attribute computes `display: none`, with and without the Tailwind build. |
+| A-19 | 5 | Display of custom elements, with no script loaded. Each of `rp-carousel`, `rp-cart`, `rp-dialog`, `rp-live`, `rp-navigation-menu`, `rp-predictive-search`, `rp-product-form`, `rp-quantity`, `rp-recommendations`, `rp-view-event` (no class) computes `display: block`. `<rp-dialog>` holding a closed `<dialog>` computes `position: absolute`, has a bounding box of 0 by 0, returns `true` from `checkVisibility()`, and the element after it has the same position as when the `rp-dialog` is removed. `ui-tabs-tab` computes `display: contents`; `ui-tabs-panel` computes `block`. |
+| A-20 | 6 | Tabs without JavaScript. In a Chromium context with JavaScript disabled, on `<ui-tabs><ui-tabs-list>...</ui-tabs-list><ui-tabs-panel>...</ui-tabs-panel><ui-tabs-panel hidden>...</ui-tabs-panel></ui-tabs>`: both panels compute `display: block` and `ui-tabs-list` computes `display: none`; a `<div hidden>` on the same page computes `display: none`. With JavaScript enabled: the `hidden` panel computes `display: none` and the list computes `display: block`. The test skips when `matchMedia("(scripting: none)").media` is `not all` (D-081). |
+| A-21 | 5 | Scroll padding. `html` computes `scroll-padding-block-start: 0px`. After `document.documentElement.style.setProperty("--rp-header-block-size", "4rem")` it computes `64px`. |
+| A-22 | 5 | `data-rp-js` on a form. Inside an undefined `<rp-cart>`, `<form data-rp-js="inflow">` computes `visibility: hidden`; after `customElements.define("rp-cart", ...)` it computes `visibility: visible`. |
+| A-23 | 1 | Linter. `src/gen/css-lint.test.ts` contains and passes every test listed in section 7.9 requirement 5. |
 
 ## 16. Evidence and UNVERIFIED
 
@@ -1935,30 +2081,17 @@ Evidence:
 
 UNVERIFIED:
 
-- Every WebKit and Gecko behaviour, and every version number in section 12 (SPIKE-06).
+- Every WebKit and Gecko behaviour, and every version number in section 12, including the first versions of the `popover` attribute, exclusive `<details name>`, `:dir()`, `:has()` and unprefixed `mask-image` (SPIKE-06).
+- Whether `::backdrop` inherits custom properties in every engine at the floor (SPIKE-06; fallback in section 12).
 - Whether the Canvas / Sidekick compiler accepts `@theme reference` (SPIKE-03).
 - Whether `--z-index-*` and `--transition-duration-*` are a supported Tailwind theme contract (pinned by A-10).
 - The total size of `browser/ripple.css` with all components.
-- The display values of `rp-*` elements in section 4.3 are this document's initial values; the element specifications may change them.
 
 ## Ledger issues
 
-Decisions this document had to make because the ledger is silent, and places where following the ledger literally does not work.
+None open. See `00-decisions.md` section 13.2: all 18 items this document reported are settled there.
 
-1. **Script-state rules are in layer `rp.props`, not `rp.base`** (D-021 item 4 says "generated rules in `base.css`"). They stay in the file `base.css` but inside an `@layer rp.props` block. In `rp.base` they lose to any component `display` rule in `rp.components` (for example a `.rp-button` carrying `data-rp-js="fallback"`), and `!important` is not allowed.
-2. **`data-text-align` added to `props.css`** between `columns` and `span` (D-028 item 4 lists a fixed order without it; section 6.3 of the ledger makes `textAlign` responsive on Heading, Text, Stack). Scoped `:where(.rp-heading, .rp-text, .rp-stack)`. The gzip budget of 5.2 kB still holds (5,037 bytes).
-3. **Modifiers set custom properties only, with no "structural modifier" exception** (D-024 item 2 read literally). Boolean props therefore work through private variables (`--_display`, `--_inline-size`), and the selector form `.rp-<id>[data-<prop>]` is added for boolean props.
-4. **Tone inputs.** Section 4.5 of the ledger says a component "consumes exactly three private slots `--_bg`, `--_fg`, `--_border`". Components with both `tone` and `variant` need three more private variables that the modifier rules (not the real declarations) use: `--_tone`, `--_on-tone`, `--_tone-text`. Other private non-colour variables (`--_hover`, `--_display`, `--_decoration`, `--_shadow`) are also allowed.
-5. **Tokens added that the ledger does not list**: `--color-sale-foreground` and `--color-link` values; `--spacing-target-min` (24 px, from D-066); `--font-weight-normal|medium|semibold|bold`; `--rp-heading-weight`; `--rp-ring-width`, `--rp-ring-offset`; `--rp-dir`; `--rp-space-steps` (generator input); `--breakpoint-*` are declared in `tokens.css` as the breakpoint source. `--shadow-xl` from the spike is dropped (D-029 lists `xs` to `lg`).
-6. **Scheme blocks set `--rp-brand-foreground`** (`initial` in `light`, a literal in `dark`), and a static block gives dark status colours. Reason: on Chrome 111 to 118 (inside the floor, no relative colour syntax) the dark scheme's near-white brand would otherwise get white text.
-7. **The host token bridge prints two rules, not one** (D-026 item 5 says "one inline `:root { ... }` rule"): non-colour dials on `:root`, colour dials on `:root, [data-scheme="light"]`. With `:root` alone, a `scheme="light"` component inside a dark section would show Ripple's stock colours instead of the merchant's. Doc 14 owns the Liquid source.
-8. **No built-in scheme follows the operating system** (the spike had `data-scheme="auto"`; D-026 names only `light` and `dark`). Section 3.6 item 6 gives the block a project adds.
-9. **No CLI command regenerates `props.css` and `theme.css` after a project edits `tokens.css`** (D-029 says "editing `tokens.css` and re-running the generator"; D-057 has no such command). This document assigns it to `ripple add` and `ripple upgrade`; doc 07 must confirm or add a command.
-10. **Files added to the repository tree of ledger 5.1**: `src/gen/tokens-source.ts`, `src/gen/css-lint.ts`, `src/gen/css-lint.test.ts`. `base.css` is "hand-written" in the tree but has two generated marker regions (`display`, `script-state`).
-11. **The manifest has no key for an element's static display value** (section 4.8 of the ledger). Section 4.3 gives initial values; doc 07 must define the key.
-12. **`theme.css` is imported by the project's entry after `tailwindcss`**, not from `ripple.css` (D-055 item 1 mentions only `ripple.css` then `tailwindcss`).
-13. **A per-component CSS budget** (6,000 bytes minified) is added; D-064 has only aggregate budgets.
-14. **`data-starting-style` and `data-ending-style`** are selected by Tabs, Tooltip and Toast CSS for animation; they are UI SDK attributes that D-021 does not list as state attributes.
-15. **Global focus ring in `base.css`** instead of one `:focus-visible` rule per component (D-066 says only "focus is always visible (`--color-ring`)").
-16. The spike's reset rule `:where(*, ::before, ::after) { box-sizing: border-box; }` never matched pseudo-elements (pseudo-elements are invalid inside `:where()`); `base.css` uses `*, ::before, ::after`.
-17. **Size budgets are measured on a minified copy** (section 5.4) while the shipped `browser/ripple.css` and `assets/ripple.css` are unminified (`01-architecture.md` build step 7, D-055). D-064 says only "gzip"; the budget numbers come from minified measurements. Unminified gzip today: `tokens.css` + `base.css` 2,787 bytes, `props.css` 4,977 bytes.
+Two choices were made while applying the reconciliation decisions, because the ledger names the need but not the mechanism. Both are implemented above and reported to the arbiter:
+
+1. **`header.css` and the linter.** D-085 and D-105 require a sticky Header to set `--rp-header-block-size` "on `:root` scope", and `12-components-chrome-and-blueprints.md` does so with the rule `:root:has(.rp-header[data-sticky])`. That selector does not begin with an own class (CSS-02), and the acceptance list of D-105 item 2 does not name it. This document accepts exactly that one rule in `header.css` (row L-15 of section 7.9) and lists `:has()` in section 12.
+2. **`:dir(rtl)` is newer than the floor in Chrome** (first version 120 from compatibility tables, UNVERIFIED; the floor is 111). D-105 item 2 accepts `:dir(rtl)` and D-032 does not list it among the features above the floor. This document treats it as a capability tier: the rule is dropped where unsupported and the value keeps its left-to-right form (section 12).

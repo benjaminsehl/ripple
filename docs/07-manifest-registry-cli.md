@@ -1,6 +1,6 @@
 # 07 - Manifest, registry and CLI
 
-Status: specification. Law: `00-decisions.md` (D-003, D-052 to D-059, section 4.8). Date: 2026-11-21.
+Status: specification. Law: `00-decisions.md` (D-003, D-052 to D-059, D-069 to D-072, D-100 to D-102, sections 4.8, 12 and 13). Date: 2026-11-21.
 
 ## 0. Scope and how to read this document
 
@@ -29,11 +29,12 @@ It does NOT own, and links to instead:
 | CSS files, `generatePropsCss`, `generateThemeCss`, `generateBaseCss`, CSS lint | `03-styling-and-tokens.md` sections 4 to 7 |
 | Element behaviour, lazy chunks, how chunks share the kernel | `04-elements.md` |
 | Commerce adapter, dialect details | `05-commerce.md` |
-| The shape of scaffolded binding files (TSX skeleton, Liquid block skeleton, rules L-1 to L-11) | `06-bindings.md` |
+| The shape of scaffolded binding files (TSX skeleton, Liquid block skeleton, the L-rules, the Liquid subset lists of L-13, the schema label keys of L-17, the generated-region definitions of G-3) | `06-bindings.md` |
 | Content of skills, package docs, the generated `AGENTS.md` section, evals | `08-agent-kit-and-evals.md` |
-| Each component's manifest values | `09-components-foundation.md` to `12-components-chrome-and-blueprints.md` |
+| Each component's manifest values, and the text of every blueprint file | `09-components-foundation.md` to `12-components-chrome-and-blueprints.md` |
+| The `problem`, `fix` and `why` TEXT of every checker rule, and the rule pages | `08-agent-kit-and-evals.md` (this document owns ids, severity, layer, detection, `fix` computation and the output format; ledger section 12) |
 | Test tiers, shim, size budgets | `13-testing.md` |
-| Content of `rp-head`, `rp-tokens`, `rp-import-map-entries`, the settings group, theme templates | `14-liquid-theme.md` |
+| Content of `rp-head`, `rp-tokens`, `rp-import-map-entries`, `import-map`, `meta-tags`, the settings group | `14-liquid-theme.md` (sections 6 and 7) |
 
 Conventions:
 
@@ -87,7 +88,7 @@ Rules:
 
 ### 1.2 `manifest.schema.json` (complete, normative)
 
-JSON Schema draft 2020-12. Validated with `jsonschema` 4.26 against the assembled manifest of the three worked entries (1.7): zero errors; and against 18 invalid variants (1.4): all rejected.
+JSON Schema draft 2020-12. Validated with `jsonschema` 4.26 (with `fixture.schema.json` of `02-html-contract.md` 11.2 registered for the `$ref`) against the assembled manifest of the three worked entries (1.7) and `elements.json` (1.5): zero errors; and against the 23 invalid variants of 1.4: all rejected.
 
 ```json
 {
@@ -220,7 +221,7 @@ JSON Schema draft 2020-12. Validated with `jsonschema` 4.26 against the assemble
           "required": ["elements", "class", "requiresId"],
           "properties": {
             "elements": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"}},
-            "class": {"type": "string", "pattern": "^[a-z]+-[a-z][a-z0-9]*(-[a-z0-9]+)*$"},
+            "class": {"type": "string", "pattern": "^[a-z]+-[a-z][a-z0-9]*(-[a-z0-9]+)*( [a-z]+-[a-z][a-z0-9]*(-[a-z0-9]+)*)?$"},
             "requiresId": {"type": "boolean"}
           }
         },
@@ -304,17 +305,8 @@ JSON Schema draft 2020-12. Validated with `jsonschema` 4.26 against the assemble
                 "required": ["name", "description"],
                 "properties": {
                   "name": {"$ref": "#/$defs/camel"},
-                  "args": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "additionalProperties": false,
-                      "required": ["name", "type"],
-                      "properties": {"name": {"$ref": "#/$defs/camel"}, "type": {"enum": ["string", "number", "boolean"]}}
-                    }
-                  },
                   "description": {"type": "string", "minLength": 1},
-                  "confirm": {"type": "boolean"}
+                  "confirm": {"type": "string", "minLength": 1}
                 }
               }
             },
@@ -402,7 +394,7 @@ JSON Schema draft 2020-12. Validated with `jsonschema` 4.26 against the assemble
         "type": {"enum": ["enum", "scale", "boolean", "string", "number", "id", "url", "object"]},
         "values": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
         "scale": {"$ref": "#/$defs/camel"},
-        "objectType": {"type": "string", "pattern": "^[^|]+ \\| [^|]+$"},
+        "objectType": {"type": "string", "pattern": "^[^|]+( \\| [^|]+)?$"},
         "default": {
           "oneOf": [
             {"type": ["string", "number", "boolean"]},
@@ -424,7 +416,7 @@ JSON Schema draft 2020-12. Validated with `jsonschema` 4.26 against the assemble
           "properties": {
             "name": {"$ref": "#/$defs/snake"},
             "surface": {"enum": ["param", "setting"]},
-            "settingType": {"enum": ["select", "checkbox", "text", "url", "range"]}
+            "settingType": {"const": "select"}
           },
           "if": {"properties": {"surface": {"const": "setting"}}},
           "then": {"required": ["settingType"]},
@@ -451,7 +443,7 @@ JSON Schema draft 2020-12. Validated with `jsonschema` 4.26 against the assemble
       "properties": {
         "name": {"$ref": "#/$defs/kebab"},
         "elements": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"}},
-        "class": {"type": "string", "pattern": "^[a-z]+-[a-z][a-z0-9]*(-[a-z0-9]+)*$"},
+        "class": {"type": "string", "pattern": "^[a-z]+-[a-z][a-z0-9]*(-[a-z0-9]+)*( [a-z]+-[a-z][a-z0-9]*(-[a-z0-9]+)*)?$"},
         "required": {"type": "boolean"},
         "multiple": {"type": "boolean"},
         "authoredBy": {"enum": ["author", "component"]},
@@ -468,11 +460,12 @@ JSON Schema draft 2020-12. Validated with `jsonschema` 4.26 against the assemble
     "stateEntry": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "type", "on", "reflects"],
+      "required": ["name", "type", "on", "writer", "reflects"],
       "properties": {
         "name": {"$ref": "#/$defs/camel"},
         "type": {"enum": ["boolean", "string", "number"]},
         "on": {"type": "string", "pattern": "^(root|[a-z][a-z0-9]*(-[a-z0-9]+)*)$"},
+        "writer": {"enum": ["server", "element", "browser"]},
         "defaultProp": {"$ref": "#/$defs/camel"},
         "property": {"$ref": "#/$defs/camel"},
         "reflects": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"}}
@@ -550,8 +543,8 @@ JSON Schema draft 2020-12. Validated with `jsonschema` 4.26 against the assemble
       "properties": {
         "key": {"type": "string", "pattern": "^[a-z][a-z0-9-]*(:[a-z][a-z0-9-]*)?$"},
         "source": {"type": "string", "pattern": "^[a-z][A-Za-z0-9._/-]*$"},
-        "target": {"type": "string", "pattern": "^(@components/|@styles/|@public/)?[A-Za-z0-9._/*-]+$"},
-        "type": {"enum": ["css", "binding", "block", "snippet", "asset", "types", "blueprint"]},
+        "target": {"type": "string", "pattern": "^(@components/|@styles/|@public/|@pages/)?[A-Za-z0-9._/*-]+$"},
+        "type": {"enum": ["css", "binding", "block", "snippet", "asset", "types", "blueprint", "data"]},
         "mode": {"enum": ["owned", "patch"]},
         "generated": {"type": "boolean"}
       }
@@ -710,22 +703,24 @@ Only keys whose meaning is not obvious from the schema and the ledger are listed
 | Key | Meaning and rules |
 |---|---|
 | `component.name` | The component id. Equals the manifest map key and the directory name. |
-| `component.kind` | Decided by D-006 only (build check MB-12). |
+| `component.kind` | The value of the table in ledger section 8 (constant `LEDGER_COMPONENTS`, MB-12). D-006 as corrected explains the value; where the mechanical rule and section 8 differ, section 8 wins. |
 | `component.status`, `since`, `deprecated` | Release meaning: section 11.3. `deprecated` is optional (one sentence naming the replacement). |
 | `component.partOf` | Id of the component whose element this component must sit inside (CartLine: `cart-lines`). Not used for parts; parts are in `parts[]`. |
 | `root.elements` | Every tag the root can be. For a custom element root: exactly one tag. |
-| `root.class` | `rp-<component id>`. |
+| `root.class` | The `rp-` class tokens the root prints, in order, separated by one space. Normally ONE class, `rp-<component id>`. Two exceptions: QuantityInput, whose class is `rp-quantity` (D-015); and a component that composes another by contract (D-070), whose value is the base component's class, then its own: `rp-drawer rp-cart-drawer`, `rp-button rp-add-to-cart-button`. The LAST token is the component's OWN class (MB-19). `root.class` is authoritative: the checker, the CSS linter (`src/gen/css-lint.ts`, D-105) and the docs read the class from here, never derive it from the id. |
 | `root.requiresId` | `true` exactly for the components named in D-020. The `id` prop then has `required: true`. |
-| `props[]` | Props of the ROOT component. The universal props `class`, rest / `attributes`, `span`, `hidden` (ledger 6.1) are NOT listed; every tool adds them. `id` IS listed when the component prints it. |
+| `props[]` | Props of the ROOT component, in the order of the component document's Props table. The universal props `class`, rest / `attributes`, `span`, `hidden`, `rmxKey` and `strings` (ledger 6.1) are NOT listed; every tool adds them. `id` IS listed, last, when the component prints it. React callback props (`onOpenChange`) are not props: they are derived from `events[]`. |
 | `prop.attribute` | The attribute the value is printed as (`02-html-contract.md` M-4). Informational for the template (the template is what renders); used by the checker (RP101) and docs. Omitted for props that print no attribute (`as`, `level`, objects). |
 | `prop.default` | Applied when the prop is unset or (enum) invalid. For a `string` prop it MAY be `{ "t": "<locale key>" }`: the English text of that key is the default in TSX hosts and in the reference renderer; Liquid emits the `t` filter. |
-| `prop.liquid` | REQUIRED when the prop exists on the `liquid` host (`hosts` absent or containing `liquid`); forbidden otherwise (MB-4). `surface: "setting"` means the block schema declares a setting with this id and the block reads it by its bare name (`06-bindings.md`). |
+| `prop.liquid` | REQUIRED when the prop exists on the `liquid` host (`hosts` absent or containing `liquid`); forbidden otherwise (MB-4). `surface: "setting"` means the block schema declares a setting with this id and the block reads it by its bare name (`06-bindings.md`). Only a non-responsive `enum` prop with a `default` may be a setting, and `settingType` is always `select` (D-038 amendment (b), MB-3). A name that Liquid reserves is replaced through `liquid.name` only on the SPIKE-02 fallback path (`as` becomes `tag`, D-038 amendment (d)); MB-2 then accepts that one pair. |
+| `prop.objectType` | For `type: "object"`. `"<Liquid drop or object name> \| <TypeScript type name>"` (`"product \| ProductFormProduct"`) when the prop exists on Liquid; the TypeScript type name alone when it does not. Type names are those of `05-commerce.md` section 11 (D-094) or an interface the binding file declares. |
 | `prop.hosts` | Present only when the prop does not exist in every host. |
 | `content.model` | `02-html-contract.md` 6.1. |
-| `parts[]` | Every named sub-element. `authoredBy: "author"`: the caller writes it; it has its own `props`, `content` and (when generated) `template`; TSX export `<Title><PascalCase part>`; Liquid block `<id>-<part>`. `authoredBy: "component"`: printed by the owner; it appears in the owner's `template` as a tag node with `part: "<name>"`. |
-| `part.parent` | `root` or a part name: the part MUST be a descendant of that part (RP113). |
+| `parts[]` | Every named sub-element that has a class. `authoredBy: "author"`: the caller writes it; it has its own `props`, `content` and (when generated) `template`; TSX export `<Title><PascalCase part>`; Liquid block `<id>-<part>`. `authoredBy: "component"`: printed by the owner; it appears in the owner's `template` as a tag node with `part: "<name>"`. An element with a hook attribute but no class (the hidden variant field of ProductForm) is not a part. |
+| `part.class` | The `rp-` class tokens the part prints. One class `rp-<component id>-<part>`; or, for a part composed by contract (D-070), the base component's class first and the part class second (`rp-input rp-search-form-input`, `rp-icon-button rp-cart-line-remove`); or the base class alone when the part carries no second class (`rp-form-message` for an error part, `rp-button` for a fallback submit button). The base component is then listed in `dependencies.components`. |
+| `part.parent` | `root` or a part name: the part MUST be a descendant (at any depth) of that part (RP113). |
 | `template` | Contract template (section 2). Absent means: bindings and fixtures are hand-written. |
-| `state[]` | One entry per piece of element state. `on`: the part (or `root`) whose attributes the element writes. `reflects`: the attribute names it writes there. `defaultProp`: the prop that supplies the initial value. `property`: the DOM property on the root custom element. The Remix binding prints `data-rmx-preserve-attrs` from `reflects` (D-034 item 2). |
+| `state[]` | One entry per row of the component document's "State and attributes" table that an element or the browser writes (rows written only by the server MAY be listed with `writer: "server"`). `on`: the part (or `root`) that carries the attributes. `writer`: who writes them after the server render: `server` (never changes in the browser), `element` (a Ripple or UI SDK element), `browser` (the user agent, for example `open` on `<dialog>`). `reflects`: the attribute names written there. `defaultProp`: the prop that supplies the initial value. `property`: the DOM property on the root custom element. Remix: every element that is the `on` of at least one row whose `writer` is `element` or `browser` prints `data-rmx-preserve-attrs="<names>"`, where `<names>` is the union of the `reflects` of those rows, in manifest order, joined by one space (D-034 item 2, D-100). Rows with `writer: "server"` contribute nothing. |
 | `events[]` | Only the four V1 event names (D-023). `detail` is a TypeScript type literal as text. |
 | `commands[]` | Invoker Commands the component responds to. |
 | `upgradeAllow[]` | Upgrade allow-list entries (`02-html-contract.md` 7.2). Absent means empty. |
@@ -733,25 +728,27 @@ Only keys whose meaning is not obvious from the schema and the ledger are listed
 | `noJs.fallbackHref` | Present when the opener MUST be a link (D-009). Value: the page path or the words `footer menu anchor`. |
 | `a11y.checkPattern` | Argument for `checkPattern(root, pattern)` from `@ui-sdk/core/testing`, or `null`. The enum is the `Pattern` union in `uisdk/packages/core/src/testing/check-pattern.ts`. |
 | `agent.surface` | `bridge` only when the contract has a custom element (kind `native`, `ui`, `commerce`); otherwise `accessibility-tree` (MB-9). |
-| `agent.actions[].confirm` | `true` marks an irreversible action (D-050, SPIKE-08). |
+| `agent.actions[]` | The bridge methods of the element (`08-agent-kit-and-evals.md` section 7 owns the list per element, D-095). `name` is the method name; `description` states the arguments and the effect in one sentence (there is no separate arguments key). |
+| `agent.actions[].confirm` | Optional. The confirmation sentence of an irreversible action (D-065 amendment (d)). No V1 action has it on the default path: `rp-cart` declares no `checkout` action (D-050); SPIKE-08 decides whether one is added. |
 | `agent.confirm[]` | `select` (selector subset) of each control inside the root that MUST carry `data-agent-confirm`; `sentence` is the English default of that attribute. Checked by RP320. |
 | `dependencies.components` | Components whose files MUST be installed with this one. Transitive closure is computed by the CLI. Includes every `embeds` entry. |
 | `dependencies.embeds` | Components whose contract this component prints inside its own (`02-html-contract.md` S-10). |
-| `dependencies.elements` | Every `rp-*` and `ui-*` tag in the component's own contract. Keys of top-level `elements`. |
+| `dependencies.elements` | Every `rp-*` and `ui-*` tag in the component's OWN markup (D-006: what its own binding file prints, including markup it composes by contract; markup of `dependencies.embeds` components is excluded). Keys of top-level `elements`. |
+| `dependencies.hydrogen` | The functions the component's TSX files value-import from `@shopify/hydrogen`. Each MUST be one of the seven names of D-094 (MB-24). |
 | `dependencies.locale` | Full locale keys (`ripple.<component id>.<key>`) the component prints. |
 | `liquid.tier` | D-037. `block`: `liquid.block` required. `parts`: `liquid.block` required (root block name; part blocks are `<block>-<part>`). `resource`: `liquid.block` required. `snippet`: `liquid.snippet` required, `liquid.block` forbidden. |
-| `liquid.snippet` | Present when the markup lives in `snippets/rp-<id>.liquid` (tier `snippet`, or any component with a non-empty `embeddedBy`). |
+| `liquid.snippet` | Present when the markup lives in `snippets/rp-<id>.liquid` (tier `snippet`, or any component with a non-empty `embeddedBy`). For Icon the snippet is installed as the core file `core/snippet:icon` (4.4), not as a file of the component. |
 | `liquid.embeddedBy` | Ids of the components that `{% render %}` this component's snippet. The inverse of `dependencies.embeds`. |
 | `liquid.partials[]` | Regions (D-046) this component's element refreshes. `name` is a region name. |
 | `liquid.formDialect`, `hydrogenHost.formDialect` | D-043 as data: `action` (the endpoint, as text), `fields` (Ripple field role, as in `data-rp-field`, to the backend's field name), `submit` (how the operation is named, as text). Checked by RP305. |
-| `rules[]` | Structure rules for RP113 (9.6). |
+| `rules[]` | Component-specific structure rules, evaluated by 9.5.3 and reported by RP113 as `[<rule id>]`. `id` is kebab-case and starts with the component id (ledger 4.1, MB-23). A component document MUST NOT introduce an `RPnnn` id (D-059). |
 | `files` | Section 4.3. All five arrays are required; an array MAY be empty. |
-| `elements.<tag>.display` | Static display value for the generated `display` region of `css/base.css` (`03-styling-and-tokens.md` 4.3). `unset` means the tag is omitted from that region. |
-| `elements.<tag>.chunk` | Which browser file defines the tag: `main` (`ripple.js`) or a lazy chunk name (D-054). |
+| `elements.<tag>.display` | Static display value for the generated `display` region of `css/base.css`. `block` for every `rp-*` tag (D-080, MB-22). For `ui-*` tags: the value UI SDK gives the tag; `unset` means the tag is omitted from that region. |
+| `elements.<tag>.chunk` | Which browser file defines the tag: `main` (`ripple.js` / `ripple.elements.js`) or the lazy chunk `tabs`, `tooltip` or `toast` (D-054). The chunks `shared` and `agent` define no tag and never appear here. |
 | `elements.<tag>.commerce` | `true`: the tag is defined by `<pkg>/commerce` and is absent from `ripple.elements.js`. |
 | `blueprints.<id>.regions` | Region names the blueprint declares (RP403). |
 
-Additions to the key list of ledger section 4.8 (each is recorded in "Ledger issues"): top-level `elements`; component `upgradeAllow`; `file.key`; `stateEntry.on` / `defaultProp`; `part.props` / `content` / `template`; `agent.actions[].confirm`; structure rule `count`.
+The key names of the schema are those of ledger section 4.8 (D-100). A key that is not in that list MUST NOT be added to the schema by a component document; a new key is a ledger change.
 
 ### 1.4 What the schema rejects
 
@@ -775,22 +772,28 @@ Each line is a negative test that MUST exist in `src/gen/manifest.test.ts` (one 
 16. A template node `{ "each": "items" }` (no loops).
 17. A manifest without `elements`.
 18. A structure rule of kind `max-count` without `count`.
+19. A `state[]` entry without `writer`.
+20. A file entry with `type: "script"`.
+21. `liquid.settingType: "range"`.
+22. `root.class` with three classes (`rp-a rp-b rp-c`).
+23. An agent action with `confirm: true` (it is a sentence).
 
 ### 1.5 `src/gen/elements.json` (complete, normative initial content)
 
-One entry per custom element tag that any contract may contain. `display` values are those of `03-styling-and-tokens.md` 4.3; for `ui-*` tags they MUST equal the `display` given to `createParts` in the pinned UI SDK (`uisdk/packages/web/src/tabs.ts`, `tooltip.ts`, `toast.ts`). An element specification in `04-elements.md` or `05-commerce.md` that states a different display value wins, and this file MUST then be changed.
+One entry per custom element tag that any contract or blueprint may contain. Every `rp-*` tag is `block` (D-080); doc 03 section 4.3 reads this file. For `ui-*` tags the value MUST equal the `display` given to `createParts` in the pinned UI SDK (`uisdk/packages/web/src/tabs.ts`, `tooltip.ts`, `toast.ts`) (D-080 item 2). `rp-view-event` is the infrastructure element printed by blueprints (D-089): it belongs to no component, and it is listed here so that the display generator, the JSX types and the checker know the tag.
 
 ```json
 {
   "rp-carousel": {"display": "block", "chunk": "main", "commerce": false},
   "rp-cart": {"display": "block", "chunk": "main", "commerce": true},
-  "rp-dialog": {"display": "contents", "chunk": "main", "commerce": false},
-  "rp-live": {"display": "contents", "chunk": "main", "commerce": true},
+  "rp-dialog": {"display": "block", "chunk": "main", "commerce": false},
+  "rp-live": {"display": "block", "chunk": "main", "commerce": true},
   "rp-navigation-menu": {"display": "block", "chunk": "main", "commerce": false},
   "rp-predictive-search": {"display": "block", "chunk": "main", "commerce": true},
-  "rp-product-form": {"display": "contents", "chunk": "main", "commerce": true},
+  "rp-product-form": {"display": "block", "chunk": "main", "commerce": true},
   "rp-quantity": {"display": "block", "chunk": "main", "commerce": false},
   "rp-recommendations": {"display": "block", "chunk": "main", "commerce": true},
+  "rp-view-event": {"display": "block", "chunk": "main", "commerce": true},
   "ui-tabs": {"display": "block", "chunk": "tabs", "commerce": false},
   "ui-tabs-indicator": {"display": "block", "chunk": "tabs", "commerce": false},
   "ui-tabs-list": {"display": "block", "chunk": "tabs", "commerce": false},
@@ -810,7 +813,7 @@ One entry per custom element tag that any contract may contain. `display` values
 }
 ```
 
-`pnpm gen` builds the `ElementDisplay[]` argument of `generateBaseCss` (`03-styling-and-tokens.md` 4.3) as: every entry whose `display` is not `unset`, as `{ tag, display }`.
+`pnpm gen` builds the `ElementDisplay[]` argument of `generateBaseCss` (`03-styling-and-tokens.md` 4.3) from this file and from nothing else: every entry whose `display` is not `unset`, as `{ tag, display }`, in ascending byte order of tag. The additional declarations of `rp-dialog` (`position: absolute; inline-size: 0; block-size: 0`, D-080 item 1) are written by `generateBaseCss` (doc 03), not stored here.
 
 ### 1.6 Build checks beyond the schema
 
@@ -819,29 +822,129 @@ One entry per custom element tag that any contract may contain. `display` values
 | Id | Check |
 |---|---|
 | MB-1 | Every prop with `type: "scale"` names a key of `scales`. Every `dependencies.components`, `dependencies.embeds`, `liquid.embeddedBy`, `partOf` and `blueprints.*.components` entry names a component. `A.dependencies.embeds` contains `B` if and only if `B.liquid.embeddedBy` contains `A`. Every `embeds` entry is also in `dependencies.components`. |
-| MB-2 | Every `prop.liquid.name` equals `snake(prop.name)` (`02-html-contract.md` M-2) and is not one of `true false nil blank empty content block section form settings for` (D-038). |
-| MB-3 | At most 3 props per component (root and parts counted together per block file) have `liquid.surface: "setting"` (D-038 item 5). |
+| MB-2 | Every `prop.liquid.name` equals `snake(prop.name)` (`02-html-contract.md` M-2) and is not one of `true false nil blank empty content block section form settings for` (D-038). Two consequences fixed by D-020: the prop that prints the native `form` attribute is named `formId` (`form_id`), and the prop that carries the cart root id is `cartLines` (`cart_lines`). No prop is named `form` on any host. One permitted exception to the `snake(prop.name)` equality exists only on the SPIKE-02 fallback path: the prop `as` then has `liquid.name: "tag"` (D-038 amendment (d); Fallback (SPIKE-02) item 4). |
+| MB-3 | At most 3 props per block file (the root's props for the root block; one part's props for a part block) have `liquid.surface: "setting"`. Each of them has `type: "enum"`, no `responsive: true`, a `default`, and `liquid.settingType: "select"` (D-038 item 5). |
 | MB-4 | `prop.liquid` is present exactly when the prop exists on the `liquid` host. |
 | MB-5 | Every non-responsive `enum` prop has a `default` that is in `values`, unless `required` is true. A responsive prop MAY have no default. |
 | MB-6 | No prop name is in ledger section 6.5 (prohibited names). No prop name matches `/^on/i`. |
 | MB-7 | Every enumerated value of a prop named in ledger sections 6.2 and 6.3 is a member of the ledger's enumeration for that name. |
-| MB-8 | `noJs.level` is `none` only for kind `ui`. Every component the ledger lists as MUST be `full` (D-005) has `noJs.level: "full"`. |
+| MB-8 | `noJs.level` is `none` only for kind `ui`. These ids, which D-005 names one by one, have `noJs.level: "full"`: `product-form`, `variant-picker`, `cart-lines`, `cart-note`, `checkout-button`, `filters`, `sort-select`, `search-form`, `pagination`, `locale-selector`, `accordion`, `newsletter-form`. The list is the constant `NO_JS_FULL` in `src/gen/registry.ts`. `discount-code` has `noJs.level: "degraded"` (D-005 as amended). D-005 also requires `full` for "every link and navigation component" and "every form control"; the build does not test that sentence, because the ledger does not list those ids: the value in each such component document is the source. |
 | MB-9 | `agent.surface` is `bridge` only when `dependencies.elements` is non-empty. When it is `bridge`, `agent.component` is present and is a member of `dependencies.elements`. |
 | MB-10 | Template references: every `{ "prop": x }`, `set`, `true`, `eq[0]` names a declared prop of the same component or part, or `class`. A tag `{ "prop": x }` names a non-responsive `enum` prop with a `default`. Every `embed` names a component that has a `template`, and every key of its `props` is a prop of that component. Every `{ "t": key }` exists in `locales/en.default.json` and is listed in `dependencies.locale`. A tag node with `part` names a part with `authoredBy: "component"`. |
-| MB-11 | Every tag in a template and every tag starting with `rp-` or `ui-` in a fixture file is a key of `elements` when it is a custom element; `dependencies.elements` equals the set of custom element tags in the component's `default` fixture and template. Tags allowed for `ui-*` are only those of `elements` (D-022 item 4). |
-| MB-12 | `kind` equals the result of the D-006 rule applied to the `default` fixture: no custom element tag gives `static`; a `ui-*` tag gives `ui`; otherwise, an `rp-*` tag whose `elements` entry has `commerce: true` gives `commerce`; otherwise `native`. |
+| MB-11 | Every tag in a template and every tag starting with `rp-` or `ui-` in a fixture file is a key of `elements`. Tags allowed for `ui-*` are only those of `elements` (D-022 item 4). `dependencies.elements` equals the set of custom element tags in the component's OWN markup (D-006): the tags of its templates, plus the tags of every fixture after this removal: for each id `E` in `dependencies.embeds`, delete every element whose class list contains every token of `components[E].root.class`, with its subtree. Example: ProductForm embeds `quantity-input`, so the `<rp-quantity>` subtree is deleted and `dependencies.elements` is `["rp-product-form"]`. |
+| MB-12 | `kind` and `liquid.tier` equal the row of the component in `LEDGER_COMPONENTS` (printed below; a copy of ledger section 8, which wins over the mechanical rule of D-006). The build does NOT derive `kind` from markup. |
 | MB-13 | Fixtures: the checks F-1, F-2, F-10 to F-20 and the lint of `02-html-contract.md` 11.5, 11.6, 11.8. A component without `template` has only `generated: "hand"` or `"upgrade-snapshot"` fixtures. |
 | MB-14 | `a11y.name.required: "always"` implies a `rules[]` entry of kind `requires-descendant` or `requires-attribute`, or a template attribute `aria-label` / `aria-labelledby` without `when`. |
-| MB-15 | Files: every `files.*[].source` exists in the registry build; `key` is unique within the component; `(owner, key)` to `target` follows table 4.3; `generated: true` only when the generator writes that source. |
+| MB-15 | Files: every `files.*[].source` exists in the registry build; `key` is unique within one host list of the component; `(owner, key)` to `target` follows table 4.3; `generated: true` only when the generator writes that source. Component `icon` has no `liquid` file with key `snippet` (its snippet is the core file `core/snippet:icon`, 4.4). A file with key `data` exists only in the `react` and `remix` lists and always in both. |
 | MB-16 | Liquid block budget: the number of distinct `target` values matching `blocks/*.liquid` over all components is at most 150 (D-038 item 7). |
-| MB-17 | `rules[].selector`, `rules[].target` (after splitting on `,`), `agent.confirm[].select`, `upgradeAllow[].select`, `noJs.hideUntilDefined[]` parse with `parseSelector` (`02-html-contract.md` 12.4). For kind `requires-attribute`, `target` is an attribute name instead. |
+| MB-17 | `rules[].selector`, `rules[].target` (after splitting on `,`), `agent.confirm[].select`, `upgradeAllow[].select`, `noJs.hideUntilDefined[]` parse with `parseSelector` (`02-html-contract.md` 12.4). One extension applies to `rules[].selector` and `rules[].target` only: the exact string `:scope` is accepted and means the component root itself (9.5.3); it is tested before `parseSelector` is called and is never passed to it. For kind `requires-attribute`, `target` is an attribute name instead. |
 | MB-18 | `events[].react` is `on` + PascalCase split of `events[].dom` (`openchange` and `onOpenChange`; D-023). |
-| MB-19 | `title` is the PascalCase of `name` (`product-card` and `ProductCard`), and `root.class` is `prefix.css + name`. Every `parts[].class` starts with `prefix.css`. |
-| MB-20 | The component set equals ledger section 8 (84 ids, with the kinds and Liquid tiers listed there) once every component document is implemented. Until then the check runs in "subset" mode: every present id MUST be in the ledger list with the listed kind and tier. |
+| MB-19 | `title` is the PascalCase of `name` (`product-card` and `ProductCard`). The LAST class token of `root.class` is `prefix.css + name`, except for `quantity-input`, where it is `rp-quantity` (D-015). Every token of `root.class` and of every `parts[].class` starts with `prefix.css`. |
+| MB-20 | The set of component ids equals the keys of `LEDGER_COMPONENTS` (84 ids). `pnpm gen --check --subset` relaxes this to "every present id is a key of `LEDGER_COMPONENTS`"; it exists so that the build can run while components are still being added. `pnpm build` and CI on `main` MUST NOT pass `--subset`. |
+| MB-21 | Composition by contract (D-070). In every fixture file, an element whose class list holds two or more tokens starting with `rp-` is legal only when `root.class` of the fixture's component, or the `class` of one of its parts, is exactly those tokens in the same order. Example: `class="rp-button rp-add-to-cart-button"` is legal in an AddToCartButton fixture because `components["add-to-cart-button"].root.class` is `rp-button rp-add-to-cart-button`. The same pair inside a ProductForm fixture is legal because MB-11 treats that element as embedded markup: elements deleted by the MB-11 removal are not checked here. |
+| MB-22 | Every key of `elements` that starts with `rp-` has `display: "block"` (D-080). |
+| MB-23 | Every `rules[].id` matches `^[a-z][a-z0-9]*(-[a-z0-9]+)*$`, starts with the component id followed by `-`, and is unique in the manifest. No component id is `props`, `settings`, `blueprints` or `core` (these are reserved locale and registry namespaces, D-038). |
+| MB-24 | Every `dependencies.hydrogen` entry is one of `formatMoney`, `renderShopPayButton`, `buildProductSelectionSearchParams`, `parseCollectionParams`, `serializeCollectionParams`, `isFilterInputActive`, `getFilterRemovalUrl` (D-094). |
+
+`LEDGER_COMPONENTS` is a hand-written constant in `src/gen/registry.ts`. It MUST equal ledger section 8 row for row. Complete content (84 rows):
+
+```ts
+// src/gen/registry.ts (part)
+export type Kind = "static" | "native" | "ui" | "commerce"
+export type Tier = "block" | "parts" | "resource" | "snippet"
+export const LEDGER_COMPONENTS: Record<string, { kind: Kind; tier: Tier }> = {
+  "container": { kind: "static", tier: "block" },
+  "stack": { kind: "static", tier: "block" },
+  "inline": { kind: "static", tier: "block" },
+  "grid": { kind: "static", tier: "block" },
+  "card": { kind: "static", tier: "block" },
+  "separator": { kind: "static", tier: "block" },
+  "heading": { kind: "static", tier: "block" },
+  "text": { kind: "static", tier: "block" },
+  "rich-text": { kind: "static", tier: "block" },
+  "link": { kind: "static", tier: "block" },
+  "image": { kind: "static", tier: "block" },
+  "video": { kind: "static", tier: "block" },
+  "icon": { kind: "static", tier: "snippet" },
+  "placeholder": { kind: "static", tier: "block" },
+  "button": { kind: "static", tier: "block" },
+  "icon-button": { kind: "static", tier: "block" },
+  "field": { kind: "static", tier: "parts" },
+  "label": { kind: "static", tier: "block" },
+  "input": { kind: "static", tier: "block" },
+  "textarea": { kind: "static", tier: "block" },
+  "select": { kind: "static", tier: "block" },
+  "checkbox": { kind: "static", tier: "block" },
+  "radio-group": { kind: "static", tier: "parts" },
+  "switch": { kind: "static", tier: "block" },
+  "form-message": { kind: "static", tier: "block" },
+  "badge": { kind: "static", tier: "block" },
+  "banner": { kind: "static", tier: "block" },
+  "spinner": { kind: "static", tier: "block" },
+  "skeleton": { kind: "static", tier: "block" },
+  "progress": { kind: "static", tier: "block" },
+  "empty-state": { kind: "static", tier: "block" },
+  "rating": { kind: "static", tier: "block" },
+  "skip-link": { kind: "static", tier: "block" },
+  "visually-hidden": { kind: "static", tier: "block" },
+  "announcer": { kind: "static", tier: "block" },
+  "breadcrumb": { kind: "static", tier: "parts" },
+  "pagination": { kind: "static", tier: "resource" },
+  "dialog": { kind: "native", tier: "parts" },
+  "drawer": { kind: "native", tier: "parts" },
+  "popover": { kind: "static", tier: "parts" },
+  "tooltip": { kind: "ui", tier: "parts" },
+  "toast": { kind: "ui", tier: "block" },
+  "tabs": { kind: "ui", tier: "parts" },
+  "accordion": { kind: "static", tier: "parts" },
+  "carousel": { kind: "native", tier: "parts" },
+  "quantity-input": { kind: "native", tier: "block" },
+  "product-card": { kind: "static", tier: "resource" },
+  "collection-card": { kind: "static", tier: "resource" },
+  "article-card": { kind: "static", tier: "resource" },
+  "price": { kind: "static", tier: "block" },
+  "product-gallery": { kind: "native", tier: "resource" },
+  "product-form": { kind: "commerce", tier: "resource" },
+  "variant-picker": { kind: "commerce", tier: "resource" },
+  "swatch": { kind: "static", tier: "block" },
+  "add-to-cart-button": { kind: "static", tier: "block" },
+  "product-recommendations": { kind: "commerce", tier: "resource" },
+  "cart-link": { kind: "commerce", tier: "block" },
+  "cart-drawer": { kind: "commerce", tier: "resource" },
+  "cart-lines": { kind: "commerce", tier: "resource" },
+  "cart-line": { kind: "static", tier: "resource" },
+  "cart-summary": { kind: "commerce", tier: "resource" },
+  "cart-note": { kind: "commerce", tier: "resource" },
+  "discount-code": { kind: "commerce", tier: "resource" },
+  "checkout-button": { kind: "static", tier: "block" },
+  "filters": { kind: "commerce", tier: "resource" },
+  "filter-group": { kind: "static", tier: "resource" },
+  "filter-chips": { kind: "commerce", tier: "resource" },
+  "price-range": { kind: "static", tier: "resource" },
+  "sort-select": { kind: "commerce", tier: "resource" },
+  "search-form": { kind: "static", tier: "block" },
+  "predictive-search": { kind: "commerce", tier: "resource" },
+  "live-form": { kind: "commerce", tier: "block" },
+  "header": { kind: "static", tier: "resource" },
+  "footer": { kind: "static", tier: "resource" },
+  "announcement-bar": { kind: "static", tier: "block" },
+  "navigation-menu": { kind: "native", tier: "resource" },
+  "mobile-nav": { kind: "native", tier: "resource" },
+  "link-list": { kind: "static", tier: "resource" },
+  "logo": { kind: "static", tier: "block" },
+  "locale-selector": { kind: "static", tier: "resource" },
+  "account-link": { kind: "static", tier: "block" },
+  "newsletter-form": { kind: "static", tier: "resource" },
+  "hero": { kind: "static", tier: "block" },
+  "featured-collection": { kind: "static", tier: "resource" },
+}
+```
+
+Counts, for a test in `src/gen/registry.test.ts`: 84 keys; 60 `static`, 7 `native`, 3 `ui`, 14 `commerce`; 45 `block`, 10 `parts`, 28 `resource`, 1 `snippet`.
 
 ### 1.7 Worked entries
 
-Three complete entries. They validate against 1.2, and their `template` fixtures below were produced by the reference renderer of 2.5. The VALUES (props, classes, parts) are owned by the component documents; if `09-components-foundation.md`, `10-components-interactive.md` or `11-components-commerce.md` differ, they win and these files are changed to match. What is normative here is the SHAPE: which key holds which fact.
+Three complete entries. They validate against 1.2, and the reference HTML printed for Button and Dialog was produced by running the reference renderer of 2.5 on these exact files. Every value (props, classes, parts, fixtures, rules) is a copy of the owning component document (D-069): Button from `09-components-foundation.md` section "Button", Dialog from `10-components-interactive.md` section "Dialog", ProductForm from `11-components-commerce.md` section "ProductForm". If an entry here and its owning document differ, the owning document wins and this entry MUST be changed to match. What this document owns is the SHAPE: which key holds which fact.
 
 #### 1.7.1 `components/button/button.json` (kind `static`, tier `block`, embedded by others)
 
@@ -856,14 +959,10 @@ Three complete entries. They validate against 1.2, and their `template` fixtures
   "summary": "A button, or a link that looks like a button. No JavaScript.",
   "useWhen": [
     "Submitting a form",
-    "Navigating with button styling (pass href)",
-    "Opening or closing a Dialog, Drawer or Popover (pass commandFor and command, or popoverTarget)"
+    "Opening or closing a Dialog, Drawer or Popover (pass commandFor and command, or popoverTarget)",
+    "Navigating with a button look (pass href)"
   ],
-  "dontUseWhen": [
-    {"case": "The control shows only an icon", "use": "icon-button"},
-    {"case": "An inline text link inside a paragraph", "use": "link"},
-    {"case": "Going to checkout", "use": "checkout-button"}
-  ],
+  "dontUseWhen": [{"case": "The control shows only an icon", "use": "icon-button"}, {"case": "The link sits in running text", "use": "link"}],
   "root": {"elements": ["button", "a"], "class": "rp-button", "requiresId": false},
   "props": [
     {
@@ -891,15 +990,27 @@ Three complete entries. They validate against 1.2, and their `template` fixtures
       "default": "button",
       "attribute": "type",
       "liquid": {"name": "type", "surface": "param"},
-      "description": "Native button type. Not printed when href is set."
+      "description": "Native button type. <button> only."
     },
     {"name": "href", "type": "url", "attribute": "href", "liquid": {"name": "href", "surface": "param"}, "description": "When set, the root element is <a>."},
+    {"name": "target", "type": "string", "attribute": "target", "liquid": {"name": "target", "surface": "param"}, "description": "Browsing context name. <a> only."},
+    {"name": "rel", "type": "string", "attribute": "rel", "liquid": {"name": "rel", "surface": "param"}, "description": "Link types. <a> only."},
+    {"name": "name", "type": "string", "attribute": "name", "liquid": {"name": "name", "surface": "param"}, "description": "Form field name. <button> only."},
+    {"name": "value", "type": "string", "attribute": "value", "liquid": {"name": "value", "surface": "param"}, "description": "Form field value. <button> only."},
     {
       "name": "disabled",
       "type": "boolean",
       "default": false,
       "liquid": {"name": "disabled", "surface": "param"},
-      "description": "disabled on <button>; aria-disabled=\"true\" and tabindex=\"-1\" on <a>."
+      "description": "disabled on <button>; aria-disabled=\"true\" and tabindex=\"-1\" on <a> (href stays)."
+    },
+    {
+      "name": "pending",
+      "type": "boolean",
+      "default": false,
+      "attribute": "data-pending",
+      "liquid": {"name": "pending", "surface": "param"},
+      "description": "Busy state: data-pending and aria-busy=\"true\". The button stays focusable."
     },
     {
       "name": "fullWidth",
@@ -910,109 +1021,186 @@ Three complete entries. They validate against 1.2, and their `template` fixtures
       "description": "Fill the inline size of the container."
     },
     {
-      "name": "name",
-      "type": "string",
-      "attribute": "name",
-      "liquid": {"name": "name", "surface": "param"},
-      "description": "Form field name. Not printed when href is set."
-    },
-    {
-      "name": "value",
-      "type": "string",
-      "attribute": "value",
-      "liquid": {"name": "value", "surface": "param"},
-      "description": "Form field value. Not printed when href is set."
-    },
-    {
-      "name": "commandFor",
-      "type": "id",
-      "attribute": "commandfor",
-      "liquid": {"name": "command_for", "surface": "param"},
-      "description": "Id of the <dialog> or popover this button commands."
-    },
-    {
-      "name": "command",
-      "type": "string",
-      "attribute": "command",
-      "liquid": {"name": "command", "surface": "param"},
-      "description": "Invoker command: show-modal, close, show-popover, hide-popover, toggle-popover, or a custom --name."
-    },
-    {
-      "name": "popoverTarget",
-      "type": "id",
-      "attribute": "popovertarget",
-      "liquid": {"name": "popover_target", "surface": "param"},
-      "description": "Id of the popover this button toggles."
-    },
-    {
       "name": "ariaLabel",
       "type": "string",
       "attribute": "aria-label",
       "liquid": {"name": "aria_label", "surface": "param"},
       "description": "Accessible name. Required when the content has no text."
     },
+    {
+      "name": "commandFor",
+      "type": "id",
+      "attribute": "commandfor",
+      "liquid": {"name": "command_for", "surface": "param"},
+      "description": "Id of the <dialog> or popover this button commands. <button> only. Pass together with command."
+    },
+    {
+      "name": "command",
+      "type": "string",
+      "attribute": "command",
+      "liquid": {"name": "command", "surface": "param"},
+      "description": "Invoker command: show-modal, close, show-popover, hide-popover, toggle-popover, or a custom --name. <button> only."
+    },
+    {
+      "name": "popoverTarget",
+      "type": "id",
+      "attribute": "popovertarget",
+      "liquid": {"name": "popover_target", "surface": "param"},
+      "description": "Id of the popover this button toggles. <button> only."
+    },
+    {
+      "name": "formId",
+      "type": "id",
+      "attribute": "form",
+      "liquid": {"name": "form_id", "surface": "param"},
+      "description": "Id of a form elsewhere in the document; prints the native form attribute. <button> only."
+    },
+    {
+      "name": "dialog",
+      "type": "id",
+      "attribute": "data-rp-open",
+      "liquid": {"name": "dialog", "surface": "param"},
+      "description": "Id of the dialog this link opens with JavaScript; without JavaScript the link navigates. Only with href."
+    },
+    {
+      "name": "tooltip",
+      "type": "id",
+      "attribute": "aria-describedby",
+      "liquid": {"name": "tooltip", "surface": "param"},
+      "description": "Id of the Tooltip this button triggers. Prints aria-describedby=\"<id>-content\" and data-slot=\"tooltip-trigger\". <button> only."
+    },
     {"name": "id", "type": "id", "attribute": "id", "liquid": {"name": "id", "surface": "param"}, "description": "Root element id."}
   ],
-  "content": {"model": "text", "required": true, "description": "The label. May include an Icon."},
+  "content": {"model": "text", "required": true, "description": "The label: text, optionally with Icon elements. No interactive content."},
   "parts": [],
   "template": {
     "tag": {"if": {"set": "href"}, "then": "a", "else": "button"},
     "attrs": [
       {"name": "class", "value": ["rp-button", {"prop": "class"}]},
       {"name": "id", "value": {"prop": "id"}, "when": {"set": "id"}},
-      {"name": "href", "value": {"prop": "href"}, "when": {"set": "href"}},
       {"name": "type", "value": {"prop": "type"}, "when": {"not": {"set": "href"}}},
+      {"name": "href", "value": {"prop": "href"}, "when": {"set": "href"}},
+      {"name": "target", "value": {"prop": "target"}, "when": {"all": [{"set": "target"}, {"set": "href"}]}},
+      {"name": "rel", "value": {"prop": "rel"}, "when": {"all": [{"set": "rel"}, {"set": "href"}]}},
       {"name": "name", "value": {"prop": "name"}, "when": {"all": [{"set": "name"}, {"not": {"set": "href"}}]}},
       {"name": "value", "value": {"prop": "value"}, "when": {"all": [{"set": "value"}, {"not": {"set": "href"}}]}},
       {"name": "disabled", "when": {"all": [{"true": "disabled"}, {"not": {"set": "href"}}]}},
       {"name": "commandfor", "value": {"prop": "commandFor"}, "when": {"all": [{"set": "commandFor"}, {"not": {"set": "href"}}]}},
       {"name": "command", "value": {"prop": "command"}, "when": {"all": [{"set": "command"}, {"not": {"set": "href"}}]}},
       {"name": "popovertarget", "value": {"prop": "popoverTarget"}, "when": {"all": [{"set": "popoverTarget"}, {"not": {"set": "href"}}]}},
+      {"name": "form", "value": {"prop": "formId"}, "when": {"all": [{"set": "formId"}, {"not": {"set": "href"}}]}},
       {"name": "data-variant", "value": {"prop": "variant"}},
       {"name": "data-size", "value": {"prop": "size"}},
       {"name": "data-full-width", "when": {"true": "fullWidth"}},
+      {"name": "data-pending", "when": {"true": "pending"}},
+      {"name": "aria-busy", "value": "true", "when": {"true": "pending"}},
       {"name": "aria-disabled", "value": "true", "when": {"all": [{"true": "disabled"}, {"set": "href"}]}},
       {"name": "tabindex", "value": "-1", "when": {"all": [{"true": "disabled"}, {"set": "href"}]}},
-      {"name": "aria-label", "value": {"prop": "ariaLabel"}, "when": {"set": "ariaLabel"}}
+      {"name": "aria-label", "value": {"prop": "ariaLabel"}, "when": {"set": "ariaLabel"}},
+      {"name": "aria-describedby", "value": {"prop": "tooltip", "suffix": "-content"}, "when": {"all": [{"set": "tooltip"}, {"not": {"set": "href"}}]}},
+      {"name": "data-slot", "value": "tooltip-trigger", "when": {"all": [{"set": "tooltip"}, {"not": {"set": "href"}}]}},
+      {"name": "data-rp-open", "value": {"prop": "dialog"}, "when": {"all": [{"set": "dialog"}, {"set": "href"}]}}
     ],
     "children": [{"slot": "children"}]
   },
   "fixtures": [
     {"name": "default", "props": {}, "children": "Add to cart", "generated": "template"},
+    {"name": "link", "props": {"href": "/cart"}, "children": "View cart", "generated": "template"},
+    {"name": "link-disabled", "props": {"href": "/cart", "variant": "outline", "disabled": true}, "children": "View cart", "generated": "template"},
     {
-      "name": "submit-outline-lg",
-      "props": {"variant": "outline", "size": "lg", "type": "submit", "name": "add", "value": "1", "fullWidth": true, "id": "buy"},
+      "name": "link-external",
+      "props": {"href": "https://example.com/", "target": "_blank", "rel": "noopener", "variant": "ghost"},
+      "children": "Example",
+      "generated": "template"
+    },
+    {
+      "name": "submit-pending",
+      "props": {"type": "submit", "name": "intent", "value": "add", "size": "lg", "fullWidth": true, "pending": true},
       "children": "Add to cart",
       "generated": "template"
     },
-    {"name": "disabled", "props": {"disabled": true}, "children": "Sold out", "generated": "template"},
-    {"name": "link", "props": {"href": "/cart"}, "children": "View cart", "generated": "template"},
-    {"name": "link-disabled", "props": {"href": "/cart", "disabled": true}, "children": "View cart", "generated": "template"},
-    {"name": "command", "props": {"commandFor": "size-guide", "command": "show-modal", "variant": "link"}, "children": "Size guide", "generated": "template"},
-    {"name": "popover-target", "props": {"popoverTarget": "locale-panel", "variant": "ghost"}, "children": "Language", "generated": "template"},
-    {"name": "invalid-enum-falls-back", "props": {"variant": "loud"}, "children": "Buy", "generated": "template"},
-    {"name": "escaping", "props": {"name": "Say \"hi\" & <go>", "ariaLabel": "Say \"hi\" & <go>"}, "children": "Go", "generated": "template"},
-    {"name": "class", "props": {"class": "custom-a custom-b"}, "children": "Buy", "generated": "template"}
+    {"name": "disabled", "props": {"variant": "outline", "size": "sm", "disabled": true}, "children": "Sold out", "generated": "template"},
+    {
+      "name": "dialog-opener",
+      "props": {"variant": "link", "commandFor": "size-guide", "command": "show-modal"},
+      "children": "Size guide",
+      "generated": "template"
+    },
+    {
+      "name": "with-icon",
+      "props": {"variant": "secondary", "popoverTarget": "sort-menu", "ariaLabel": "Sort products"},
+      "children": "<svg class=\"rp-icon\" aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 24 24\"><path d=\"M4 6h16M7 12h10M10 18h4\"/></svg>Sort",
+      "generated": "template"
+    },
+    {"name": "destructive", "props": {"variant": "destructive", "type": "reset"}, "children": "Clear", "generated": "template"},
+    {"name": "class", "props": {"class": "custom-a custom-b"}, "children": "Add to cart", "generated": "template"},
+    {"name": "invalid-enum-falls-back", "props": {"variant": "bogus"}, "children": "Add to cart", "generated": "template"},
+    {"name": "escaping", "props": {"href": "/cart", "target": "Say \"hi\" & <go>"}, "children": "View cart", "generated": "template"},
+    {"name": "link-dialog", "props": {"href": "/cart", "dialog": "cart-drawer"}, "children": "Cart", "generated": "template"},
+    {"name": "tooltip-trigger", "props": {"tooltip": "tip-1", "formId": "cart-form", "type": "submit"}, "children": "Update", "generated": "template"}
   ],
-  "noJs": {"level": "full", "behavior": "Native <button> or <a>. Nothing to enhance."},
+  "noJs": {"level": "full", "behavior": "Native <button> or <a>. Submit and reset buttons act on their form; links navigate; popovertarget and commandfor are native."},
   "a11y": {
-    "pattern": "native button",
+    "pattern": "native button or link",
     "checkPattern": null,
     "name": {"required": "when-no-text", "sources": ["text content", "aria-label"]},
-    "keyboard": [{"keys": "Enter, Space", "does": "Activates the button (native)."}],
-    "focus": "Focus ring from :focus-visible using --color-ring."
+    "keyboard": [{"keys": "Enter, Space", "does": "Activates a <button> (native)."}, {"keys": "Enter", "does": "Follows an <a> (native)."}],
+    "focus": "Focusable natively. A disabled <a> root leaves the tab order. A pending button stays focusable."
   },
   "agent": {"surface": "accessibility-tree"},
-  "dependencies": {"components": [], "elements": [], "tokens": ["--color-primary", "--color-primary-foreground", "--color-ring", "--radius-control", "--spacing-control-md"]},
-  "liquid": {"tier": "block", "block": "button", "snippet": "rp-button", "embeddedBy": ["add-to-cart-button", "checkout-button"]},
+  "dependencies": {
+    "components": [],
+    "elements": [],
+    "tokens": [
+      "--spacing-control-sm",
+      "--spacing-control-md",
+      "--spacing-control-lg",
+      "--spacing-target-min",
+      "--spacing",
+      "--radius-control",
+      "--radius-xs",
+      "--text-sm",
+      "--text-base",
+      "--font-weight-medium",
+      "--color-primary",
+      "--color-primary-foreground",
+      "--color-secondary",
+      "--color-secondary-foreground",
+      "--color-foreground",
+      "--color-input",
+      "--color-link",
+      "--color-destructive",
+      "--color-destructive-foreground",
+      "--rp-duration-fast",
+      "--rp-duration-slow",
+      "--ease-out"
+    ]
+  },
+  "liquid": {"tier": "block", "block": "button", "snippet": "rp-button", "embeddedBy": ["pagination"]},
   "rules": [
     {
-      "id": "no-interactive-ancestor",
-      "kind": "forbids-ancestor",
-      "selector": ".rp-button",
-      "target": "a, button",
-      "message": "A Button is inside another link or button.",
-      "fix": "Move the Button out of the link or button, or make the outer element a non-interactive container."
+      "id": "button-no-interactive-content",
+      "kind": "forbids-descendant",
+      "selector": ":scope",
+      "target": "a, button, input, select, textarea, details, label",
+      "message": "A Button contains a link, a button or a form control.",
+      "fix": "Move the inner control out of the Button; a Button holds text and Icons only."
+    },
+    {
+      "id": "button-command-pair",
+      "kind": "requires-attribute",
+      "selector": ".rp-button[commandfor]",
+      "target": "command",
+      "message": "A Button has commandfor without command, so it does nothing.",
+      "fix": "Pass command together with commandFor (Liquid: command_for), for example command=\"show-modal\"."
+    },
+    {
+      "id": "button-command-needs-target",
+      "kind": "requires-attribute",
+      "selector": ".rp-button[command]",
+      "target": "commandfor",
+      "message": "A Button has command without commandfor, so it has no target.",
+      "fix": "Pass commandFor (Liquid: command_for) with the id of the dialog or popover."
     }
   ],
   "files": {
@@ -1041,25 +1229,35 @@ Reference HTML produced for its fixtures (the content of `components/button/fixt
 ```text
 button/default
   <button class="rp-button" type="button" data-variant="primary" data-size="md">Add to cart</button>
-button/submit-outline-lg
-  <button class="rp-button" id="buy" type="submit" name="add" value="1" data-variant="outline" data-size="lg" data-full-width="">Add to cart</button>
-button/disabled
-  <button class="rp-button" type="button" disabled="" data-variant="primary" data-size="md">Sold out</button>
 button/link
   <a class="rp-button" href="/cart" data-variant="primary" data-size="md">View cart</a>
 button/link-disabled
-  <a class="rp-button" href="/cart" data-variant="primary" data-size="md" aria-disabled="true" tabindex="-1">View cart</a>
-button/command
+  <a class="rp-button" href="/cart" data-variant="outline" data-size="md" aria-disabled="true" tabindex="-1">View cart</a>
+button/link-external
+  <a class="rp-button" href="https://example.com/" target="_blank" rel="noopener" data-variant="ghost" data-size="md">Example</a>
+button/submit-pending
+  <button class="rp-button" type="submit" name="intent" value="add" data-variant="primary" data-size="lg" data-full-width="" data-pending="" aria-busy="true">Add to cart</button>
+button/disabled
+  <button class="rp-button" type="button" disabled="" data-variant="outline" data-size="sm">Sold out</button>
+button/dialog-opener
   <button class="rp-button" type="button" commandfor="size-guide" command="show-modal" data-variant="link" data-size="md">Size guide</button>
-button/popover-target
-  <button class="rp-button" type="button" popovertarget="locale-panel" data-variant="ghost" data-size="md">Language</button>
-button/invalid-enum-falls-back
-  <button class="rp-button" type="button" data-variant="primary" data-size="md">Buy</button>
-button/escaping
-  <button class="rp-button" type="button" name="Say &quot;hi&quot; &amp; &lt;go&gt;" data-variant="primary" data-size="md" aria-label="Say &quot;hi&quot; &amp; &lt;go&gt;">Go</button>
+button/with-icon
+  <button class="rp-button" type="button" popovertarget="sort-menu" data-variant="secondary" data-size="md" aria-label="Sort products"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Sort</button>
+button/destructive
+  <button class="rp-button" type="reset" data-variant="destructive" data-size="md">Clear</button>
 button/class
-  <button class="rp-button custom-a custom-b" type="button" data-variant="primary" data-size="md">Buy</button>
+  <button class="rp-button custom-a custom-b" type="button" data-variant="primary" data-size="md">Add to cart</button>
+button/invalid-enum-falls-back
+  <button class="rp-button" type="button" data-variant="primary" data-size="md">Add to cart</button>
+button/escaping
+  <a class="rp-button" href="/cart" target="Say &quot;hi&quot; &amp; &lt;go&gt;" data-variant="primary" data-size="md">View cart</a>
+button/link-dialog
+  <a class="rp-button" href="/cart" data-variant="primary" data-size="md" data-rp-open="cart-drawer">Cart</a>
+button/tooltip-trigger
+  <button class="rp-button" type="submit" form="cart-form" data-variant="primary" data-size="md" aria-describedby="tip-1-content" data-slot="tooltip-trigger">Update</button>
 ```
+
+Notes: boolean attributes print as `disabled=""` in fixture files (the serialisation of `02-html-contract.md` 11.3); `disabled` and `disabled=""` are the same attribute. The props `formId`, `dialog` and `tooltip` come from D-020, D-009 and D-082 (ledger 6.4); the fixtures `link-dialog` and `tooltip-trigger` exercise them.
 
 #### 1.7.2 `components/dialog/dialog.json` (kind `native`, tier `parts`, state, event, commands)
 
@@ -1071,11 +1269,12 @@ button/class
   "kind": "native",
   "status": "beta",
   "since": "0.1.0",
-  "summary": "A modal window over the page, built on the native <dialog> element.",
-  "useWhen": ["Short, self-contained content that interrupts the page: size guide, confirmation, quick view"],
+  "summary": "A modal window centred over the page, built on the native <dialog> element.",
+  "useWhen": ["Short, self-contained content interrupts the page: size guide, confirmation, quick view, search"],
   "dontUseWhen": [
-    {"case": "A panel that slides in from a screen edge (cart, mobile menu)", "use": "drawer"},
-    {"case": "Content that must be readable when JavaScript never loads", "use": "accordion"}
+    {"case": "The panel slides in from a screen edge", "use": "drawer"},
+    {"case": "The content must be readable when JavaScript never loads", "use": "accordion"},
+    {"case": "The popup is small and anchored to its button", "use": "popover"}
   ],
   "root": {"elements": ["rp-dialog"], "class": "rp-dialog", "requiresId": true},
   "props": [
@@ -1085,7 +1284,7 @@ button/class
       "required": true,
       "attribute": "id",
       "liquid": {"name": "id", "surface": "param"},
-      "description": "Id of the inner <dialog>. Openers use it in commandFor. Part ids derive from it."
+      "description": "Id of the inner <dialog>. Openers and closers use it in commandFor. Part ids derive from it."
     },
     {
       "name": "size",
@@ -1106,7 +1305,7 @@ button/class
     },
     {"name": "open", "type": "boolean", "hosts": ["react"], "description": "Controlled open state. React only. Use with onOpenChange."}
   ],
-  "content": {"model": "parts", "required": true, "description": "dialog-title (required), dialog-description, dialog-body."},
+  "content": {"model": "parts", "required": true, "description": "dialog-header, dialog-title (required), dialog-description, dialog-body, dialog-footer, in that order."},
   "parts": [
     {
       "name": "panel",
@@ -1117,6 +1316,18 @@ button/class
       "authoredBy": "component",
       "parent": "root",
       "description": "The native <dialog>. Carries the id."
+    },
+    {
+      "name": "header",
+      "elements": ["div"],
+      "class": "rp-dialog-header",
+      "required": false,
+      "multiple": false,
+      "authoredBy": "author",
+      "parent": "panel",
+      "props": [],
+      "content": {"model": "flow", "required": true, "description": "The title first, then at most one closer (an IconButton with commandFor and command=\"close\")."},
+      "template": {"tag": "div", "attrs": [{"name": "class", "value": ["rp-dialog-header", {"prop": "class"}]}], "children": [{"slot": "children"}]}
     },
     {
       "name": "title",
@@ -1175,8 +1386,20 @@ button/class
       "authoredBy": "author",
       "parent": "panel",
       "props": [],
-      "content": {"model": "flow", "required": true},
+      "content": {"model": "flow", "required": true, "description": "Any flow content. The only part that scrolls."},
       "template": {"tag": "div", "attrs": [{"name": "class", "value": ["rp-dialog-body", {"prop": "class"}]}], "children": [{"slot": "children"}]}
+    },
+    {
+      "name": "footer",
+      "elements": ["div"],
+      "class": "rp-dialog-footer",
+      "required": false,
+      "multiple": false,
+      "authoredBy": "author",
+      "parent": "panel",
+      "props": [],
+      "content": {"model": "flow", "required": true, "description": "Buttons only."},
+      "template": {"tag": "div", "attrs": [{"name": "class", "value": ["rp-dialog-footer", {"prop": "class"}]}], "children": [{"slot": "children"}]}
     }
   ],
   "template": {
@@ -1198,26 +1421,40 @@ button/class
       }
     ]
   },
-  "state": [{"name": "open", "type": "boolean", "on": "panel", "defaultProp": "defaultOpen", "property": "open", "reflects": ["open"]}],
-  "events": [{"dom": "openchange", "react": "onOpenChange", "detail": "{ value: boolean; reason: string; source: Element | null }", "bubbles": false, "cancelable": true}],
+  "state": [{"name": "open", "type": "boolean", "on": "panel", "writer": "browser", "defaultProp": "defaultOpen", "property": "open", "reflects": ["open"]}],
+  "events": [
+    {
+      "dom": "openchange",
+      "react": "onOpenChange",
+      "detail": "{ value: boolean; reason: \"trigger-press\" | \"close-press\" | \"escape-key\" | \"outside-press\" | \"link-press\" | \"imperative\"; source: string }",
+      "bubbles": false,
+      "cancelable": true
+    }
+  ],
   "commands": [
-    {"command": "show-modal", "description": "Opens the dialog as a modal. Sent by a Button with commandFor set to the dialog id."},
+    {"command": "show-modal", "description": "Opens the dialog as a modal. Sent by a Button or IconButton with commandFor set to the dialog id."},
     {"command": "close", "description": "Closes the dialog."}
   ],
   "fixtures": [
+    {"name": "default", "props": {"id": "size-guide"}, "parts": [{"part": "title", "props": {"dialog": "size-guide"}, "children": "Size guide"}], "generated": "template"},
     {
-      "name": "default",
-      "props": {"id": "size-guide"},
-      "parts": [{"part": "title", "props": {"dialog": "size-guide"}, "children": "Size guide"}, {"part": "body", "children": "<p>Measure your foot.</p>"}],
+      "name": "composed",
+      "props": {"id": "remove-item", "size": "lg"},
+      "parts": [
+        {
+          "part": "header",
+          "children": "<h2 class=\"rp-dialog-title\" id=\"remove-item-title\">Remove item</h2><button type=\"button\" commandfor=\"remove-item\" command=\"close\" aria-label=\"Close\">x</button>"
+        },
+        {"part": "description", "props": {"dialog": "remove-item"}, "children": "This removes the item from your cart."},
+        {"part": "body", "children": "<p>Linen shirt, size M</p>"},
+        {"part": "footer", "children": "<button type=\"button\" commandfor=\"remove-item\" command=\"close\">Cancel</button>"}
+      ],
       "generated": "template"
     },
     {
-      "name": "default-open-lg",
-      "props": {"id": "promo", "size": "lg", "defaultOpen": true},
-      "parts": [
-        {"part": "title", "props": {"dialog": "promo"}, "children": "Welcome"},
-        {"part": "description", "props": {"dialog": "promo", "class": "custom-a"}, "children": "Ten percent off today."}
-      ],
+      "name": "default-open",
+      "props": {"id": "promo", "defaultOpen": true},
+      "parts": [{"part": "title", "props": {"dialog": "promo"}, "children": "Welcome"}],
       "generated": "template"
     },
     {
@@ -1229,7 +1466,7 @@ button/class
     {
       "name": "class",
       "props": {"id": "d2", "class": "custom-a custom-b"},
-      "parts": [{"part": "title", "props": {"dialog": "d2"}, "children": "Title"}],
+      "parts": [{"part": "title", "props": {"dialog": "d2", "class": "custom-c"}, "children": "Title"}],
       "generated": "template"
     }
   ],
@@ -1242,17 +1479,18 @@ button/class
   ],
   "noJs": {
     "level": "degraded",
-    "behavior": "With Invoker Commands in the browser the dialog opens and closes with no script. Without them the opener does nothing; an opener with a page equivalent MUST be a link with data-rp-open."
+    "behavior": "With Invoker Commands in the browser the dialog opens and closes with no script. Without them the opener does nothing; an opener with a page equivalent MUST be a link with the dialog prop."
   },
   "a11y": {
     "pattern": "dialog (modal)",
     "checkPattern": "dialog",
     "name": {"required": "always", "sources": ["dialog-title through aria-labelledby"]},
     "keyboard": [
-      {"keys": "Escape", "does": "Closes the dialog and returns focus to the opener (native)."},
-      {"keys": "Tab, Shift+Tab", "does": "Move focus inside the dialog; the page behind is inert (native)."}
+      {"keys": "Escape", "does": "Closes the dialog; focus returns to the opener."},
+      {"keys": "Tab, Shift+Tab", "does": "Moves focus among the controls inside the dialog only."},
+      {"keys": "Enter or Space on an opener or closer", "does": "Opens or closes."}
     ],
-    "focus": "On open the browser focuses the first focusable element in the dialog. On close focus returns to the opener."
+    "focus": "On open the browser focuses the first focusable element inside the <dialog>. On close focus returns to the opener."
   },
   "agent": {
     "surface": "bridge",
@@ -1260,9 +1498,28 @@ button/class
     "actions": [{"name": "open", "description": "Open the dialog."}, {"name": "close", "description": "Close the dialog."}]
   },
   "dependencies": {
-    "components": ["button"],
+    "components": ["button", "icon", "icon-button"],
     "elements": ["rp-dialog"],
-    "tokens": ["--color-popover", "--color-popover-foreground", "--color-overlay", "--radius-surface", "--shadow-lg", "--rp-z-overlay"]
+    "tokens": [
+      "--container-prose",
+      "--spacing",
+      "--radius-surface",
+      "--color-popover",
+      "--color-popover-foreground",
+      "--color-border",
+      "--color-overlay",
+      "--color-muted-foreground",
+      "--shadow-lg",
+      "--font-heading",
+      "--rp-heading-weight",
+      "--text-lg",
+      "--text-lg--line-height",
+      "--text-sm",
+      "--text-sm--line-height",
+      "--rp-duration-base",
+      "--rp-duration-slow",
+      "--ease-out"
+    ]
   },
   "liquid": {"tier": "parts", "block": "dialog"},
   "rules": [
@@ -1281,15 +1538,39 @@ button/class
       "target": "dialog[open]",
       "message": "A <dialog> is printed with the open attribute, which shows it as a non-modal box before JavaScript runs.",
       "fix": "Remove open and pass defaultOpen (Liquid: default_open: true)."
+    },
+    {
+      "id": "dialog-one-title",
+      "kind": "max-count",
+      "selector": "rp-dialog.rp-dialog .rp-dialog-title",
+      "count": 1,
+      "message": "A Dialog has more than one title.",
+      "fix": "Keep one dialog-title."
+    },
+    {
+      "id": "dialog-not-nested",
+      "kind": "forbids-ancestor",
+      "selector": "rp-dialog",
+      "target": "dialog, a, button, label, [popover]",
+      "message": "A Dialog is inside a dialog, link, button, label or popover.",
+      "fix": "Move the Dialog to the end of the page body; openers find it by id."
     }
   ],
   "files": {
     "shared": [{"key": "css", "source": "css/components/dialog.css", "target": "@styles/components/dialog.css", "type": "css", "mode": "owned", "generated": false}],
     "html": [{"key": "html", "source": "html/dialog.html", "target": "@components/dialog.html", "type": "binding", "mode": "owned", "generated": true}],
     "react": [{"key": "react", "source": "react/dialog.tsx", "target": "@components/dialog.tsx", "type": "binding", "mode": "owned", "generated": false}],
-    "remix": [{"key": "remix", "source": "remix/dialog.tsx", "target": "@components/dialog.tsx", "type": "binding", "mode": "owned", "generated": false}],
+    "remix": [{"key": "remix", "source": "remix/dialog.tsx", "target": "@components/dialog.tsx", "type": "binding", "mode": "owned", "generated": true}],
     "liquid": [
       {"key": "block", "source": "liquid/blocks/dialog.liquid", "target": "blocks/dialog.liquid", "type": "block", "mode": "owned", "generated": true},
+      {
+        "key": "block:header",
+        "source": "liquid/blocks/dialog-header.liquid",
+        "target": "blocks/dialog-header.liquid",
+        "type": "block",
+        "mode": "owned",
+        "generated": true
+      },
       {
         "key": "block:title",
         "source": "liquid/blocks/dialog-title.liquid",
@@ -1314,6 +1595,14 @@ button/class
         "mode": "owned",
         "generated": true
       },
+      {
+        "key": "block:footer",
+        "source": "liquid/blocks/dialog-footer.liquid",
+        "target": "blocks/dialog-footer.liquid",
+        "type": "block",
+        "mode": "owned",
+        "generated": true
+      },
       {"key": "locale", "source": "liquid/locales/dialog.json", "target": "locales/*.json", "type": "asset", "mode": "patch", "generated": true}
     ]
   }
@@ -1324,18 +1613,20 @@ Reference HTML:
 
 ```text
 dialog/default
-  <rp-dialog class="rp-dialog" data-slot="rp-dialog"><dialog class="rp-dialog-panel" id="size-guide" data-size="md" aria-labelledby="size-guide-title" closedby="any"><h2 class="rp-dialog-title" id="size-guide-title">Size guide</h2><div class="rp-dialog-body"><p>Measure your foot.</p></div></dialog></rp-dialog>
-dialog/default-open-lg
-  <rp-dialog class="rp-dialog" data-slot="rp-dialog"><dialog class="rp-dialog-panel" id="promo" data-size="lg" aria-labelledby="promo-title" closedby="any" data-default-open=""><h2 class="rp-dialog-title" id="promo-title">Welcome</h2><p class="rp-dialog-description custom-a" id="promo-description">Ten percent off today.</p></dialog></rp-dialog>
+  <rp-dialog class="rp-dialog" data-slot="rp-dialog"><dialog class="rp-dialog-panel" id="size-guide" data-size="md" aria-labelledby="size-guide-title" closedby="any"><h2 class="rp-dialog-title" id="size-guide-title">Size guide</h2></dialog></rp-dialog>
+dialog/composed
+  <rp-dialog class="rp-dialog" data-slot="rp-dialog"><dialog class="rp-dialog-panel" id="remove-item" data-size="lg" aria-labelledby="remove-item-title" closedby="any"><div class="rp-dialog-header"><h2 class="rp-dialog-title" id="remove-item-title">Remove item</h2><button type="button" commandfor="remove-item" command="close" aria-label="Close">x</button></div><p class="rp-dialog-description" id="remove-item-description">This removes the item from your cart.</p><div class="rp-dialog-body"><p>Linen shirt, size M</p></div><div class="rp-dialog-footer"><button type="button" commandfor="remove-item" command="close">Cancel</button></div></dialog></rp-dialog>
+dialog/default-open
+  <rp-dialog class="rp-dialog" data-slot="rp-dialog"><dialog class="rp-dialog-panel" id="promo" data-size="md" aria-labelledby="promo-title" closedby="any" data-default-open=""><h2 class="rp-dialog-title" id="promo-title">Welcome</h2></dialog></rp-dialog>
 dialog/invalid-enum-falls-back
   <rp-dialog class="rp-dialog" data-slot="rp-dialog"><dialog class="rp-dialog-panel" id="d1" data-size="md" aria-labelledby="d1-title" closedby="any"><h2 class="rp-dialog-title" id="d1-title">Title</h2></dialog></rp-dialog>
 dialog/class
-  <rp-dialog class="rp-dialog custom-a custom-b" data-slot="rp-dialog"><dialog class="rp-dialog-panel" id="d2" data-size="md" aria-labelledby="d2-title" closedby="any"><h2 class="rp-dialog-title" id="d2-title">Title</h2></dialog></rp-dialog>
+  <rp-dialog class="rp-dialog custom-a custom-b" data-slot="rp-dialog"><dialog class="rp-dialog-panel" id="d2" data-size="md" aria-labelledby="d2-title" closedby="any"><h2 class="rp-dialog-title custom-c" id="d2-title">Title</h2></dialog></rp-dialog>
 ```
 
-Notes: the React-only prop `open` has no `liquid` key (MB-4) and never appears in a fixture without `"hosts": ["react"]`. The React and Remix bindings are hand-written (`generated: false`) because they need `useElement` wiring and `data-rmx-*` attributes (D-003); the Liquid blocks and the `html` reference file are generated from the templates.
+Notes: the React-only prop `open` has no `liquid` key (MB-4) and never appears in a fixture without `"hosts": ["react"]`. Dialog is kind `native` with a `template`, so `html/dialog.html`, `remix/dialog.tsx` and every Liquid block are generated whole (`generated: true`), and `react/dialog.tsx` is hand-written below its generated props region (`generated: false`, D-072, 3.3). The `state[]` row has `writer: "browser"`, so the Remix file prints `data-rmx-preserve-attrs="open"` on the `<dialog>` (2.4, D-034).
 
-#### 1.7.3 `components/product-form/product-form.json` (kind `commerce`, tier `resource`, hand fixture, two dialects)
+#### 1.7.3 `components/product-form/product-form.json` (kind `commerce`, tier `resource`, hand fixtures, two dialects)
 
 ```json
 {
@@ -1345,9 +1636,12 @@ Notes: the React-only prop `open` has no `liquid` key (MB-4) and never appears i
   "kind": "commerce",
   "status": "beta",
   "since": "0.1.0",
-  "summary": "The add-to-cart form for one product. Posts natively; enhanced through the cart store.",
-  "useWhen": ["Selling one product: wraps the quantity input and the add-to-cart button"],
-  "dontUseWhen": [{"case": "Choosing a variant", "use": "variant-picker"}, {"case": "Changing a line that is already in the cart", "use": "cart-lines"}],
+  "summary": "The add-to-cart form for one product variant. Posts natively; enhanced through the cart store.",
+  "useWhen": ["Selling one product (product page, quick add)"],
+  "dontUseWhen": [
+    {"case": "Choosing a variant (render it as a sibling, before the form)", "use": "variant-picker"},
+    {"case": "Changing a line that is already in the cart", "use": "cart-lines"}
+  ],
   "root": {"elements": ["rp-product-form"], "class": "rp-product-form", "requiresId": true},
   "props": [
     {"name": "id", "type": "id", "required": true, "attribute": "id", "liquid": {"name": "id", "surface": "param"}, "description": "Id of the inner <form>."},
@@ -1362,7 +1656,7 @@ Notes: the React-only prop `open` has no `liquid` key (MB-4) and never appears i
     {
       "name": "variant",
       "type": "object",
-      "objectType": "variant | ProductFormVariant",
+      "objectType": "variant | RippleVariant",
       "liquid": {"name": "variant", "surface": "param"},
       "description": "The selected variant. Default: the selected or first available variant of the product."
     },
@@ -1371,10 +1665,18 @@ Notes: the React-only prop `open` has no `liquid` key (MB-4) and never appears i
       "type": "boolean",
       "default": false,
       "liquid": {"name": "accelerated_checkout", "surface": "param"},
-      "description": "Print the platform's accelerated checkout buttons after the body."
+      "description": "Print the platform's accelerated checkout buttons between the body and the error part."
+    },
+    {
+      "name": "action",
+      "type": "url",
+      "default": "/api/cart",
+      "attribute": "action",
+      "hosts": ["react", "remix"],
+      "description": "The cart endpoint of the hydrogen backend. Liquid prints routes.cart_add_url through {% form %}."
     }
   ],
-  "content": {"model": "flow", "required": true, "description": "Form controls and exactly one AddToCartButton."},
+  "content": {"model": "flow", "required": false, "description": "Form controls and exactly one AddToCartButton. Children replace the default body."},
   "parts": [
     {
       "name": "fields",
@@ -1384,7 +1686,27 @@ Notes: the React-only prop `open` has no `liquid` key (MB-4) and never appears i
       "multiple": false,
       "authoredBy": "component",
       "parent": "root",
-      "description": "The native form. action, method and hidden inputs are host-owned."
+      "description": "The native form. Carries the id. action, method and extra hidden inputs are host-owned."
+    },
+    {
+      "name": "quantity",
+      "elements": ["div"],
+      "class": "rp-product-form-quantity",
+      "required": false,
+      "multiple": false,
+      "authoredBy": "component",
+      "parent": "fields",
+      "description": "Wrapper of the QuantityInput in the default body."
+    },
+    {
+      "name": "accelerated",
+      "elements": ["div"],
+      "class": "rp-product-form-accelerated",
+      "required": false,
+      "multiple": false,
+      "authoredBy": "component",
+      "parent": "fields",
+      "description": "Opaque platform markup for accelerated checkout; carries data-agent-confirm."
     },
     {
       "name": "error",
@@ -1394,23 +1716,97 @@ Notes: the React-only prop `open` has no `liquid` key (MB-4) and never appears i
       "multiple": false,
       "authoredBy": "component",
       "parent": "fields",
-      "description": "role=\"alert\"; hidden until an add fails."
+      "description": "data-rp-part=\"error\", role=\"alert\"; hidden until an add fails."
     }
   ],
-  "state": [{"name": "pending", "type": "boolean", "on": "root", "reflects": ["data-pending", "aria-busy"]}],
-  "events": [{"dom": "action", "react": "onAction", "detail": "{ value: \"add\"; merchandiseId: string; quantity: number }", "bubbles": false, "cancelable": true}],
+  "state": [
+    {"name": "pending", "type": "boolean", "on": "root", "writer": "element", "reflects": ["data-pending", "aria-busy"]},
+    {"name": "error", "type": "string", "on": "error", "writer": "element", "reflects": ["hidden"]}
+  ],
+  "events": [
+    {
+      "dom": "action",
+      "react": "onAction",
+      "detail": "{ value: \"add\"; reason: \"submit\"; merchandiseId: string; quantity: number }",
+      "bubbles": false,
+      "cancelable": true
+    }
+  ],
   "fixtures": [
     {
       "name": "default",
       "props": {"id": "pf", "product": {"$resource": "product.basic"}},
-      "children": "<button class=\"rp-button rp-add-to-cart-button\" type=\"submit\" data-variant=\"primary\" data-size=\"md\">Add to cart</button>",
       "mask": [
         {"select": "form.rp-product-form-fields", "op": "attr", "name": "action"},
         {"select": "form.rp-product-form-fields", "op": "drop-attr", "name": "accept-charset"},
         {"select": "form.rp-product-form-fields", "op": "drop-attr", "name": "enctype"},
         {"select": "form.rp-product-form-fields > input[type=\"hidden\"]:not([data-rp-field])", "op": "remove"},
         {"select": "[data-rp-field=\"merchandise-id\"]", "op": "attr", "name": "name"},
-        {"select": "[data-rp-field=\"merchandise-id\"]", "op": "attr", "name": "value"}
+        {"select": "[data-rp-field=\"merchandise-id\"]", "op": "attr", "name": "value"},
+        {"select": ".rp-add-to-cart-button", "op": "drop-attr", "name": "name"},
+        {"select": ".rp-add-to-cart-button", "op": "drop-attr", "name": "value"}
+      ],
+      "generated": "hand"
+    },
+    {
+      "name": "children",
+      "props": {"id": "pf", "product": {"$resource": "product.basic"}},
+      "children": "<button class=\"rp-button rp-add-to-cart-button\" type=\"submit\" name=\"intent\" value=\"add\" data-variant=\"primary\" data-size=\"md\" data-rp-part=\"submit\">Add to cart</button>",
+      "mask": [
+        {"select": "form.rp-product-form-fields", "op": "attr", "name": "action"},
+        {"select": "form.rp-product-form-fields", "op": "drop-attr", "name": "accept-charset"},
+        {"select": "form.rp-product-form-fields", "op": "drop-attr", "name": "enctype"},
+        {"select": "form.rp-product-form-fields > input[type=\"hidden\"]:not([data-rp-field])", "op": "remove"},
+        {"select": "[data-rp-field=\"merchandise-id\"]", "op": "attr", "name": "name"},
+        {"select": "[data-rp-field=\"merchandise-id\"]", "op": "attr", "name": "value"},
+        {"select": ".rp-add-to-cart-button", "op": "drop-attr", "name": "name"},
+        {"select": ".rp-add-to-cart-button", "op": "drop-attr", "name": "value"}
+      ],
+      "generated": "hand"
+    },
+    {
+      "name": "sold-out",
+      "props": {"id": "pf", "product": {"$resource": "product.sold-out"}},
+      "mask": [
+        {"select": "form.rp-product-form-fields", "op": "attr", "name": "action"},
+        {"select": "form.rp-product-form-fields", "op": "drop-attr", "name": "accept-charset"},
+        {"select": "form.rp-product-form-fields", "op": "drop-attr", "name": "enctype"},
+        {"select": "form.rp-product-form-fields > input[type=\"hidden\"]:not([data-rp-field])", "op": "remove"},
+        {"select": "[data-rp-field=\"merchandise-id\"]", "op": "attr", "name": "name"},
+        {"select": "[data-rp-field=\"merchandise-id\"]", "op": "attr", "name": "value"},
+        {"select": ".rp-add-to-cart-button", "op": "drop-attr", "name": "name"},
+        {"select": ".rp-add-to-cart-button", "op": "drop-attr", "name": "value"}
+      ],
+      "generated": "hand"
+    },
+    {
+      "name": "accelerated",
+      "props": {"id": "pf", "product": {"$resource": "product.basic"}, "acceleratedCheckout": true},
+      "mask": [
+        {"select": "form.rp-product-form-fields", "op": "attr", "name": "action"},
+        {"select": "form.rp-product-form-fields", "op": "drop-attr", "name": "accept-charset"},
+        {"select": "form.rp-product-form-fields", "op": "drop-attr", "name": "enctype"},
+        {"select": "form.rp-product-form-fields > input[type=\"hidden\"]:not([data-rp-field])", "op": "remove"},
+        {"select": "[data-rp-field=\"merchandise-id\"]", "op": "attr", "name": "name"},
+        {"select": "[data-rp-field=\"merchandise-id\"]", "op": "attr", "name": "value"},
+        {"select": ".rp-add-to-cart-button", "op": "drop-attr", "name": "name"},
+        {"select": ".rp-add-to-cart-button", "op": "drop-attr", "name": "value"},
+        {"select": ".rp-product-form-accelerated", "op": "children"}
+      ],
+      "generated": "hand"
+    },
+    {
+      "name": "class",
+      "props": {"id": "pf", "product": {"$resource": "product.basic"}, "class": "custom-a custom-b"},
+      "mask": [
+        {"select": "form.rp-product-form-fields", "op": "attr", "name": "action"},
+        {"select": "form.rp-product-form-fields", "op": "drop-attr", "name": "accept-charset"},
+        {"select": "form.rp-product-form-fields", "op": "drop-attr", "name": "enctype"},
+        {"select": "form.rp-product-form-fields > input[type=\"hidden\"]:not([data-rp-field])", "op": "remove"},
+        {"select": "[data-rp-field=\"merchandise-id\"]", "op": "attr", "name": "name"},
+        {"select": "[data-rp-field=\"merchandise-id\"]", "op": "attr", "name": "value"},
+        {"select": ".rp-add-to-cart-button", "op": "drop-attr", "name": "name"},
+        {"select": ".rp-add-to-cart-button", "op": "drop-attr", "name": "value"}
       ],
       "generated": "hand"
     }
@@ -1420,68 +1816,70 @@ Notes: the React-only prop `open` has no `liquid` key (MB-4) and never appears i
       "select": "rp-product-form [data-rp-part=\"error\"]",
       "attrs": ["hidden"],
       "text": true,
-      "reason": "The element fills the error text and removes hidden when an add fails (D-045)."
+      "reason": "The element fills the error text and removes hidden when an add fails (D-045, D-071 item 3)."
     }
   ],
   "noJs": {
     "level": "full",
-    "behavior": "The inner form posts to the backend's cart endpoint and the browser navigates. When the commerce runtime is not usable the element does not call preventDefault()."
+    "behavior": "The form posts natively: hydrogen backend to the cart endpoint, Liquid to routes.cart_add_url. In the default body the stepper buttons are hidden; the number input works."
   },
   "a11y": {
     "pattern": "native form",
     "checkPattern": null,
     "name": {"required": "never", "sources": []},
-    "announces": ["\"Added to cart\" through announce() after a confirmed add", "the error text in the role=\"alert\" part"]
+    "keyboard": [{"keys": "Enter in a field", "does": "Submits the form (add to cart)."}],
+    "focus": "Stays on the submit button after an add; when the CartDrawer opens, the browser moves focus into the dialog.",
+    "announces": ["\"Added to cart\" (ripple.product-form.added) through announce() after a confirmed add", "the error text through the role=\"alert\" part"]
   },
   "agent": {
     "surface": "bridge",
     "component": "rp-product-form",
     "actions": [
-      {"name": "setQuantity", "args": [{"name": "quantity", "type": "number"}], "description": "Set the quantity field."},
-      {"name": "add", "description": "Add the selected variant to the cart (same path as submitting the form)."}
-    ]
+      {"name": "setQuantity", "description": "setQuantity(quantity: number): set the quantity field."},
+      {"name": "add", "description": "add(): add the selected variant to the cart (same path as submitting the form)."}
+    ],
+    "confirm": [{"select": ".rp-product-form-accelerated", "sentence": "Buys this product now with an express checkout"}]
   },
   "dependencies": {
     "components": ["add-to-cart-button", "form-message", "quantity-input"],
-    "embeds": ["form-message"],
+    "embeds": ["add-to-cart-button", "quantity-input"],
     "elements": ["rp-product-form"],
-    "hydrogen": ["createCartStore"],
-    "tokens": ["--spacing"],
-    "locale": ["ripple.product-form.added", "ripple.product-form.error"]
+    "hydrogen": ["renderShopPayButton"],
+    "tokens": ["--spacing", "--rp-duration-base"],
+    "locale": ["ripple.product-form.added", "ripple.product-form.agent_confirm_accelerated", "ripple.product-form.quantity"]
   },
   "liquid": {
     "tier": "resource",
     "block": "product-form",
-    "partials": [{"name": "rp-cart-lines", "refreshedBy": "rp-product-form", "on": "the cart store confirms an add"}],
     "formDialect": {
       "action": "routes.cart_add_url",
       "fields": {"merchandise-id": "id", "quantity": "quantity", "selling-plan": "selling_plan"},
-      "submit": "the submit button of {% form 'product' %}"
+      "submit": "the submit button of {% form 'product' %} with name=\"add\""
     }
   },
   "hydrogenHost": {
     "formDialect": {
       "action": "/api/cart",
       "fields": {"merchandise-id": "merchandiseId", "quantity": "quantity", "selling-plan": "sellingPlanId"},
-      "submit": "button[name=\"intent\"][value=\"add\"], or a submit button with no name"
+      "submit": "button[name=\"intent\"][value=\"add\"]"
     }
   },
   "rules": [
     {
       "id": "product-form-one-submit",
       "kind": "requires-descendant",
-      "selector": "rp-product-form",
-      "target": "button[type=\"submit\"]",
-      "message": "A ProductForm has no submit button, so nothing can be added to the cart.",
+      "selector": ":scope",
+      "target": "button[type=\"submit\"][data-rp-part=\"submit\"]",
+      "message": "A ProductForm has no AddToCartButton, so nothing can be added to the cart.",
       "fix": "Put one AddToCartButton inside the ProductForm."
     },
     {
-      "id": "variant-picker-outside-form",
-      "kind": "forbids-ancestor",
-      "selector": ".rp-variant-picker",
-      "target": "rp-product-form",
-      "message": "A VariantPicker is inside a ProductForm. Its GET form cannot be nested in the add-to-cart form.",
-      "fix": "Render VariantPicker as a sibling before ProductForm."
+      "id": "product-form-single-submit",
+      "kind": "max-count",
+      "selector": "[data-rp-part=\"submit\"]",
+      "count": 1,
+      "message": "A ProductForm has more than one AddToCartButton.",
+      "fix": "Keep one AddToCartButton."
     }
   ],
   "files": {
@@ -1513,14 +1911,26 @@ Notes: the React-only prop `open` has no `liquid` key (MB-4) and never appears i
 }
 ```
 
-`components/product-form/fixtures/default.html` (hand-written, hydrogen dialect in full, `02-html-contract.md` F-9):
+`components/product-form/fixtures/default.html` is hand-written, in the hydrogen dialect, on one line with no whitespace between tags (`02-html-contract.md` F-9). Its content is the fixture `default` of `11-components-commerce.md` section "ProductForm", "HTML contract". It is shown here indented for reading; the `<rp-quantity>` subtree is the QuantityInput `default` markup of `10-components-interactive.md` with `name="quantity"` and `data-rp-field="quantity"` on its input:
 
-```text
-product-form/default
-  <rp-product-form class="rp-product-form" data-slot="rp-product-form" data-rp-refresh="rp-cart-lines rp-cart-summary"><form class="rp-product-form-fields" id="pf" action="/api/cart" method="post"><input type="hidden" name="merchandiseId" value="gid://shopify/ProductVariant/1" data-rp-field="merchandise-id"><button class="rp-button rp-add-to-cart-button" type="submit" data-variant="primary" data-size="md">Add to cart</button><p class="rp-form-message" data-tone="destructive" role="alert" hidden="" data-rp-part="error"></p></form></rp-product-form>
+```html
+<rp-product-form class="rp-product-form" data-slot="rp-product-form">
+  <form class="rp-product-form-fields" id="pf" method="post" action="/api/cart">
+    <input type="hidden" name="merchandiseId" value="gid://shopify/ProductVariant/11" data-rp-field="merchandise-id">
+    <div class="rp-product-form-quantity">
+      <rp-quantity class="rp-quantity" data-size="md" data-slot="rp-quantity">
+        <button class="rp-quantity-button" type="button" disabled aria-label="Decrease quantity" data-rp-part="decrement" data-rp-js="inflow"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+        <input class="rp-quantity-input" type="number" inputmode="numeric" name="quantity" min="1" step="1" value="1" aria-label="Quantity" data-rp-part="input" data-rp-field="quantity">
+        <button class="rp-quantity-button" type="button" aria-label="Increase quantity" data-rp-part="increment" data-rp-js="inflow"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+      </rp-quantity>
+    </div>
+    <button class="rp-button rp-add-to-cart-button" type="submit" name="intent" value="add" data-variant="primary" data-size="md" data-full-width="" data-rp-part="submit">Add to cart</button>
+    <p class="rp-form-message" data-rp-part="error" data-tone="destructive" role="alert" hidden></p>
+  </form>
+</rp-product-form>
 ```
 
-Notes: there is no `template`, so every binding is hand-written and the fixture is `hand`. The locale file entry is a patch (`mode: "patch"`, 7.6.4).
+Notes: there is no `template`, so every binding is hand-written and every fixture is `hand`. The root does not carry `data-rp-refresh`; the element refreshes cart regions through the store (`05-commerce.md`). The submit button and the quantity control are embedded components (`dependencies.embeds`), so `dependencies.elements` is `["rp-product-form"]` (MB-11) and the two-class button is legal (MB-21). `dependencies.hydrogen` lists `renderShopPayButton` because the React and Remix files call it for the `accelerated` part (D-094). The locale file entry is a patch (`mode: "patch"`, 7.6.4).
 
 ---
 
@@ -1620,10 +2030,11 @@ The same tree is emitted to each host by these fixed rules. The file skeleton ar
 | Embed | embedded render | `{% render 'rp-<id>', <snake prop>: <value>, content: <text> %}`; a prefixed or suffixed prop value is first assigned in the leading `liquid` block with `append` / `prepend` | `<Title prop={...}>{text}</Title>` with an import of `./<id>` |
 | Caller attributes | n/a | `{{ attributes }}` as the LAST thing inside the root start tag (M-14) | `{...rest}` as the FIRST thing in the root element (M-14) |
 | Universal props | `class` only | `class`, `attributes`; `span` and `hidden` print `data-span` / `data-hidden` when set | `class` / `className`, rest, `span`, `hidden` |
+| Remix host extras (D-034 item 2) | not printed | not printed | Remix ONLY, added by `src/gen/remix.ts`, never written in a template. (a) On the root element when its tag starts with `rp-` or `ui-`: `data-rmx-key={id}` when the component has `root.requiresId: true`; otherwise `data-rmx-key={rmxKey}`, where `rmxKey` is an optional Remix-only string prop the generator adds to the props type, and the attribute is omitted when `rmxKey` is undefined. (b) On every element named by `state[].on` (`root`, or the part's element): `data-rmx-preserve-attrs="<names>"`, where `<names>` is the `reflects` values of the `state[]` rows with that `on` and with `writer` equal to `element` or `browser`, in manifest order, joined with one space. No such row: no attribute. Both attributes are printed last on the element. The canonicaliser removes every `data-rmx-*` attribute, so the fixtures do not contain them. React prints neither. |
 
 The generator MUST add, to every root template at emission time, two attributes that are not written in the manifest: `data-span` (`when: { "set": "span" }`, responsive value) and `data-hidden` (`when: { "set": "hidden" }`, responsive value). The reference renderer does the same when a fixture passes `span` or `hidden`. (They are universal props, ledger 6.1; writing them in 84 templates would be noise.) These two are appended after the last `data-<prop>` attribute of the root.
 
-Constant folding (REQUIRED, so that scaffolded code is readable): when a tag is `{ "if": C, "then", "else" }`, the emitter evaluates every `when` in each branch with `C` known true (then-branch) or known false (else-branch): a condition that is certainly false removes the attribute or node from that branch; a condition that is certainly true is removed from the `when`; an `all` loses its certain-true items. For the Button entry this means the `<a>` branch prints no `type`, `name`, `value`, `disabled`, `commandfor`, `command`, `popovertarget` lines, and the `<button>` branch prints no `href`, `aria-disabled`, `tabindex` lines.
+Constant folding (REQUIRED, so that scaffolded code is readable): when a tag is `{ "if": C, "then", "else" }`, the emitter evaluates every `when` in each branch with `C` known true (then-branch) or known false (else-branch): a condition that is certainly false removes the attribute or node from that branch; a condition that is certainly true is removed from the `when`; an `all` loses its certain-true items. For the Button entry this means the `<a>` branch prints no `type`, `form`, `name`, `value`, `disabled`, `commandfor`, `command`, `popovertarget` lines, and the `<button>` branch prints no `href`, `target`, `rel`, `data-rp-open`, `aria-disabled`, `tabindex` lines.
 
 Acceptance for the emitters (tier 2, `13-testing.md`): for every fixture of every component whose files are `generated: true`, the canonical form of the reference HTML, of the Liquid output rendered through the shim, of the React output (`react-dom/server`) and of the Remix output are equal. Prior evidence: 10 of 10 cases for Button and Stack with an earlier version of these rules (`ripple/docs/research/spikes/agent-kit/gen/test.mjs`, `emit.mjs`). The `embed`, `text`, `eq` and `{ t }` forms and the Remix emitter were NOT run in that spike: UNVERIFIED until tier 2 passes for a component that uses each.
 
@@ -1792,8 +2203,9 @@ Rules:
 
 | Invocation | Behaviour | Exit code |
 |---|---|---|
-| `pnpm gen` | Run steps G1 to G9; write every committed output whose content changed; print one line per written file: `wrote <path>`; last line `gen: <n> files written, <m> unchanged.` | 0; 1 when a build check fails |
-| `pnpm gen --check` | Run G1 to G9 in memory; write nothing; print `stale <path>` for every committed output that differs from disk and `missing <path>` for every absent one; print every build check failure | 0 when nothing is stale and every check passes; otherwise 1 |
+| `pnpm gen` | Run steps G1 to G10; write every committed output whose content changed; print one line per written file: `wrote <path>`; last line `gen: <n> files written, <m> unchanged.` | 0; 1 when a build check fails |
+| `pnpm gen --check` | Run G1 to G10 in memory; write nothing; print `stale <path>` for every committed output that differs from disk and `missing <path>` for every absent one; print every build check failure | 0 when nothing is stale and every check passes; otherwise 1 |
+| `pnpm gen --check --subset` | As `--check`, with MB-20 relaxed (1.6). Not allowed in `pnpm build` | as `--check` |
 | `pnpm gen --snapshot <component id> [<component id>...]` | Regenerate the `upgrade-snapshot` fixtures of the named components by the procedure of `02-html-contract.md` 11.4 (needs Playwright and a prior `pnpm build`); then run `pnpm gen` | 0; 1 when the stability re-check (U-2) records a mutation |
 | any other argument | print `gen: unknown argument <arg>` | 2 |
 
@@ -1803,15 +2215,16 @@ Rules for every generated file: UTF-8; LF; exactly one trailing newline; no time
 
 | Step | Module | Committed outputs | Input |
 |---|---|---|---|
-| G1 Load | `src/gen/index.ts` | none | Read `src/gen/elements.json`, every `components/<id>/<id>.json`, every `blueprints/<id>/blueprint.json`, `locales/en.default.json`, `css/tokens.css`. Validate each component against `#/$defs/component` and each blueprint against `#/$defs/blueprint` of 1.2. Fail when a source entry contains a fixture `html` key. |
-| G2 Global CSS | `src/gen/props-css.ts`, `theme-css.ts`, `display-css.ts` | `css/props.css`, `css/theme.css`, the two marker regions of `css/base.css` | `03-styling-and-tokens.md` 4.3, 5.1, 6.3 |
+| G1 Load | `src/gen/index.ts` | none | Read `src/gen/elements.json`, every `components/<id>/<id>.json`, every `blueprints/<id>/blueprint.json` (the directory `blueprints/_sample/` is not a blueprint and is skipped), `locales/en.default.json`, `css/tokens.css`. Validate each component against `#/$defs/component` and each blueprint against `#/$defs/blueprint` of 1.2. Fail when a source entry contains a fixture `html` key. |
+| G2 Global CSS | `src/gen/props-css.ts`, `theme-css.ts`, `display-css.ts` | `css/props.css`, `css/theme.css`, the two marker regions of `css/base.css` | `css/tokens.css`; `src/gen/elements.json` (the `display` region lists every key with its `display` value; every `rp-*` tag is `block`, D-080). Formats: `03-styling-and-tokens.md` 4.3, 5.1, 6.3 |
 | G3 Fixtures | `src/gen/html.ts` | `components/<id>/fixtures/<name>.html` for every `generated: "template"` fixture | 2.5 |
 | G4 HTML host | `src/gen/html.ts` | `components/<id>/html/<id>.html` for every component (all fixtures, format of `02-html-contract.md` 11.7, WITHOUT the trailer line; the trailer is added at install) | fixture files |
-| G5 Liquid | `src/gen/liquid.ts` | For components and parts WITH a template: the whole of `components/<id>/liquid/blocks/<id>.liquid`, `blocks/<id>-<part>.liquid`, `snippets/rp-<id>.liquid`. For hand-written Liquid files: only the generated regions of 3.3. | manifest; `06-bindings.md` |
-| G6 TSX | `src/gen/react.ts`, `src/gen/remix.ts` | For kind `static` components WITH a template: the whole of `components/<id>/react/<id>.tsx` and `components/<id>/remix/<id>.tsx`. For every other binding: only the `props` region of 3.3. | manifest; `06-bindings.md` |
-| G7 Types | `src/gen/types.ts` | `src/types.generated.ts` (exported from `src/index.ts`): `Breakpoint`, `SpaceStep`, `Responsive<T>`, `ComponentId`, `IconName`, `RegionName`, `RuleId`. `src/react/jsx.generated.ts` and `src/remix/jsx.generated.ts`: `IntrinsicElements` entries for every key of `elements`, with attributes typed from the manifest. | manifest, `icons/`, ledger D-046 |
-| G8 Checks | `src/gen/index.ts`, `src/gen/css-lint.ts` | none | Build checks MB-1 to MB-20 (1.6), fixture lint (`02-html-contract.md` 11.8), CSS lint (`03-styling-and-tokens.md` 7.9) |
+| G5 Liquid | `src/gen/liquid.ts` | For components and parts WITH a template: the whole of `components/<id>/liquid/blocks/<id>.liquid`, `blocks/<id>-<part>.liquid`, `snippets/rp-<id>.liquid`. For hand-written Liquid files: only the generated regions of 3.3. Also `components/<id>/liquid/locales/<id>.json` for every component and `locales/core.json`, `locales/blueprint.<id>.json` (4.1 rule 2). | manifest; `locales/en.default.json`; `06-bindings.md` |
+| G6 TSX | `src/gen/react.ts`, `src/gen/remix.ts` | By kind (D-072; `06-bindings.md` G-1, G-2). Kind `static` WITH a template: the whole of `components/<id>/react/<id>.tsx` and `components/<id>/remix/<id>.tsx`. Kind `native` or `ui` WITH a template: the whole of `components/<id>/remix/<id>.tsx` (template plus the Remix host extras of 2.4); in `components/<id>/react/<id>.tsx` only the header region of 3.3. Every other TSX binding (kind `commerce`; any component without a template): only the header region of 3.3. `<id>.data.ts` files are hand-written and have no generated region. | manifest; `06-bindings.md` |
+| G7 Types | `src/gen/types.ts` | `src/types.generated.ts` (exported from `src/index.ts`): `Breakpoint`, `SpaceStep`, `Responsive<T>`, `ComponentId`, `IconName`, `RegionName`, `RuleId`. `src/react/jsx.generated.ts` and `src/remix/jsx.generated.ts`: `IntrinsicElements` entries for every key of `elements` (including `rp-view-event`, whose attributes are `view-event-trigger` and `view-event-payload`, D-089), with attributes typed from the manifest; the exact declaration text is owned by `06-bindings.md` sections 6.3 and 7.2. | manifest, `icons/`, ledger D-046 |
+| G8 Checks | `src/gen/index.ts`, `src/gen/css-lint.ts` | none | Build checks MB-1 to MB-24 (1.6), fixture lint (`02-html-contract.md` 11.8), CSS lint (`03-styling-and-tokens.md` 7.9) |
 | G9 Registry map | `src/gen/registry.ts` | none (in-memory `RegistryIndex`, 4.2; written to `pkg/` only by `pnpm build`) | manifest |
+| G10 HTML blueprints | `src/gen/index.ts` (function `generateBlueprintHtml`; ledger tree 5.1 has no separate module for it) | `blueprints/<id>/html/<id>.html` for each of the 14 blueprints (D-101 item 4; `12-components-chrome-and-blueprints.md` rules H-1 and H-2) | Procedure: (1) bundle `blueprints/<id>/react/<id>.tsx` and `blueprints/layout/react/layout.tsx` in memory with esbuild, with the alias `@components/<c>` resolved to `components/<c>/react/<c>.tsx` and `__PKG__` resolved to `src/`; (2) read the props object from `blueprints/_sample/<id>.json` and `blueprints/_sample/layout.json`; (3) call `renderDocument` (`12-components-chrome-and-blueprints.md` 2.6) to get the document string; (4) apply H-2; (5) write the string unchanged, followed by one trailing newline. (`12-components-chrome-and-blueprints.md` H-1 says "pretty-printed by the fixture printer of `02-html-contract.md`"; that document defines no printer, so no re-formatting is applied. The tier 2 comparison uses canonical forms, which do not depend on whitespace between tags.) The step needs `react` and `react-dom/server` (dev dependencies of the repository). A sample file that is missing fails with `gen: blueprints/_sample/<id>.json: missing`. |
 
 Build-only outputs (never committed; written under `pkg/` by `pnpm build` step 8 of `01-architecture.md` section 7, using the same modules):
 
@@ -1819,7 +2232,7 @@ Build-only outputs (never committed; written under `pkg/` by `pnpm build` step 8
 |---|---|---|
 | `manifest.json`, `manifest.schema.json`, `fixture.schema.json`, `config.schema.json` | `src/gen/registry.ts` | 1.1 |
 | `registry/**` | `src/gen/registry.ts` | section 4 |
-| `docs/components/<id>.md`, `docs/INDEX.md`, `docs/llms.txt`, `docs/rules/<RULE>.md` | `src/gen/docs.ts` | page formats owned by `08-agent-kit-and-evals.md`; `docs/rules/<RULE>.md` is generated from the rule table of 9.6 (fields: id, severity, layers, detects, how to fix, example) |
+| `docs/components/<id>.md`, `docs/INDEX.md`, `docs/llms.txt`, `docs/rules/<RULE>.md` | `src/gen/docs.ts` | page formats owned by `08-agent-kit-and-evals.md`; `docs/rules/<RULE>.md` is generated from the rule table of 9.6 (fields: id, severity, layers, hosts, detects, how to fix) |
 | `custom-elements.json`, `html-custom-data.json` | `src/gen/registry.ts` | 3.4 |
 
 The generated `AGENTS.md` section is produced at CLI run time by `src/gen/agents-md.ts` (bundled into the CLI) from the manifest and the installed component list; its content is owned by `08-agent-kit-and-evals.md`.
@@ -1831,13 +2244,13 @@ A hand-written binding still gets its manifest-derived text from the generator, 
 | File | Region | Delimiters | Generated content |
 |---|---|---|---|
 | hand-written `.liquid` block or snippet | doc | from the line `{% doc %}` to the line `{% enddoc %}` | the `{% doc %}` block (`06-bindings.md` format) |
-| hand-written `.liquid` block or snippet | guards | from `{% comment %} ripple:start guards {% endcomment %}` to `{% comment %} ripple:end guards {% endcomment %}` | the enumeration guards and string defaults of 2.4 |
+| hand-written `.liquid` block or snippet | guards | inside the leading `{%- liquid ... -%}` block: the consecutive lines that start with `assign allowed_`, `unless allowed_`, `assign <param> = '<default>'` or `endunless` (`06-bindings.md` G-3 item 2). There are no marker comments. | the enumeration guards of 2.4, one group of four lines per non-responsive `enum` prop with a default, in manifest order |
 | hand-written `.liquid` block | schema | from the line `{% schema %}` to the line `{% endschema %}` | the block schema (below) |
-| hand-written `.tsx` binding | props | from the line `// ripple:start props` to the line `// ripple:end props` | `export interface <Title>Props` for the root and one `export interface <Title><Part>Props` per author part |
+| hand-written `.tsx` binding | header | from the first line that starts with `const ` and ends with ` as const;` (or, when the component has no enum prop, from the line that starts with `interface <Title>OwnProps` or `export interface <Title>OwnProps`) down to and including the line `export type <Title>Props = <Title>OwnProps & RestProps<<Title>OwnProps>;`; one such region for the root and one per author part (`06-bindings.md` G-3 item 1). There are no marker comments. | the value arrays, the `OwnProps` interfaces and the `Props` types, in the format of `06-bindings.md` section 5.2. Props with `hosts: ["react"]` are included only in the React file. |
 
-`pnpm gen` replaces exactly the text between (and including) the delimiters. A hand-written file that lacks a region it must have (every block needs doc and schema; every block or snippet with an enum prop needs guards; every TSX binding needs props) fails `pnpm gen` with `gen: <path>: missing region <name>`.
+`pnpm gen` replaces exactly the lines of the region (first and last line included). `pnpm gen --check` compares them byte for byte and prints `stale <path>` on a difference. A hand-written file that lacks a region it must have (every block needs doc and schema; every snippet needs doc; every block or snippet with a non-responsive `enum` prop that has a default needs guards; every TSX binding needs header) fails `pnpm gen` with `gen: <path>: missing region <name>`. The text of every region is owned by `06-bindings.md`; this section fixes only where the regions are and when they are checked.
 
-Block schema generation (D-038 items 5 and 6), for a block file of component `<id>`:
+Block schema generation (D-038 items 5 and 6 as amended; `06-bindings.md` L-17), for a block file of component `<id>`:
 
 ```json
 {
@@ -1846,24 +2259,31 @@ Block schema generation (D-038 items 5 and 6), for a block file of component `<i
     {
       "type": "select",
       "id": "<liquid.name>",
-      "label": "t:ripple.<id>.settings.<liquid.name>.label",
+      "label": "t:ripple.props.<liquid.name>",
       "default": "<prop default>",
-      "options": [{ "value": "<value>", "label": "t:ripple.<id>.settings.<liquid.name>.options.<value>" }]
+      "options": [{ "value": "<value>", "label": "t:ripple.props.<value key>" }]
     }
   ]
 }
 ```
 
-- One settings entry per prop with `liquid.surface: "setting"`, in manifest order. `settingType` maps to `type` (`select`, `checkbox`, `text`, `url`, `range`). `options` exist only for `select` and list the prop's `values` in order. Option values are prop tokens, never classes.
-- A part block (`<id>-<part>`) uses `"name": "t:ripple.<id>.parts.<part>.name"` and the settings of that part's props.
+- One settings entry per prop with `liquid.surface: "setting"`, in manifest order; at most three (MB-3). `type` is always `select` (the only `settingType`). `options` lists the prop's `values` in order. Option values are prop tokens, never classes.
+- `<value key>` is the value with every character outside `[a-z0-9_]` replaced by `_` (`1/1` gives `1_1`; `2xl` stays `2xl`).
+- A part block (`<id>-<part>`) uses `"name": "t:ripple.<id>.<part>_name"`, where `<part>` is the part name with `-` replaced by `_`, and the settings of that part's props.
+- A block with no setting prop prints `"settings": []`.
 - The schema JSON is printed with two-space indentation.
-- Schema strings (English) are generated, not hand-written: `name` is the component `title` split into words (`ProductCard` gives `Product card`); a part name is title + space + part words (`Dialog title`); a setting label is the prop name split into words with the first letter capitalised (`fullWidth` gives `Full width`); an option label is the value with the first letter capitalised, except this fixed table: `xs` Extra small, `sm` Small, `md` Medium, `lg` Large, `xl` Extra large, `2xl` to `6xl` unchanged, `1/1` and other ratios unchanged.
+- Schema strings (English) are generated, not hand-written. They are written to the `schema` half of the locale patch files (4.1 rule 2):
+  - `ripple.<id>.name`: the component `title` split into words, first word capitalised, later words lower case (`ProductCard` gives `Product card`).
+  - `ripple.<id>.<part>_name`: that text, one space, the part name with `-` replaced by a space (`Dialog title`).
+  - `ripple.props.<liquid.name>`: the prop name split into words, first letter capitalised (`fullWidth` gives `Full width`). One key per distinct Liquid prop name in the whole manifest.
+  - `ripple.props.<value key>`: the value with the first letter capitalised, except this fixed table: `xs` Extra small, `sm` Small, `md` Medium, `lg` Large, `xl` Extra large; a value that starts with a digit is printed unchanged (`2xl`, `1/1`). One key per distinct value key in the whole manifest.
+  - Collision check: when two different values give the same `<value key>` with different English text, or a `<liquid.name>` equals a `<value key>` with different English text, `pnpm gen` fails with `gen: locale key ripple.props.<key> has two texts: "<a>" and "<b>"`.
 
 ### 3.4 `custom-elements.json` and `html-custom-data.json`
 
 Both describe ONLY Ripple's `rp-*` tags (the `ui-*` tags are described by the files `@ui-sdk/web` ships: `uisdk/packages/web/package.json` fields `customElements` and `files`).
 
-`custom-elements.json` (Custom Elements Manifest, `schemaVersion` `"1.0.0"`), one module per `rp-*` key of `elements`:
+`custom-elements.json` (Custom Elements Manifest, `schemaVersion` `"1.0.0"`), one module per `rp-*` key of `elements` EXCEPT `rp-view-event` (it has no module of its own: the adapters define it, D-089 item 5):
 
 ```json
 {
@@ -1893,9 +2313,9 @@ Both describe ONLY Ripple's `rp-*` tags (the `ui-*` tags are described by the fi
 - `name` is the PascalCase of the tag. `events` is the union of `events[]` of every component whose `agent.component` or root tag is this tag, de-duplicated by `dom`.
 - `attributes` lists `data-slot` and every attribute in `state[].reflects` with `on: "root"` of those components.
 
-`html-custom-data.json` (VS Code custom data, `"version": 1.1`): `tags` holds one `{ "name": "<tag>", "description": "<same description>", "attributes": [] }` per `rp-*` tag; `globalAttributes` holds one entry per hook attribute of ledger section 4.4 that has a fixed value set (`data-rp-js` with values `inflow`, `overlay`, `fallback`; `data-rp-field` with its six values) and one entry without values for each of `data-rp-part`, `data-rp-line`, `data-rp-open`, `data-rp-refresh`, `data-rp-region`, `data-default-open`, `data-agent-confirm`, `data-agent-secret`, `data-agent-hidden`.
+`html-custom-data.json` (VS Code custom data, `"version": 1.1`): `tags` holds one `{ "name": "<tag>", "description": "<same description>", "attributes": [] }` per `rp-*` tag; `globalAttributes` holds one entry per hook attribute of ledger section 4.4 that has a fixed value set (`data-rp-js` with values `inflow`, `overlay`, `fallback`; `data-rp-field` with its six values) and one entry without values for each of `data-rp-part`, `data-rp-line`, `data-rp-open`, `data-rp-close`, `data-rp-refresh`, `data-rp-region`, `data-default-open`, `data-url`, `data-template`, `data-view-event-payload`, `data-agent-confirm`, `data-agent-secret`, `data-agent-hidden`. The `rp-view-event` tag entry has `"attributes": [{ "name": "view-event-trigger", "values": [{ "name": "connect" }, { "name": "intersect" }] }, { "name": "view-event-payload" }]`. The test attributes `data-rp-case`, `data-rp-fixture`, `data-rp-test-raw` and the `data-rmx-*` attributes are NOT listed.
 
-Acceptance: both files parse as JSON; `custom-elements.json` has exactly one module per `rp-*` key of `elements`; every `tagName` is a key of `elements`.
+Acceptance: both files parse as JSON; `custom-elements.json` has exactly one module per `rp-*` key of `elements` other than `rp-view-event`; every `tagName` is a key of `elements`; `html-custom-data.json` has one `tags` entry per `rp-*` key of `elements`, `rp-view-event` included.
 
 ---
 
@@ -1913,21 +2333,28 @@ registry/
     components/<id>.css                               # copy of components/<id>/<id>.css
   html/<id>.html                              # copy of components/<id>/html/<id>.html
   react/<id>.tsx                              # copy of components/<id>/react/<id>.tsx
+  react/<id>.data.ts                          # copy of components/<id>/react/<id>.data.ts (only components with a `data` file, D-094)
   remix/<id>.tsx                              # copy of components/<id>/remix/<id>.tsx
+  remix/<id>.data.ts                          # copy of components/<id>/remix/<id>.data.ts
   liquid/
     blocks/<id>.liquid  blocks/<id>-<part>.liquid     # copies of components/<id>/liquid/blocks/*
-    snippets/rp-<id>.liquid                           # copies of components/<id>/liquid/snippets/*
-    snippets/rp-head.liquid  rp-tokens.liquid  rp-import-map-entries.liquid   # copies of src/gen/liquid-core/*.liquid (content: 14-liquid-theme.md)
-    assets/ripple.js  ripple-tabs.js  ripple-tooltip.js  ripple-toast.js  ripple-agent.js   # bare-specifier build (01-architecture.md 6.1)
-    locales/<id>.json  locales/core.json              # generated locale patches (7.6.4)
-    settings.json                                     # copy of src/gen/liquid-core/settings.json (content: 14-liquid-theme.md)
-  blueprints/<blueprint id>/<host>/**         # copy of blueprints/<id>/<host>/**
+    snippets/rp-<id>.liquid                           # copies of components/<id>/liquid/snippets/* (includes rp-icon.liquid)
+    snippets/rp-<id>-<part>.liquid                    # region-part snippets (06-bindings.md L-21)
+    snippets/rp-head.liquid  rp-tokens.liquid  rp-import-map-entries.liquid   # copies of src/gen/liquid-core/*.liquid (content: 14-liquid-theme.md section 7)
+    assets/ripple.js  ripple-tabs.js  ripple-tooltip.js  ripple-toast.js  ripple-shared.js  ripple-agent.js   # six files, bare-specifier build (D-054 item 3)
+    locales/<id>.json  locales/core.json  locales/blueprint.<blueprint id>.json   # generated locale patches (rule 2, 7.6.4)
+    settings.json                                     # copy of src/gen/liquid-core/settings.json (content: 14-liquid-theme.md 6.1)
+  blueprints/<blueprint id>/<host>/**         # copy of blueprints/<id>/<host>/** (blueprints/_sample/ is NOT copied)
 ```
 
 Rules:
 
 1. The registry copy of a scaffolded file and its repository source differ only by `__PKG__` replacement (`01-architecture.md` 8.3 rule 4).
-2. `registry/liquid/locales/<id>.json` is generated at build: `{ "storefront": { "<id>": <subtree of locales/en.default.json at ripple.<id>> }, "schema": { "<id>": <schema strings of 3.3 for every block file of the component> } }`. A key is omitted when its subtree is empty; the file is omitted when both are empty. `locales/core.json` holds the strings of the Ripple settings group (`{ "schema": { "settings": ... } }`, content from `src/gen/liquid-core/settings.locale.json`).
+2. Locale patch files are generated by G5 and copied to `registry/liquid/locales/`. Every file has the shape `{ "storefront": <object>, "schema": <object> }`; each half is the subtree to merge under the key `ripple` (7.6.4). A half with no key is `{}`; a file whose two halves are both `{}` is not written and has no file entry.
+   - `<id>.json` (one per component): `storefront` is `{ "<id>": <subtree of locales/en.default.json at ripple.<id>> }`; `schema` is `{ "<id>": { "name": ..., "<part>_name": ... } }` with the block-name strings of 3.3 for every block file of the component.
+   - `core.json`: `storefront` is `{}`; `schema` is `{ "settings": <the object printed in 14-liquid-theme.md 11.2>, "props": { <every ripple.props.* key of 3.3, in ascending byte order> } }`. The `settings` object is read from `src/gen/liquid-core/settings.locale.json`, which MUST equal the text of `14-liquid-theme.md` 11.2. The shared `props` keys live here, once, because every block's schema refers to them (D-038 amendment (a)).
+   - `blueprint.<blueprint id>.json` (one per blueprint that has keys, D-107 item 5): `storefront` is `{ "blueprints": { "<blueprint id>": <subtree of locales/en.default.json at ripple.blueprints.<blueprint id>> } }`; `schema` is `{}`.
+   - Generation check: every key that a file of the component or blueprint reads with the `t` filter (found with the tokeniser of 9.5.2 in its `.liquid` sources: a string literal immediately followed by `| t`) MUST exist in the generated `storefront` half of that owner's file or of a component in its dependency closure; otherwise `gen: <path>: locale key <key> is not in locales/en.default.json`.
 3. Nothing under `registry/` is imported by library code. The CLI reads it as data.
 
 ### 4.2 `registry/index.json`
@@ -1942,9 +2369,9 @@ export interface RegistryFile {
   id: string
   /** Path relative to the PACKAGE root, or null for derived files and for patches without a source. */
   source: string | null
-  /** Project path. May start with @components/, @styles/, @public/. A composite region is "assets/ripple.css#<id>". */
+  /** Project path. May start with @components/, @styles/, @public/, @pages/. A composite region is "assets/ripple.css#<id>". */
   target: string
-  type: "css" | "binding" | "block" | "snippet" | "asset" | "types" | "blueprint"
+  type: "css" | "binding" | "data" | "block" | "snippet" | "asset" | "types" | "blueprint"
   mode: InstallMode
 }
 export interface RegistryIndex {
@@ -1978,7 +2405,8 @@ Derivation from a manifest file entry `f` of component `c` for host `h`:
 - `source` is `"registry/" + f.source`.
 - `mode` is `f.mode`, except: a file of type `asset` whose target ends in `.js` gets `library`.
 - `target` is `f.target`, except on `liquid` for type `css`: `"assets/ripple.css#" + id` (the component CSS becomes a region of the composite stylesheet, 4.5).
-- Blueprint files use owner `blueprint.<blueprint id>`.
+- Blueprint files use owner `blueprint.<blueprint id>`, so the trailer id of the product page file is `blueprint.product/template` and the id of its locale patch is `blueprint.product/locale`.
+- A `source` that starts with `blueprints/` or `liquid/` or `css/` or `html/` or `react/` or `remix/` is relative to `registry/`; this is the only form manifest and blueprint file entries use.
 
 Example (abridged to one component):
 
@@ -2032,16 +2460,31 @@ Every component uses exactly these keys, sources and targets. A manifest entry t
 | `shared` | `css` | `css/components/<id>.css` | `@styles/components/<id>.css` | `css` | `owned` | always |
 | `html` | `html` | `html/<id>.html` | `@components/<id>.html` | `binding` | `owned` | always |
 | `react` | `react` | `react/<id>.tsx` | `@components/<id>.tsx` | `binding` | `owned` | always |
+| `react` | `data` | `react/<id>.data.ts` | `@components/<id>.data.ts` | `data` | `owned` | the component has pure data helpers (D-094); `generated: false` |
 | `remix` | `remix` | `remix/<id>.tsx` | `@components/<id>.tsx` | `binding` | `owned` | always |
+| `remix` | `data` | `remix/<id>.data.ts` | `@components/<id>.data.ts` | `data` | `owned` | exactly when the `react` list has a `data` file; the two source files are byte-identical |
 | `liquid` | `block` | `liquid/blocks/<id>.liquid` | `blocks/<id>.liquid` | `block` | `owned` | tier `block`, `parts`, `resource` |
 | `liquid` | `block:<part>` | `liquid/blocks/<id>-<part>.liquid` | `blocks/<id>-<part>.liquid` | `block` | `owned` | one per author part, tier `parts` |
-| `liquid` | `snippet` | `liquid/snippets/rp-<id>.liquid` | `snippets/rp-<id>.liquid` | `snippet` | `owned` | `liquid.snippet` is set |
-| `liquid` | `snippet:<name>` | `liquid/snippets/rp-<id>-<name>.liquid` | `snippets/rp-<id>-<name>.liquid` | `snippet` | `owned` | a resource component that splits its default body into more snippets |
+| `liquid` | `snippet` | `liquid/snippets/rp-<id>.liquid` | `snippets/rp-<id>.liquid` | `snippet` | `owned` | `liquid.snippet` is set, except for component `icon` (its snippet is the core file `core/snippet:icon`, 4.4) |
+| `liquid` | `snippet:<part>` | `liquid/snippets/rp-<id>-<part>.liquid` | `snippets/rp-<id>-<part>.liquid` | `snippet` | `owned` | one per region part (`06-bindings.md` L-21: `rp-cart-lines-list`, `rp-cart-summary-totals`, `rp-product-gallery-media` and the others that document lists) |
 | `liquid` | `locale` | `liquid/locales/<id>.json` | `locales/*.json` | `asset` | `patch` | the registry build produced that file (4.1 rule 2) |
 
-Target aliases (npm hosts only): `@components/` is `paths.components`, `@styles/` is `paths.styles`, `@public/` is `paths.public` of `ripple.json` (6.1). Liquid targets are relative to the theme root and never use an alias.
+Target aliases (npm hosts only; D-101 item 1): `@components/` is `paths.components`, `@styles/` is `paths.styles`, `@public/` is `paths.public`, `@pages/` is `paths.pages` of `ripple.json` (6.1). Liquid targets are relative to the theme root and never use an alias. Component files never target `@pages/`; blueprint files on npm hosts always do.
 
-Blueprint files are listed in `blueprints/<id>/blueprint.json` (`#/$defs/blueprint`): `type` is `blueprint`, `mode` is `owned`, `key` is unique within the blueprint, and `target` is the project path the blueprint document gives (`12-components-chrome-and-blueprints.md`).
+Blueprint files are listed in `blueprints/<id>/blueprint.json` (`#/$defs/blueprint`). The 14 blueprint ids, their targets and their complete file lists are owned by `12-components-chrome-and-blueprints.md` section 2.1 (D-099). The record shape is:
+
+| File | `key` | `source` (under `registry/`) | `target` | `type` | `mode` | `generated` |
+|---|---|---|---|---|---|---|
+| page file, `html` | `template` | `blueprints/<id>/html/<id>.html` | `@pages/<id>.html` | `blueprint` | `owned` | `true` (G10) |
+| page file, `react` / `remix` | `template` | `blueprints/<id>/<host>/<id>.tsx` | `@pages/<id>.tsx` | `blueprint` | `owned` | `false` |
+| `lib/<name>.ts`, `react` / `remix` | `<name>` (`document`, `menu`, `locale-route`, `newsletter-route`, `contact-route`) | `blueprints/<id>/<host>/lib/<name>.ts` | `@pages/lib/<name>.ts` | `blueprint` | `owned` | `false` |
+| `types.ts`, `react` / `remix` (`layout` only) | `types` | `blueprints/layout/<host>/types.ts` | `@pages/types.ts` | `blueprint` | `owned` | `false` |
+| Liquid template or `layout/theme.liquid` | `template` | `blueprints/<id>/liquid/<path>` | `<path>` (for example `templates/product.liquid`, `layout/theme.liquid`) | `blueprint` | `owned` | `false` |
+| `layout/password.liquid` (`password` only) | `layout` | `blueprints/password/liquid/layout/password.liquid` | `layout/password.liquid` | `blueprint` | `owned` | `false` |
+| `snippets/import-map.liquid`, `snippets/meta-tags.liquid` (`layout` only) | `import-map`, `meta-tags` | `blueprints/layout/liquid/snippets/<name>.liquid` | `snippets/<name>.liquid` | `blueprint` | `owned` | `false` |
+| Liquid locale patch | `locale` | `liquid/locales/blueprint.<id>.json` | `locales/*.json` | `asset` | `patch` | `true` |
+
+The element ids fixed in blueprint files (`main`, `cart-drawer`, `search-dialog` and the rest of D-107 item 4) are data of `12-components-chrome-and-blueprints.md` section 1.5; the CLI does not know them.
 
 ### 4.4 Core files (installed by `ripple init`)
 
@@ -2060,6 +2503,7 @@ npm hosts (`html`, `react`, `remix`):
 | `core/js:tabs` | `browser/ripple-tabs.js` | `@public/ripple-tabs.js` | `library` | `html`, `remix` |
 | `core/js:tooltip` | `browser/ripple-tooltip.js` | `@public/ripple-tooltip.js` | `library` | `html`, `remix` |
 | `core/js:toast` | `browser/ripple-toast.js` | `@public/ripple-toast.js` | `library` | `html`, `remix` |
+| `core/js:shared` | `browser/ripple-shared.js` | `@public/ripple-shared.js` | `library` | `html`, `remix` |
 | `core/js:agent` | `browser/ripple-agent.js` | `@public/ripple-agent.js` | `library` | `html`, `remix` |
 | `core/patch:css-entry` | none | the file named by `css` in `ripple.json` | `patch` | all three |
 | `core/patch:agents` | none | `AGENTS.md` | `patch` | all three |
@@ -2076,10 +2520,12 @@ npm hosts (`html`, `react`, `remix`):
 | `core/js:tabs` | `registry/liquid/assets/ripple-tabs.js` | `assets/ripple-tabs.js` | `library` |
 | `core/js:tooltip` | `registry/liquid/assets/ripple-tooltip.js` | `assets/ripple-tooltip.js` | `library` |
 | `core/js:toast` | `registry/liquid/assets/ripple-toast.js` | `assets/ripple-toast.js` | `library` |
+| `core/js:shared` | `registry/liquid/assets/ripple-shared.js` | `assets/ripple-shared.js` | `library` |
 | `core/js:agent` | `registry/liquid/assets/ripple-agent.js` | `assets/ripple-agent.js` | `library` |
 | `core/snippet:head` | `registry/liquid/snippets/rp-head.liquid` | `snippets/rp-head.liquid` | `owned` |
 | `core/snippet:tokens` | `registry/liquid/snippets/rp-tokens.liquid` | `snippets/rp-tokens.liquid` | `owned` |
 | `core/snippet:import-map-entries` | `registry/liquid/snippets/rp-import-map-entries.liquid` | `snippets/rp-import-map-entries.liquid` | `owned` |
+| `core/snippet:icon` | `registry/liquid/snippets/rp-icon.liquid` | `snippets/rp-icon.liquid` | `owned` |
 | `core/patch:head` | none | `layout/theme.liquid` | `patch` |
 | `core/patch:import-map` | none | `snippets/import-map.liquid`, else `layout/theme.liquid` | `patch` |
 | `core/patch:theme-reference` | none: `generateThemeCss(<body of region core/tokens>)` | `config/styles.css` | `patch` |
@@ -2089,7 +2535,9 @@ npm hosts (`html`, `react`, `remix`):
 
 Notes:
 
+- JavaScript: exactly the six files of the `ripple.js` set (D-054 items 3 and 4, D-101 item 3): `ripple.js`, `ripple-tabs.js`, `ripple-tooltip.js`, `ripple-toast.js`, `ripple-shared.js`, `ripple-agent.js`. On `html` and `remix` they are the relative-import build from `browser/`; on `liquid` they are the bare-specifier build, resolved by the six import-map entries `ripple`, `ripple/tabs`, `ripple/tooltip`, `ripple/toast`, `ripple/shared`, `ripple/agent` that `snippets/rp-import-map-entries.liquid` prints (`14-liquid-theme.md` 7.2).
 - `ripple-agent.js` is always copied but never loaded unless the project imports it (D-054 item 6: the bridge is opt-in by LOADING it). On Liquid the import-map snippet names it, so the asset MUST exist.
+- Liquid infrastructure snippets (ledger 4.6): `rp-head`, `rp-tokens`, `rp-import-map-entries`, `rp-icon`; owner `core` in trailers. The text of the first three is owned by `14-liquid-theme.md` section 7; `rp-head` prints exactly the five items of D-054 item 7 and nothing else (D-099 item 4). `rp-icon` is the Liquid file of component Icon (`09-components-foundation.md`, section "Icon"; repository source `components/icon/liquid/snippets/rp-icon.liquid`); it is installed by `init` because blocks of many components render it. Its CSS is the region `icon/css`, which arrives with `ripple add icon` or with any component that lists `icon` in `dependencies.components`.
 - `ripple.elements.js` and its chunks (`01-architecture.md` 6.1) are NOT scaffolded. A project with no commerce MAY copy them by hand from `node_modules/<pkg>/browser/`.
 - On the `react` host no JavaScript is copied (D-054 item 5).
 - On `react`, `remix`, `html` the prebuilt `browser/ripple.css` is NOT scaffolded (D-055 item 2 allows linking it by hand for a no-build page). The scaffolded `ripple.css` entry uses `@import`, which browsers load natively.
@@ -2204,12 +2652,59 @@ export function emptyComposite(): Segment[] {
 
 ### 4.6 Install transform
 
-The **install transform** `T` is applied to every registry body before it is hashed, compared, merged or written. The same `T` is applied to `base` and `next` bodies, so it never causes a difference.
+The **install transform** `T` is applied to every registry body before it is hashed, compared, merged or written. The same `T` is applied to `base` and `next` bodies (and therefore to the merge base of 8.3), so it never causes a difference. It has exactly three steps (D-101 item 2), applied in this order:
 
-`T(body, file, project)`:
+| Step | Applies to | Effect |
+|---|---|---|
+| T1 package name | every file | Every occurrence of the token `__PKG__` becomes `index.package.name`. `pnpm build` already replaces the token in every file it copies into `pkg/` (`01-architecture.md` 6.3 rule 2 and test A-10), so on a published registry this step finds nothing; it exists so that a registry read from an unbuilt checkout behaves the same. |
+| T2 Liquid block prefix | host `liquid`, target ends in `.liquid`, the project's Liquid file prefix `P` is not empty | Every `{% block '<name>'` whose `<name>` is a member of `index.liquidBlocks` becomes `{% block '<P><name>'`. |
+| T3 component import specifier | hosts `react` and `remix`, target ends in `.ts` or `.tsx` | Every import specifier `@components/<id>` or `@components/<id>.data` (D-096 item 4; written by blueprint files, `12-components-chrome-and-blueprints.md` rule R-1) becomes the relative POSIX path from the directory of the installed file to `<paths.components>/<id>`, starting with `./` or `../`. On `remix` the extension is appended: `.tsx`, or `.ts` for a `.data` specifier. On `react` no extension is appended. Component binding files do not use the specifier (siblings import `./<id>`), so T3 changes only blueprint files. |
 
-1. Host `liquid`, file path ends in `.liquid`, and the project's Liquid file prefix `P` is not empty: replace every match of `/(\{%-?\s*block\s+')([a-z0-9-]+)(')/g` whose group 2 is a member of `index.liquidBlocks` by group 1 + `P` + group 2 + group 3.
-2. Every other case: the body unchanged.
+`src/cli/plan.ts` (part; complete function; run with Node 22 on 5 cases, 13.1):
+
+```ts
+import { posix } from "node:path"
+
+export interface TransformContext {
+  host: "html" | "react" | "remix" | "liquid"
+  /** index.package.name */
+  packageName: string
+  /** index.liquidBlocks */
+  liquidBlocks: string[]
+  /** The project's Liquid block file prefix P ("" when none). */
+  liquidPrefix: string
+  /** Project-relative POSIX path the file is written to, aliases already resolved (for example "app/pages/product.tsx"). */
+  targetPath: string
+  /** paths.components of ripple.json, POSIX, no trailing slash. Pass "" on liquid. */
+  componentsDir: string
+}
+
+const BLOCK_CALL = /(\{%-?\s*block\s+')([a-z0-9-]+)(')/g
+const COMPONENT_SPECIFIER = /(\bfrom\s+|\bimport\s*\(\s*|\bimport\s+)(["'])@components\/([a-z0-9-]+(?:\.data)?)\2/g
+
+export function installTransform(body: string, context: TransformContext): string {
+  // T1: package name.
+  let out = body.split("__PKG__").join(context.packageName)
+  // T2: Liquid block prefix.
+  if (context.host === "liquid" && context.targetPath.endsWith(".liquid") && context.liquidPrefix !== "") {
+    out = out.replace(BLOCK_CALL, (match: string, open: string, name: string, close: string) =>
+      context.liquidBlocks.includes(name) ? open + context.liquidPrefix + name + close : match)
+  }
+  // T3: component import specifiers.
+  if ((context.host === "react" || context.host === "remix") && /\.tsx?$/.test(context.targetPath)) {
+    const fromDir = posix.dirname(context.targetPath)
+    out = out.replace(COMPONENT_SPECIFIER, (_match: string, lead: string, quote: string, name: string) => {
+      let relative = posix.relative(fromDir, posix.join(context.componentsDir, name))
+      if (!relative.startsWith(".")) relative = "./" + relative
+      const extension = context.host === "remix" ? (name.endsWith(".data") ? ".ts" : ".tsx") : ""
+      return lead + quote + relative + extension + quote
+    })
+  }
+  return out
+}
+```
+
+Example: `import { Stack } from "@components/stack";` in a file installed at `app/pages/product.tsx`, with `paths.components` `app/components/ripple`, becomes `import { Stack } from "../components/ripple/stack.tsx";` on `remix` and `import { Stack } from "../components/ripple/stack";` on `react` (with `src/pages` and `src/components/ripple`: the same relative path). Because T3 depends on `paths.components` and `paths.pages`, changing either path in `ripple.json` after install makes blueprint files report as modified; `ripple upgrade` then rewrites them.
 
 The target path of a Liquid file of type `block` is `blocks/<P><name>.liquid`. Snippet names never take the prefix (D-038 item 2).
 
@@ -2377,7 +2872,7 @@ Field definitions:
 | file `state` (mode `derived`) | `current`: the local body equals what the CLI would generate now. `stale`: it differs and the file is unmodified relative to its trailer. `modified`: the local body differs from its own trailer hash. |
 | component `missing` | Ids of the component's files for this host that do not exist (RP501). |
 | component `state` | The worst file state in the order `current` < `outdated` < `modified` < `modified-outdated`; `incomplete` when `missing` is not empty. A component is listed when at least one of its files is found. |
-| patch `state` | `present`: applied and equal to what would be generated. `stale`: applied but different (marker regions, settings group, `AGENTS.md` section). `absent`: not applied (RP510). `skipped`: the target file does not exist and the patch is optional (`core/patch:theme-reference` without `config/styles.css`; `core/patch:css-entry` when `css` is `null`). |
+| patch `state` | `present`: applied and equal to what would be generated. `stale`: applied but different (marker regions, settings group, `AGENTS.md` section). `absent`: not applied (RP510). `skipped`: the target file does not exist and the patch is optional (`core/patch:theme-reference` without `config/styles.css`; `core/patch:css-entry` when `css` is `null`), or the patch is `core/patch:head` or `core/patch:import-map` and its target file does not exist yet (7.6.3; RP510 does not report a `skipped` patch). |
 | `unmanaged` | Paths that are a registry target for ANY component or core file of this host, exist, and have no trailer (RP504). |
 | `duplicates` | Trailer ids found in more than one file (RP512). |
 | `orphans` | Files whose trailer id is not in the running registry: `{ "id", "path", "modified" }`. |
@@ -2396,11 +2891,12 @@ Written by `ripple init` at the project root. It holds configuration only, never
 ```json
 {
   "$schema": "./node_modules/ripple-kit/config.schema.json",
-  "host": "react",
+  "host": "remix",
   "paths": {
     "components": "app/components/ripple",
     "styles": "app/styles/ripple",
-    "public": "public/ripple"
+    "public": "public/ripple",
+    "pages": "app/pages"
   },
   "css": "app/app.css",
   "prefix": { "css": "rp-", "element": "rp-" }
@@ -2413,6 +2909,7 @@ Written by `ripple init` at the project root. It holds configuration only, never
 | `paths.components` | Directory for bindings (`<id>.tsx`; `html` host: `<id>.html`) | `app/components/ripple` when `app/` exists; else `src/components/ripple` when `src/` exists; else `components/ripple` |
 | `paths.styles` | Directory for `ripple.css`, `tokens.css`, `theme.css`, `base.css`, `props.css`, `components/` | `app/styles/ripple`; else `src/styles/ripple`; else `styles/ripple` (same rule) |
 | `paths.public` | Directory for the prebuilt JavaScript (`html`, `remix`). Omitted on `react`. | `public/ripple` |
+| `paths.pages` | Directory for blueprint files; the alias `@pages/` (D-101 item 1) | `app/pages` on `remix`; `src/pages` on `react`; `pages` on `html`. The default does not depend on which directories exist |
 | `css` | The project's CSS entry file, or `null` when there is none | the first of these that exists: `app/app.css`, `app/styles/app.css`, `app/root.css`, `app/tailwind.css`, `app/globals.css`, `src/index.css`, `src/app.css`, `src/styles.css`, `src/main.css`, `styles/app.css`, `public/styles.css`; else `null` |
 | `prefix` | MUST equal the `css` and `element` prefix of the running package's manifest. Informational; a mismatch is exit code 2 with `error: ripple.json prefix does not match the installed package (rp-).` | from the manifest |
 
@@ -2434,11 +2931,12 @@ All paths are relative to the project root, use `/`, and MUST NOT start with `/`
     "paths": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["components", "styles"],
+      "required": ["components", "styles", "pages"],
       "properties": {
         "components": { "$ref": "#/$defs/path" },
         "styles": { "$ref": "#/$defs/path" },
-        "public": { "$ref": "#/$defs/path" }
+        "public": { "$ref": "#/$defs/path" },
+        "pages": { "$ref": "#/$defs/path" }
       }
     },
     "css": { "oneOf": [{ "$ref": "#/$defs/path" }, { "type": "null" }] },
@@ -2453,7 +2951,7 @@ All paths are relative to the project root, use `/`, and MUST NOT start with `/`
     }
   },
   "if": { "properties": { "host": { "enum": ["html", "remix"] } } },
-  "then": { "properties": { "paths": { "required": ["components", "styles", "public"] } } },
+  "then": { "properties": { "paths": { "required": ["components", "styles", "pages", "public"] } } },
   "$defs": {
     "path": { "type": "string", "pattern": "^(?!/)(?!\\./)(?!.*\\.\\.)[A-Za-z0-9._/@-]+$" }
   }
@@ -2466,7 +2964,7 @@ The CLI validates `ripple.json` with a hand-written validator in `src/cli/config
 
 ## 7. CLI
 
-Binary `ripple` (`bin/ripple.mjs`, `01-architecture.md` 4.2). Source: `src/cli/index.ts`, `src/cli/commands/<command>.ts` (`init`, `add`, `diff`, `upgrade`, `remove`, `status`, `check`, `docs`, `manifest`, `skills`), plus `detect-host.ts`, `trailer.ts`, `merge3.ts`, `diff.ts`, `composite.ts`, `plan.ts`, `config.ts`. The CLI has no install-time dependency: it uses Node built-ins only (`node:util` `parseArgs`, `node:fs`, `node:path`, `node:crypto`, `node:child_process`, `node:os`); `parse5` is bundled.
+Binary `ripple` (`bin/ripple.mjs`, `01-architecture.md` 4.2). Source: `src/cli/index.ts`, `src/cli/commands/<command>.ts` (`init`, `add`, `diff`, `upgrade`, `remove`, `status`, `check`, `docs`, `manifest`, `skills`), plus `detect-host.ts`, `trailer.ts`, `merge3.ts`, `diff.ts`, `composite.ts`, `plan.ts`, `config.ts`, `base.ts` (ledger tree 5.1). The CLI has no install-time dependency: it uses Node built-ins only (`node:util` `parseArgs`, `node:fs`, `node:path`, `node:crypto`, `node:child_process`, `node:os`); `parse5` is bundled.
 
 ### 7.1 General rules
 
@@ -2507,7 +3005,7 @@ Binary `ripple` (`bin/ripple.mjs`, `01-architecture.md` 4.2). Source: `src/cli/i
 
    - Header: `ripple <command and positionals>  (host: <host>, <pkg>@<running version>)`; with `--dry-run` the header ends with ` [dry run]`.
    - File line: two spaces, the action left-aligned and padded to 18 characters, two spaces, the project-relative path (a composite region is printed as `assets/ripple.css#<id>`). Lines are sorted by path.
-   - Actions: the action names of section 8 (`add`, `unchanged`, `update`, `restamp`, `overwrite`, `keep-local`, `merged`, `merge-conflict`, `needs-base`, `conflict-unmanaged`, `remove`, `orphan-kept`), plus `regenerate` (a derived file whose content changed), `patch` (a patch that changed its target), `patch-skipped` (optional patch without target), `patch-failed` (anchor not found; the exact line to add is printed after the plan).
+   - Actions: the action names of section 8 (`add`, `unchanged`, `update`, `restamp`, `overwrite`, `keep-local`, `merged`, `merge-conflict`, `needs-base`, `conflict-unmanaged`, `remove`, `orphan-kept`), plus `regenerate` (a derived file whose content changed), `patch` (a patch that changed its target), `patch-skipped` (the patch wrote nothing and that is not an error: its content is already present; or it is optional and its target does not exist; or, for `core/patch:head` and `core/patch:import-map`, the target file does not exist yet, D-107 item 5), `patch-failed` (the target file exists but the anchor was not found; the exact line to add is printed after the plan).
    - Summary: `<w> written, <u> unchanged, <m> merged, <c> conflicts.` where `written` counts `add`, `update`, `restamp`, `overwrite`, `regenerate`, `patch`, `remove`; `unchanged` counts `unchanged`, `keep-local`, `orphan-kept`, `patch-skipped`; `merged` counts `merged`; `conflicts` counts `merge-conflict`, `needs-base`, `conflict-unmanaged`, `patch-failed`.
 9. **Network.** The CLI makes no network request except: `upgrade` and `add` obtaining a base version through `npm pack` (8.3), and `check --url`.
 10. **Package root.** `getPackageRoot()` is the directory two levels above the running `dist/cli/index.mjs` (from `import.meta.url`). The registry is `<package root>/registry`, the manifest `<package root>/manifest.json`. The CLI therefore works when run through `npx <pkg>@<version>` in a directory with no `package.json` (verified pattern with Hydrogen's CLI: `ripple/docs/research/agent-kit-and-distribution.md` 2.1 and 6.8).
@@ -2525,7 +3023,7 @@ Binary `ripple` (`bin/ripple.mjs`, `01-architecture.md` 4.2). Source: `src/cli/i
 | `ripple remove <component...>` | yes | Delete a component's files |
 | `ripple status` | no | Print the computed lock |
 | `ripple check [paths...]` | no | Run the checker (section 9) |
-| `ripple docs [component]` | no | Print documentation |
+| `ripple docs`, `ripple docs <component>`, `ripple docs <RULE>`, `ripple docs guide <topic>` | no | Print documentation (7.11; positionals only) |
 | `ripple manifest [component]` | no | Print manifest JSON |
 | `ripple skills sync`, `ripple skills check` | sync: yes | Install or verify agent skills |
 
@@ -2543,7 +3041,7 @@ Evaluated in this order; the first match wins; nothing is guessed (D-057).
 
 After detection, when the host is `liquid` (by any route, including the flag), the theme MUST pass `validateTheme`: no `sections/` directory and no `templates/**/*.json` file; otherwise exit code 2 with the message in the code below.
 
-`src/cli/detect-host.ts` (complete; tested on 12 directory layouts):
+`src/cli/detect-host.ts` (complete; run with Node 22 on 14 directory layouts, 13.1):
 
 ```ts
 // src/cli/detect-host.ts - host detection (00-decisions D-057). First match wins; nothing is guessed.
@@ -2569,6 +3067,24 @@ function readJson(path: string): unknown {
 function majorOf(range: unknown): number | null {
   const match = typeof range === "string" ? /\d+/.exec(range) : null
   return match === null ? null : Number(match[0])
+}
+
+/**
+ * The two theme checks. Returns the error message, or null when the theme is acceptable.
+ * A missing templates/ directory is acceptable (an empty theme before `ripple add --blueprint`).
+ */
+export function validateTheme(cwd: string): string | null {
+  if (isDirectory(join(cwd, "sections"))) {
+    return "This theme has a sections/ directory. Ripple supports only themes built with {% block %} (no sections, no JSON templates)."
+  }
+  if (!isDirectory(join(cwd, "templates"))) return null
+  const jsonTemplate = readdirSync(join(cwd, "templates"), { recursive: true })
+    .map(String)
+    .find((name) => name.endsWith(".json"))
+  if (jsonTemplate !== undefined) {
+    return `This theme has a JSON template (templates/${jsonTemplate.replace(/\\/g, "/")}). Ripple supports only themes built with {% block %} (no sections, no JSON templates).`
+  }
+  return null
 }
 
 export function detectHost(cwd: string, flag: string | undefined): Detection {
@@ -2600,15 +3116,8 @@ export function detectHost(cwd: string, flag: string | undefined): Detection {
     isDirectory(join(cwd, "templates")) &&
     existsSync(join(cwd, "config", "settings_schema.json"))
   if (isTheme) {
-    if (isDirectory(join(cwd, "sections"))) {
-      return { ok: false, message: "This theme has a sections/ directory. Ripple supports only themes built with {% block %} (no sections, no JSON templates)." }
-    }
-    const jsonTemplate = readdirSync(join(cwd, "templates"), { recursive: true })
-      .map(String)
-      .find((name) => name.endsWith(".json"))
-    if (jsonTemplate !== undefined) {
-      return { ok: false, message: `This theme has a JSON template (templates/${jsonTemplate.replace(/\\/g, "/")}). Ripple supports only themes built with {% block %} (no sections, no JSON templates).` }
-    }
+    const problem = validateTheme(cwd)
+    if (problem !== null) return { ok: false, message: problem }
     return { ok: true, host: "liquid", source: "theme" }
   }
   // 4. package.json
@@ -2630,18 +3139,18 @@ export function detectHost(cwd: string, flag: string | undefined): Detection {
 }
 ```
 
-When `--host liquid` is passed, the command additionally runs the same two theme checks (the `sections/` and JSON-template branches above) before doing anything else; the implementation MUST factor them into an exported `validateTheme(cwd): string | null` that both paths call.
+When `--host liquid` is passed, the command calls `validateTheme(cwd)` before doing anything else and exits with code 2 and `error: <message>` when it returns a string. `--host liquid` is REQUIRED for the first `init` in a theme directory that has no `layout/theme.liquid` yet (`14-liquid-theme.md` section 4.1 step 2: the layout arrives later with `ripple add --blueprint layout`); automatic detection cannot recognise such a directory. After `init` has run there, later commands still need `--host liquid` until `layout/theme.liquid`, `templates/` and `config/settings_schema.json` all exist.
 
 ### 7.4 `ripple init`
 
 ```text
-ripple init [--host <host>] [--prefix <p>] [--components <dir>] [--styles <dir>] [--public <dir>] [--css <file|none>] [--dry-run]
+ripple init [--host <host>] [--prefix <p>] [--components <dir>] [--styles <dir>] [--public <dir>] [--pages <dir>] [--css <file|none>] [--dry-run]
 ```
 
 | Option | Hosts | Meaning | Default |
 |---|---|---|---|
 | `--prefix <p>` | `liquid` | Block file prefix for THIS first install; MUST match `^[a-z]+-$` | empty (D-038) |
-| `--components <dir>`, `--styles <dir>`, `--public <dir>` | npm | Values for `paths.*` | 6.1 |
+| `--components <dir>`, `--styles <dir>`, `--public <dir>`, `--pages <dir>` | npm | Values for `paths.*` | 6.1 |
 | `--css <file\|none>` | npm | CSS entry file; the word `none` means `null` | 6.1 |
 | `--dry-run` | all | Print the plan; write nothing | off |
 
@@ -2649,7 +3158,7 @@ Behaviour, npm hosts:
 
 1. Detect the host. Delete leftover `*.ripple-tmp` files.
 2. `ripple.json`: when absent, build it from the flags and the defaults of 6.1 and add it to the plan (action `add`). When present, validate it; a path flag whose value differs from the file is exit code 2: `error: ripple.json already exists. Edit it instead of passing --<flag>.`
-3. Plan every core file of 4.4 for the host with the decision table of section 8 (options: none). Derived files are generated per 7.6.1.
+3. Plan every core file of 4.4 for the host with the decision table of section 8 (options: none). On `html` and `remix` this includes the six JavaScript files of the `ripple.js` set, copied to `paths.public`; on `react` no JavaScript is copied. The `ripple.elements.js` set is never copied (D-054 item 4). Derived files are generated per 7.6.1.
 4. Plan the patches `core/patch:css-entry` (7.6.2), `core/patch:package-json` (7.6.6), `core/patch:agents` (7.6.5).
 5. Apply the plan (7.1 rule 7).
 6. Run `skills sync` (7.13) and print its lines.
@@ -2664,8 +3173,8 @@ Behaviour, `liquid`:
 
 1. Detect the host; run `validateTheme`. Delete leftover `*.ripple-tmp` files.
 2. Determine the block prefix `P` (4.6). `--prefix` with a value different from the prefix of already installed files is exit code 2.
-3. Plan the core files of 4.4: the three regions of `assets/ripple.css` (create the file with the layer header when absent), the five JavaScript assets, the three snippets.
-4. Plan the patches `core/patch:head`, `core/patch:import-map`, `core/patch:theme-reference`, `core/patch:settings`, `core/patch:locale`, `core/patch:agents` (7.6).
+3. Plan the core files of 4.4: the three regions of `assets/ripple.css` (create the file with the layer header when absent), the six JavaScript assets, the four snippets (`rp-head`, `rp-tokens`, `rp-import-map-entries`, `rp-icon`).
+4. Plan the patches `core/patch:head`, `core/patch:import-map`, `core/patch:theme-reference`, `core/patch:settings`, `core/patch:locale`, `core/patch:agents` (7.6). In a theme directory that has no `layout/theme.liquid` and no `snippets/import-map.liquid` yet, the first two are `patch-skipped` with the note of 7.6.3 and the exit code stays 0; the files of the `layout` blueprint already contain both lines (`14-liquid-theme.md` section 4.1).
 5. Apply the plan. Run `skills sync`.
 6. Print: when `config/styles.css` was changed by this run, `note: config/styles.css changed. assets/styles.min.css is stale until Shopify recompiles it (Canvas or Sidekick). Ripple components do not depend on it.` Then `next: add components with: npx <pkg>@<version> add <component>`.
 
@@ -2683,7 +3192,7 @@ ripple add <component...> [--all] [--blueprint <id>]... [--dry-run] [--diff] [--
 |---|---|
 | `<component...>` | Component ids (kebab-case). At least one of: a component, `--all`, `--blueprint` |
 | `--all` | Every component whose `status` is not `planned` |
-| `--blueprint <id>` | Install that blueprint's files for the host and every component in its `components` list. Repeatable |
+| `--blueprint <id>` | Install that blueprint's files for the host and every component in its `components` list. Repeatable. The 14 ids: `layout`, `home`, `collection`, `collections-list`, `product`, `search`, `cart`, `blog`, `article`, `page`, `contact`, `not-found`, `password`, `gift-card`. An unknown id is exit code 2: `error: unknown blueprint "<id>".` |
 | `--dry-run` | Print the plan; write nothing |
 | `--diff` | For each planned file that already exists, print the unified diff between the local body and the body the running package ships (7.7 format); write nothing |
 | `--prefix <p>` | `liquid` only; same meaning as in `init`; allowed only while no Ripple block file is installed |
@@ -2695,7 +3204,7 @@ Behaviour:
 3. Resolve the transitive closure of `dependencies` (breadth-first, ascending id order, each component once).
 4. For every file of every resolved component for the host (`index.components[id].files[host]`) and every blueprint file: plan with the decision table of section 8 (no options). A component that is already installed is therefore brought to the running version exactly as `upgrade` would.
 5. `liquid`: count block files. If the plan would leave more than 150 block files whose trailer owner is a Ripple component, or more than 300 `blocks/*.liquid` files in total, stop with exit code 1 and the RP405 diagnostic (9.6) before writing.
-6. Plan the derived files (7.6.1), the components' locale patches (7.6.4) and `core/patch:agents` (7.6.5).
+6. Plan the derived files (7.6.1), the locale patches of the resolved components and of each requested blueprint (`blueprint.<id>/locale`, 7.6.4) and `core/patch:agents` (7.6.5). `liquid`, when a requested blueprint is `layout`: also re-plan `core/patch:head` and `core/patch:import-map` after the blueprint files are planned (they report `patch-skipped`, because the `layout` blueprint's files already contain both lines).
 7. Apply the plan.
 8. Print, for each component added for the first time, one line: `docs: <command form> docs <id>`.
 
@@ -2727,7 +3236,7 @@ Target: the file `css` of `ripple.json`. Skipped (`patch-skipped`) when `css` is
 
 #### 7.6.3 Liquid layout patches
 
-`core/patch:head` (target `layout/theme.liquid`): present when the file matches `/\{%-?\s*render\s+'rp-head'/`. Otherwise insert the line `{% render 'rp-head' %}` with the indentation of the anchor line, at the first anchor that exists:
+`core/patch:head` (target `layout/theme.liquid`). When the file does not exist: `patch-skipped`, with `note: layout/theme.liquid does not exist; core/patch:head was skipped. Add the layout with: <command form> add --blueprint layout` (D-107 item 5; exit code unaffected). When the file matches `/\{%-?\s*render\s+'rp-head'/`: `patch-skipped` (already present). Otherwise insert the line `{% render 'rp-head' %}` with the indentation of the anchor line, at the first anchor that exists:
 
 1. immediately AFTER the first line matching `/\{%-?\s*render\s+'import-map'/`;
 2. immediately BEFORE the first line containing `stylesheet_tag`;
@@ -2735,7 +3244,7 @@ Target: the file `css` of `ripple.json`. Skipped (`patch-skipped`) when `css` is
 
 (Reason for the order: D-054 item 7 requires the snippet after the import map and before `content_for_header`; D-055 requires `ripple.css` before `styles.min.css`. Base theme evidence: `ripple/theme/layout/theme.liquid` lines 5 to 8.) No anchor: `patch-failed`.
 
-`core/patch:import-map`: present when a file matches `/\{%-?\s*render\s+'rp-import-map-entries'/`. Otherwise, in the first of `snippets/import-map.liquid`, `layout/theme.liquid` that contains the text `<script type="importmap">`, insert the line `{% render 'rp-import-map-entries' %}` (indented two spaces more than the anchor line) immediately after the first line matching `/"imports"\s*:\s*\{/`. No such file or line: `patch-failed` with the instruction to add an import map (`14-liquid-theme.md` gives the full snippet). Whether Shopify tolerates a `{% render %}` inside the JSON of an import map script is UNVERIFIED on a live store (the rendered output is valid JSON); it is covered by SPIKE-02.
+`core/patch:import-map`. When neither `snippets/import-map.liquid` nor `layout/theme.liquid` exists: `patch-skipped`, with `note: no import map file exists; core/patch:import-map was skipped. Add the layout with: <command form> add --blueprint layout`. When one of the two files matches `/\{%-?\s*render\s+'rp-import-map-entries'/`: `patch-skipped` (already present). Otherwise, in the first of `snippets/import-map.liquid`, `layout/theme.liquid` that contains the text `<script type="importmap">`, insert the line `{% render 'rp-import-map-entries' %}` (indented two spaces more than the anchor line) immediately after the first line matching `/"imports"\s*:\s*\{/`. A file exists but none has that text or line: `patch-failed` with the instruction `add snippets/import-map.liquid from 14-liquid-theme.md section 7.1 and render it in layout/theme.liquid before {% render 'rp-head' %}`. Whether Shopify tolerates a `{% render %}` inside the JSON of an import map script is UNVERIFIED on a live store (the rendered output is valid JSON); it is covered by SPIKE-02.
 
 `core/patch:theme-reference` (target `config/styles.css`): skipped when the file does not exist or does not match `/@import\s+["']tailwindcss["']/`. Otherwise the marker region
 
@@ -2747,17 +3256,25 @@ Target: the file `css` of `ripple.json`. Skipped (`patch-skipped`) when `css` is
 
 is appended at the end of the file (after one blank line) when absent, and replaced in place when present. Content outside the region is untouched.
 
-`core/patch:settings` (target `config/settings_schema.json`): the file is a JSON array. The group object from `registry/liquid/settings.json` (whose `name` is `t:ripple.settings.name`) is appended when no element has that `name`, and replaces that element as a whole when one has. The file is rewritten with two-space indentation and one trailing newline.
+`core/patch:settings` (target `config/settings_schema.json`; D-098; `14-liquid-theme.md` 6.1 and 6.2):
+
+1. The file is a JSON array. When it does not exist: `patch-failed` with the instruction `create config/settings_schema.json (14-liquid-theme.md section 6.1)`.
+2. `registry/liquid/settings.json` holds ONE group object whose `name` is `t:ripple.settings.name`. It MUST be byte-identical to the second object printed in `14-liquid-theme.md` 6.1 (settings `rp_palette`, `rp_font_body`, `rp_font_heading`, `rp_radius`, `rp_density`, `rp_text_scale`; font defaults `system_ui_n4`; range bounds of D-098 item 1). This document does not print it.
+3. One `color_palette` per theme (D-098 item 3). Scan every `settings[]` entry of every OTHER element of the array (every element whose `name` is not `t:ripple.settings.name`) for an entry with `"type": "color_palette"`. When one exists (let `<id>` be its `id`): remove the entry whose `id` is `rp_palette` from the Ripple group before writing, and print exactly `note: this theme already has a color_palette setting ("<id>"); rp_palette was not added. Ripple colours stay at their tokens.css values until you map them in snippets/rp-tokens.liquid.`
+4. The (possibly reduced) group is appended when no element has the name `t:ripple.settings.name`, and replaces that element as a whole when one has.
+5. The file is rewritten with two-space indentation and one trailing newline. When the result equals the existing text the action is `patch-skipped`; otherwise `patch`.
+6. Patch `state` (5.3) is `present` when the element in the file equals the group this procedure would write (with or without `rp_palette` by rule 3), `stale` when an element with that name differs, `absent` when there is none.
 
 #### 7.6.4 Locale patches (Liquid)
 
-Sources: `registry/liquid/locales/core.json` and `registry/liquid/locales/<id>.json` for every installed component. For each source, merge `storefront` into every `locales/*.json` whose name does not end in `.schema.json`, and `schema` into every `locales/*.schema.json`, under the single top-level key `ripple`:
+Sources: `registry/liquid/locales/core.json`, `registry/liquid/locales/<id>.json` for every installed component, and `registry/liquid/locales/blueprint.<id>.json` for every installed blueprint (a blueprint is installed when a file with owner `blueprint.<id>` is found, 5.2). Ripple ships English text only (D-098 item 4, Q16). For each source, merge `storefront` into every `locales/*.json` whose name does not end in `.schema.json`, and `schema` into every `locales/*.schema.json`, under the single top-level key `ripple`:
 
 1. A locale file MAY start with a `/* ... */` comment block (the base theme's files do: `ripple/theme/locales/en.default.json`). Remove it before `JSON.parse` and write it back unchanged in front of the result.
 2. Add every key path that is missing. NEVER change or remove an existing value (a merchant's or translator's edit wins).
 3. Non-default locale files receive the English text as the value of a missing key. (Theme Check's `MatchingTranslations` reports a key that exists in the default locale and is missing elsewhere as an error: docs "MatchingTranslations", shopify.dev `storefronts/themes/tools/theme-check/checks/matching-translations`.)
 4. Write with two-space indentation and one trailing newline. Key order: existing keys keep their position; new keys are appended in source order.
 5. `remove` never deletes locale keys.
+6. A theme with no `locales/*.schema.json` file: the CLI creates `locales/en.default.schema.json` with the `schema` half under `ripple`. A theme with no storefront locale file: it creates `locales/en.default.json` the same way.
 
 #### 7.6.5 `core/patch:agents`
 
@@ -2916,13 +3433,29 @@ Columns are padded with spaces to the widths shown (name 20, state 20). Sections
 ### 7.11 `ripple docs`
 
 ```text
-ripple docs [component] [--rule <RULE>] [--host <host>]
+ripple docs
+ripple docs <component id>
+ripple docs <RULE>
+ripple docs guide <topic>
 ```
 
-- No argument: print `<package root>/docs/INDEX.md`.
-- `<component>`: print `docs/components/<id>.md`. When the page has per-host sections (`08-agent-kit-and-evals.md` format), print the common part and only the section of the detected host; when no host is detected, print the whole page.
-- `--rule RP101`: print `docs/rules/RP101.md`.
-- Unknown component or rule: exit code 2 with the nearest name (Levenshtein distance at most 2) as a suggestion.
+`docs` takes positionals only. It has no flags of its own (D-057 amendment (a)); the global options of 7.1 rule 3 are accepted, and `--host` has no effect on the output. These four forms are the only ones any message, skill or generated file may print (`08-agent-kit-and-evals.md` 2.7).
+
+| Arguments | Output (the file is printed to standard output unchanged) |
+|---|---|
+| none | `<package root>/docs/INDEX.md` |
+| one argument matching `/^RP\d{3}$/` | `docs/rules/<RULE>.md` |
+| one argument that is exactly `guide` | usage error (rule 3 below) |
+| one other argument | `docs/components/<id>.md` |
+| `guide` followed by one argument | `docs/guides/<topic>.md` |
+
+Rules:
+
+1. The argument is tested in the order of the table. No component id matches `/^RP\d{3}$/` and no component is named `guide`, so the forms cannot collide.
+2. Unknown component: exit code 2, `error: unknown component "<name>".` plus ` Did you mean "<id>"?` when a component id is within Levenshtein distance 2, then `fix: <command form> docs` on the second line (the index lists every component).
+3. Unknown rule id (a string that matches the pattern but has no page): exit code 2, `error: unknown rule "<RULE>".` and `fix: valid rules: <every rule id of 9.6 that has a page, ascending, separated by ", ">`.
+4. `guide` with no topic, or an unknown topic: exit code 2, `error: unknown guide "<topic>".` (or `error: ripple docs guide needs a topic.`) and `fix: valid topics: <the base names of docs/guides/*.md without ".md", ascending, separated by ", ">`. The topic list is read from the directory; the CLI holds no list of its own.
+5. More arguments than the form allows, or any option other than a global one (for example `--rule`): usage error, exit code 2, `error: ripple docs takes positionals only: docs, docs <component>, docs <RULE>, docs guide <topic>.`
 
 ### 7.12 `ripple manifest`
 
@@ -3000,7 +3533,7 @@ Rows are evaluated top to bottom; the first row whose condition holds is used. `
 | 3 | not modified and `trailer.hash === H(next)` | `unchanged` | nothing (the trailer keeps its older version text; the hash is what matters) | unchanged |
 | 4 | not modified and `trailer.hash !== H(next)` | `update` | `next` | running version, `H(next)` |
 | 5 | modified and `H(local body) === H(next)` (the project made the same change upstream made) | `restamp` | `next` (same body, new trailer) | running version, `H(next)` |
-| 12 | modified and the file's registry mode is `library` (the five JavaScript assets on Liquid) | `overwrite`, plus `warning: <path> is a library file; your edits were replaced.` | `next` | running version, `H(next)` |
+| 12 | modified and the file's registry mode is `library` (the six JavaScript files of 4.4, on `liquid`, `html` and `remix`) | `overwrite`, plus `warning: <path> is a library file; your edits were replaced.` | `next` | running version, `H(next)` |
 | 9a | modified and the file's type is `blueprint` | `keep-local` | nothing. Blueprints are starting points; `upgrade` never changes an edited blueprint file, with any flag | unchanged |
 | 6 | modified and (`--theirs` or `--force`) | `overwrite` | `next` | running version, `H(next)` |
 | 7 | modified and `--ours` | `keep-local` (restamp) | the local body, unchanged | running version, `H(next)` |
@@ -3375,7 +3908,7 @@ export interface Diagnostic {
   allowed: string | null
   fix: string | null
   why: string | null
-  docs: string | null          // a command line (7.1 rule 12): "<command form> docs <component>" or "<command form> docs --rule <RULE>"
+  docs: string | null          // a command line (7.1 rule 12): "<command form> docs <RULE>" (D-102 item 2)
 }
 
 export interface CheckOptions {
@@ -3507,9 +4040,9 @@ Standard output is `JSON.stringify(report, null, 2)` plus one newline, where `re
 
 #### 9.5.2 Liquid call tokeniser
 
-Layer S on Liquid uses `findLiquidCalls`. It handles `{%- -%}` trimming, multi-line tags, tags inside `{% liquid %}`, commas and colons inside quoted strings and filter arguments, and skips the bodies of `comment`, `raw`, `doc`, `schema`, `javascript`, `stylesheet` and `style`. Argument kinds: `string`, `number`, `boolean`, `nil`, `expression`. Rules check only literal kinds; an `expression` (a variable or a filtered value) is skipped by layer S and caught by layer H.
+Layer S on Liquid uses `findLiquidCalls` (component calls) and `findLiquidUses` (every tag name and filter name, for RP401). `findLiquidCalls` handles `{%- -%}` trimming, multi-line tags, tags inside `{% liquid %}`, commas and colons inside quoted strings and filter arguments, and skips the bodies of `comment`, `raw`, `doc`, `schema`, `javascript`, `stylesheet` and `style`. Argument kinds: `string`, `number`, `boolean`, `nil`, `expression`. Rules check only literal kinds; an `expression` (a variable or a filtered value) is skipped by layer S and caught by layer H.
 
-`src/check/liquid-calls.ts` (complete; tested on single-line, multi-line, trimmed, `{% liquid %}`, commented-out and filtered calls):
+`src/check/liquid-calls.ts` (complete; both functions were run with Node 22: `findLiquidCalls` on single-line, multi-line, trimmed, `{% liquid %}`, commented-out and filtered calls; `findLiquidUses` on the 5 assertions listed in 13.1):
 
 ```ts
 // src/check/liquid-calls.ts - finds {% block %}, {% render %} and {% partial %} tags in Liquid source and tokenises their arguments.
@@ -3637,13 +4170,93 @@ export function findLiquidCalls(source: string): LiquidCall[] {
   }
   return calls
 }
+
+export interface LiquidUse {
+  kind: "tag" | "filter"
+  name: string
+  /** 1-based position of the name. */
+  line: number
+  col: number
+}
+
+/** Tags that only close or continue another tag. They are never reported. */
+const STRUCTURAL = /^(end[a-z_]+|break|continue)$/
+
+/** Returns every filter name ("| name") in one piece of markup. A "|" inside a quoted string is not a filter. */
+function filtersIn(source: string, markup: string, markupOffset: number): LiquidUse[] {
+  const uses: LiquidUse[] = []
+  let quote = ""
+  for (let index = 0; index < markup.length; index++) {
+    const char = markup[index]
+    if (quote !== "") {
+      if (char === quote) quote = ""
+      continue
+    }
+    if (char === "'" || char === '"') {
+      quote = char
+      continue
+    }
+    if (char !== "|") continue
+    const match = /^\|\s*([a-z_]+)/.exec(markup.slice(index))
+    if (match === null) continue
+    const nameOffset = markupOffset + index + match[0].length - match[1].length
+    uses.push({ kind: "filter", name: match[1], ...position(source, nameOffset) })
+  }
+  return uses
+}
+
+/**
+ * Returns every tag name and every filter name used in a Liquid source, in source order.
+ * The bodies of comment, raw, doc, schema, javascript, stylesheet and style are skipped; the tag itself is reported
+ * (so that "schema" and "doc" are checked against the scope, and "javascript" is reported as outside every scope).
+ */
+export function findLiquidUses(source: string): LiquidUse[] {
+  const uses: LiquidUse[] = []
+  const pattern = /\{%-?\s*([a-z_]+)([\s\S]*?)-?%\}|\{\{-?([\s\S]*?)-?\}\}/g
+  let match: RegExpExecArray | null
+  while ((match = pattern.exec(source)) !== null) {
+    if (match[1] === undefined) {
+      // {{ output }}
+      const bodyOffset = match.index + match[0].indexOf(match[3])
+      uses.push(...filtersIn(source, match[3], bodyOffset))
+      continue
+    }
+    const name = match[1]
+    const nameOffset = match.index + match[0].indexOf(name)
+    const markupOffset = nameOffset + name.length
+    if (!STRUCTURAL.test(name)) uses.push({ kind: "tag", name, ...position(source, nameOffset) })
+    if (SKIP_BLOCKS.includes(name)) {
+      const end = new RegExp(`\\{%-?\\s*end${name}\\s*-?%\\}`, "g")
+      end.lastIndex = pattern.lastIndex
+      const close = end.exec(source)
+      pattern.lastIndex = close === null ? source.length : end.lastIndex
+      continue
+    }
+    if (name === "liquid") {
+      // One tag per line inside {% liquid %}. A line that starts with "#" is a comment.
+      const body = match[2]
+      const linePattern = /^([ \t]*)([a-z_]+)([^\n]*)$/gm
+      let line: RegExpExecArray | null
+      while ((line = linePattern.exec(body)) !== null) {
+        const tagOffset = markupOffset + line.index + line[1].length
+        if (!STRUCTURAL.test(line[2])) uses.push({ kind: "tag", name: line[2], ...position(source, tagOffset) })
+        uses.push(...filtersIn(source, line[3], tagOffset + line[2].length))
+      }
+      continue
+    }
+    uses.push(...filtersIn(source, match[2], markupOffset))
+  }
+  return uses
+}
 ```
 
 A call `{% block '<name>' ... %}` is "a call of component C" when `<name>` minus the project's block prefix (4.6) equals `C.liquid.block` or the block name of one of C's parts. Argument names map to props through `prop.liquid` (the snake_case name, `02-html-contract.md` M-2). The names `class`, `attributes`, `content` and `id` are always accepted.
 
 #### 9.5.3 Structure rules (`rules[]` of a component, reported by RP113)
 
-For every root R of component C and every entry `rule` of `C.rules`: let `subjects` be `selectAll(R, rule.selector)` (the selector `:scope` selects R itself). For each subject S:
+Component-specific rules are manifest data, not rule ids (D-059 amendment (d), D-102 item 3). No document may introduce an `RPnnn` id: the 55 ids of 9.6 are the complete set, `RP120` does not exist, and a component document that needs a check writes a `rules[]` entry whose kebab-case id starts with its component id (`dialog-needs-title`, `spinner-needs-label`; MB-23).
+
+For every root R of component C and every entry `rule` of `C.rules`: let `subjects` be `[R]` when `rule.selector` is exactly `:scope`, otherwise `selectAll(R, rule.selector)` (the descendants of R that match; R itself is never in that list). The same applies to each item of `rule.target`: the item `:scope` means R. `:scope` is an extension of this document; `parseSelector` of `02-html-contract.md` 12.4 never sees it (MB-17). For each subject S:
 
 | `rule.kind` | Violated when |
 |---|---|
@@ -3656,7 +4269,7 @@ For every root R of component C and every entry `rule` of `C.rules`: let `subjec
 
 `rule.target` for the first four kinds is a comma-separated list; the checker splits on `,`, trims, and parses each item with `parseSelector`. The diagnostic uses `problem: rule.message`, `fix: rule.fix`, `found:` the opening tag of S (or of R for `max-count`), and appends ` [<rule.id>]` to `problem`.
 
-Parts: RP113 also reports, without a `rules` entry, (a) a part with `required: true` that does not occur inside a root of its component, and (b) a part element whose nearest ancestor part or root is not its manifest `parent`.
+Parts: RP113 also reports, without a `rules` entry, (a) a part with `required: true` that does not occur inside a root of its component, and (b) a part element with a manifest `parent` that has no ancestor, at any depth inside R, that is the element of that parent part (for `parent: "root"` or an absent `parent`: the part is not inside R). Elements between the part and its parent are allowed. A part element is recognised by its part class (every token of `parts[].class`).
 
 #### 9.5.4 Theme Check sub-step (Liquid)
 
@@ -3677,6 +4290,8 @@ The `MutationObserver` records are filtered by the component's `upgradeAllow` en
 
 ### 9.6 Rules (complete list)
 
+The V1 set is exactly 55 rule ids (D-059, D-102 item 1): RP101 to RP105, RP110 to RP118, RP201 to RP204, RP301 to RP309, RP320, RP321, RP401 to RP406, RP501 to RP508, RP510 to RP512, RP601 to RP609. Ownership (ledger section 12): this document owns each rule's id, severity, layer, hosts, detection and `fix` computation, and the output format of 9.4. `08-agent-kit-and-evals.md` owns each rule's `problem`, `fix` and `why` TEXT and the rule pages; where a "Fix given" cell below words a sentence differently from that document's table, that document's wording is printed.
+
 Columns: **Sev** `E` error, `W` warning. **Layer** as in 9.1. **Hosts**: `all`, or the listed hosts. "TC" marks a rule that Theme Check also reports (9.5.4 rule 4). Every rule has a page `docs/rules/<RULE>.md` generated from this table (3.2).
 
 Usage and structure
@@ -3695,8 +4310,8 @@ Usage and structure
 | RP114 | E | H | all | Per document: a duplicate `id` among Ripple roots and their derived part ids; or a part id that is not the derived id (`<root id>-title`) the template defines | The derived id |
 | RP115 | E | H | all | An element with `role` of `dialog`, `alertdialog`, `tablist`, `menu`, `menubar`, `listbox`, `slider`, `radiogroup`, `toolbar`, `tree` or `combobox` that is not inside a Ripple root. (`role="switch"` on `input[type=checkbox]` is allowed everywhere.) | `use the <Component> component` for the mapped component, else `use native HTML` |
 | RP116 | W | S, H | all | Inside a Ripple root: an inline `style` attribute containing `color`, `background` or `border-color` with a literal colour; or a class token matching `/^(bg\|text\|border\|fill\|stroke)-\[(#\|rgb\|hsl\|oklch)/` | `use a token: <nearest role token name>` (sentence) |
-| RP117 | W | S | html, react, remix | An `import` or `from` specifier that is `@ui-sdk/react`, starts with `@ui-sdk/core/internal/`, or starts with `<pkg>/dist/` | The public specifier (`<pkg>/elements`) |
-| RP118 | E | H | all | (a) A `data-state` attribute on an element inside a Ripple root (D-059; state is expressed with the attributes of `02-html-contract.md` 3 and 8). (b) An attribute whose name starts with `data-rp-` and is not one of `data-rp-part`, `data-rp-field`, `data-rp-line`, `data-rp-open`, `data-rp-close`, `data-rp-refresh`, `data-rp-region`, `data-rp-js`. (c) A `data-rp-field` value outside `merchandise-id`, `quantity`, `line-id`, `selling-plan`, `note`, `discount-code`; a `data-rp-js` value outside `inflow`, `overlay`, `fallback` | Remove the attribute, or the nearest allowed name or value |
+| RP117 | W | S | html, react, remix | A forbidden import, in any scanned `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs` file. (a) Any file: an `import` or `from` specifier that is `@ui-sdk/react`, starts with `@ui-sdk/core/internal/`, or starts with `<pkg>/dist/`. (b) Any file under `paths.components` or `paths.pages`: a VALUE import from `@shopify/hydrogen` (a specifier that is `@shopify/hydrogen` or starts with `@shopify/hydrogen/`) of a name that is not one of the seven of D-094 item 3: `formatMoney`, `renderShopPayButton`, `buildProductSelectionSearchParams`, `parseCollectionParams`, `serializeCollectionParams`, `isFilterInputActive`, `getFilterRemovalUrl`. `import type { ... }` and `import { type X }` are not value imports; a namespace or default import is always reported (D-102 item 6). (c) A file under `paths.components` that carries a Ripple trailer: a specifier `<pkg>/elements` or `<pkg>/commerce` (D-096 item 3; a binding prints markup and never loads the runtime) | (a) the public specifier (`<pkg>/elements`); (b) the allowed names; (c) `import it once in the client entry` |
+| RP118 | E | H | all | (a) A `data-state` attribute on an element inside a Ripple root (D-059; state is expressed with the attributes of `02-html-contract.md` 3 and 8). (b) An attribute whose name starts with `data-rp-` and is not in ledger section 4.4. The allowed names are exactly `data-rp-part`, `data-rp-field`, `data-rp-line`, `data-rp-open`, `data-rp-close`, `data-rp-refresh`, `data-rp-region`, `data-rp-js`. The three test-harness names `data-rp-case`, `data-rp-fixture`, `data-rp-test-raw` are accepted ONLY in a file whose project-relative path has a directory segment named `test` or `.ripple-conformance` (the harness work directories, D-096 item 5); in every other file, and in every `--url` document, they are reported (ledger 4.4: they MUST NOT appear in a component, blueprint or registry file). The constant `HOOK_ATTRIBUTES` in `src/check/rules/RP118.ts` holds the list. (c) A `data-rp-field` value outside `merchandise-id`, `quantity`, `line-id`, `selling-plan`, `note`, `discount-code`; a `data-rp-js` value outside `inflow`, `overlay`, `fallback` | Remove the attribute, or the nearest allowed name or value |
 
 Accessibility (static)
 
@@ -3718,16 +4333,16 @@ Progressive enhancement, commerce, agent attributes
 | RP305 | E | H | all | Form dialect (`05-commerce.md` 13). A `form` inside a commerce root is classified by its `action` and fields against `C.liquid.formDialect` (host `liquid`) or `C.hydrogenHost.formDialect` (other hosts). Reported: a field role required by the dialect with no control carrying that `name`; hydrogen cart-line form whose first `button[type="submit"]` is not `name="intent" value="set"` with `hidden`; Liquid cart form whose first submit button is not `name="update"`; Liquid cart form where the number of `[name="updates[]"]` controls differs from the number of `[data-rp-line]` elements | The missing control as markup |
 | RP306 | E | H | liquid | A submit control with class `rp-checkout-button` inside a `form` whose action ends with `/cart`, without `name="checkout"` | `name="checkout"` |
 | RP307 | E | S | liquid | The text `updateCart.configure` in any theme file outside `assets/ripple*.js`; or the existence of `snippets/standard-actions-config.liquid` or `assets/standard-actions-override.js` (D-041) | `delete <file>` |
-| RP308 | E (first item W) | H | all | Regions (D-046; `05-commerce.md` 13): (W) a `data-rp-refresh` name with no `[data-rp-region="<name>"]` element in the document; (E) a `[data-rp-region]` element that contains an element whose `data-rp-refresh` names that same region; (E) a `dialog` that is, or is inside, a `[data-rp-region]` element; (E) two `[data-rp-region]` elements with the same name | Sentence naming the region |
-| RP309 | E | H | all | More than one element with `id="rp-commerce"`, or one whose text does not parse as JSON | `keep one <script type="application/json" id="rp-commerce">` |
-| RP320 | E | H | all | An element matched by an `agent.confirm[].select` entry of its enclosing component root that has no non-empty `data-agent-confirm` attribute. In V1 the entries are CheckoutButton's root in both forms (`button[name="checkout"]`, `a.rp-checkout-button`) (rewritten per D-059 and D-050: wallet buttons are platform markup and are not checked) | `data-agent-confirm="<the sentence from agent.confirm[].sentence>"` |
+| RP308 | E (first item W) | H | all | Regions (D-046, D-102 item 4; `05-commerce.md` 13): (W) on every host, a `data-rp-refresh` name with no `[data-rp-region="<name>"]` element in the document; (E) a `[data-rp-region]` element that contains an `rp-cart` element whose `data-rp-refresh` names that same region. This containment check applies ONLY to `rp-cart` roots: an `rp-live` root MAY sit inside a region it refreshes (D-047), and forms or links are not checked; (E) a `dialog` that is, or is inside, a `[data-rp-region]` element; (E) two `[data-rp-region]` elements with the same name | Sentence naming the region |
+| RP309 | E | H | all | Commerce configuration (D-087 item 3). (a) The document contains at least one element whose tag has `commerce: true` in `manifest.elements`, AND has no element with `id="rp-commerce"`, AND no inline `script` element whose text contains `configureCommerce(`, AND (when layer S ran) no scanned `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs` source file contains `configureCommerce(`. One diagnostic per document, located at the first commerce element. (b) More than one element with `id="rp-commerce"`. (c) An `#rp-commerce` element that is not `script[type="application/json"]` or whose text does not parse as JSON | (a) `print <script type="application/json" id="rp-commerce"> in <head> before ripple.js (Liquid: {% render 'rp-head' %}), or call configureCommerce(options)`; (b), (c) `keep one <script type="application/json" id="rp-commerce">` |
+| RP320 | E | H | all | An element matched by an `agent.confirm[].select` entry of its enclosing component root that has no non-empty `data-agent-confirm` attribute. The rule is data-driven: it reads only `agent.confirm[]` and names no component. In V1 the manifest entries are the CheckoutButton control in both forms (REQUIRED, D-095) and the two wrappers Ripple prints around accelerated-checkout markup, `div.rp-product-form-accelerated` (ProductForm, 1.7.3) and `div.rp-cart-summary-accelerated` (CartSummary); the platform markup inside a wrapper is opaque and is not checked (D-050, `08-agent-kit-and-evals.md` section 7) | `data-agent-confirm="<the sentence from agent.confirm[].sentence>"` |
 | RP321 | W | H | all | An attribute starting with `data-agent-` other than `data-agent-confirm`, `data-agent-secret`, `data-agent-hidden` | Nearest allowed name |
 
 Liquid source
 
 | Id | Sev | Layer | Hosts | Detects | Fix given |
 |---|---|---|---|---|---|
-| RP401 | E | S | liquid (TC) | A `block` call in a file under `blocks/` or `snippets/` | `move the call to a template or layout; compose inside a block with snippets` |
+| RP401 | E | S | liquid (TC for item (a)) | The Ripple Liquid subset (D-097; lists owned by `06-bindings.md` L-13). (a) A `block` tag in ANY file under `blocks/` or `snippets/`, Ripple's or the project's (the platform rejects it). (b) In a `.liquid` file that carries a Ripple trailer (5.1): a tag or filter name returned by `findLiquidUses` (9.5.2) that is not in the scope of the file. The scope is chosen from the trailer id: owner `core`, or id `blueprint.layout/import-map` or `blueprint.layout/meta-tags`, gives Infrastructure; any other owner starting with `blueprint.` gives Blueprint; every other id gives Component. The three tag lists and three filter lists are the constant `LIQUID_SUBSET` in `src/check/rules/RP401.ts`, copied from `06-bindings.md` L-13; objects and globals are not checked. A project file without a trailer is checked only by item (a) | (a) `{% render 'rp-<name>' %}` when that snippet exists, else `move the call to a template or layout`; (b) `allowed in this file: <the scope's list>` |
 | RP402 | E | S, P | liquid | A `block` call with a literal name for which `blocks/<name>.liquid` does not exist. When the name (minus prefix) is a manifest block: the fix is the `add` command | `<command form> add <id>` |
 | RP403 | E | S | liquid | Partials: a `data-rp-refresh` literal in a theme file naming a region for which no `{% partial '<name>' %}` exists in `layout/` or `templates/`; the same partial name declared in two places of one template or layout | Sentence naming the partial |
 | RP404 | E | S | liquid | A `block` call of a component whose root contains a `dialog` (Dialog, Drawer, CartDrawer, MobileNav, ProductGallery) between `{% partial %}` and `{% endpartial %}` | `move the overlay outside the partial; keep only its content partial inside the dialog` |
@@ -3762,11 +4377,11 @@ Browser
 | RP604 | E | B | all | An element with a tag of `manifest.elements` still matching `:not(:defined)` 2 s after `load` |
 | RP605 | E | B | all | For every root of a component whose `a11y.checkPattern` is not null: `checkPattern(root, pattern)` from `@ui-sdk/core/testing`, injected with `page.addScriptTag`, throws. Each line of the thrown message is one diagnostic. `checkPattern` is marked experimental upstream (`uisdk/packages/core/src/testing/check-pattern.ts`) |
 | RP606 | E | B | all | In pass 1, for each component on the page with `noJs.level: "full"`: its recorded flow fails. Flows are data in `src/check/flows.ts`, keyed by component id; the V1 flows are: `product-form` (submit the form; expect a navigation with a 2xx or 3xx response), `filters` and `sort-select` (submit; expect the URL query to change), `cart-link` (click; expect navigation to the `href`), `accordion` (click `summary`; expect `details[open]`). Flow content for other components is added by their component documents |
-| RP607 | W | B | all | With `ripple-agent.js` loaded by the checker: a `snapshot()` entry without `label`, or a root of a `commerce` component with `agent.surface: "bridge"` absent from the snapshot |
+| RP607 | W | B | all | With `ripple-agent.js` loaded by the checker, and ONLY for roots of components whose manifest `agent.actions` is non-empty (D-095): (a) such a root is absent from `snapshot()`; (b) two or more such roots on the page have the same `component`, no `label`, and identical `items` and `buttons` lists. A missing label alone is never reported; `rp-dialog`, `rp-quantity` and `rp-navigation-menu` roots are never reported (`08-agent-kit-and-evals.md` section 7) |
 | RP608 | E | B | all | `document.documentElement.scrollWidth > document.documentElement.clientWidth` at 375, 768 or 1440 px |
 | RP609 | W | B | all | Text inside a Ripple root with a contrast ratio below 4.5:1 (3:1 for text of at least 24 px, or 18.66 px bold), computed from resolved colours drawn to a canvas. This rule also covers the gamut warning requested by `03-styling-and-tokens.md` 3.5 item 8: a dial colour outside sRGB that yields an unreadable foreground is reported here; there is no separate gamut rule |
 
-Not checker rules: "no value import of `@shopify/hydrogen` outside the two adapters" (`05-commerce.md` 13) is a boundary of the Ripple repository and is enforced by the import-boundary lint of `01-architecture.md` 2, not by `ripple check`.
+Not checker rules: inside the Ripple repository, "no value import of `@shopify/hydrogen` outside the two adapters, the bindings and the `.data.ts` files" is enforced by the import-boundary lint of `01-architecture.md` section 8 with the same seven-name list (D-094 item 3); in a project the same list is enforced by RP117 item (b). Generated-region drift in a binding is a build check (`pnpm gen --check`, 3.3), not a checker rule.
 
 ### 9.7 Implementation order and status
 
@@ -3810,7 +4425,7 @@ Checks added to build step 10 (the build fails on any):
 | RB-4 | No file under `pkg/registry/` contains a provenance trailer line (5.1) or the text `__PKG__` |
 | RB-5 | Concatenating `registry/css/tokens.css`, `base.css`, `props.css` and every `registry/css/components/<id>.css` in ascending id order, after `css/layers.css`, is byte-identical to `pkg/browser/ripple.css` |
 | RB-6 | `registry/css/props.css` equals `generatePropsCss(<registry/css/tokens.css>)` and `registry/css/theme.css` equals `generateThemeCss(<registry/css/tokens.css>)` (so a fresh install is `current`, not `stale`) |
-| RB-7 | Each of the five files in `registry/liquid/assets/` contains no relative `import` specifier (only the bare specifiers `ripple`, `ripple/tabs`, `ripple/tooltip`, `ripple/toast`, `ripple/agent` and the three `@shopify/*` platform specifiers) |
+| RB-7 | `registry/liquid/assets/` holds exactly six files (`ripple.js`, `ripple-tabs.js`, `ripple-tooltip.js`, `ripple-toast.js`, `ripple-shared.js`, `ripple-agent.js`). Each contains no relative `import` specifier: only the six bare specifiers `ripple`, `ripple/tabs`, `ripple/tooltip`, `ripple/toast`, `ripple/shared`, `ripple/agent` (D-054 item 3) and the `@shopify/*` platform specifiers that `04-elements.md` section 5.4 lists |
 | RB-8 | In a temporary directory: `ripple init --host liquid` then `ripple add --all`, on a copy of the base theme fixture `test/fixtures/theme-min/` (a `layout/theme.liquid`, an empty `templates/`, `config/settings_schema.json` containing `[]`, `locales/en.default.json` containing `{}`), exits 0; a second run of both prints no line other than `unchanged` and `patch-skipped` lines; `ripple status --json` reports every component `current` |
 | RB-9 | The same for `--host react` in a directory containing `package.json` with `react` in `dependencies` and `app/styles/app.css` containing `@import "tailwindcss";` |
 
@@ -3820,11 +4435,11 @@ No new rule: `01-architecture.md` 6.5. The CLI's part is only to copy files:
 
 | Host | File | Destination | Mode |
 |---|---|---|---|
-| `liquid` | `registry/liquid/assets/ripple.js`, `ripple-tabs.js`, `ripple-tooltip.js`, `ripple-toast.js`, `ripple-agent.js` | `assets/` | `library` (trailer; replaced on upgrade, never merged: 8.1 row 12) |
-| `remix`, `html` | `browser/ripple.js`, `ripple-tabs.js`, `ripple-tooltip.js`, `ripple-toast.js`, `ripple-agent.js` | `<paths.public>/` | `library` |
+| `liquid` | `registry/liquid/assets/ripple.js`, `ripple-tabs.js`, `ripple-tooltip.js`, `ripple-toast.js`, `ripple-shared.js`, `ripple-agent.js` | `assets/` | `library` (trailer; replaced on upgrade, never merged: 8.1 row 12) |
+| `remix`, `html` | `browser/ripple.js`, `ripple-tabs.js`, `ripple-tooltip.js`, `ripple-toast.js`, `ripple-shared.js`, `ripple-agent.js` | `<paths.public>/` | `library` |
 | `react` | none (the app bundler resolves `<pkg>/elements` and `<pkg>/commerce`) | - | - |
 
-`ripple-agent.js` is always copied and never loaded by default; a page opts in by loading it (D-065). `ripple.elements.js` is not scaffolded by the CLI in V1; a no-commerce page links it from the package or a CDN copy by hand.
+`ripple-agent.js` is always copied and never loaded by default; a page opts in by loading it (D-065). `ripple.elements.js` and its five chunks are not scaffolded by the CLI on any host (D-054 item 4); a project without commerce links them from `node_modules/<pkg>/browser/` or copies them by hand.
 
 ---
 
@@ -3891,13 +4506,15 @@ Each item is a test that a script decides. Paths are in the Ripple repository un
 Manifest and schema
 
 1. `src/gen/schema/manifest.schema.json` is byte-identical to the JSON printed in 1.2 after `JSON.parse` / `JSON.stringify(_, null, 2)` normalisation of both.
-2. The three worked entries of 1.7, assembled with `elements.json`, validate with 0 errors; each of the 18 mutations of 1.4 is rejected.
-3. `pnpm gen --check` exits 0 on a clean checkout, and exits 1 after any one of: editing a `fixtures[].html` string in a `component.json`; editing a generated region of a Liquid block; deleting a line of `css/props.css`.
-4. Build checks MB-1 to MB-20 each have a test with one failing manifest.
+2. The three worked entries of 1.7, assembled with `elements.json`, validate with 0 errors; each of the 23 mutations of 1.4 is rejected. `LEDGER_COMPONENTS` has 84 keys with the counts printed in 1.6.
+3. `pnpm gen --check` exits 0 on a clean checkout, and exits 1 after any one of: editing a fixture file `components/button/fixtures/default.html`; editing the `{% schema %}` region of a Liquid block; editing the header region of `components/dialog/react/dialog.tsx`; deleting a line of `css/props.css`; editing `blueprints/product/html/product.html` (G10).
+4. Build checks MB-1 to MB-24 each have a test in `src/gen/manifest.test.ts` with one failing manifest; the test asserts the message starts with `manifest: <component id>: MB-<n>:`.
 
 Template language
 
-5. For Button and Dialog, `renderHtml` output for every fixture equals the `html` strings printed in 1.7 (byte comparison).
+5. For Button (14 fixtures) and Dialog (5 fixtures), `renderHtml` output for every fixture equals the strings printed in 1.7 (byte comparison).
+5a. The generated `components/dialog/remix/dialog.tsx` contains `data-rmx-key={id}` on the `rp-dialog` element and `data-rmx-preserve-attrs="open"` on the `dialog` element; the generated React and Liquid files and every fixture file contain no attribute starting with `data-rmx-` (2.4).
+5b. The generated schema of `blocks/button.liquid` has `"name": "t:ripple.button.name"`, at most three settings, every setting `"type": "select"`, labels `t:ripple.props.<liquid name>` and option labels `t:ripple.props.<value key>`; `registry/liquid/locales/core.json` contains every `ripple.props.*` key any block schema refers to (3.3, 4.1 rule 2).
 6. A template containing a key outside the node grammar of 2.3 (for example `"each"`) fails schema validation.
 
 Registry, trailers, CLI
@@ -3906,7 +4523,12 @@ Registry, trailers, CLI
 8. `planFile` returns the row numbers of 8.1 for the 13 scripted situations of `src/cli/plan.test.ts` (one per row; rows 12 and 13 through the `upgrade` command).
 9. `merge3` agrees with `git merge-file -p --diff3` on 2000 seeded random cases (0 disagreements).
 10. `unifiedDiff` output applies with `patch` on 500 seeded random cases.
-11. `detectHost` returns the expected result for the 12 layouts of `src/cli/detect-host.test.ts` (empty directory; `--host` flag; invalid flag value; `ripple.json`; theme; theme plus `package.json`; theme with `sections/`; theme with a JSON template; `remix` 3; `remix` 2, which gives `html`; `react` in `devDependencies`; `package.json` with no dependencies).
+11. `detectHost` returns the expected result for the 12 layouts of `src/cli/detect-host.test.ts` (empty directory; `--host` flag; invalid flag value; `ripple.json`; theme; theme plus `package.json`; theme with `sections/`; theme with a JSON template; `remix` 3; `remix` 2, which gives `html`; `react` in `devDependencies`; `package.json` with no dependencies). `validateTheme` returns `null` for a directory with no `templates/` directory and a string for one with `templates/customers/x.json`.
+11a. `installTransform` (4.6) passes the five cases of `src/cli/plan.test.ts`: a Remix blueprint file (`.tsx` and `.data.ts` extensions appended, `__PKG__` replaced); a React file two directories deep (no extension); a components directory below the pages directory (path starts with `./`); a Liquid file with prefix `rp-` (only names in `liquidBlocks` are prefixed; `render` is untouched); a Liquid file with an empty prefix (unchanged).
+11b. In an empty directory, `ripple init --host liquid` exits 0, plans six JavaScript assets and the four `core` snippets, and reports `core/patch:head` and `core/patch:import-map` as `patch-skipped`; after `ripple add --blueprint layout --host liquid` the theme's `layout/theme.liquid` exists and `ripple status --json --host liquid` reports both patches `present` (`14-liquid-theme.md` section 4.1).
+11c. `core/patch:settings` on a `config/settings_schema.json` that already holds a `color_palette` setting with id `color_palette` writes a Ripple group with no `rp_palette` entry and prints the note of 7.6.3 rule 3; on `[]` it writes the group with `rp_palette`.
+11d. `ripple docs`, `ripple docs button`, `ripple docs RP101`, `ripple docs guide <first topic>` each exit 0 and print the file byte for byte; `ripple docs --rule RP101`, `ripple docs guide`, `ripple docs guide nope`, `ripple docs RP999` and `ripple docs buton` each exit 2 with the messages of 7.11.
+11e. `ripple init` on `remix` writes exactly six `.js` files under `paths.public` and a `ripple.json` whose `paths.pages` is `app/pages`; on `react` it writes no `.js` file and `paths.pages` is `src/pages`.
 12. RB-8 and RB-9 (10.2) pass.
 13. `ripple add button` in a project where `blocks/button.liquid` exists without a trailer exits 1, prints `conflict-unmanaged`, and leaves every file byte-identical (compare a recursive hash of the project before and after).
 14. Upgrade scenarios, each in a temporary project, asserting plan lines and exit code: unmodified + upstream changed gives `update`, 0; modified + upstream unchanged gives `keep-local`, 0; modified + disjoint upstream change gives `merged`, 0; modified + overlapping change gives `merge-conflict`, 1, file unchanged; the same with `--write-conflicts` writes markers and `ripple check` then reports RP511; `--ours` gives `keep-local`, 0; `--theirs` gives `overwrite`, 0; base unavailable (`RIPPLE_OFFLINE=1`, empty cache) gives `needs-base`, 1.
@@ -3914,15 +4536,16 @@ Registry, trailers, CLI
 16. `ripple status --json` output validates against the TypeScript type `ComputedLock` (5.3) through a JSON Schema generated from it in the test.
 17. Every CLI command run with standard input closed (`< /dev/null`) terminates within 30 s (no prompt).
 18. `ripple init` run twice produces identical trees (recursive hash).
-19. Locale patch: after `ripple add dialog` on a theme with `locales/en.default.json` and `locales/fr.json`, both contain the same key paths under `ripple.dialog`; a value edited in `fr.json` survives a second `add`.
+19. Locale patch: after `ripple add dialog` on a theme with `locales/en.default.json` and `locales/fr.json`, both contain the same key paths under `ripple.dialog`; a value edited in `fr.json` survives a second `add`. After `ripple add --blueprint product`, both files contain the key paths under `ripple.blueprints.product`.
 
 Checker
 
-20. Every rule id of 9.6 has `src/check/rules/<RULE>.ts`, `src/check/rules/<RULE>.test.ts` and `docs/rules/<RULE>.md`; the set of ids in `rules/index.ts` equals the set of ids in 9.6 (for the layers implemented, 9.7).
+20. Every rule id of 9.6 has `src/check/rules/<RULE>.ts`, `src/check/rules/<RULE>.test.ts` and `docs/rules/<RULE>.md`; the set of ids in `rules/index.ts` equals the set of ids in 9.6 (for the layers implemented, 9.7); once layer B ships the set has exactly 55 ids. No file in the repository contains a rule id matching `/\bRP\d{3}\b/` that is outside that set, other than `RP000` and `RP509` in this document's reserved list.
 21. Every fixture `html` of every component produces 0 diagnostics from layer H.
 22. The text output for the RP101 example of 9.4.1 is reproduced byte for byte by a test.
 23. `ripple check --json` prints exactly one JSON value on standard output, parseable by `JSON.parse`.
-24. `findLiquidCalls` passes the test printed with it (7 calls, kinds and positions as asserted).
+24. `findLiquidCalls` passes `src/check/liquid-calls.test.ts` (7 calls, kinds and positions as asserted). `findLiquidUses` on a source that contains a `{% doc %}` body, a `{% liquid %}` block with a `#` comment line, a quoted string containing `|`, a `{% comment %}` body containing `{% section %}`, a `{% javascript %}` body and a `{% schema %}` body returns the tags `doc liquid assign unless assign echo if render for comment javascript schema` and the filters `split escape escape default url_encode standard_event_data escape`, in that order.
+24a. RP401 item (b) reports `javascript` in a file with trailer id `button/block` and does not report `block` in a file with trailer id `blueprint.product/template`. RP308 reports an `rp-cart` inside the region it refreshes and does not report an `rp-live` inside the region it refreshes. RP309 item (a) reports a document with `<rp-cart>` and no `#rp-commerce`, and is silent when an inline script contains `configureCommerce(`. RP117 item (b) reports `import { CartForm } from "@shopify/hydrogen"` in a file under `paths.components` and is silent for `import { formatMoney } from "@shopify/hydrogen"` and for `import type { Cart } from "@shopify/hydrogen"`.
 
 Policy
 
@@ -3938,16 +4561,17 @@ All in a scratch directory with Node 22.23 (type stripping); none of it is in th
 
 | Item | Result |
 |---|---|
-| `manifest.schema.json` against the assembled three-entry manifest (Python `jsonschema`, Draft 2020-12, fixture schema registered by `$id`) | 0 errors |
-| 18 negative manifests (1.4) | all rejected |
-| `html.ts` reference renderer over the Button and Dialog fixtures | output printed in 1.7 |
+| `manifest.schema.json` (extracted from 1.2) against the manifest assembled from the three entries of 1.7 and `elements.json` of 1.5 (Python `jsonschema` 4.26, Draft 2020-12, fixture schema of `02-html-contract.md` 11.2 registered by `$id`) | 0 errors |
+| 23 negative manifests (1.4) | all rejected |
+| `html.ts` reference renderer (extracted from 2.5) over the 14 Button and 5 Dialog fixtures of 1.7 | output printed in 1.7 |
 | `merge3.ts` against `git merge-file -p --diff3`, 2000 random cases | 1621 clean, 379 conflict, 0 disagreements, 0 differing clean texts |
 | `plan.ts` rows 1 to 11 | each row reached by a scripted case |
 | `trailer.ts` | Liquid, block-comment and HTML syntaxes; CRLF; scoped names; prerelease versions |
-| `detect-host.ts` | 12 layouts |
+| `detect-host.ts` (as printed in 7.3, with `validateTheme`) | 14 assertions: the 12 layouts and the two `validateTheme` cases of acceptance item 11 |
+| `installTransform` (as printed in 4.6) | the 5 cases of acceptance item 11a |
 | `diff.ts` | 500 random cases applied with `patch`: 500 ok |
 | `composite.ts` | round trip, CRLF, insertion order, removal |
-| `liquid-calls.ts` | the test described in 9.5.2 |
+| `liquid-calls.ts` | `findLiquidCalls`: the test described in 9.5.2 (run for the first version of this document; the function is unchanged). `findLiquidUses`: the source and the two lists of acceptance item 24, plus two position checks |
 | `npm pack <name>@<version> --pack-destination <dir> --silent` then `tar -xzf` (npm 10.9, public package) | tarball `<name>-<version>.tgz`, top-level directory `package/` |
 | npm registry lookup of the placeholder name `ripple-kit` | not found (free at the time of writing) |
 
@@ -3972,8 +4596,10 @@ All in a scratch directory with Node 22.23 (type stripping); none of it is in th
 4. The Canvas / Sidekick compiler accepting the `theme` marker region in `config/styles.css` (7.6.3; SPIKE-03).
 5. The CLI on Node 20.18 (the package's engine floor, `01-architecture.md` 9); everything here ran on Node 22.23. `parseArgs`, global `fetch`, `mkdtempSync` and `renameSync` exist in Node 20 per the Node documentation; not run.
 6. Layer B (9.5.5) was not executed for this document; it restates the research prototype's design (`ripple/docs/research/agent-kit-and-distribution.md` 7.3) and `13-testing.md` owns its page scripts.
-7. The complete rule set beyond the six rules of the research prototype (RP101, RP102, RP103, RP110, RP113, RP201) is specified, not implemented.
+7. The complete rule set beyond the six rules of the research prototype (RP101, RP102, RP103, RP110, RP113, RP201) is specified, not implemented. This includes the reconciled forms of RP117, RP308, RP309, RP320, RP401 and RP607.
 8. Atomicity of `renameSync` over an existing file on Windows when the target is open in an editor; on failure the CLI MUST report `error: could not write <path> (<code>).`, leave the `.ripple-tmp` file for the next run to delete, and exit 2.
+9. Step G10 (HTML blueprint files) and the Remix host extras of 2.4 are specified, not executed: they need the blueprint sources of `12-components-chrome-and-blueprints.md` and the emitters of `06-bindings.md`.
+10. `as` as a Liquid block argument name (D-038 amendment (d); SPIKE-02). Fallback: item 4 of Fallback (SPIKE-02).
 
 ### Fallback (SPIKE-03)
 
@@ -3998,11 +4624,13 @@ If SPIKE-02 shows a `{% render %}` inside the import map script is not evaluated
    "ripple/tabs": "{{ 'ripple-tabs.js' | asset_url }}",
    "ripple/tooltip": "{{ 'ripple-tooltip.js' | asset_url }}",
    "ripple/toast": "{{ 'ripple-toast.js' | asset_url }}",
+   "ripple/shared": "{{ 'ripple-shared.js' | asset_url }}",
    "ripple/agent": "{{ 'ripple-agent.js' | asset_url }}",
    ```
 
 2. Presence test: a line matching `/"ripple"\s*:/` in the file. `snippets/rp-import-map-entries.liquid` is no longer a core file.
 3. If the platform wraps block output in an element, nothing in this document changes: the canonicaliser handles it (`02-html-contract.md` 15) and layer H rules use ancestor relations, which a wrapper does not break. RP110 MUST then skip the wrapper element, identified by the attribute the spike records.
+4. If SPIKE-02 shows that a block or snippet cannot receive an argument named `as`: every prop named `as` sets `liquid.name: "tag"` in its manifest entry (the TSX name stays `as`), MB-2 accepts that one pair, and `pnpm gen` regenerates the Liquid files. No other document section changes.
 
 ### Fallback (SPIKE-05)
 
@@ -4012,31 +4640,4 @@ If bindings must print `data-rp-open` / `data-rp-close` on buttons (`02-html-con
 
 ## Ledger issues
 
-Decisions this document had to make because the ledger was silent or inconsistent. Each is applied above.
-
-1. **"Lockfile format" versus D-056.** The task scope names a lockfile; D-056 forbids one on disk. Applied: the trailer is the lock record and `ripple status --json` prints the computed lock (5.3) with `lockVersion: 1`.
-2. **Top-level manifest key `elements`.** Section 4.8 has no place for per-tag data that `03-styling-and-tokens.md` 4.3 needs (display value) and the loader needs (chunk). Applied: `elements` (`display`, `chunk`, `commerce`), source `src/gen/elements.json` (1.5).
-3. **Component key `upgradeAllow`** (requested by `02-html-contract.md` Ledger issues): added to the schema.
-4. **File records need a stable key.** D-056's trailer id is `<component>/<file key>` but 4.8's `files` has no key. Applied: `files.<host>[].key`, and owners `core` and `blueprint.<id>` for non-component files.
-5. **Parts live inside their component entry** (`parts[].props`, `content`, `template`); `partOf` is used only for full components that are valid only inside another (CartLine, FilterGroup, PriceRange, AddToCartButton).
-6. **Sub-keys the ledger names without a shape**: `state[]` (`name`, `type`, `on`, `defaultProp`, `property`, `reflects`), `formDialect` (`action`, `fields`, `submit`), `agent.confirm[]` (`select`, `sentence`), `rules[]` (six kinds, `count`), `a11y.name` (`required`, `sources`). Shapes are in the schema.
-7. **Template language additions to D-003**: a `prefix` on prop values; `{ "t": key }` as a prop default; `embed` takes `text`, not markup children; `not` wraps only `set`, `true`, `eq`; no `any` (use two nodes).
-8. **D-065 says `static`/`native` components have no bridge surface, but D-008/D-019 build `rp-dialog` with `definePrimitive`.** Applied: `agent.surface: "bridge"` is allowed for kind `native`; the manifest states it per component.
-9. **Locations not in the ledger tree (section 5)**: `src/gen/schema/*.schema.json`, `src/gen/elements.json`, `src/gen/liquid-core/`, `src/cli/diff.ts`, `composite.ts`, `config.ts`, `base.ts`, `src/check/liquid-calls.ts`, `src/check/flows.ts`. `fixture.schema.json` is also shipped at the package root (`01-architecture.md` 6.1 does not list it; `manifest.schema.json` references it by `$id`). `registry/liquid/settings.json` likewise.
-10. **`ripple.json` key `paths.public`** (where `ripple.js` is copied on `remix` and `html`): D-056 lists only `paths.components` and `paths.styles`.
-11. **CLI flags beyond D-057**: global `--host`, `--cwd`, `--help`, `--version`, `--yes` (no effect); `init --prefix --components --styles --public --css --dry-run`; `remove --force --dry-run`; `skills sync --force`, `skills check --mode`; `docs --rule`; `check [paths...]`. The CLI never prompts.
-12. **New checker rule ids** (D-059 lists ranges): RP118 (mandated), RP308 (regions in rendered HTML), RP309 (`#rp-commerce`), RP507 (two runtimes on one page; requested by `01-architecture.md` Ledger issue 16), RP508 (stale derived CSS). RP509 reserved. The gamut warning requested by `03-styling-and-tokens.md` is folded into RP609. RP000 is reserved for internal rule failures.
-13. **`add`/`upgrade` regenerate derived CSS** from the project's `tokens.css` (confirms `03-styling-and-tokens.md` 3.7); the instruction after editing `tokens.css` is `ripple upgrade`.
-14. **Liquid `assets/ripple.css`**: D-055 says "tokens, base, props, then one marker region per component". Applied: tokens, base and props are ALSO regions (`core/tokens`, `core/base`, `core/props`) so that they have trailers and can be upgraded and merged.
-15. **`ripple-agent.js` is always copied; `ripple.elements.js` is never scaffolded.**
-16. **Block prefix install transform** (D-038) is applied before hashing, so the hash in a trailer is of the transformed body; the base fetch re-applies the project's current prefix.
-17. **Library JavaScript assets are never merged** (overwrite with a warning): D-057's table does not distinguish them.
-18. **Locale patches write English text into every locale file**, because Theme Check `MatchingTranslations` is an error otherwise. Existing values are never changed; `remove` leaves keys in place.
-19. **Hand-written binding files contain generated regions** (doc, guards, schema in Liquid; props type in TSX); schema labels are generated by humanising prop names.
-20. **`ripple diff` exits 1 when files differ** and does not attribute hunks to a side.
-21. **The research report's Liquid "compiled CSS mode"** is dropped (D-055 has one mode).
-22. **Merge base retrieval** is not in the ledger: running registry, project `node_modules`, cache directory (`RIPPLE_CACHE_DIR`), then `npm pack`; `RIPPLE_OFFLINE=1` disables the last. Consequence: published versions are never unpublished (11.4).
-23. **Rule rewrites required by D-059**: RP204 (overlays are `rp-dialog`, `dialog`, `[popover]`, `ui-tooltip`), RP303 (tab panels, empty error/status parts, `dialog[open]`, `data-rp-js="fallback"`), RP320 (driven by `agent.confirm`; wallet buttons excluded). RP403's region check moved partly to RP308 so that it runs on every host.
-24. **No suppression mechanism** in `check` V1 (no inline comment, no ignore file).
-25. **Component key `deprecated`** (11.3) and the meaning of `status: beta` (not protected by semver) are not in the ledger.
-26. **`RP502` is defined by file state** (`outdated`), not by trailer version text, because row 3 of 8.1 leaves an old version string on a file whose content did not change.
+None open. See `00-decisions.md` section 13.2.
