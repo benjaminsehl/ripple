@@ -1,0 +1,520 @@
+<title>Ripple Layer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Cormorant+Garamond:wght@500;600&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=IBM+Plex+Sans:wght@400;500;600&family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Jost:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+
+<script>
+  // Cascade order for the whole page: Tailwind base, UI SDK, Ripple, Tailwind utilities.
+  // The first stylesheet that names a layer fixes its place. UI SDK's runtime prepends
+  // its own styles to <head>, which would put ui-sdk below Tailwind's preflight, so this
+  // keeps the order statement first. (Open question for UI SDK: append instead.)
+  (() => {
+    const s = document.createElement("style");
+    s.textContent = "@layer theme, base, ui-sdk, ripple, components, utilities;";
+    const first = () => document.head.firstChild !== s && document.head.prepend(s);
+    first();
+    new MutationObserver(first).observe(document.head, { childList: true });
+  })();
+</script>
+<style id="css-uisdk">{{UISDK_CSS}}</style>
+<style id="css-ripple">{{RIPPLE_CSS}}</style>
+<style id="css-parts">{{RIPPLE_PARTS_CSS}}</style>
+<style id="css-themes">{{THEMES_CSS}}</style>
+<style type="text/tailwindcss">{{TAILWIND_THEME}}</style>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.1.17/dist/index.global.js"></script>
+
+<style>
+/* Playground chrome. Layout: one column; controls, then the store in a frame, then the explainer. */
+:root {
+  --pg-bg: #f3f4f6;
+  --pg-panel: #ffffff;
+  --pg-ink: #15171c;
+  --pg-sub: #5b606b;
+  --pg-line: #e1e3e8;
+  --pg-accent: #3b4ee0;
+  --pg-accent-soft: #e8ebff;
+  --pg-code: #f6f7f9;
+  --pg-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --pg-display: "Inter Tight", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --pg-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pg-bg: #0f1115; --pg-panel: #171a20; --pg-ink: #e8eaf0; --pg-sub: #9aa0ad;
+    --pg-line: #2a2e37; --pg-accent: #8d99ff; --pg-accent-soft: #232a52; --pg-code: #12141a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --pg-bg: #0f1115; --pg-panel: #171a20; --pg-ink: #e8eaf0; --pg-sub: #9aa0ad;
+  --pg-line: #2a2e37; --pg-accent: #8d99ff; --pg-accent-soft: #232a52; --pg-code: #12141a;
+  color-scheme: dark;
+}
+body { background: var(--pg-bg); color: var(--pg-ink); font-family: var(--pg-sans); }
+
+.pg-wrap {
+  max-width: 1240px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 64px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+.pg-head { display: flex; flex-direction: column; gap: 8px; max-width: 72ch; }
+.pg-eyebrow { font: 600 11px/1 var(--pg-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--pg-accent); margin: 0; }
+.pg-title { font: 650 clamp(26px, 4vw, 38px)/1.08 var(--pg-display); letter-spacing: -.025em; margin: 0; text-wrap: balance; }
+.pg-lede { font-size: 15px; line-height: 1.6; color: var(--pg-sub); margin: 0; max-width: 68ch; }
+.pg-lede code, .pg-prose code { font-family: var(--pg-mono); font-size: .88em; background: var(--pg-code); border: 1px solid var(--pg-line); padding: 0 4px; border-radius: 4px; }
+
+.pg-bar {
+  display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: end;
+  padding: 14px 16px; background: color-mix(in oklab, var(--pg-panel) 92%, transparent);
+  backdrop-filter: blur(10px); border: 1px solid var(--pg-line); border-radius: 12px;
+}
+@media (min-width: 900px) { .pg-bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; } }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--pg-bg); }
+.pg-group { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pg-label { font: 600 11px/1 var(--pg-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--pg-sub); }
+.pg-seg { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.pg-seg button, .pg-btn {
+  font: 500 13px/1 var(--pg-sans); color: var(--pg-ink); background: var(--pg-panel);
+  border: 1px solid var(--pg-line); border-radius: 7px; height: 32px; padding: 0 11px; cursor: pointer;
+}
+.pg-seg button:hover, .pg-btn:hover { border-color: var(--pg-sub); }
+.pg-seg button[aria-pressed="true"] { background: var(--pg-accent-soft); border-color: var(--pg-accent); color: var(--pg-accent); font-weight: 600; }
+.pg-seg button:focus-visible, .pg-btn:focus-visible, .pg-knob input:focus-visible, .pg-tabs button:focus-visible { outline: 2px solid var(--pg-accent); outline-offset: 2px; }
+.pg-knobs { display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: center; }
+.pg-knob { display: flex; align-items: center; gap: 8px; font: 500 12px/1 var(--pg-sans); color: var(--pg-sub); }
+.pg-knob input[type="range"] { width: 92px; accent-color: var(--pg-accent); }
+.pg-knob input[type="color"] { width: 30px; height: 26px; padding: 0; border: 1px solid var(--pg-line); border-radius: 6px; background: none; }
+.pg-knob output { font: 500 11px/1 var(--pg-mono); color: var(--pg-ink); min-width: 32px; font-variant-numeric: tabular-nums; }
+.pg-knob input:disabled { opacity: .35; }
+.pg-note { font-size: 12.5px; color: var(--pg-sub); margin: 0; flex-basis: 100%; }
+
+.pg-frame { border: 1px solid var(--pg-line); border-radius: 14px; overflow: hidden; background: var(--pg-panel); box-shadow: 0 1px 2px rgb(0 0 0 / .04), 0 18px 40px -24px rgb(0 0 0 / .25); }
+.pg-chrome { display: flex; align-items: center; gap: 12px; height: 38px; padding: 0 14px; border-bottom: 1px solid var(--pg-line); background: var(--pg-panel); }
+.pg-dots { display: flex; gap: 6px; } .pg-dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--pg-line); }
+.pg-url { flex: 1; min-width: 0; font: 400 12px/1 var(--pg-mono); color: var(--pg-sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+#store[data-inspect] [data-slot] { outline: 1px dashed color-mix(in oklab, #3b4ee0 70%, transparent) !important; outline-offset: 1px; }
+#store[data-inspect] [data-escape] { outline: 2px dashed #e0731f !important; outline-offset: 3px; }
+.pg-tip { position: fixed; z-index: 100; pointer-events: none; display: flex; flex-direction: column; gap: 3px; padding: 7px 9px; border-radius: 7px; background: #15171c; color: #fff; font: 500 11.5px/1.3 var(--pg-mono); box-shadow: 0 8px 20px rgb(0 0 0 / .25); max-width: 280px; }
+.pg-tip span { color: #b9c1ff; } .pg-tip i { font-style: normal; color: #9aa0ad; font-family: var(--pg-sans); }
+
+.pg-explain { background: var(--pg-panel); border: 1px solid var(--pg-line); border-radius: 12px; overflow: hidden; }
+.pg-tabs { display: flex; gap: 2px; padding: 6px; border-bottom: 1px solid var(--pg-line); overflow-x: auto; }
+.pg-tabs button { font: 500 13px/1 var(--pg-sans); color: var(--pg-sub); background: none; border: 0; border-radius: 7px; height: 34px; padding: 0 12px; cursor: pointer; white-space: nowrap; }
+.pg-tabs button[aria-selected="true"] { background: var(--pg-accent-soft); color: var(--pg-accent); font-weight: 600; }
+.pg-panel { padding: 22px; }
+.pg-prose { font-size: 14.5px; line-height: 1.65; max-width: 76ch; display: flex; flex-direction: column; gap: 12px; }
+.pg-prose p, .pg-prose ul, .pg-prose ol { margin: 0; }
+.pg-prose h3 { font: 650 17px/1.3 var(--pg-display); margin: 6px 0 0; letter-spacing: -.01em; }
+.pg-prose li + li { margin-top: 4px; }
+.pg-code { margin: 0; padding: 16px; background: var(--pg-code); border: 1px solid var(--pg-line); border-radius: 9px; overflow-x: auto; font: 400 12.5px/1.6 var(--pg-mono); color: var(--pg-ink); tab-size: 2; }
+.pg-flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.pg-step { border: 1px solid var(--pg-line); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 5px; background: var(--pg-bg); }
+.pg-step b { font: 650 14px/1.2 var(--pg-display); } .pg-step span { font-size: 12.5px; line-height: 1.5; color: var(--pg-sub); }
+.pg-step em { font: 500 11px/1 var(--pg-mono); font-style: normal; color: var(--pg-accent); }
+.pg-table-wrap { overflow-x: auto; border: 1px solid var(--pg-line); border-radius: 9px; }
+.pg-table { border-collapse: collapse; width: 100%; font-size: 13.5px; min-width: 640px; }
+.pg-table th, .pg-table td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--pg-line); line-height: 1.5; }
+.pg-table th { font: 600 11px/1.2 var(--pg-mono); letter-spacing: .05em; text-transform: uppercase; color: var(--pg-sub); background: var(--pg-bg); }
+.pg-table tr:last-child td { border-bottom: 0; }
+.pg-table code { font-family: var(--pg-mono); font-size: 12px; }
+.pg-pick { display: inline-block; font: 600 10.5px/1 var(--pg-mono); text-transform: uppercase; letter-spacing: .05em; color: var(--pg-accent); background: var(--pg-accent-soft); padding: 4px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+</style>
+
+<div class="pg-wrap">
+  <header class="pg-head">
+    <p class="pg-eyebrow">Prototype · visual layer for UI SDK</p>
+    <h1 class="pg-title">Ripple Layer: one stylesheet that gives UI SDK a storefront look</h1>
+    <p class="pg-lede">Everything in the store below is real UI SDK markup (<code>ui-radio-group</code>, <code>ui-number-input</code>, <code>ui-drawer</code>, <code>ui-toast</code> and friends). Ripple adds twelve knobs, maps them onto UI SDK's own <code>--ui-*</code> variables, and tunes each part through the <code>data-slot</code> and state attributes UI SDK already renders. Switch themes, turn the layer off, or drag a knob.</p>
+  </header>
+
+  <div class="pg-bar" role="toolbar" aria-label="Playground">
+    <div class="pg-group">
+      <span class="pg-label" id="lbl-theme">Theme</span>
+      <div class="pg-seg" data-pick="theme" aria-labelledby="lbl-theme">
+        <button type="button" value="ripple" aria-pressed="true">Ripple</button>
+        <button type="button" value="atelier" aria-pressed="false">Atelier</button>
+        <button type="button" value="trail" aria-pressed="false">Trail</button>
+        <button type="button" value="sorbet" aria-pressed="false">Sorbet</button>
+        <button type="button" value="midnight" aria-pressed="false">Midnight</button>
+      </div>
+    </div>
+    <div class="pg-group">
+      <span class="pg-label" id="lbl-layer">Layer</span>
+      <div class="pg-seg" data-pick="layer" aria-labelledby="lbl-layer">
+        <button type="button" value="uisdk" aria-pressed="false">UI SDK only</button>
+        <button type="button" value="tokens" aria-pressed="false">+ Ripple tokens</button>
+        <button type="button" value="full" aria-pressed="true">+ Ripple parts</button>
+      </div>
+    </div>
+    <div class="pg-group">
+      <span class="pg-label">Knobs</span>
+      <div class="pg-knobs" id="knobs">
+        <label class="pg-knob">Radius <input id="k-radius" type="range" min="0" max="24" step="1"><output data-out="k-radius"></output></label>
+        <label class="pg-knob">Density <input id="k-density" type="range" min="0.8" max="1.3" step="0.05"><output data-out="k-density"></output></label>
+        <label class="pg-knob">Type scale <input id="k-scale" type="range" min="1.125" max="1.414" step="0.01"><output data-out="k-scale"></output></label>
+        <label class="pg-knob">Elevation <input id="k-elevation" type="range" min="0" max="1" step="0.05"><output data-out="k-elevation"></output></label>
+        <label class="pg-knob">Brand <input id="k-brand" type="color"></label>
+        <label class="pg-knob">Highlight <input id="k-highlight" type="color"></label>
+        <label class="pg-knob"><input id="k-inspect" type="checkbox"> Show parts</label>
+        <button type="button" class="pg-btn" id="k-reset">Reset knobs</button>
+      </div>
+    </div>
+    <p class="pg-note" id="layer-note">Knobs, primitives and Ripple's storefront refinements of UI SDK parts.</p>
+  </div>
+
+  <div class="pg-frame">
+    <div class="pg-chrome" aria-hidden="true"><span class="pg-dots"><i></i><i></i><i></i></span><span class="pg-url">harborandpine.shop/products/market-tote</span></div>
+
+    <!-- ===================== The store: UI SDK + Ripple + Tailwind ===================== -->
+    <div id="store" data-theme="ripple">
+      <p data-surface="brand" class="px-4 py-2.5 text-center text-xs font-semibold tracking-wide">Free shipping over $75 · Free returns for 30 days</p>
+
+      <header class="flex items-center justify-between gap-4 border-b border-line px-6 py-4">
+        <a href="#store" data-slot="heading" data-size="xs" class="no-underline">Harbor &amp; Pine</a>
+        <nav class="hidden items-center gap-6 text-sm md:flex" aria-label="Main">
+          <a href="#store" class="no-underline">Bags</a>
+          <a href="#store" class="no-underline">Stationery</a>
+          <a href="#store" class="no-underline">Kitchen</a>
+          <a href="#store" class="no-underline">Journal</a>
+        </nav>
+        <div class="relative">
+        <ui-drawer side="right">
+          <ui-drawer-trigger>
+            <button data-variant="ghost" aria-label="Open bag">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+            </button>
+          </ui-drawer-trigger>
+          <ui-drawer-backdrop hidden></ui-drawer-backdrop>
+          <ui-drawer-content hidden>
+            <div class="flex items-center justify-between">
+              <ui-drawer-title>Your bag</ui-drawer-title>
+              <ui-drawer-close><button data-variant="ghost" data-size="sm" aria-label="Close bag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></ui-drawer-close>
+            </div>
+            <div class="flex flex-col gap-2" data-escape="free-shipping meter">
+              <p data-slot="text" data-size="xs" data-tone="subtle" id="ship-note">Add $57.00 for free shipping</p>
+              <div class="h-1.5 overflow-hidden rounded-full bg-surface-strong"><div id="ship-meter" class="h-full rounded-full bg-brand transition-[width] duration-300" style="width:24%"></div></div>
+            </div>
+            <ul id="cart-lines" class="-my-4 min-h-0 flex-1 divide-y divide-line overflow-y-auto"></ul>
+            <p id="cart-empty" data-slot="text" data-tone="subtle" hidden>Your bag is empty.</p>
+            <div class="flex flex-col gap-4 border-t border-line pt-5">
+              <label><ui-switch id="gift-wrap"><ui-switch-thumb></ui-switch-thumb></ui-switch> Gift wrap with a handwritten note (+$5)</label>
+              <div class="flex items-baseline justify-between">
+                <p data-slot="text" class="font-semibold">Subtotal</p>
+                <p data-slot="price" id="cart-subtotal">$18.00</p>
+              </div>
+              <ui-button><button data-variant="solid" data-size="lg" class="w-full">Check out</button></ui-button>
+              <p data-slot="text" data-size="xs" data-tone="subtle" class="text-center">Taxes and shipping are calculated at checkout.</p>
+            </div>
+          </ui-drawer-content>
+        </ui-drawer>
+        <span data-slot="badge" data-tone="brand" class="pointer-events-none absolute -right-1 -top-1 h-5 min-w-5 justify-center rounded-full px-1.5 tabular-nums" id="cart-count">1</span>
+        </div>
+      </header>
+
+      <main class="mx-auto grid max-w-6xl gap-10 px-6 py-10 md:grid-cols-[1.15fr_1fr] md:gap-14">
+        <!-- Gallery -->
+        <section class="flex min-w-0 flex-col gap-3" aria-label="Product images">
+          <div data-slot="media" data-ratio="portrait" id="hero-art"></div>
+          <div class="grid grid-cols-3 gap-3" data-escape="thumbnail strip">
+            <button type="button" data-view="front" aria-label="Front view" class="aspect-[4/5] overflow-hidden rounded-md bg-surface ring-ink/0 aria-pressed:ring-2 aria-pressed:ring-ink"></button>
+            <button type="button" data-view="detail" aria-label="Pocket detail" class="aspect-[4/5] overflow-hidden rounded-md bg-surface aria-pressed:ring-2 aria-pressed:ring-ink"></button>
+            <button type="button" data-view="hung" aria-label="Hanging on a peg" class="aspect-[4/5] overflow-hidden rounded-md bg-surface aria-pressed:ring-2 aria-pressed:ring-ink"></button>
+          </div>
+        </section>
+
+        <!-- Buy box -->
+        <section class="flex min-w-0 flex-col gap-6" aria-label="Product details">
+          <div class="flex flex-col gap-3">
+            <div class="flex items-center gap-2">
+              <p data-slot="eyebrow">Bags · Waxed canvas</p>
+              <span data-slot="badge" data-tone="highlight">Save 20%</span>
+            </div>
+            <h1 data-slot="heading" data-size="lg">Market Tote</h1>
+            <div class="flex items-center gap-2">
+              <ui-rating value="4.6" read-only data-size="sm"></ui-rating>
+              <p data-slot="text" data-size="sm" data-tone="subtle">4.6 · 212 reviews</p>
+            </div>
+            <p data-slot="price" data-size="lg" id="pdp-price">$48.00 <s>$60.00</s></p>
+            <p data-slot="text" data-tone="subtle">An 18 oz waxed canvas tote that stands up on its own, with an inside zip pocket and a gusset deep enough for a week of groceries.</p>
+          </div>
+
+          <ui-field>
+            <ui-field-label>Colour: <span id="color-name" class="font-normal text-subtle">Olive</span></ui-field-label>
+            <ui-radio-group id="color-group" data-variant="swatches" default-value="olive" name="color">
+              <label style="--swatch:#e3d6bb"><ui-radio value="natural"></ui-radio>Natural</label>
+              <label style="--swatch:#5d6a3b"><ui-radio value="olive"></ui-radio>Olive</label>
+              <label style="--swatch:#2c3a55"><ui-radio value="harbor"></ui-radio>Harbor</label>
+              <label style="--swatch:#b35b3b"><ui-radio value="clay" disabled></ui-radio>Clay, sold out</label>
+            </ui-radio-group>
+          </ui-field>
+
+          <ui-field>
+            <div class="flex items-baseline justify-between">
+              <ui-field-label>Size: <span id="size-name" class="font-normal text-subtle">Standard</span></ui-field-label>
+              <a href="#dimensions" data-slot="text" data-size="xs" data-tone="subtle" class="underline">Dimensions</a>
+            </div>
+            <ui-radio-group id="size-group" data-variant="chips" default-value="standard" name="size">
+              <label><ui-radio value="mini"></ui-radio>Mini</label>
+              <label><ui-radio value="standard"></ui-radio>Standard</label>
+              <label><ui-radio value="large"></ui-radio>Large</label>
+              <label><ui-radio value="weekender" disabled></ui-radio>Weekender</label>
+            </ui-radio-group>
+          </ui-field>
+
+          <ui-field>
+            <ui-field-label>Straps</ui-field-label>
+            <ui-radio-group id="strap-group" data-variant="cards" default-value="canvas" name="strap">
+              <label>
+                <ui-radio value="canvas"><ui-radio-indicator></ui-radio-indicator></ui-radio>
+                <span class="flex flex-1 flex-col gap-0.5"><span class="font-semibold">Canvas straps</span><span data-slot="text" data-size="xs" data-tone="subtle">Soft, washable, gets better with age.</span></span>
+                <span data-slot="price" data-size="sm">$48</span>
+              </label>
+              <label>
+                <ui-radio value="leather"><ui-radio-indicator></ui-radio-indicator></ui-radio>
+                <span class="flex flex-1 flex-col gap-0.5"><span class="font-semibold">Leather straps</span><span data-slot="text" data-size="xs" data-tone="subtle">Vegetable-tanned, riveted, hand-finished.</span></span>
+                <span data-slot="price" data-size="sm">$60</span>
+              </label>
+            </ui-radio-group>
+          </ui-field>
+
+          <div class="flex items-stretch gap-3">
+            <ui-number-input id="qty" default-value="1" min="1" max="10">
+              <ui-number-input-group>
+                <ui-number-input-decrement><button aria-label="Decrease quantity"></button></ui-number-input-decrement>
+                <ui-number-input-control><input aria-label="Quantity" /></ui-number-input-control>
+                <ui-number-input-increment><button aria-label="Increase quantity"></button></ui-number-input-increment>
+              </ui-number-input-group>
+            </ui-number-input>
+            <ui-button id="add-to-bag" pending-announcement="Adding to bag">
+              <button data-variant="solid" data-size="lg" class="min-w-0 flex-1">
+                <span data-show="idle" id="add-label">Add to bag · $48.00</span>
+                <span data-show="pending">Adding…</span>
+              </button>
+            </ui-button>
+            <ui-toggle>
+              <button data-size="lg" aria-label="Save to wishlist">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"/></svg>
+              </button>
+            </ui-toggle>
+          </div>
+
+          <ul class="grid gap-2 text-sm text-subtle" data-escape="perks list">
+            <li class="flex items-center gap-2"><span class="size-1.5 rounded-full bg-highlight"></span>Ships in 1 to 2 business days</li>
+            <li class="flex items-center gap-2"><span class="size-1.5 rounded-full bg-highlight"></span>Lifetime repairs on seams and straps</li>
+          </ul>
+
+          <ui-accordion>
+            <ui-accordion-item value="details">
+              <ui-accordion-header><h3><ui-accordion-trigger><button>Details</button></ui-accordion-trigger></h3></ui-accordion-header>
+              <ui-accordion-panel hidden>Waxed cotton canvas from a mill in Lancashire, brass rivets at every stress point, and an unlined interior so it dries fast. Wipe clean; re-wax once a year.</ui-accordion-panel>
+            </ui-accordion-item>
+            <ui-accordion-item value="dimensions" id="dimensions">
+              <ui-accordion-header><h3><ui-accordion-trigger><button>Dimensions</button></ui-accordion-trigger></h3></ui-accordion-header>
+              <ui-accordion-panel hidden>
+                <div class="overflow-x-auto" data-escape="size table">
+                  <table class="w-full border-collapse text-left text-sm tabular-nums">
+                    <thead><tr class="border-b border-line text-xs uppercase tracking-wider text-faint"><th class="py-2 pr-4 font-semibold">Size</th><th class="py-2 pr-4 font-semibold">W × H × D</th><th class="py-2 pr-4 font-semibold">Volume</th></tr></thead>
+                    <tbody class="text-ink">
+                      <tr class="border-b border-line"><td class="py-2 pr-4">Mini</td><td class="py-2 pr-4">30 × 28 × 10 cm</td><td class="py-2 pr-4">8 L</td></tr>
+                      <tr class="border-b border-line bg-brand-soft"><td class="py-2 pr-4 font-semibold">Standard</td><td class="py-2 pr-4">40 × 36 × 16 cm</td><td class="py-2 pr-4">20 L</td></tr>
+                      <tr class="border-b border-line"><td class="py-2 pr-4">Large</td><td class="py-2 pr-4">48 × 40 × 18 cm</td><td class="py-2 pr-4">30 L</td></tr>
+                      <tr><td class="py-2 pr-4">Weekender</td><td class="py-2 pr-4">56 × 38 × 24 cm</td><td class="py-2 pr-4">45 L</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </ui-accordion-panel>
+            </ui-accordion-item>
+            <ui-accordion-item value="shipping">
+              <ui-accordion-header><h3><ui-accordion-trigger><button>Shipping and returns</button></ui-accordion-trigger></h3></ui-accordion-header>
+              <ui-accordion-panel hidden>Free standard shipping over $75. Returns are free within 30 days, unused and with tags.</ui-accordion-panel>
+            </ui-accordion-item>
+          </ui-accordion>
+        </section>
+      </main>
+
+      <!-- Cross-sell -->
+      <section class="mx-auto flex max-w-6xl flex-col gap-6 px-6 pb-14" aria-labelledby="pairs">
+        <div class="flex items-end justify-between gap-4">
+          <h2 data-slot="heading" data-size="sm" id="pairs">Pairs well with</h2>
+          <ui-segmented-control aria-label="Sort" default-value="popular">
+            <ui-segmented-control-indicator></ui-segmented-control-indicator>
+            <ui-segmented-control-item value="popular">Popular</ui-segmented-control-item>
+            <ui-segmented-control-item value="new">New</ui-segmented-control-item>
+          </ui-segmented-control>
+        </div>
+        <div class="grid gap-6 sm:grid-cols-3">
+          <article data-slot="card" data-variant="flush">
+            <div data-slot="media" data-ratio="landscape" data-art="pouch"></div>
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex flex-col gap-1"><h3 data-slot="heading" data-size="xs">Zip Pouch</h3><p data-slot="text" data-size="sm" data-tone="subtle">Olive</p></div>
+              <p data-slot="price">$22.00</p>
+            </div>
+          </article>
+          <article data-slot="card" data-variant="flush">
+            <div data-slot="media" data-ratio="landscape" data-art="bottle"></div>
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex flex-col gap-1"><h3 data-slot="heading" data-size="xs">Trail Bottle</h3><p data-slot="text" data-size="sm" data-tone="subtle">Harbor · 750 ml</p></div>
+              <p data-slot="price">$34.00</p>
+            </div>
+          </article>
+          <article data-slot="card" data-variant="flush">
+            <div data-slot="media" data-ratio="landscape" data-art="notebook"></div>
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex flex-col gap-1"><h3 data-slot="heading" data-size="xs">Field Notebook, set of 3</h3><p data-slot="text" data-size="sm" data-tone="subtle">Clay · Dot grid</p></div>
+              <p data-slot="price">$18.00 <s>$24.00</s></p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Inverse band -->
+      <section data-surface="inverse" aria-labelledby="letters">
+        <div class="mx-auto grid max-w-6xl gap-8 px-6 py-14 md:grid-cols-2 md:items-end">
+          <div class="flex flex-col gap-3">
+            <p data-slot="eyebrow">The Sunday letter</p>
+            <h2 data-slot="heading" data-size="md" id="letters">Repair notes, new colours, nothing else.</h2>
+          </div>
+          <form id="newsletter" class="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <ui-field class="flex-1">
+              <ui-field-label>Email</ui-field-label>
+              <ui-input><input type="email" required placeholder="you@example.com" autocomplete="email" class="w-full" /></ui-input>
+            </ui-field>
+            <ui-button><button type="submit" data-variant="solid">Subscribe</button></ui-button>
+          </form>
+        </div>
+      </section>
+
+      <footer class="flex flex-wrap items-center justify-between gap-4 px-6 py-6">
+        <p data-slot="text" data-size="xs" data-tone="faint">Harbor &amp; Pine is a made-up store for this prototype.</p>
+        <label><ui-checkbox default-checked><ui-checkbox-indicator></ui-checkbox-indicator></ui-checkbox> Prices in CAD</label>
+      </footer>
+
+      <ui-toast-region>
+        <template>
+          <ui-toast>
+            <ui-toast-title></ui-toast-title>
+            <ui-toast-description></ui-toast-description>
+          </ui-toast>
+        </template>
+      </ui-toast-region>
+    </div>
+    <!-- ===================== /store ===================== -->
+  </div>
+
+  <section class="pg-explain" aria-label="How it works">
+    <div class="pg-tabs" role="tablist">
+      <button type="button" role="tab" data-tab="how" aria-selected="true">How it works</button>
+      <button type="button" role="tab" data-tab="theme" aria-selected="false">theme.css (live)</button>
+      <button type="button" role="tab" data-tab="markup" aria-selected="false">Markup</button>
+      <button type="button" role="tab" data-tab="rules" aria-selected="false">Rules for agents</button>
+      <button type="button" role="tab" data-tab="options" aria-selected="false">Other ways to do it</button>
+    </div>
+
+    <div class="pg-panel" data-panel="how">
+      <div class="pg-prose" style="max-width:none">
+        <div class="pg-flow">
+          <div class="pg-step"><em>you write</em><b>12 knobs</b><span>Paper, ink, brand, highlight, radius, elevation, density, two fonts, display weight, tracking, case, type scale.</span></div>
+          <div class="pg-step"><em>derived</em><b>~40 tokens</b><span>Surfaces, lines, subtle text, focus ring, brand tints, spacing unit, a 9-step type scale, shadows. All <code>color-mix()</code> and <code>calc()</code>.</span></div>
+          <div class="pg-step"><em>mapped</em><b>UI SDK --ui-*</b><span>All 55 UI SDK components pick up the theme through their own variables, with no per-component work.</span></div>
+          <div class="pg-step"><em>refined</em><b>Ripple parts</b><span>Storefront sizing and looks keyed on <code>data-slot</code> and UI SDK state: chips, swatches, cards, stepper, drawer.</span></div>
+          <div class="pg-step"><em>added</em><b>7 primitives</b><span>heading, text, eyebrow, price, badge, card, media. Same <code>data-slot</code> convention.</span></div>
+          <div class="pg-step"><em>escape hatch</em><b>Tailwind</b><span>Layout and one-offs. Utilities read the same tokens (<code>bg-surface</code>, <code>border-line</code>) and always win the cascade.</span></div>
+        </div>
+        <p>The layer is one CSS file in cascade layers: <code>ui-sdk</code> &lt; <code>ripple</code> &lt; Tailwind <code>utilities</code>. No build step, no JavaScript, and nothing framework-specific, so the same markup works from Liquid, React, Remix or plain HTML. A theme is a block of knobs on <code>data-theme</code>; a section can re-theme itself with <code>data-surface="inverse|brand|muted"</code> (see the announcement bar and the newsletter band).</p>
+        <p>Turn on <b>Show parts</b> and hover the store: blue outlines are UI SDK parts and Ripple primitives, orange ones are custom HTML written with Tailwind. The custom pieces still follow every theme because they use token utilities.</p>
+      </div>
+    </div>
+
+    <div class="pg-panel" data-panel="theme" hidden>
+      <div class="pg-prose" style="max-width:none">
+        <p>This is the whole theme for the store as it looks right now. Drag a knob above and it updates.</p>
+        <pre class="pg-code" id="theme-code"></pre>
+      </div>
+    </div>
+
+    <div class="pg-panel" data-panel="markup" hidden>
+      <div class="pg-prose" style="max-width:none">
+        <p>What an agent writes for the buy box. UI SDK elements carry behavior; <code>data-variant</code>, <code>data-size</code> and <code>data-tone</code> pick a look; Tailwind arranges.</p>
+<pre class="pg-code">&lt;p data-slot="eyebrow"&gt;Bags · Waxed canvas&lt;/p&gt;
+&lt;h1 data-slot="heading" data-size="lg"&gt;Market Tote&lt;/h1&gt;
+&lt;p data-slot="price" data-size="lg"&gt;$48.00 &lt;s&gt;$60.00&lt;/s&gt;&lt;/p&gt;   &lt;!-- &lt;s&gt; makes it a sale price --&gt;
+
+&lt;ui-field&gt;
+  &lt;ui-field-label&gt;Colour&lt;/ui-field-label&gt;
+  &lt;ui-radio-group data-variant="swatches" default-value="olive" name="color"&gt;
+    &lt;label style="--swatch:#5d6a3b"&gt;&lt;ui-radio value="olive"&gt;&lt;/ui-radio&gt;Olive&lt;/label&gt;
+    &lt;label style="--swatch:#b35b3b"&gt;&lt;ui-radio value="clay" disabled&gt;&lt;/ui-radio&gt;Clay, sold out&lt;/label&gt;
+  &lt;/ui-radio-group&gt;
+&lt;/ui-field&gt;
+
+&lt;ui-radio-group data-variant="chips" default-value="standard" name="size"&gt;
+  &lt;label&gt;&lt;ui-radio value="standard"&gt;&lt;/ui-radio&gt;Standard&lt;/label&gt; …
+&lt;/ui-radio-group&gt;
+
+&lt;div class="flex gap-3"&gt;
+  &lt;ui-number-input default-value="1" min="1"&gt; … &lt;/ui-number-input&gt;
+  &lt;ui-button&gt;&lt;button data-variant="solid" data-size="lg" class="flex-1"&gt;Add to bag&lt;/button&gt;&lt;/ui-button&gt;
+&lt;/div&gt;
+
+&lt;section data-surface="inverse"&gt; … &lt;/section&gt;   &lt;!-- re-themes everything inside --&gt;</pre>
+      </div>
+    </div>
+
+    <div class="pg-panel" data-panel="rules" hidden>
+      <div class="pg-prose">
+        <p>Five rules an agent can hold in its head. Each value list is closed, so a linter can check every attribute.</p>
+        <ol>
+          <li><b>Behavior is UI SDK.</b> If UI SDK has the part, use it. Never rebuild a radio, stepper, drawer or accordion.</li>
+          <li><b><code>data-slot</code> says what it is.</b> UI SDK sets it on its parts; you set it on the seven primitives.</li>
+          <li><b><code>data-variant</code>, <code>data-size</code>, <code>data-tone</code> say how it looks.</b> Pick from the table below. State (<code>data-checked</code>, <code>data-open</code>, <code>data-disabled</code>) comes from UI SDK; never fake it with classes.</li>
+          <li><b>Tailwind arranges.</b> Layout, width, position and one-offs are utilities, using token colors (<code>bg-surface</code>, <code>text-subtle</code>, <code>border-line</code>), never raw hex.</li>
+          <li><b>Themes are knobs.</b> Change the look by editing the theme block or a <code>data-surface</code>, never by restyling a part.</li>
+        </ol>
+        <div class="pg-table-wrap">
+          <table class="pg-table">
+            <thead><tr><th>Slot</th><th>Attributes</th><th>Use for</th></tr></thead>
+            <tbody>
+              <tr><td><code>button</code> (UI SDK)</td><td><code>data-variant</code> solid · soft · ghost · link · destructive<br><code>data-size</code> sm · lg</td><td>Default is outline. One solid button per view.</td></tr>
+              <tr><td><code>radio-group</code> (UI SDK)</td><td><code>data-variant</code> chips · swatches · cards</td><td>Size, colour, purchase options. Disabled radio means sold out.</td></tr>
+              <tr><td><code>number-input</code> (UI SDK)</td><td><code>data-size</code> sm</td><td>Quantity. Small in cart lines.</td></tr>
+              <tr><td><code>rating</code> (UI SDK)</td><td><code>data-size</code> sm</td><td>Read-only averages.</td></tr>
+              <tr><td><code>heading</code></td><td><code>data-size</code> xs · sm · md · lg · xl · 2xl</td><td>Any heading level; size is independent of h1–h6.</td></tr>
+              <tr><td><code>text</code> · <code>eyebrow</code></td><td><code>data-size</code> xs · sm · lg<br><code>data-tone</code> subtle · faint · highlight · critical · positive</td><td>Body copy and labels.</td></tr>
+              <tr><td><code>price</code></td><td><code>data-size</code> sm · lg</td><td>Put compare-at in <code>&lt;s&gt;</code> to show a sale.</td></tr>
+              <tr><td><code>badge</code></td><td><code>data-tone</code> brand · highlight · inverse · outline · positive</td><td>Sale, new, low stock.</td></tr>
+              <tr><td><code>card</code></td><td><code>data-variant</code> flush · muted</td><td>Product cards, callouts.</td></tr>
+              <tr><td><code>media</code></td><td><code>data-ratio</code> portrait · square · landscape · wide</td><td>Every product image.</td></tr>
+              <tr><td>any element</td><td><code>data-surface</code> muted · inverse · brand<br><code>data-theme</code> any theme name</td><td>Bands and sections with their own palette.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="pg-panel" data-panel="options" hidden>
+      <div class="pg-prose" style="max-width:none">
+        <p>Five ways to put a look on UI SDK. This prototype is option 2; the layer toggle above shows option 1 against it.</p>
+        <div class="pg-table-wrap">
+          <table class="pg-table">
+            <thead><tr><th>Approach</th><th>Good</th><th>Costs</th></tr></thead>
+            <tbody>
+              <tr><td><b>1. Tokens only.</b> Map knobs onto <code>--ui-*</code>, keep UI SDK's web.css.</td><td>Tiny (about 40 lines). Never drifts from UI SDK.</td><td>UI SDK's look is dense app UI: 13px text, 32px controls, a single radius. No chips, swatches or display type, so storefronts look like admin panels.</td></tr>
+              <tr><td><b>2. Layer on top</b> <span class="pg-pick">this one</span><br>Tokens, plus refinements keyed on <code>data-slot</code>, plus a few primitives.</td><td>Storefront look with UI SDK's markup unchanged. One file, no build, any framework. Vocabulary is small and lintable.</td><td>Depends on UI SDK's slot names and its CSS staying stable; an upstream rename needs a patch. About 700 lines to own.</td></tr>
+              <tr><td><b>3. Replace web.css.</b> Write every slot rule yourself.</td><td>Total control; no fighting the default.</td><td>About 3,000 lines to own across 55 components, and every UI SDK release can add parts you haven't styled.</td></tr>
+              <tr><td><b>4. Tailwind recipes in markup.</b> shadcn-style class strings on each part.</td><td>Very visible; agents already know Tailwind; easy one-off edits.</td><td>Long class strings get copied with drift, themes need class edits instead of knobs, and Liquid templates get noisy.</td></tr>
+              <tr><td><b>5. Tailwind plugin.</b> Ship variants like <code>rp-chip</code>, <code>data-checked:</code> helpers.</td><td>Feels native in Tailwind projects.</td><td>Requires Tailwind and a build; doesn't help plain-CSS or Liquid users. Works best as an add-on to option 2.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="pg-tip" id="inspect-tip" hidden></div>
+
+<script type="module">{{APP_JS}}</script>

@@ -1,0 +1,51 @@
+/*
+  Tailwind bridge. Utilities read Ripple's tokens, so custom HTML written with
+  Tailwind follows the theme too. "inline" keeps the var() references, so a
+  region with its own data-theme or data-surface changes its utilities as well.
+
+  Ripple styles things; Tailwind arranges them (flex, grid, gap, width,
+  position) and covers one-offs. Utilities sit in a later layer, so a class
+  always beats a Ripple rule.
+*/
+
+@layer theme, base, ui-sdk, ripple, components, utilities;
+
+@import "tailwindcss";
+
+@theme inline {
+  --color-paper: var(--rp-paper);
+  --color-ink: var(--rp-ink);
+  --color-subtle: var(--rp-ink-subtle);
+  --color-faint: var(--rp-ink-faint);
+  --color-surface: var(--rp-surface);
+  --color-surface-strong: var(--rp-surface-strong);
+  --color-line: var(--rp-line);
+  --color-line-strong: var(--rp-line-strong);
+  --color-brand: var(--rp-brand);
+  --color-on-brand: var(--rp-on-brand-color);
+  --color-brand-soft: var(--rp-brand-soft);
+  --color-highlight: var(--rp-highlight);
+
+  --font-body: var(--rp-font-body);
+  --font-display: var(--rp-font-display);
+
+  --text-xs: var(--rp-text-xs);
+  --text-sm: var(--rp-text-sm);
+  --text-base: var(--rp-text-md);
+  --text-lg: var(--rp-text-lg);
+  --text-xl: var(--rp-text-xl);
+  --text-2xl: var(--rp-text-2xl);
+  --text-3xl: var(--rp-text-3xl);
+
+  --radius-sm: var(--rp-radius-sm);
+  --radius-md: var(--rp-radius);
+  --radius-lg: var(--rp-radius-lg);
+  --radius-full: var(--rp-radius-full);
+
+  --shadow-sm: var(--rp-shadow-sm);
+  --shadow-md: var(--rp-shadow-md);
+  --shadow-lg: var(--rp-shadow-lg);
+
+  /* Every p-*, gap-*, m-* scales with density. */
+  --spacing: var(--rp-unit);
+}
