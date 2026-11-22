@@ -47,8 +47,9 @@ Nesting rules: root children in order: totals, accelerated, status. Totals child
 | `cartLines` | `cart_lines` | string | the `id` of the CartLines on the page | none | no | no | passed to CheckoutButton (Liquid: `form="<value>-form"`); ignored on hydrogen hosts |
 | `acceleratedCheckout` | `accelerated_checkout` | boolean | `true false` | `false` | no | no | the accelerated part (D-050) |
 | `locale` | none | string | BCP 47 tag | `en-US` | no | no | money text (CV-1) |
+| `action` | none | url | the cart endpoint including the locale path prefix | `/api/cart` | no | no | `action` on each remove-code form (hydrogen hosts); TSX hosts only (CV-17, D-118) |
 
-The region part takes `cart`, `cartLines` and `locale` (Liquid: the snippet `rp-cart-summary-totals` takes exactly `cart` and `cart_lines`; EVERY call passes both, D-091 item 4).
+The region part takes `cart`, `cartLines`, `locale` and `action` (Liquid: the snippet `rp-cart-summary-totals` takes exactly `cart` and `cart_lines`; EVERY call passes both, D-091 item 4).
 
 ### Content model
 
@@ -98,6 +99,8 @@ Fixture `empty` (`cart`: `cart.empty`; all four hosts, one file):
 
 Fixture `accelerated` / `liquid-accelerated` (`cart`: `cart.two-lines`, `acceleratedCheckout`: true): the `two-lines` HTML with `<div class="rp-cart-summary-accelerated" data-agent-confirm="Pays for this cart now with an express checkout"></div>` between the totals part and the status part; its children are host-owned.
 
+Fixture `line-discount` / `liquid-line-discount` (`cart`: `cart.line-discounted`, a cart whose code `SHIRT5` applies to one product only; D-120): the `default` / `liquid-default` HTML with the code text `SHIRT5`, `value="SHIRT5"`, `aria-label="Remove discount SHIRT5"` and the (masked) amounts subtotal `$103.00`, total `$103.00`. On Liquid the resource has an EMPTY `cart_level_discount_applications` and the code only in the first item's `line_level_discount_allocations`; the fixture fails when the snippet reads the cart-level list alone.
+
 Further required fixtures: `two-lines` / `liquid-two-lines` (`cart`: `cart.two-lines`: no discount row; subtotal `$108.00`; total `$108.00`); `class` (root class `rp-cart-summary custom-a custom-b`); `children` (children `<div data-rp-region="rp-cart-summary"></div>` printed in place of the totals part).
 
 Host-owned regions and masks: the accelerated part's children (`{ "select": ".rp-cart-summary-accelerated", "op": "children" }`). Masks: `{ "select": ".rp-cart-summary-row dd bdi", "op": "text" }`, `{ "select": ".rp-cart-summary-remove", "op": "attr", "name": "action" }`, `{ "select": "a.rp-checkout-button", "op": "attr", "name": "href" }`.
@@ -117,7 +120,7 @@ Upgrade allow-list (mutations permitted when the element upgrades): `{ "select":
 ### Behaviour with JavaScript
 
 1. After every cart mutation the adapter refreshes region `rp-cart-summary`; the totals part is replaced by the server's rendering (React: re-rendered from the store).
-2. The remove form of a discount row is intercepted by `rp-cart` and sent as `discount-remove`; on success `Discount removed` is written to the status part of this root.
+2. The remove form of a discount row is intercepted by `rp-cart` and sent as `discount-remove`; on success `Discount removed` is written to the status part of this root. liquid backend with commerce not usable (`getCommerce().usable === false`): `rp-cart` calls `preventDefault()` on the remove form's submit, and does NOT post ([05-commerce.md](05-commerce.md) 7.1, D-129); CartSummary has no error part (rule `cart-summary-no-error`), so no message is written and the row stays.
 3. The checkout control is never intercepted: hydrogen backend it is a link; liquid backend its submitter name is `checkout`.
 4. The accelerated part is filled by Shopify's scripts; Ripple does not touch it.
 
@@ -164,7 +167,39 @@ Required rules: root `display: block`; totals `display: flex; flex-direction: co
 - HTML: copy the `default` contract.
 - React: file `cart-summary.tsx`, `"use client";`. `CartSummary(props: { cart: RippleCart; cartLines?: string; acceleratedCheckout?: boolean; locale?: string; className?: string; children?: ReactNode })` and `CartSummaryTotals(props: { cart: RippleCart; cartLines?: string; locale?: string })`. `CartSummaryTotals` reads the live cart with `useCart` (server value: the `cart` prop) and `toRippleCart` from `./cart-lines.data` (CV-10). Discount rows: `cart.discountCodes.filter((d) => d.applicable)`. Accelerated part: `<div className="rp-cart-summary-accelerated" data-agent-confirm={strings?.agentConfirmAccelerated ?? "Pays for this cart now with an express checkout"} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: renderShopPayButton({}) }} />` with `renderShopPayButton` imported from `@shopify/hydrogen` (`hydrogen/packages/hydrogen/skills/hydrogen-shop-pay/SKILL.md`; a value import allowed by D-094, CV-9). `CartSummary` also takes `strings?: { agentConfirmAccelerated?: string }` (CV-2).
 - Remix: prop `rmxKey?: string` prints `data-rmx-key` on root (omitted when unset; CV-5, D-034). The checkout link carries `data-rmx-document` (CheckoutButton).
-- Liquid: discount rows: `{% for d in cart.cart_level_discount_applications %}{% if d.type == 'discount_code' %}` with code `d.title`. Subtotal `cart.items_subtotal_price | money`; total `cart.total_price | money`. Empty test: `cart.item_count == 0`. Accelerated part: `{% if additional_checkout_buttons %}<div class="rp-cart-summary-accelerated" data-agent-confirm="{{ 'ripple.cart-summary.agent_confirm_accelerated' | t }}">{{ content_for_additional_checkout_buttons }}</div>{% endif %}` (both objects are in the component scope of the Liquid subset, D-097). The root is not printed by `{% form %}`, so it prints `{{ attributes }}` last (D-035). The region-part snippet `rp-cart-summary-totals` takes exactly the params `cart` and `cart_lines`; EVERY call passes both (D-091 item 4), `cart_lines` being the `cart_lines` param of the block (blank when there is no CartLines on the page). No schema settings. Locale keys: `ripple.cart-summary.subtotal` = `Subtotal`; `ripple.cart-summary.discount` = `Discount`; `ripple.cart-summary.total` = `Total`; `ripple.cart-summary.note` = `Taxes and shipping calculated at checkout.`; `ripple.cart-summary.remove_discount` = `Remove discount {{ code }}`; `ripple.cart-summary.agent_confirm_accelerated` = `Pays for this cart now with an express checkout`.
+- Liquid: discount rows (D-120): one row per UNIQUE discount code, collected from BOTH places Shopify exposes a code: (a) `cart.cart_level_discount_applications` where `type == 'discount_code'` (code `title`) and (b) for each `item` of `cart.items`, each `allocation` of `item.line_level_discount_allocations` where `allocation.discount_application.type == 'discount_code'` (code `allocation.discount_application.title`). A code that applies to specific products appears ONLY in (b); reading (a) alone would hide it and it could not be removed. `snippets/rp-cart-summary-totals.liquid` builds the list with exactly this code (component scope of L-13: `assign`, `for`, `if`, `unless`, `append`, `split`, the `contains` operator; no `uniq`):
+
+  ```liquid
+  {%- liquid
+    assign codes = '|'
+    for application in cart.cart_level_discount_applications
+      if application.type == 'discount_code'
+        assign marker = '|' | append: application.title | append: '|'
+        unless codes contains marker
+          assign codes = codes | append: application.title | append: '|'
+        endunless
+      endif
+    endfor
+    for item in cart.items
+      for allocation in item.line_level_discount_allocations
+        if allocation.discount_application.type == 'discount_code'
+          assign marker = '|' | append: allocation.discount_application.title | append: '|'
+          unless codes contains marker
+            assign codes = codes | append: allocation.discount_application.title | append: '|'
+          endunless
+        endif
+      endfor
+    endfor
+    assign code_list = codes | split: '|'
+  -%}
+  {%- for code in code_list -%}
+    {%- if code != blank -%}
+      ... one discount row for {{ code | escape }} (markup of the fixture) ...
+    {%- endif -%}
+  {%- endfor -%}
+  ```
+
+  Subtotal `cart.items_subtotal_price | money`; total `cart.total_price | money`. Empty test: `cart.item_count == 0`. Accelerated part: `{% if additional_checkout_buttons %}<div class="rp-cart-summary-accelerated" data-agent-confirm="{{ 'ripple.cart-summary.agent_confirm_accelerated' | t }}">{{ content_for_additional_checkout_buttons }}</div>{% endif %}` (both objects are in the component scope of the Liquid subset, D-097). The root is not printed by `{% form %}`, so it prints `{{ attributes }}` last (D-035). The region-part snippet `rp-cart-summary-totals` takes exactly the params `cart` and `cart_lines`; EVERY call passes both (D-091 item 4), `cart_lines` being the `cart_lines` param of the block (blank when there is no CartLines on the page). No schema settings. Locale keys: `ripple.cart-summary.subtotal` = `Subtotal`; `ripple.cart-summary.discount` = `Discount`; `ripple.cart-summary.total` = `Total`; `ripple.cart-summary.note` = `Taxes and shipping calculated at checkout.`; `ripple.cart-summary.remove_discount` = `Remove discount {{ code }}`; `ripple.cart-summary.agent_confirm_accelerated` = `Pays for this cart now with an express checkout`.
 
 ```tsx
 <CartSummary cart={cart} cartLines="cart" />
@@ -187,7 +222,7 @@ Required rules: root `display: block`; totals `display: flex; flex-direction: co
 |---|---|---|
 | Subtotal | `cart.cost.subtotalAmount` | `cart.items_subtotal_price` |
 | Total | `cart.cost.totalAmount` | `cart.total_price` |
-| Applied codes | `cart.discountCodes` where `applicable` | `cart.cart_level_discount_applications` where `type == 'discount_code'`, code = `title` |
+| Applied codes | `cart.discountCodes` where `applicable` | the unique titles of `cart.cart_level_discount_applications` where `type == 'discount_code'` AND of every `item.line_level_discount_allocations[].discount_application` where `type == 'discount_code'` (D-120; Host notes) |
 | Remove code | `<form method="post" action="/api/cart">`, hidden `discountCode`, submit `name="intent" value="discount-remove"` | same markup, `action="{{ routes.cart_url }}"`, `data-rp-js="inflow"` on the form |
 | Checkout | `<a href="<checkoutUrl>">` | `<button type="submit" name="checkout" form="<cart_lines>-form">` |
 
@@ -201,7 +236,7 @@ RP104 (`cart`), RP301, RP305, RP306, RP308 (the root is outside the region it re
 
 ### Acceptance tests
 
-1. Tier 2: `default`, `two-lines`, `accelerated`, `class`, `children` (hydrogen hosts), the `liquid-*` variants (shim) and `empty` (all hosts) are canonical-equal with the masks above.
+1. Tier 2: `default`, `line-discount`, `two-lines`, `accelerated`, `class`, `children` (hydrogen hosts), the `liquid-*` variants (shim) and `empty` (all hosts) are canonical-equal with the masks above.
 2. Tier 5: submitting a remove form produces one store call with intent `discount-remove` and the code, one refresh of `rp-cart-summary`, and the status part text `Discount removed`.
 3. Tier 5: starting from `cart.empty`, after an add and the refresh the region contains a checkout control whose `href` (hydrogen) equals the store's `checkoutUrl`.
 4. Tier 5: a click on the checkout control is not prevented (`defaultPrevented` is false) in both backends.
@@ -209,8 +244,8 @@ RP104 (`cart`), RP301, RP305, RP306, RP308 (the root is outside the region it re
 
 ### Evidence and UNVERIFIED
 
-- Evidence: [05-commerce.md](05-commerce.md) sections 6.2, 7.1, 9.1 (code list inside `rp-cart-summary`); `hydrogen/packages/hydrogen/src/core/cart/queries.ts`; Liquid `cart.cart_level_discount_applications` (Shopify docs tool, this session); `ripple/theme/snippets/cart-discount-list.liquid`.
-- UNVERIFIED: the `discount_application.type` value `discount_code`; that discount codes applied at line level appear in `cart.cart_level_discount_applications` (if not, those codes are not listed on Liquid; doc 14 owns the correction); `renderShopPayButton({})` with an empty options object.
+- Evidence: [05-commerce.md](05-commerce.md) sections 6.2, 7.1, 9.1 (code list inside `rp-cart-summary`); `hydrogen/packages/hydrogen/src/core/cart/queries.ts`; Liquid `cart.cart_level_discount_applications` and `line_item.line_level_discount_allocations` (each allocation has `discount_application.title` / `.type`; `discount_application.type` values `automatic`, `discount_code`, `manual`, `script`; Shopify Liquid reference, checked by the feasibility review, D-120); `ripple/theme/snippets/cart-discount-list.liquid`.
+- UNVERIFIED: `renderShopPayButton({})` with an empty options object; the rendered result of the code list on a preview store (SPIKE-02, V-12).
 
 ### Fallback (SPIKE-nn)
 

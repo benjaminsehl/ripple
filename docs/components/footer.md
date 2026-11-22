@@ -171,12 +171,14 @@ Default body of `components/footer/liquid/snippets/rp-footer.liquid` (inside `<d
   endif
   assign menu_label = 'ripple.footer.menu' | t
   assign policies_label = 'ripple.footer.policies' | t
+  # Escape before `t`: a filter after a `t:` named argument applies to the translated output.
+  assign shop_name = shop.name | escape
 -%}
 {%- if menu.links.size > 0 -%}
   {% render 'rp-link-list', id: link_list, menu: menu, aria_label: menu_label, orientation: 'vertical' %}
 {%- endif -%}
 <div class="rp-footer-bottom">
-  <p class="rp-footer-copyright">{{ 'ripple.footer.copyright' | t: year: year, name: shop.name | escape }}</p>
+  <p class="rp-footer-copyright">{{ 'ripple.footer.copyright' | t: year: year, name: shop_name }}</p>
   {%- if shop.policies.size > 0 -%}
     {% render 'rp-link-list', links: shop.policies, aria_label: policies_label, orientation: 'horizontal' %}
   {%- endif -%}

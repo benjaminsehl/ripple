@@ -85,11 +85,13 @@ export interface LayoutProps {
   cartPage: boolean;
   /** Four-digit year for the copyright line. */
   year: number;
+  /** Cart endpoint including the locale path prefix: `${requestContext.locale.pathPrefix}/api/cart` (05-commerce.md 10.1 rule 7). Default "/api/cart". */
+  cartAction?: string;
   children: ReactNode;
 }
 
 export function Layout(props: LayoutProps) {
-  const { shop, menu, footerMenu, policies, cart, locale, path, announcement, newsletterStatus, searchResults, cartPage, year, children } = props;
+  const { shop, menu, footerMenu, policies, cart, locale, path, announcement, newsletterStatus, searchResults, cartPage, year, cartAction = "/api/cart", children } = props;
   const hasFooterMenu = footerMenu.items.length > 0;
   return (
     <>
@@ -125,7 +127,7 @@ export function Layout(props: LayoutProps) {
           <PredictiveSearch id="predictive-search" results={searchResults} />
         </DialogBody>
       </Dialog>
-      {cartPage ? null : <CartDrawer cart={cart} />}
+      {cartPage ? null : <CartDrawer cart={cart} action={cartAction} />}
       <Toast />
     </>
   );
@@ -157,8 +159,9 @@ The TSX layout prints `<main id="main" tabIndex={-1}>` with no `data-template`: 
       assign announcement = 'ripple.blueprints.layout.announcement' | t
       assign search_title = 'ripple.blueprints.layout.search' | t
       assign close_label = 'ripple.blueprints.layout.close' | t
-      assign footer_label = 'ripple.footer.menu' | t
-      assign policies_label = 'ripple.footer.policies' | t
+      assign footer_label = 'ripple.blueprints.layout.footer_menu' | t
+      assign policies_label = 'ripple.blueprints.layout.policies' | t
+      assign shop_name = shop.name | escape
       assign year = 'now' | date: '%Y'
       assign footer_menu = linklists.footer
       if footer_menu.links.size == 0
@@ -187,7 +190,7 @@ The TSX layout prints `<main id="main" tabIndex={-1}>` with no `data-template`: 
       {%- endif -%}
       {% block 'newsletter-form', id: 'newsletter' %}{% endblock %}
       {% block 'locale-selector', id: 'footer-locale', side: 'top' %}{% endblock %}
-      {% block 'text', size: 'sm', tone: 'muted' %}{{ 'ripple.footer.copyright' | t: year: year, name: shop.name | escape }}{% endblock %}
+      {% block 'text', size: 'sm', tone: 'muted' %}{{ 'ripple.blueprints.layout.copyright' | t: year: year, name: shop_name }}{% endblock %}
       {%- if shop.policies.size > 0 -%}
         {% block 'link-list', links: shop.policies, aria_label: policies_label, orientation: 'horizontal' %}{% endblock %}
       {%- endif -%}
@@ -265,7 +268,7 @@ Notes on the Liquid file:
 - The Liquid footer menu fallback implements rule LY-1.
 - The Header block is called with no body, so its default body renders the two `dialog`-based openers and the CartLink (Header, Host notes).
 
-Locale keys (`ripple.blueprints.layout.*`): `skip` "Skip to content"; `announcement` ""; `search` "Search"; `close` "Close"; `meta_tagged` "tagged \"{{ tags }}\""; `meta_page` "Page {{ number }}" (the last two are read only by `snippets/meta-tags.liquid`, D-109).
+Locale keys (`ripple.blueprints.layout.*`): `skip` "Skip to content"; `announcement` ""; `search` "Search"; `close` "Close"; `meta_tagged` "tagged \"{{ tags }}\""; `meta_page` "Page {{ number }}" (the last two are read only by `snippets/meta-tags.liquid`, D-109); `footer_menu` "Footer"; `policies` "Policies"; `copyright` "© {{ year }} {{ name }}". The layout uses its OWN three footer keys, not `ripple.footer.*` (T-3, BP-6: every string of a shipped template is a `ripple.blueprints.<blueprint id>.*` key); the Footer component keeps `ripple.footer.*` for its default body. `shop.name` is escaped BEFORE the `t` call (`assign shop_name = shop.name | escape`): a filter written after a `t:` named argument applies to the translated output, not to that argument (`ripple/theme/AGENTS.md`, Liquid parsing rules). UNVERIFIED on a store that the value then renders once-escaped (`14-liquid-theme.md` V-21).
 
 ### Data requirements per backend
 
@@ -276,6 +279,7 @@ Locale keys (`ripple.blueprints.layout.*`): `skip` "Skip to content"; `announcem
 | Footer menu | `menu(handle: "footer")`, through `toRippleMenu` | `linklists.footer` |
 | Policies | `shop { privacyPolicy { title handle } refundPolicy { title handle } shippingPolicy { title handle } termsOfService { title handle } }`; each non-null policy becomes an item `{ id: handle, title, url: "/policies/<handle>", current: false, items: [] }` | `shop.policies` |
 | Cart | `cartHandlers.get({ storefrontClient, request })` (`05-commerce.md` section 10.1 rule 3), mapped to `RippleCart`; `null` on publicly cached pages | the global `cart` (read inside the cart components) |
+| Cart endpoint | `cartAction`: `` `${requestContext.locale.pathPrefix}/api/cart` ``, the same string as `commerce.cartEndpoint` of `DocumentParts` (`05-commerce.md` 10.1 rule 7, D-118) | `routes.cart_url`, `routes.cart_add_url` (printed inside the components) |
 | Locales | rule LR-3 | the global `localization` (read inside LocaleSelector) |
 | Language tag | `getHtmlLang(requestContext.locale.language)` (`hydrogen/packages/hydrogen/src/core/i18n/locale.ts`) | `request.locale.iso_code` |
 | Newsletter status | `newsletterStatus(request)` (2.7) | the `form` object inside NewsletterForm |
@@ -344,6 +348,7 @@ BT-1 to BT-9, plus:
 - **LT-9** (tier 5, Remix) After a client navigation between two pages, the header, the open state of no dialog, and `html[style]` are unchanged, and no element is defined twice (`06-bindings.md` Q-15).
 - **LT-10** (tier 5, React) Hydrating `document.body` with the sample layout logs no hydration error, with the Hydrogen script tags present in `<head>`.
 - **LT-11** (tier 5) On the cart page, `getCommerce().openCart()` navigates to `cartUrl`, because no dialog with the id `cart-drawer` is on the page. The behaviour and its test are owned by `05-commerce.md` (D-042 amendment b); this entry is a reference, not a second test.
+- **LT-13** (tier 2, hydrogen hosts) With `cartAction: "/fr-ca/api/cart"`, every `form[method="post"]` inside `#cart-drawer` has `action="/fr-ca/api/cart"`; without the prop every such form has `action="/api/cart"` (D-118).
 - **LT-12** (tier 1) `snippets/meta-tags.liquid` (without its trailer line) is byte-equal to `theme/snippets/meta-tags.liquid` after the two key replacements of D-109 (`general.meta.tagged` to `ripple.blueprints.layout.meta_tagged`, `general.meta.page` to `ripple.blueprints.layout.meta_page`), and contains no other `general.` key; `snippets/import-map.liquid` renders a `<script type="importmap">` whose text parses as JSON in the shim; the rendered `<head>` of `layout/theme.liquid` has the import map before every `script[type="module"]`, and contains no `page-view.js` reference.
 
 ---

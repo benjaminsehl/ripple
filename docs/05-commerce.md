@@ -15,7 +15,7 @@ A working implementation of everything in this document exists and was run in Ch
 | `ripple/docs/research/spikes/commerce/run.cjs`, `run2.cjs`, `run3.cjs` | Playwright scenarios L1 to L7 (liquid backend), D1 to D4 (details), H1 to H7 (hydrogen backend). |
 | `ripple/docs/research/spikes/commerce/result.txt` | Recorded output of every scenario. |
 
-The implementer MUST copy `ripple/docs/research/spikes/commerce/src/commerce/*.ts` to `src/commerce/` and then apply exactly these nine changes. Changes 3 to 9 were decided after the spike ran (ledger section 13) and are therefore NOT covered by a scenario in `result.txt`.
+The implementer MUST copy `ripple/docs/research/spikes/commerce/src/commerce/*.ts` to `src/commerce/` and then apply exactly these eighteen changes. Changes 3 to 18 were decided after the spike ran (ledger section 13; changes 10 to 18 by the feasibility review, ledger 13.4) and are therefore NOT covered by a scenario in `result.txt`.
 
 | # | File | Change |
 |---|---|---|
@@ -28,8 +28,17 @@ The implementer MUST copy `ripple/docs/research/spikes/commerce/src/commerce/*.t
 | 7 | `rp-product-form.ts` | After a successful add: dispatch `action`, then open the cart, then announce (section 7.2 step 5). The spike announced first. |
 | 8 | `adapter.ts` | In `refresh`, the history write of step 4 (section 8.2) is skipped on the `react` host AND on the `remix` host when `options.navigate` is set. The spike skipped it on `react` only. The type of `RefreshStrategy`'s `reason` becomes `RefreshReason` (the value passed is `refreshOptions.reason` when it is one of the six values, otherwise `"manual"`). Add the export `getOptions` (4.6): `export function getOptions(): ResolvedOptions | null { return resolved; }`. |
 | 9 | `adapter-liquid.ts`, `index.ts` | Replace `defineViewEvent` with the exported `startStandardEvents` of section 12.3 and remove the `void defineViewEvent();` line from `afterReady`. `create()` in `index.ts` calls `startStandardEvents()` as section 12.3 shows: the `rp-view-event` definition and the new page-view dispatch run only on Liquid and only when `options.analytics` is true (D-089). |
+| 10 | `rp-cart.ts` | Empty-quantity guard in the `submit` listener (D-116; 7.1): a `set` submit whose quantity field is empty or not a number is prevented and nothing is sent. |
+| 11 | `adapter.ts`, `rp-cart.ts`, `adapter-hydrogen.ts` | Checkout guard (D-117): new exports `registerFlush`, `hasUnsettled`, `settle` in `adapter.ts` (4.6); `rp-cart` registers a flush and records every action promise in `inflight` (7.1, connect row and the code after the table); `afterReady` of the hydrogen adapter adds the `onCheckoutClick` listener (5.1 step 5). |
+| 12 | `adapter.ts`, `rp-product-form.ts` | Add errors (D-119): `errorMessage` gains the scope `"add"`, new export `hasUserError` (4.6, 9.2); the product form uses them and treats a warnings-only result as a successful add (7.2 step 4). |
+| 13 | `adapter-liquid.ts`, `globals.d.ts` | Liquid connect timing (D-122): delete the synchronous `isDefault()` throw and the `cart.connect()` call from `createLiquidCommerce`; `probe` becomes the code of 5.2 item 4 (awaits `window.rpDomReady`, checks `isDefault()`, then `cart.connect()` and `cart.fetch()`). Declare `rpDomReady?: Promise<void>` on `Window`. |
+| 14 | `adapter-hydrogen.ts` | Replace the spike's `rp-view-event` class with the class of 12.2 (observes `view-event-payload`, publishes once per payload value; D-123). |
+| 15 | `dialect.ts`, `adapter-liquid.ts`, `adapter.ts`, `rp-cart.ts` | Note and attribute baseline, and "nothing sent" (D-126): `translateLiquidForm` takes `baseline` and `CartOp` gains `sent` (6.3); the Liquid `submit` part is the code of 5.2 item 3; `BackendParts.submit` and `RippleCommerce.submitCart` resolve `boolean` (4.1, 4.6): in `adapter.ts`, `submitCart` returns `false` after `nativeSubmit(...)` (both places) and otherwise `return await parts.submit(form, submitter, event)`; the inert `submitCart` is `() => Promise.resolve(false)`; `rp-cart`'s `run` announces nothing when the action resolved `false` (7.1). |
+| 16 | `adapter-hydrogen.ts` | The `submit` part is the code of 5.1 step 3 (D-127): a product form submitted without a submitter is sent as one synthetic `add`; every path returns `true`. |
+| 17 | `rp-cart.ts` | The `submit` listener is the code of 7.1 (D-129): with `usable === false`, a form that carries `data-rp-js="inflow"` is prevented and shows `strings.error` instead of posting. |
+| 18 | `adapter.ts`, `adapter-hydrogen.ts` | New option `routes` (4.2; passed through `resolveOptions` unchanged). `afterReady` of the hydrogen adapter is the code of 12.1 item 1: `initializeShopifyScripts` is called regardless of `options.analytics`, with `consent`, `routes` and a `navigate` wrapper (D-130). |
 
-Everything below is a description of that code after the nine changes. When prose and code disagree, the code in the spike folder is correct for behaviour that a scenario in `result.txt` covers and that rows 3 to 9 do not change; the prose is correct otherwise.
+Everything below is a description of that code after the eighteen changes. When prose and code disagree, the code in the spike folder is correct for behaviour that a scenario in `result.txt` covers and that rows 3 to 18 do not change; the prose is correct otherwise.
 
 Not run (stated again under [Evidence and UNVERIFIED](#15-evidence-and-unverified)): the real Standard Actions runtime (SPIKE-01), real `@shopify/partial-rendering` (SPIKE-02), the new `refresh-react.ts` and `refresh-remix.ts` (SPIKE-10, SPIKE-11), `rp-view-event` and the Liquid page view, `initializeShopifyScripts` and `trackCartAnalytics` at runtime, the `definePrimitive` shell of section 7.7 (SPIKE-04), WebKit and Gecko.
 
@@ -84,7 +93,8 @@ export interface RippleCommerce {
   host: RippleHost;
   cart: CartStore;
   dialect: FormDialect;
-  submitCart(form: HTMLFormElement, submitter: HTMLElement | null, event: SubmitEvent): Promise<void>;
+  /** Resolves `true` when at least one cart operation was sent through the store, `false` otherwise (D-126). */
+  submitCart(form: HTMLFormElement, submitter: HTMLElement | null, event: SubmitEvent): Promise<boolean>;
   setLineQuantity(lineId: string, quantity: number): Promise<void>;
   refresh(regions: string[], options?: { url?: string; reason?: string }): Promise<void>;
   openCart(): void;
@@ -96,7 +106,7 @@ export interface RippleCommerce {
 | Member | Contract |
 |---|---|
 | `cart` | The Hydrogen store: `connect`, `destroy`, `hydrate`, `getState`, `subscribe`, `fetch`, `refresh`, `reset`, `handleFormSubmit(event)`. Source: `hydrogen/packages/hydrogen/src/core/cart/`. User code MAY read it and subscribe. User code MUST NOT call `destroy`, `connect` or create another store. |
-| `submitCart(form, submitter, event)` | The caller MUST have called `event.preventDefault()`. Awaits `ready`. If `usable` is false it calls `form.requestSubmit(submitter)` (native post) and resolves. Otherwise it runs the form through the store (hydrogen: `cart.handleFormSubmit(event)`; liquid: `translateLiquidForm` then one synthetic submit per operation). Resolves when the mutation has settled. User errors do NOT reject; they appear in `cart.getState().errors`. A setup error (message matches `/Standard Actions|could not be configured/`) sets `usable = false` and posts the form natively. Any other thrown error rejects. |
+| `submitCart(form, submitter, event)` | The caller MUST have called `event.preventDefault()`. Awaits `ready`. If `usable` is false it calls `form.requestSubmit(submitter)` (native post) and resolves `false`. Otherwise it runs the form through the store (hydrogen: `cart.handleFormSubmit(event)`, or one synthetic `add` for a product form submitted without a submitter, 5.1 step 3; liquid: `translateLiquidForm` then one synthetic submit per operation). Resolves when the mutation has settled, with the value `BackendParts.submit` returned: `true` when at least one operation was sent, `false` when nothing was sent (a Liquid cart form in which nothing differs from its baseline, 6.3) (D-126; change 15 of section 1). User errors do NOT reject; they appear in `cart.getState().errors`. A setup error (message matches `/Standard Actions|could not be configured/`) sets `usable = false` and posts the form natively. Any other thrown error rejects. |
 | `setLineQuantity(lineId, quantity)` | Sends intent `set` with `lineId` and `Math.max(0, Math.round(quantity))` through a synthetic submit. `0` removes the line. Rejects when `usable` is false. |
 | `refresh(regions, { url, reason })` | Section 8. `reason` is one of the six values of `RefreshReason` (section 8.2); the member is typed `string` to match D-042, and an unknown value is treated as `manual`. Resolves after the regions were replaced or after the fallback navigation was started. Never rejects. |
 | `openCart()` | If `document.getElementById(options.cartDrawer)` is an `HTMLDialogElement`: `showModal()` when not open. Otherwise `location.assign(options.cartUrl)` unless the current path already equals the cart path. On the cart page the layout prints no CartDrawer (D-091 item 5), so `openCart()` does nothing there. |
@@ -117,6 +127,7 @@ export interface CommerceStrings {
 }
 
 export interface CommerceOptions {
+  // `ShopifyRouteTemplates`: `import type { CartStore, ShopifyRouteTemplates } from "@shopify/hydrogen";` in adapter.ts
   host?: RippleHost;
   cartEndpoint?: string;
   cartUrl?: string;
@@ -126,6 +137,8 @@ export interface CommerceOptions {
   analytics?: boolean;
   consent?: "no-banner" | "default-banner";
   strings?: Partial<CommerceStrings>;
+  /** hydrogen backend. The app's route templates; the same object passed to `handleShopifyRoutes` (D-130). JSON. */
+  routes?: ShopifyRouteTemplates;
   navigate?: (url: string, options: { replace: boolean }) => void | Promise<void>;
   reloadFrames?: (names: string[], url: string | null) => void | Promise<void>;
 }
@@ -134,14 +147,15 @@ export interface CommerceOptions {
 | Option | Default | Used by | Meaning |
 |---|---|---|---|
 | `host` | `"html"` | all | Selects the refresh strategy. `backend` is derived: `"liquid"` when `host === "liquid"`, otherwise `"hydrogen"`. |
-| `cartEndpoint` | `"/api/cart"` | hydrogen backend | Passed to `configureCartEndpoint`. Also the `action` of every cart form. |
+| `cartEndpoint` | `"/api/cart"` | hydrogen backend | Passed to `configureCartEndpoint`. Also the `action` of every cart form. The value MUST include the page's locale path prefix (D-118): the server computes `` `${requestContext.locale.pathPrefix}/api/cart` `` (for example `/fr-ca/api/cart`; `pathPrefix` is `""` for the default locale) and prints it in the config element AND passes the same string as the `action` prop of every cart component and of ProductForm (10.1 rule 7). Without the prefix Hydrogen's handler resolves the default locale and resets the cart's buyer country (`reconcileBuyerCountry`, `hydrogen/packages/hydrogen/src/core/cart/server-handlers.ts`). |
 | `cartUrl` | `"/cart"` | all | Cart page URL. `action` of the Liquid cart form. Target of `openCart()` when no drawer exists. |
 | `cartAddUrl` | `"/cart/add"` | liquid backend | `action` of the Liquid product form. |
 | `cartDrawer` | `"cart-drawer"` | all | `id` of the CartDrawer `<dialog>`. The CartDrawer `<dialog>` id MUST equal this value (D-087 item 5, D-020); every blueprint uses `cart-drawer`. |
 | `initialCart` | `undefined` | hydrogen backend | The `data` value returned by `cartHandlers.get(...)` on the server (section 10.1). When set, the store is seeded and no `GET <cartEndpoint>` is made on load. JSON only. |
-| `analytics` | `true` | all | `false` skips `initializeShopifyScripts`, `trackCartAnalytics` and the definition of `rp-view-event`. Liquid: also gates the page-view dispatch (section 12). |
+| `analytics` | `true` | all | `false` skips `trackCartAnalytics` and the definition of `rp-view-event`. Liquid: also gates the page-view dispatch (section 12). On the hydrogen backend `initializeShopifyScripts` is called REGARDLESS of this option (D-130): it also sets up `Shopify.routes` and the WebMCP tools, and it is the call that publishes Hydrogen's page views, which this option therefore does not switch off on the hydrogen backend. |
 | `consent` | `"default-banner"` | hydrogen backend | Passed as `initializeShopifyScripts({ consent: { mode } })`. `custom-banner` is not supported in V1 (D-051). |
 | `strings` | English, 4.3 | all | Announcement and generic error texts. |
+| `routes` | `undefined` | hydrogen backend | The app's route templates (`ShopifyRouteTemplates`, a type export of `@shopify/hydrogen`; a plain JSON object): the SAME object the server passes as `routeTemplates` to `handleShopifyRoutes` (10.1). Passed as `initializeShopifyScripts({ routes })` (D-130). Omit when the app uses the standard routes. |
 | `navigate` | `undefined` | `react`, `remix` | The router's navigation function, called for reasons `variant` and `filter` with `replace: true` for `variant`. `react`: without it the strategy calls `location.assign(url)`. `remix`: opt-in (SPIKE-11); without it the `html` strategy runs. |
 | `reloadFrames` | `undefined` | `remix` | Remix only, opt-in (SPIKE-11). Called with `(regions, null)` for refreshes without a URL (reasons `cart`, `manual`). Without it the `html` strategy runs. The second argument is always `null` in V1. |
 
@@ -212,11 +226,11 @@ Outcomes:
 | Failure | `usable` | Commerce elements defined | `[data-rp-js="fallback"]` controls |
 |---|---|---|---|
 | Server render, or module not loaded | `false` (inert object, not cached) | no | visible |
-| Feature test fails, or `create()` throws (for example `updateCart` already configured by another script on Liquid) | `false` | no | visible |
-| `probe()` rejects (Standard Actions missing, `configure` returned false, first cart read failed) | `false` after `ready` | yes | hidden; controllers call `form.requestSubmit(<fallback submit button>)` instead |
+| Feature test fails, or `create()` throws | `false` | no | visible |
+| `probe()` rejects (on Liquid: `updateCart` already configured by another script, D-122; Standard Actions missing, `configure` returned false, first cart read failed) | `false` after `ready` | yes | hidden; controllers call `form.requestSubmit(<fallback submit button>)` instead. A form that carries `data-rp-js="inflow"` (Liquid discount forms) is NOT posted: `rp-cart` prevents the submit and shows `strings.error` (7.1, D-129) |
 | None | `true` | yes | hidden |
 
-The inert object has every member of `RippleCommerce`: `cart.getState()` returns an empty cart with `loading: true`, `cart.subscribe` returns a no-op, `submitCart`, `setLineQuantity`, `refresh` resolve without effect, `ready` is resolved, `usable` is `false`.
+The inert object has every member of `RippleCommerce`: `cart.getState()` returns an empty cart with `loading: true`, `cart.subscribe` returns a no-op, `submitCart` (value `false`), `setLineQuantity`, `refresh` resolve without effect, `ready` is resolved, `usable` is `false`.
 
 ### 4.6 Other exports of `adapter.ts`
 
@@ -232,8 +246,12 @@ Used by the adapters and controllers; not part of the public package API (only `
 | `createInertCommerce` | `(options: ResolvedOptions \| null) => RippleCommerce` | 4.5 |
 | `createCommerce` | `(options: ResolvedOptions, parts: BackendParts) => RippleCommerce` | Shared implementation |
 | `beginAction` | `() => number` | Marks the start of a buyer action; returns `Date.now()` |
-| `errorMessage` | `(state: CartState, scope: { line: string } \| "discount" \| "cart") => string \| null` | Section 9.2 |
+| `errorMessage` | `(state: CartState, scope: { line: string } \| "discount" \| "cart" \| "add") => string \| null` | Section 9.2. Scope `"add"` is not in the spike: change 12 of section 1 (D-119). |
+| `hasUserError` | `(state: CartState, since: number) => boolean` | `true` when a `userErrors` entry or a network error was recorded at or after `since`; `false` when only warnings were recorded (9.2, D-119). Not in the spike: change 12. |
 | `isBusy` | `(state: CartState) => boolean` | Section 7.1 |
+| `registerFlush` | `(hooks: { pending(): boolean; flush(): Promise<void> }) => () => void` | Each `connectCart` registers its hooks at connect and calls the returned function in its cleanup (7.1, D-117). Not in the spike: change 11 of section 1. |
+| `hasUnsettled` | `() => boolean` | `true` when any registered `pending()` returns `true` or `isBusy(cart.getState())` (D-117) |
+| `settle` | `() => Promise<void>` | Calls every registered `flush()` and awaits them all (a rejected flush is ignored), then resolves when `isBusy(cart.getState())` is `false` (it subscribes to the store when it is busy). It ALWAYS resolves within 5000 ms: a timer resolves it so that checkout is never blocked (D-117). Code below. |
 | `submitOp` | `(cart: CartStore, op: CartOp) => Promise<void>` | Synthetic submit, 6.4 |
 | `isSetupError` | `(error: unknown) => boolean` | 4.1 |
 | `nativeSubmit` | `(form: HTMLFormElement, submitter: HTMLElement \| null) => void` | `requestSubmit`; call only when `usable` is false |
@@ -247,14 +265,53 @@ Internal exports of other files, also not public package API:
 | `refresh-react.ts` | `getRegionHtml` | `(name: string) => string \| null` | `src/react/hooks.ts` (`useRegionHtml`) |
 | `refresh-react.ts` | `subscribeRegionHtml` | `(name: string, listener: () => void) => () => void` | `src/react/hooks.ts` (`useRegionHtml`) |
 
-`ResolvedOptions` is `CommerceOptions` with every default applied plus the derived `backend`: `host`, `backend`, `cartEndpoint`, `cartUrl`, `cartAddUrl`, `cartDrawer`, `analytics`, `consent` and `strings` are never `undefined`; `initialCart`, `navigate` and `reloadFrames` keep their optional types.
+`settle`, `registerFlush` and `hasUnsettled` (D-117), complete; added to `adapter.ts`:
+
+```ts
+interface FlushHooks {
+  pending(): boolean;
+  flush(): Promise<void>;
+}
+const flushHooks = new Set<FlushHooks>();
+const SETTLE_TIMEOUT_MS = 5000;
+
+export function registerFlush(hooks: FlushHooks): () => void {
+  flushHooks.add(hooks);
+  return () => void flushHooks.delete(hooks);
+}
+
+export function hasUnsettled(): boolean {
+  for (const hooks of flushHooks) if (hooks.pending()) return true;
+  return isBusy(getCommerce().cart.getState());
+}
+
+export function settle(): Promise<void> {
+  const cart = getCommerce().cart;
+  const work = Promise.all(Array.from(flushHooks, (hooks) => hooks.flush().catch(() => undefined))).then(
+    () =>
+      new Promise<void>((resolve) => {
+        if (!isBusy(cart.getState())) return resolve();
+        const stop = cart.subscribe(() => {
+          if (isBusy(cart.getState())) return;
+          stop();
+          resolve();
+        });
+      }),
+  );
+  const timeout = new Promise<void>((resolve) => setTimeout(resolve, SETTLE_TIMEOUT_MS));
+  return Promise.race([work, timeout]);
+}
+```
+
+`ResolvedOptions` is `CommerceOptions` with every default applied plus the derived `backend`: `host`, `backend`, `cartEndpoint`, `cartUrl`, `cartAddUrl`, `cartDrawer`, `analytics`, `consent` and `strings` are never `undefined`; `initialCart`, `routes`, `navigate` and `reloadFrames` keep their optional types.
 
 ```ts
 export interface BackendParts {
   cart: CartStore;
   dialect: FormDialect;
   strategy: RefreshStrategy;
-  submit(form: HTMLFormElement, submitter: HTMLElement | null, event: SubmitEvent): Promise<void>;
+  /** Resolves `true` when at least one operation was sent, `false` when none was (D-126). */
+  submit(form: HTMLFormElement, submitter: HTMLElement | null, event: SubmitEvent): Promise<boolean>;
   probe(): Promise<void>;
   afterReady(commerce: RippleCommerce): void;
 }
@@ -275,9 +332,43 @@ Hydrogen APIs called, all from `@shopify/hydrogen`: `configureCartEndpoint`, `cr
 
 1. `configureCartEndpoint(options.cartEndpoint)`.
 2. `createCartStore({ initialData: options.initialCart })` when `initialCart` is set, otherwise `createCartStore()`. Then `cart.connect()`.
-3. `submit`: `cart.handleFormSubmit(event)` with the REAL submit event. The form's own field names are already the Hydrogen protocol.
+3. `submit`: `cart.handleFormSubmit(event)` with the REAL submit event. The form's own field names are already the Hydrogen protocol. One exception (D-127; change 16 of section 1): `handleFormSubmit` throws `TypeError: Expected event.submitter to be an HTMLElement, got null` for a submit without a submitter (`form.requestSubmit()` with no argument; `requireFormEvent` in `hydrogen/packages/hydrogen/src/core/cart/cart.ts`), and 7.2 intercepts exactly that case for the product form. So a submit with `submitter === null` of a form that has a `[data-rp-field="merchandise-id"]` control is sent as one synthetic `add` (6.4). Complete code of the `submit` part:
+
+   ```ts
+   async submit(form, submitter, event) {
+     const merchandise = form.querySelector<HTMLInputElement>('[data-rp-field="merchandise-id"]');
+     if (submitter === null && merchandise) {
+       const fields: Record<string, string> = { merchandiseId: merchandise.value };
+       for (const [name, value] of new FormData(form)) {
+         if (typeof value !== "string" || value === "") continue;
+         if (name === "quantity" || name === "sellingPlanId" || name.startsWith("attributes.")) fields[name] = value;
+       }
+       fields.quantity ??= "1";
+       await submitOp(cart, { intent: "add", fields });
+       return true;
+     }
+     await cart.handleFormSubmit(event);
+     return true;
+   },
+   ```
+
+   `submitOp` is imported from `./adapter`. A submit with `submitter === null` of any OTHER form still reaches `handleFormSubmit` and rejects; `rp-cart` never produces one (it always passes the submit part to `requestSubmit`).
 4. `probe`: unseeded: `cart.fetch()` (returns the in-flight initial load; one `GET /api/cart`, scenario H1). Seeded: wait for `DOMContentLoaded`, then throw unless `window.Shopify?.actions?.updateCart` exists (scenario H6).
-5. `afterReady`: `window.Shopify.actions.openCart.configure({ handler: async () => commerce.openCart() })`; then analytics (section 12).
+5. `afterReady`: `window.Shopify.actions.openCart.configure({ handler: async () => commerce.openCart() })`; then the checkout guard below; then `initializeShopifyScripts` (always, D-130; code in 12.1 item 1); then analytics (section 12).
+   **Checkout guard** (D-117; hydrogen backend only, because the hydrogen checkout control is a plain link and a navigation cancels a quantity or note change that has not been sent or has not finished). `afterReady` adds ONE listener, `document.addEventListener("click", onCheckoutClick)`:
+
+   ```ts
+   function onCheckoutClick(event: MouseEvent): void {
+     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+     const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>("a.rp-checkout-button[href]") : null;
+     if (!link || !getCommerce().usable || !hasUnsettled()) return; // nothing pending: the click stays native
+     event.preventDefault();
+     const href = link.href; // read before a region refresh replaces the link
+     void settle().then(() => location.assign(href));
+   }
+   ```
+
+   A modified click (new tab) and a click with nothing unsettled stay native. On Liquid there is no guard: the checkout button submits the cart form natively with every quantity and the note.
 6. Strategy: `html` host `refreshHtml`; `react` host `refreshReact`; `remix` host `refreshRemix`, which falls back to `refreshHtml` per reason (8.3).
 
 The hydrogen backend REQUIRES the Standard Actions script on the page even though it has its own endpoint: the store sends every mutation through `window.Shopify.actions.updateCart`, which it configures once to call the endpoint. The server MUST print the Hydrogen script tags (section 10.1) before `ripple.js` (D-041 item 1, D-088 item 2). Evidence: `hydrogen/packages/hydrogen/src/core/cart/`, scenario H6.
@@ -286,10 +377,43 @@ The hydrogen backend REQUIRES the Standard Actions script on the page even thoug
 
 Hydrogen APIs called: `createCartStore`; on the store: `connect`, `fetch`, `handleFormSubmit` (synthetic events only), `getState`, `subscribe`, `refresh`. Platform specifier imported dynamically: `@shopify/standard-events` (`createViewEventElement`, `PageViewEvent`; types in `hydrogen/packages/hydrogen/vendor/standard-events.d.ts`). It is platform-provided and is NOT an npm dependency (D-046).
 
-1. If `window.Shopify?.actions?.updateCart?.isDefault() === false`, throw `Shopify.actions.updateCart is already configured by another script.` (D-041 item 5). This synchronous check was not exercised by a scenario; L5 and L6 cover the case where `configure` fails during the first cart read.
-2. `configureCartEndpoint` MUST NOT be called. `createCartStore()`, `cart.connect()`.
-3. `submit`: `for (const op of translateLiquidForm(form, submitter)) await submitOp(cart, op);` (section 6.3).
-4. `probe`: `cart.fetch()`. It rejects when Standard Actions is missing or `updateCart.configure` returns `false` (scenario L6).
+1. `configureCartEndpoint` MUST NOT be called. `createCartStore()` is called synchronously in `createLiquidCommerce`. `cart.connect()` is NOT called there (D-122; change 13 of section 1): it is called by `probe` (item 4), because `connect()` is the call that makes Hydrogen look for `Shopify.actions` and configure `updateCart`, and at module evaluation `Shopify.actions` does not exist yet (Shopify docs: "Actions are ready after DOMContentLoaded fires").
+2. Timing of the one `configure` call (D-122). "Only the first configure call on an action takes effect" (Shopify docs), so Ripple must configure before any app. `rp-head` prints, before `{{ content_for_header }}`, an inline classic script whose first line sets `window.rpDomReady`, a promise resolved by the FIRST `DOMContentLoaded` listener of the page (`04-elements.md` 3.3 item 8, `14-liquid-theme.md` 7.3). `probe` awaits it; its continuation runs in the microtask checkpoint directly after that first listener, before every listener registered later (those of `content_for_header` and of apps), with `Shopify.actions.updateCart` present. UNVERIFIED on a store (SPIKE-01 step 1a).
+3. `submit` (D-126; change 15 of section 1). The adapter holds one `baseline` map for the page: the last value of each note and cart-attribute control that the store accepted. It is needed because those controls sit OUTSIDE every refreshed region on Liquid, so their `defaultValue` stays the first server value for the lifetime of the page. Complete code:
+
+   ```ts
+   const baseline = new WeakMap<Element, string>();
+
+   async submit(form, submitter) {
+     const ops = translateLiquidForm(form, submitter, baseline);
+     for (const op of ops) {
+       const before = cart.getState().errors.lastUpdatedAt;
+       await submitOp(cart, op);
+       // No error or warning recorded by this operation: the sent values are the new baseline.
+       if (cart.getState().errors.lastUpdatedAt === before) {
+         for (const [control, value] of op.sent ?? []) baseline.set(control, value);
+       }
+     }
+     return ops.length > 0;
+   },
+   ```
+
+   `baseline` is declared inside `createLiquidCommerce`, before the `createCommerce` call.
+4. `probe` (complete):
+
+   ```ts
+   async probe() {
+     await (window.rpDomReady ?? Promise.resolve());
+     // Another script configured updateCart before Ripple: Hydrogen cannot own it (D-041 item 5).
+     if (window.Shopify?.actions?.updateCart?.isDefault() === false) {
+       throw new Error("Shopify.actions.updateCart is already configured by another script.");
+     }
+     cart.connect(); // Hydrogen configures updateCart synchronously here when Shopify.actions exists.
+     await cart.fetch();
+   },
+   ```
+
+   It rejects when another script configured `updateCart` first, when Standard Actions is missing, or when `updateCart.configure` returns `false` (scenario L6). The `isDefault()` check was not exercised by a scenario. `window.rpDomReady` is declared in `globals.d.ts` as `rpDomReady?: Promise<void>`. No element or user code can mutate the cart before this point: `submitCart` awaits `ready`.
 5. `afterReady`: configure `openCart` as in 5.1, and nothing else. `trackCartAnalytics` and `initializeShopifyScripts` MUST NOT be called on Liquid (the platform reports cart events and handles consent). `rp-view-event` and the page view are started by `startStandardEvents()`, which `index.ts` calls before the adapter is created and only when `options.analytics` is true (section 12.3).
 6. Strategy: `refreshLiquid`.
 
@@ -383,15 +507,15 @@ Rules for both: the selling-plan input is `disabled` when no plan is selected (a
   <form method="post" action="/api/cart">
     <input type="hidden" name="lineId" value="gid://shopify/CartLine/9?cart=c1" data-rp-field="line-id">
     <button type="submit" name="intent" value="set" hidden></button>
-    <input type="number" name="quantity" value="2" min="0" data-rp-field="quantity">
+    <input type="number" name="quantity" value="2" min="0" required data-rp-field="quantity">
     <button type="submit" name="intent" value="set" data-rp-part="submit" data-rp-js="fallback">Update</button>
-    <button type="submit" name="intent" value="remove">Remove</button>
+    <button type="submit" name="intent" value="remove" formnovalidate>Remove</button>
     <ERROR/>
   </form>
 </li>
 ```
 
-The first submit button MUST be the hidden `set` button (D-044): it is the form's default button, so Enter in the quantity input sends `set`. The quantity input is the input of an embedded QuantityInput (`rp-quantity`, [10-components-interactive.md](10-components-interactive.md)); its `type="button"` steppers are not part of this contract. Visible stepper submit buttons with `value="increase"` / `value="decrease"` MAY be added on the hydrogen backend only (D-044).
+The first submit button MUST be the hidden `set` button (D-044): it is the form's default button, so Enter in the quantity input sends `set`. On the hydrogen backend the quantity input of a cart line MUST carry `required` (CartLine passes `required` to the embedded QuantityInput) and the `remove` button MUST carry `formnovalidate` (D-116): Hydrogen's handler reads an empty `quantity` as `0` and removes the line (`hydrogen/packages/hydrogen/src/core/cart/cart.ts`, `getLineQuantityPayload`: `Number("")` is `0`), so native validation must stop an empty `set`, and an invalid quantity must not block the removal (Hydrogen's own `register("remove")` returns `formNoValidate: true`). Neither attribute is printed on Liquid. The quantity input is the input of an embedded QuantityInput (`rp-quantity`, [10-components-interactive.md](10-components-interactive.md)); its `type="button"` steppers are not part of this contract. Visible stepper submit buttons with `value="increase"` / `value="decrease"` MAY be added on the hydrogen backend only (D-044).
 
 **Cart lines, liquid backend** (ONE form for all lines, printed by CartLines, inside `rp-cart`; the region is inside the form):
 
@@ -430,7 +554,9 @@ liquid backend, inside `rp-cart`, associated with the cart form:
 <ERROR/>
 ```
 
-**Cart attributes.** hydrogen backend: inputs named `attributes.<key>` in a form whose submit button is `name="intent" value="attributes-update"`. liquid backend: inputs named `attributes[<key>]` with `form="{{ cart_lines }}-form"`. With JavaScript on Liquid, when any attribute control differs from its `defaultValue`, ALL attribute controls of the form are sent in one `attributes-update`.
+**Cart attributes.** hydrogen backend: inputs named `attributes.<key>` in a form whose submit button is `name="intent" value="attributes-update"`. liquid backend: inputs named `attributes[<key>]` with `form="{{ cart_lines }}-form"`. With JavaScript on Liquid, when any attribute control differs from its baseline value (6.3), ALL attribute controls of the form are sent in one `attributes-update`.
+
+`attributes-update` REPLACES the cart's attribute set on both backends with JavaScript (D-128). Evidence: Shopify docs, `UpdateCartPayload.attributes`: "The complete set of cart attributes the cart should end up with, replacing the existing set"; Hydrogen sends only the form's fields (`updateCart({ attributes: payload.attributes })`). Without JavaScript the Liquid post of `attributes[<key>]` sets only the named keys. Therefore a form that edits cart attributes MUST print every attribute that must survive, as a visible control or as `<input type="hidden">` (hydrogen: `name="attributes.<key>"` for each entry of `cart.attributes`; Liquid: `name="attributes[<key>]"` for each pair of `cart.attributes`, with `form="{{ cart_lines }}-form"`). An attribute that is not a control of the form is DELETED by the JavaScript path. No shipped component prints cart attribute controls; this rule is for project code. It is not statically checkable (section 13) and is documented only.
 
 **Discount code.** hydrogen backend, inside `rp-cart`:
 
@@ -448,9 +574,11 @@ liquid backend, inside `rp-cart`, associated with the cart form:
 
 liquid backend: the SAME markup with `action="{{ routes.cart_url }}"`, and each `<form>` additionally carries `data-rp-js="inflow"` (there is no no-JS discount form on Liquid, D-043). The submitter `name="intent"` tells `translateLiquidForm` to read the fields by `data-rp-field`. The field name `discountCode` is not sent to Shopify on Liquid.
 
-**Checkout** (D-050; the contract is CheckoutButton in doc 11). hydrogen backend: `<a href="<cart.checkoutUrl>" data-agent-confirm="<sentence>">` (Remix adds `data-rmx-document`). liquid backend: `<button type="submit" name="checkout" form="<cart lines id>-form" data-agent-confirm="<sentence>">`; when `cart_lines` is blank (the page has no CartLines), the button is wrapped in its own `<form method="post" action="{{ routes.cart_url }}">` and prints no `form` attribute. `data-agent-confirm` is REQUIRED (D-095). With an empty cart the control is inert: `disabled` on the button; `aria-disabled="true"` and no `href` on the link. The control is printed inside region `rp-cart-summary`; accelerated checkout markup is printed outside the region. `rp-cart` never intercepts a submitter whose `name` is `checkout` (scenario D3).
+**Checkout** (D-050; the contract is CheckoutButton in doc 11). hydrogen backend: `<a href="<cart.checkoutUrl>" data-agent-confirm="<sentence>">` (Remix adds `data-rmx-document`). liquid backend: `<button type="submit" name="checkout" form="<cart lines id>-form" data-agent-confirm="<sentence>">`; when `cart_lines` is blank (the page has no CartLines), the button is wrapped in its own `<form method="post" action="{{ routes.cart_url }}">` and prints no `form` attribute. `data-agent-confirm` is REQUIRED (D-095). With an empty cart the control is inert: `disabled` on the button; `aria-disabled="true"` and no `href` on the link. The control is printed inside region `rp-cart-summary`; accelerated checkout markup is printed outside the region. `rp-cart` never intercepts a submitter whose `name` is `checkout` (scenario D3). On the hydrogen backend a plain click on the checkout LINK is delayed by the adapter's checkout guard while a cart change is unsent or in flight (5.1 step 5, D-117); otherwise the navigation is native.
 
-### 6.3 `translateLiquidForm(form, submitter): CartOp[]`
+### 6.3 `translateLiquidForm(form, submitter, baseline): CartOp[]`
+
+Signature (D-126): `translateLiquidForm(form: HTMLFormElement, submitter: HTMLElement | null, baseline: WeakMap<Element, string> = new WeakMap()): CartOp[]`. `CartOp` gains one optional member: `export interface CartOp { intent: CartIntent; fields: Record<string, string>; sent?: Array<[Element, string]> }`. `sent` lists the note or attribute controls an operation carries with the value sent; `submitOp` ignores it; the Liquid adapter writes it to `baseline` after the operation settles without an error (5.2 item 3). Below, **the baseline value of a control** is `baseline.get(control) ?? control.defaultValue`.
 
 Input: the submitted form and its submitter. Only successful controls count (not `disabled`; checkboxes and radios only when checked). Output: zero or more operations in the Hydrogen protocol, sent in order.
 
@@ -458,7 +586,7 @@ Input: the submitted form and its submitter. Only successful controls count (not
 |---|---|---|
 | 1 | Submitter has `name="intent"` and a valid intent value | One op with that intent. Fields: for each control with a `data-rp-field` hook, `FIELD_TO_PROTOCOL[hook] = control.value`. |
 | 2 | Else: the form has a control with `data-rp-field="merchandise-id"` | One `add` op: `merchandiseId`; `quantity` from the `quantity` hook or `"1"`; `sellingPlanId` when the `selling-plan` hook has a non-empty value; `attributes.<k>` for each non-empty control named `properties[<k>]`. |
-| 3 | Else (cart form) | For each `[data-rp-line]` in the form whose `input[data-rp-field="quantity"]` has `value !== defaultValue` and a numeric value: a `set` op `{ lineId: <data-rp-line>, quantity: <rounded, min 0> }`. Then `note-update` when the `note` hook differs from its `defaultValue`. Then `attributes-update` as described in 6.2. An unchanged form yields `[]` and nothing is sent. |
+| 3 | Else (cart form) | For each `[data-rp-line]` in the form whose `input[data-rp-field="quantity"]` has `value !== defaultValue` and a numeric value: a `set` op `{ lineId: <data-rp-line>, quantity: <rounded, min 0> }`. Then `note-update` when the value of the `note` hook differs from its baseline value; the op carries `sent: [[note, note.value]]`. Then `attributes-update` as described in 6.2 (comparison against the baseline value; the op carries `sent` with one `[control, control.value]` pair per attribute control). An unchanged form yields `[]`, nothing is sent, `submitCart` resolves `false` and `rp-cart` announces nothing (7.1). The quantity comparison stays `value !== defaultValue`: quantity inputs are inside region `rp-cart-lines` and are re-rendered after every mutation. |
 
 ```ts
 export const FIELD_TO_PROTOCOL: Record<string, string> = {
@@ -472,6 +600,31 @@ export const FIELD_TO_PROTOCOL: Record<string, string> = {
 ```
 
 Verified payloads received by `Shopify.actions.updateCart` (scenarios L2, L3, D4): add `{"lines":[{"merchandiseId":"123","quantity":2,"sellingPlanId":"77","attributes":[{"key":"Engraving","value":"Hi"}]}]}`; set `{"lines":[{"id":"40123:abc","quantity":5}]}`; remove `{"lines":[{"id":"40123:abc","quantity":0}]}`; discount `{"discountCodes":["SAVE10"]}`; note `{"note":"hello"}`.
+
+The two changed comparisons of step 3 in `dialect.ts` (the rest of the spike function is unchanged):
+
+```ts
+const base = (control: Control) => baseline.get(control) ?? (control instanceof HTMLSelectElement ? "" : control.defaultValue);
+
+const note = hooked("note");
+if (note && !(note instanceof HTMLSelectElement) && note.value !== base(note)) {
+  ops.push({ intent: "note-update", fields: { note: note.value }, sent: [[note, note.value]] });
+}
+const attributes = all.filter((control) => /^attributes\[(.+)\]$/.test(control.name));
+const changed = attributes.some((control) => !(control instanceof HTMLSelectElement) && control.value !== base(control));
+if (changed) {
+  const fields: Record<string, string> = {};
+  const sent: Array<[Element, string]> = [];
+  for (const control of attributes) {
+    const key = /^attributes\[(.+)\]$/.exec(control.name)![1];
+    fields[`attributes.${key}`] = control.value;
+    sent.push([control, control.value]);
+  }
+  ops.push({ intent: "attributes-update", fields, sent });
+}
+```
+
+Why: without the baseline, after saving the note `gift` and then clearing it back to the first server value, `value === defaultValue`, no operation is sent and the cart keeps `gift`; and after any note save every later cart-form submit re-sends `note-update`.
 
 ### 6.4 The synthetic submit
 
@@ -538,10 +691,62 @@ Behaviour:
 
 | Trigger | Condition | Action |
 |---|---|---|
-| `submit` | form is `method="post"`, owned by this root, `usable`, submitter name is not `checkout` | `preventDefault()`; `submitCart(form, submitter, event)`; announce (9.1) |
+| `submit` | form is `method="post"`, owned by this root, `usable`, submitter name is not `checkout` | `preventDefault()`. Empty-quantity guard (D-116): when the submitter is `name="intent" value="set"` and the value of the form's `input[data-rp-field="quantity"]` is empty or not a number (`value.trim() === "" \|\| !Number.isFinite(Number(value))`), stop here: no `submitCart`, no announcement (Hydrogen reads an empty quantity as `0` and would REMOVE the line). Otherwise `const sent = await submitCart(form, submitter, event)`; announce (9.1) only when `sent` is `true` (D-126: a Liquid cart form with nothing to send announces nothing) |
+| `submit` | form is `method="post"`, owned by this root, `commerce.usable` is `false`, and the form carries `data-rp-js="inflow"` (the Liquid discount forms, which have no no-JS counterpart) | `preventDefault()`; write `strings.error` to the form's own `[data-rp-part="error"]` when it has one (DiscountCode), else to the root's first cart-scope error part, and remove its `hidden`; do NOT post (D-129). Reason: the form's fields `discountCode` and `intent` are Hydrogen names that the platform's `/cart` route ignores; a native post would reload the page, apply nothing and show nothing. Every other `method="post"` form is left alone when `usable` is `false` (native post, as before). |
 | `change`, and `valuechange` (captured; from `rp-quantity`) | target is or contains `input[data-rp-field="quantity"]` inside an owned `[data-rp-line]` | Debounce 250 ms per line. Then read the input: skip when empty, not a number, or equal to the last sent value (initially `defaultValue`). `usable`: `setLineQuantity(id, quantity)`. Not usable: `form.requestSubmit(<[data-rp-part="submit"] of that form>)`. |
 | `change` | target matches `[data-rp-field="note"]` | `form.requestSubmit(<[data-rp-part="submit"] of target.form>)`, which re-enters the `submit` row (on Liquid the form is the cart form in the CartLines root, which handles it) |
 | `click` | plain primary click on owned `a[data-rp-part="remove"]`, `usable` | `preventDefault()`; `setLineQuantity(<data-rp-line>, 0)` |
+| connect (D-117) | always | `registerFlush({ pending, flush })`; the returned function is called in the cleanup. `pending()`: `timers.size > 0 \|\| inflight.size > 0`. `flush()`: for every pending quantity timer, `clearTimeout`, delete it and call `commitQuantity(line)` now; then `await Promise.allSettled([...inflight])`. `inflight` is a `Set<Promise<void>>` to which `run()` adds its own promise and from which it removes it when it settles. The checkout link is NOT handled by `rp-cart`; the adapter's checkout guard (5.1 step 5) calls `settle()`. |
+
+
+Code of the `submit` listener and of `run` after changes 10, 11, 15 and 17 of section 1 (the empty-quantity guard is the `isEmptySet` line):
+
+```ts
+async function runAction(kind: ActionKind, action: () => Promise<boolean | void>): Promise<void> {
+  const started = beginAction();
+  let sent: boolean | void;
+  try {
+    sent = await action();
+  } catch (error) {
+    console.error("[ripple] cart action failed.", error);
+    const part = own<HTMLElement>('[data-rp-part="error"]').find((el) => !el.closest("[data-rp-line]"));
+    if (part) showError(part, getStrings().error);
+    return;
+  }
+  if (sent === false) return; // nothing was sent (D-126): no announcement
+  if (commerce.usable && commerce.cart.getState().errors.lastUpdatedAt < started) say(kind);
+}
+
+// Every cart action goes through `run`, which records the promise for the checkout guard (D-117).
+function run(kind: ActionKind, action: () => Promise<boolean | void>): Promise<void> {
+  const promise = runAction(kind, action);
+  inflight.add(promise);
+  void promise.finally(() => inflight.delete(promise));
+  return promise;
+}
+
+const onSubmit = (event: Event): void => {
+  const form = event.target;
+  if (!(event instanceof SubmitEvent) || !(form instanceof HTMLFormElement) || !owns(form)) return;
+  if (form.method !== "post") return;
+  const submitter = event.submitter;
+  if (submitter?.getAttribute("name") === "checkout") return;
+  if (!commerce.usable) {
+    if (!form.matches('[data-rp-js="inflow"]')) return; // native post
+    event.preventDefault(); // D-129: a JS-only form must not post Hydrogen field names to the platform
+    const part =
+      form.querySelector<HTMLElement>('[data-rp-part="error"]') ??
+      own<HTMLElement>('[data-rp-part="error"]').find((el) => !el.closest("[data-rp-line]"));
+    if (part) showError(part, getStrings().error);
+    return;
+  }
+  event.preventDefault();
+  if (isEmptySet(form, submitter)) return; // D-116
+  void run(kindOf(form, submitter), () => commerce.submitCart(form, submitter, event));
+};
+```
+
+`isEmptySet(form, submitter)` is `true` when the submitter is `name="intent" value="set"` and the form's `input[data-rp-field="quantity"]` value is empty or not a number. `inflight` is the `Set<Promise<void>>` of the connect row. `setLineQuantity` resolves `void`, which `run` treats as sent.
 
 Events dispatched: none.
 
@@ -574,7 +779,9 @@ Behaviour on `submit` of an owned form when `usable` and (`event.submitter === n
 1. If the root has `data-pending`: `preventDefault()` and stop (double submit).
 2. `preventDefault()`; clear the error part; set `data-pending=""` and `aria-busy="true"` on the root.
 3. `await submitCart(form, submitter, event)`.
-4. If the store recorded an error at or after step 2 (`state.errors.lastUpdatedAt >= started`): show `errorMessage(state, "cart") ?? strings.error` in the error part. Stop.
+4. If the store recorded an error or a warning at or after step 2 (`state.errors.lastUpdatedAt >= started`): show `errorMessage(state, "add") ?? strings.error` in the error part (scope `"add"`, 9.2: Hydrogen keys an add error to the EXISTING cart line when the variant is already in the cart, and that line is rendered in the CartDrawer of every page, so scope `"cart"` would miss it). Then:
+   - `hasUserError(state, started)` is `true` (a `userErrors` entry or a network error): stop. Nothing was added.
+   - otherwise only warnings were recorded: the cart DID change (a warning accompanies a successful mutation, for example a quantity reduced to the available stock). Continue with step 5 (a) and (b), and skip (c): the message stays in the error part and `strings.added` is NOT announced.
 5. Otherwise, in this order: (a) dispatch `action` on the root; (b) unless a listener called `preventDefault()`, call `commerce.openCart()`; (c) announce `strings.added` (channel: section 9.1).
 6. Always: remove `data-pending` and `aria-busy`.
 
@@ -1053,6 +1260,44 @@ Scope of an `rp-cart` error part, decided by position:
 | inside a `[data-rp-line]` | that line | first `userErrors` message, else first `warnings` message, of `errors.lines.get(<line id>)` |
 | inside a form that contains `[data-rp-field="discount-code"]` | discount | the last discount code group's first message |
 | anywhere else in the root | cart | first of: `errors.cart`; `errors.note`; `errors.attributes`; line errors whose line is not rendered on the page; the latest `errors.network` message |
+| the error part of an `rp-product-form` | add (D-119) | first of: `errors.cart`; the first message of ANY `errors.lines` group, rendered on the page or not, when `errors.linesUpdatedAt >= since`; the latest `errors.network` message. `errors.note`, `errors.attributes` and discount errors are not shown here. |
+
+Code added to `errorMessage` in `adapter.ts` (the `"add"` branch goes directly after the `"discount"` branch) and the new export `hasUserError`:
+
+```ts
+export type ErrorScope = { line: string } | "discount" | "cart" | "add";
+
+// inside errorMessage(), after the "discount" branch:
+if (scope === "add") {
+  if (errors.cartUpdatedAt >= since) {
+    const cart = first(errors.cart);
+    if (cart) return cart;
+  }
+  if (errors.linesUpdatedAt >= since) {
+    for (const group of errors.lines.values()) {
+      const message = first(group);
+      if (message) return message;
+    }
+  }
+  if (errors.networkUpdatedAt >= since && errors.network.length > 0) {
+    return errors.network[errors.network.length - 1]!.message;
+  }
+  return null;
+}
+
+/** True when a userError or a network error (not only warnings) was recorded at or after `since`. */
+export function hasUserError(state: CartState, since: number): boolean {
+  const { errors } = state;
+  const has = (group: { userErrors: unknown[] } | undefined): boolean => (group?.userErrors.length ?? 0) > 0;
+  if (errors.networkUpdatedAt >= since && errors.network.length > 0) return true;
+  if (errors.cartUpdatedAt >= since && has(errors.cart)) return true;
+  if (errors.noteUpdatedAt >= since && has(errors.note)) return true;
+  if (errors.linesUpdatedAt >= since) for (const group of errors.lines.values()) if (has(group)) return true;
+  if (errors.attributesUpdatedAt >= since) for (const group of errors.attributes.values()) if (has(group)) return true;
+  if (errors.discountCodesUpdatedAt >= since) for (const group of errors.discountCodes.values()) if (has(group)) return true;
+  return false;
+}
+```
 
 Rules:
 
@@ -1061,7 +1306,7 @@ Rules:
 - An error stays visible until the next buyer cart action begins (D-045).
 - A cart-scope message is shown by every cart-scope part on the page (a note error appears in CartLines and in CartNote). This duplication is accepted in V1.
 - When `submitCart` or `setLineQuantity` rejects (network failure not recorded by the store), `rp-cart` writes `strings.error` to its first cart-scope error part and logs `[ripple] cart action failed.` with `console.error`.
-- `rp-product-form` shows `errorMessage(state, "cart") ?? strings.error` in its own error part.
+- `rp-product-form` shows `errorMessage(state, "add") ?? strings.error` in its own error part (7.2 step 4). When only warnings were recorded it still opens the cart (D-119).
 - After an error the server state may still have changed (partial success); the cart regions are refreshed in every case, so quantities return to the server's values (step 8 of 8.2).
 - Errors use `role="alert"` on the error part; they are not also sent through `announce`.
 - The two writes on an error part (text, `hidden`) and the two on a count part (text, `hidden`) are `upgradeAllow` entries fixed by D-071 item 3.
@@ -1078,7 +1323,7 @@ Rules:
 
 ### 10.1 Hydrogen server (all of `html`, `react`, `remix`)
 
-This section is D-041 item 1 as corrected and D-088. Server APIs, all from `@shopify/hydrogen` (evidence: `hydrogen/packages/hydrogen/src/core/cart/server-handlers.ts`, `hydrogen/packages/hydrogen/skills/hydrogen-request-handlers/SKILL.md`, `hydrogen/packages/hydrogen/src/core/shopify-scripts/index.ts`). In the code below `i18n`, `routeTemplates` and the arguments of `createStorefrontClient` are the app's own values, described in the Hydrogen skills `hydrogen-markets`, `hydrogen-request-handlers` and `hydrogen-storefront-client` (`hydrogen/packages/hydrogen/skills/`); Ripple adds nothing to them.
+This section is D-041 item 1 as corrected and D-088. Server APIs, all from `@shopify/hydrogen` (evidence: `hydrogen/packages/hydrogen/src/core/cart/server-handlers.ts`, `hydrogen/packages/hydrogen/skills/hydrogen-request-handlers/SKILL.md`, `hydrogen/packages/hydrogen/src/core/shopify-scripts/index.ts`). In the code below `i18nDefinition` (the value returned by `defineShopifyI18n`), `routeTemplates`, `storefrontClientType` and `storefrontClientConfig` are the app's own values, described in the Hydrogen skills `hydrogen-markets`, `hydrogen-request-handlers` and `hydrogen-storefront-client` (`hydrogen/packages/hydrogen/skills/`); Ripple adds nothing to them.
 
 ```ts
 import {
@@ -1093,8 +1338,9 @@ import {
 const cartHandlers = createCartServerHandlers();
 
 export async function handle(request: Request): Promise<Response> {
-  const requestContext = createShopifyRequestContext({ request, i18n });
-  const storefrontClient = createStorefrontClient(storefrontClientOptions);
+  const requestContext = createShopifyRequestContext({ request, i18n: i18nDefinition });
+  // `requestContext` MUST be the object created on the line above; handleShopifyRoutes throws otherwise.
+  const storefrontClient = createStorefrontClient({ type: storefrontClientType, requestContext, config: storefrontClientConfig });
 
   // 1. Hydrogen routes first. Returns null synchronously when no route matches.
   const shopifyRoute = handleShopifyRoutes({
@@ -1111,18 +1357,25 @@ export async function handle(request: Request): Promise<Response> {
 }
 ```
 
+`createStorefrontClient` takes ONE object `{ type, requestContext, config }` (`hydrogen/packages/hydrogen/src/client/client.ts`) and MUST receive the per-request `requestContext` created in the same function: `handleShopifyRoutes` throws `handleShopifyRoutes must receive the same requestContext used by storefrontClient.` otherwise (`hydrogen/packages/hydrogen/src/core/request-routing/handle-shopify-routes.ts`). A module-level client cannot satisfy this.
+
 Rules:
 
 1. `handlers: [cartHandlers]` mounts `GET /api/cart` (JSON) and `POST /api/cart`. A JSON POST (from the store) answers JSON. A form POST (no JavaScript) answers `303` to the same-origin `Referer`. The handlers object has lowercase members `get` and `post`.
-2. Every page MUST print the Hydrogen script tags in `<head>` before the config element and the `ripple.js` module script (D-088 item 2): `renderShopifyScriptTags({ shop, i18n, consent: { mode: "default-banner" } }).join("")`. They load Standard Actions (required, 5.1), consent and analytics. `shop` is `{ shopId, storefrontId, myshopifyDomain }` (shape from `hydrogen/packages/hydrogen/src/core/shopify-scripts/static-scripts.test.ts`). The `consent.mode` printed here MUST equal the `consent` option of section 4.2.
+2. Every page MUST print the Hydrogen script tags in `<head>` before the config element and the `ripple.js` module script (D-088 item 2): `renderShopifyScriptTags({ shop, i18n: requestContext.locale, consent: { mode: "default-banner" } }).join("")`. Here `i18n` is the RESOLVED locale of the request (`{ country, language, pathPrefix?, currency? }`), NOT the `defineShopifyI18n` definition passed to `createShopifyRequestContext` (`hydrogen/packages/hydrogen/skills/hydrogen-setup/steps/7-shopify-runtime-scripts.md`). They load Standard Actions (required, 5.1), consent and analytics. `shop` is `{ shopId, storefrontId, myshopifyDomain }` (shape from `hydrogen/packages/hydrogen/src/core/shopify-scripts/static-scripts.test.ts`). The `consent.mode` printed here MUST equal the `consent` option of section 4.2.
 3. Cart markup is rendered from a server cart read: `const { data } = await cartHandlers.get({ storefrontClient, request });` where `data` is `{ cart, errors? }`. This read marks the response as personalized: a page that prints cart lines or a non-zero count from it MUST NOT be cached publicly.
 4. Seeding: a server that made the read of rule 3 SHOULD pass it to the client as `initialCart` in the config element (then no `GET /api/cart` happens on load, scenario H3). A publicly cached page MUST NOT seed; it prints the count part with `hidden` and the text `0` (hook attributes: `data-rp-part="count" hidden`; classes in doc 11, CartLink) and the element fills it after load (D-041 as amended).
 5. The response for a region refresh on the `html` host, and on the `remix` host by default, is the full page; no special route is needed.
-6. Config element for the `html` host (printed by the `layout` blueprint, 4.4):
+6. Config element for the `html` host (printed by the `layout` blueprint, 4.4), for a request in the default locale (`pathPrefix` is `""`):
 
 ```html
 <script type="application/json" id="rp-commerce">{"host":"html","cartEndpoint":"/api/cart","cartUrl":"/cart","initialCart":{"cart":null}}</script>
 ```
+
+   An app that passes its own `routeTemplates` to `handleShopifyRoutes` MUST add the same object to the config element as `"routes": <routeTemplates>` (option `routes`, 4.2, D-130); an app on the standard routes omits the key.
+
+7. Locale path prefix (D-118). `handleShopifyRoutes` serves the cart handlers under every locale prefix (`/fr-ca/api/cart`) and the handler takes the locale from the request URL. The route code computes ONE string per request, `const cartAction = `${requestContext.locale.pathPrefix}/api/cart`;`, and uses it in exactly three places: (a) `cartEndpoint` of the config element (and `cartUrl` is `` `${requestContext.locale.pathPrefix}/cart` ``); (b) the `cartAction` prop of the `layout`, `cart` and `product` blueprints, which pass it as the `action` prop of CartDrawer, CartLines, CartSummary, CartNote, DiscountCode and ProductForm (`11-components-commerce.md` CV-17); (c) nowhere else: no component reads the config element on the server. For a request to `/fr-ca/...` the config element is `{"host":"html","cartEndpoint":"/fr-ca/api/cart","cartUrl":"/fr-ca/cart",...}` and every cart form has `action="/fr-ca/api/cart"`. Hydrogen's own statement (`configureCartEndpoint` doc comment, `hydrogen/packages/hydrogen/src/core/cart/cart.ts`): "Without those providers, call the function in the browser only and include the page's locale path prefix in the endpoint, such as `/fr-ca/api/cart`."
+
 
 ### 10.2 Remix 3
 
@@ -1158,7 +1411,7 @@ Everything in 10.1, plus:
 
 ### 10.4 Liquid theme
 
-1. The theme MUST NOT contain `snippets/standard-actions-config.liquid` or `assets/standard-actions-override.js`, and MUST NOT call `Shopify.actions.updateCart.configure` (RP307). Hydrogen inside `ripple.js` makes the one `configure` call.
+1. The theme MUST NOT contain `snippets/standard-actions-config.liquid` or `assets/standard-actions-override.js`, and MUST NOT call `Shopify.actions.updateCart.configure` (RP307). Hydrogen inside `ripple.js` makes the one `configure` call, at the time fixed by 5.2 item 2 (inside the page's first `DOMContentLoaded` listener, D-122).
 2. Standard Actions, Standard Events and partial rendering are provided by the platform; `ripple.js` imports `@shopify/partial-rendering` and `@shopify/standard-events` dynamically and reads `window.Shopify.actions`. Ripple prints nothing for them (D-088 item 2). How the developer-preview theme enables these (import map) is specified in [14-liquid-theme.md](14-liquid-theme.md); it is UNVERIFIED here (SPIKE-01, SPIKE-02).
 3. The config element is printed by `snippets/rp-head.liquid` (owned by [14-liquid-theme.md](14-liquid-theme.md) section 7), after `{% render 'rp-tokens' %}` and before the inline Invoker Commands polyfill (D-054 item 7, D-087 item 3). The layout does not print it. Its text (the snippet file is owned by doc 14; the JSON keys and values are owned here, and the two MUST be equal):
 
@@ -1415,7 +1668,7 @@ Which component reads which type, and the Liquid expression each Liquid binding 
 | `variant` | ProductForm, Price, AddToCartButton, ProductGallery | `RippleVariant` | `ProductVariant`: `id`, `title`, `availableForSale`, `price`, `compareAtPrice`, `image`, `selectedOptions` | `variant.id`, `.title`, `.available`, `.price`, `.compare_at_price`, `.image`; default `product.selected_or_first_available_variant` |
 | `collection` | CollectionCard, FeaturedCollection | `RippleCollection` | `Collection`: `id`, `title`, `handle`, `image` | `collection.id`, `.title`, `.handle`, `.url`, `.image` |
 | `article` | ArticleCard | `RippleArticle` | `Article`: `id`, `title`, `handle`, `excerpt`, `publishedAt`, `image`, `blog.handle` | `article.id`, `.title`, `.url`, `.excerpt`, `.published_at`, `.image` |
-| `cart` | CartDrawer, CartLines, CartSummary, CartNote | `RippleCart` | `Cart`: `id`, `totalQuantity`, `checkoutUrl`, `note`, `cost.subtotalAmount`, `cost.totalAmount`, `discountCodes`, `lines.nodes` | `cart.item_count`, `cart.note`, `cart.items_subtotal_price`, `cart.total_price`, `cart.items`; applied discount codes: `cart.cart_level_discount_applications` where `type == 'discount_code'`, code = `title` (the `type` value is UNVERIFIED, SPIKE-02; D-092 item 4) |
+| `cart` | CartDrawer, CartLines, CartSummary, CartNote | `RippleCart` | `Cart`: `id`, `totalQuantity`, `checkoutUrl`, `note`, `cost.subtotalAmount`, `cost.totalAmount`, `discountCodes`, `lines.nodes` | `cart.item_count`, `cart.note`, `cart.items_subtotal_price`, `cart.total_price`, `cart.items`; applied discount codes: the unique titles of `cart.cart_level_discount_applications` where `type == 'discount_code'` and of every `item.line_level_discount_allocations[].discount_application` where `type == 'discount_code'` (D-120; code in `components/cart-summary.md` Host notes) |
 | `line` | CartLine | `RippleLine` | `CartLine`: `id`, `quantity`, `merchandise.product.title`, `merchandise.title`, `merchandise.image`, `cost.totalAmount`, `cost.subtotalAmount`, `attributes` | `item.key`, `.quantity`, `.product.title`, `.variant.title`, `.url`, `.image`, `.final_line_price`, `.original_line_price`, `.properties` |
 | `image` | Image and every card | `RippleImage` | `Image`: `url`, `altText`, `width`, `height` | image drop: `image_url` filter, `.alt`, `.width`, `.height` |
 | `media` | ProductGallery | `RippleMedia[]` | `product.media.nodes` of type `MediaImage`: `id`, `image` | `product.media` where `media_type == 'image'`: `.id`, `.preview_image`, `.alt` |
@@ -1486,12 +1739,42 @@ export function imageSrcSet(src: string, widths: readonly number[]): string {
 
 ### 12.1 Consent, page views, cart events
 
-1. There is no consent banner component (D-051). hydrogen backend: the platform banner is loaded by the script tags of 10.1 with `consent: { mode: "default-banner" }` (or `"no-banner"`); the client calls `initializeShopifyScripts({ consent: { mode: options.consent } })` once, in `afterReady`. Liquid: the platform handles consent; Ripple calls nothing.
+1. There is no consent banner component (D-051). hydrogen backend: the platform banner is loaded by the script tags of 10.1 with `consent: { mode: "default-banner" }` (or `"no-banner"`); the client calls `initializeShopifyScripts` once, in `afterReady`, REGARDLESS of `options.analytics` (D-130; change 18 of section 1). The call is more than analytics: it assigns `Shopify.routes.match / resolve / navigate` from `routes` and `navigate`, starts Hydrogen's page-view events and loads the WebMCP tools (`hydrogen/packages/hydrogen/src/core/shopify-scripts/initialize.ts`, `global.ts`); Hydrogen's routing skill requires the same route templates on the server and in this call. Liquid: the platform handles consent and routing; Ripple calls nothing. Code of the hydrogen `afterReady` (complete; replaces the spike's):
+
+   ```ts
+   afterReady(commerce) {
+     window.Shopify?.actions?.openCart?.configure({ handler: async () => commerce.openCart() });
+     document.addEventListener("click", onCheckoutClick); // 5.1 step 5
+     try {
+       void initializeShopifyScripts({
+         consent: { mode: options.consent },
+         routes: options.routes,
+         // Read at call time: `navigate` may be set by configureCommerce after the start (4.4).
+         navigate: (url) => {
+           const navigate = getOptions()?.navigate;
+           if (navigate) return void navigate(url, { replace: false });
+           window.location.assign(url);
+         },
+       });
+     } catch (error) {
+       console.error("[ripple] Shopify scripts not initialised.", error);
+     }
+     if (!options.analytics || !window.Shopify?.analytics) return;
+     try {
+       trackCartAnalytics(cart);
+       defineViewEvent();
+     } catch (error) {
+       console.error("[ripple] analytics not started.", error);
+     }
+   },
+   ```
+
+   `getOptions` is imported from `./adapter`. An app MUST NOT call `initializeShopifyScripts` itself: Ripple owns the call (a second call overwrites `Shopify.routes`).
 2. Page views.
-   - hydrogen backend: published by `initializeShopifyScripts` (it calls Hydrogen's page-view initialiser; `hydrogen/packages/hydrogen/src/core/shopify-scripts/initialize.ts`).
+   - hydrogen backend: published by `initializeShopifyScripts`, also when `options.analytics` is `false` (item 1; it calls Hydrogen's page-view initialiser; `hydrogen/packages/hydrogen/src/core/shopify-scripts/initialize.ts`).
    - Liquid (D-089 item 6): the Liquid adapter dispatches ONE `PageViewEvent` from `@shopify/standard-events` per document load when `options.analytics` is true. Target: `document`. Payload: `page: { template, title: document.title, url: location.href }`, where `template` is `document.querySelector("main[data-template]")?.dataset.template ?? ""` (the layout prints `<main id="main" data-template="{{ request.page_type }}">`). Timing: at `DOMContentLoaded`, or immediately when the document is already parsed. Code: 12.3. This is a port of `ripple/theme/assets/page-view-event.js` and `ripple/theme/assets/page-view-event-init.js`; the Ripple theme contains no page-view asset (D-039). UNVERIFIED: whether the platform also publishes a page view by itself (SPIKE-01); when it does, the adapter's dispatch is removed.
 3. Cart events: hydrogen backend: `trackCartAnalytics(cart)` once, in `afterReady` (`hydrogen/packages/hydrogen/src/core/analytics/cart-tracker.ts`). Liquid: published by the platform through Standard Actions; `trackCartAnalytics` MUST NOT be called.
-4. Analytics starts only when `options.analytics` is true and, on the hydrogen backend, `window.Shopify.analytics` exists. A thrown error is logged (`[ripple] analytics not started.` on the hydrogen backend; the message of 12.3 on Liquid) and does not change `usable`.
+4. Cart events and `rp-view-event` start only when `options.analytics` is true and, on the hydrogen backend, `window.Shopify.analytics` exists. A thrown error is logged (`[ripple] analytics not started.` on the hydrogen backend; the message of 12.3 on Liquid) and does not change `usable`.
 
 ### 12.2 `rp-view-event`
 
@@ -1540,7 +1823,7 @@ The same view on the hydrogen backend; `cart` is the `data.cart` object of the s
 
 (The example shows two of the cart's fields; the real payload carries the whole `data.cart` object.)
 
-Filter arguments on Liquid, as the base theme prints them: product `{{ product | standard_event_data: 'view', context: 'page' | escape }}`; collection `{{ collection | standard_event_data: 'view', context: 'page' | escape }}`; cart `{{ cart | standard_event_data: 'view', context: 'page' }}`. The search view expression is owned by doc 12 (`search` blueprint). `standard_event_data` is in the blueprint scope of the Liquid subset (D-097).
+Filter arguments on Liquid, as the base theme prints them: product `{{ product | standard_event_data: 'view', context: 'page' | escape }}`; collection `{{ collection | standard_event_data: 'view' | escape }}` (no `context`: the base theme passes none, and the Liquid reference says the `context` parameter is ignored for collections); cart `{{ cart | standard_event_data: 'view', context: 'page' }}`. The search view expression is owned by doc 12 (`search` blueprint). `standard_event_data` is in the blueprint scope of the Liquid subset (D-097).
 
 Payloads on the hydrogen backend, `{ "event": <name>, "payload": <object> }` (shapes from `hydrogen/packages/hydrogen/src/core/analytics/`):
 
@@ -1555,8 +1838,71 @@ Definition per backend (D-089 item 5):
 
 | Backend | Where | Behaviour |
 |---|---|---|
-| hydrogen | `adapter-hydrogen.ts`, function `defineViewEvent()` (copied from the spike unchanged), called in `afterReady` when analytics starts | A plain `HTMLElement` subclass. On connect (`connect`) or first intersection (`intersect`) it reads `view-event-payload`, or else the text of the child `script[type="application/json"][data-view-event-payload]`, parses `{ event, payload }` and calls `window.Shopify.analytics.publish(event, payload)` once per element. Invalid JSON: `console.error("[ripple] rp-view-event: invalid payload.", error)`. |
+| hydrogen | `adapter-hydrogen.ts`, function `defineViewEvent()` (the spike's function with change 14 of section 1: the class below), called in `afterReady` when analytics starts | A plain `HTMLElement` subclass. On connect (`connect`) or first intersection (`intersect`) it reads `view-event-payload`, or else the text of the child `script[type="application/json"][data-view-event-payload]`, parses `{ event, payload }` and calls `window.Shopify.analytics.publish(event, payload)` once per PAYLOAD VALUE (D-123): the element observes `view-event-payload`, and when the attribute changes to a value that differs from the last published one while the element is connected, it publishes again (trigger `connect`) or re-arms its IntersectionObserver (trigger `intersect`). This is what makes client-side navigation work on the `remix` and `react` hosts, where the unkeyed element is REUSED between two pages and only its attribute is rewritten. Invalid JSON: `console.error("[ripple] rp-view-event: invalid payload.", error)`. |
 | liquid | `adapter-liquid.ts`, function `startStandardEvents()` (12.3) | `customElements.define("rp-view-event", createViewEventElement())` with `createViewEventElement` from `@shopify/standard-events` (types: `hydrogen/packages/hydrogen/vendor/standard-events.d.ts`; that API also supports the triggers `dialog` and `manual`, which Ripple does not use). |
+
+The hydrogen class, complete (replaces the class body of the spike's `defineViewEvent`; D-123):
+
+```ts
+class extends HTMLElement {
+  static observedAttributes = ["view-event-payload"];
+  #published: string | null = null; // the raw payload text last published; null before the first publish
+  #observer: IntersectionObserver | null = null;
+
+  connectedCallback(): void {
+    this.#arm();
+  }
+
+  disconnectedCallback(): void {
+    this.#observer?.disconnect();
+    this.#observer = null;
+  }
+
+  // Runs when a host (Remix morph, React re-render) rewrites the attribute on the reused element.
+  // It also runs once at upgrade, before connectedCallback: #published is null then and nothing happens.
+  attributeChangedCallback(_name: string, _old: string | null, value: string | null): void {
+    if (!this.isConnected || this.#published === null || value === null || value === this.#published) return;
+    this.#arm();
+  }
+
+  #raw(): string {
+    return (
+      this.getAttribute("view-event-payload") ??
+      this.querySelector('script[type="application/json"][data-view-event-payload]')?.textContent ??
+      ""
+    );
+  }
+
+  #arm(): void {
+    this.#observer?.disconnect();
+    this.#observer = null;
+    if (this.#raw() === this.#published) return;
+    if (this.getAttribute("view-event-trigger") !== "intersect" || !("IntersectionObserver" in window)) {
+      this.dispatchViewEvent();
+      return;
+    }
+    this.#observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) this.dispatchViewEvent();
+    });
+    this.#observer.observe(this);
+  }
+
+  dispatchViewEvent(): void {
+    const raw = this.#raw();
+    if (raw === this.#published) return;
+    this.#published = raw;
+    this.#observer?.disconnect();
+    try {
+      const { event, payload } = JSON.parse(raw) as { event: AnalyticsEventName; payload: never };
+      window.Shopify?.analytics?.publish(event, payload);
+    } catch (error) {
+      console.error("[ripple] rp-view-event: invalid payload.", error);
+    }
+  }
+}
+```
+
+The child-script form (cart view) is read at connect only: a changed child script does not re-publish (there is no client-side navigation from one cart page to another). The rule "no commerce element observes attributes" (section 7) does not cover `rp-view-event`, which is an infrastructure element. On Liquid the element is the platform's (`createViewEventElement()`), and every navigation is a document load, so the question does not arise.
 
 UNVERIFIED (SPIKE-01, preview store): that `createViewEventElement()` accepts this markup under the tag name `rp-view-event` (the base theme registers it as `s-view-event`), and that the element dispatches for the output of `standard_event_data`. Neither backend implementation of `rp-view-event` was run.
 
@@ -1633,6 +1979,8 @@ Rule ids, severity, layer and detection are owned by [07-manifest-registry-cli.m
 | Scaffolded TSX bindings and `.data.ts` files (in the repository: `registry/`; in a project: files under `paths.components` and `paths.pages`): the only value imports from `@shopify/hydrogen` are these seven functions (D-094 item 3): `formatMoney`, `renderShopPayButton`, `buildProductSelectionSearchParams`, `parseCollectionParams`, `serializeCollectionParams`, `isFilterInputActive`, `getFilterRemovalUrl`. Type-only imports are allowed. A namespace or default import is reported. | S | RP117 item (b) in a project; the import-boundary lint in the repository |
 | A scaffolded binding does not import `<pkg>/commerce` or `<pkg>/elements` (6.1). | S | RP117 item (c) |
 
+Not checkable, documented only (D-128): a cart form that prints some but not all keys of `cart.attributes` loses the missing keys on an `attributes-update` with JavaScript (6.2). The checker cannot know the cart's keys statically; there is no rule.
+
 ## 14. Acceptance tests
 
 Tiers are those of D-063. "Spike" names the scenario in `ripple/docs/research/spikes/commerce/` that already passes; the test in `test/commerce/` MUST assert the same observations. Tests marked E run against the Standard Actions emulation `fake-sa.js`; tests marked M run against mock.shop (tier 7); tests marked P need the preview store (tier 8).
@@ -1643,7 +1991,7 @@ Tiers are those of D-063. "Spike" names the scenario in `ripple/docs/research/sp
 | C-02 | 5 E | Liquid add: one `updateCart` call with `lines[0] = { merchandiseId, quantity, sellingPlanId, attributes }`; root has `data-pending` and `aria-busy="true"` during the call and neither after; `action` event detail equals `{ value: "add", reason: "submit", merchandiseId, quantity }`; `#cart-drawer` is open; the `added` string from the config element is the text of the CartDrawer's `[data-rp-part="status"]` (7.1), written after the drawer opened; one `rp:refresh` with `reason: "cart"`; `partials.fetch` called with the declared regions. | L2 |
 | C-03 | 5 E | Liquid quantity: no call before 250 ms; then `{ lines: [{ id: <item.key>, quantity: 5 }] }`; status text `Cart updated`. Remove link: quantity 0, status `Item removed`, no navigation. Enter in a quantity input: one `set`. Discount form: `{ discountCodes: ["SAVE10"] }`. | L3 |
 | C-04 | 5 E | `userErrors` on a line: the line's error part shows the message without `hidden`; the cart-scope part stays hidden; no success announcement. | L4 |
-| C-05 | 5 E | `updateCart` configured by another script before `ripple.js`: `usable === false` after `ready`; a cart form submit produces a native POST. Separate case, `updateCart.isDefault()` already `false` at start: no commerce element is defined (not run in the spike). | L5, L6 |
+| C-05 | 5 E | `updateCart` configured by another script before `ripple.js`: `usable === false` after `ready`; a cart form submit produces a native POST. Separate case (D-122), `updateCart.isDefault()` is `false` when `window.rpDomReady` resolves: `usable === false` after `ready`, the commerce elements ARE defined, forms post natively (not run in the spike). Third case (D-122): a classic inline script placed AFTER `rp-head` (the position of `content_for_header`) that calls `updateCart.configure` in its own `DOMContentLoaded` listener LOSES: its `configure` returns `false` and `getCommerce().usable === true`. Fourth case (D-129): with `usable === false`, submitting a discount form (`data-rp-js="inflow"`) produces NO navigation and no request, and the form's error part shows `Something went wrong. Try again.` (not run in the spike). | L5, L6 |
 | C-06 | 5 E | `partials.fetch` rejects after a cart mutation: the page reloads. | L7 |
 | C-07 | 5 E | A submitter without `data-rp-part="submit"` in a product form, and a `name="checkout"` submitter in a cart form, produce a native POST with the Liquid field names. | D2, D3 |
 | C-08 | 5 E | Note `change`: one `updateCart` call with `{ note }`. | D4 |
@@ -1668,9 +2016,16 @@ Tiers are those of D-063. "Spike" names the scenario in `ripple/docs/research/sp
 | C-27 | 5 | `react` host: reason `predictive` fetches the document at `url` once and `getRegionHtml("rp-predictive-results")` returns the `innerHTML` of that region in the response; a subscriber registered with `subscribeRegionHtml("rp-predictive-results", fn)` is called once; a failing fetch leaves `getRegionHtml` unchanged and the URL unchanged; reason `cart` with `url: null` makes no request; reason `filter` calls `navigate` when configured and `location.assign(url)` otherwise. | not run (SPIKE-10) |
 | C-28 | 4 | React: a component that renders `useRegionHtml("rp-predictive-results")` hydrates without a hydration error and shows the fetched results after typing. | not run (SPIKE-10) |
 | C-29 | 5 E | Liquid page view: exactly one `shopify:page:view` event on `document` per document load, with `page.template` equal to `main[data-template]`'s `data-template` value, `page.title === document.title`, `page.url === location.href`; a region refresh and a `pushState` from `rp-live` dispatch none. With `"analytics": false`: zero events and `customElements.get("rp-view-event") === undefined`. | not run |
-| C-30 | 5 E | `rp-view-event`: the product, collection, search and cart blueprints each print exactly one; no component fixture prints one; the element has computed `display: block`; the attribute form carries `data-payload` and the cart view carries one child `script[type="application/json"][data-view-event-payload]` (12.2). | not run |
+| C-30 | 5 E | `rp-view-event`: the product, collection, search and cart blueprints each print exactly one; no component fixture prints one; the element has computed `display: block`; the attribute form carries `view-event-payload` and the cart view carries one child `script[type="application/json"][data-view-event-payload]` (12.2). | not run |
 | C-31 | 5 | Agent: for each commerce element, the snapshot of `08-agent-kit-and-evals.md` section 7.2 lists exactly the actions of the element's Agent row in section 7; no element lists an action named `checkout`; `rp-recommendations` is not shown. | not run |
 | C-32 | 1 | `DEFAULT_STRINGS` in `src/commerce/adapter.ts` has exactly the seven keys of 4.3 and each value equals the value of the matching locale key (4.3) in the repository file `locales/en.default.json`. | not run |
+| C-34 | 5 | hydrogen host, checkout guard (D-117): type a new quantity into a cart line, then click `a.rp-checkout-button` within 100 ms: exactly one `POST /api/cart` carrying the new quantity completes BEFORE the navigation to the checkout URL starts. Same with a changed note (`note-update` completes first). With nothing changed, the click navigates without any `POST`. A Ctrl/Meta click is never prevented. | not run |
+| C-35 | 2, 5 | Locale prefix (D-118): for a request to `/fr-ca/cart` and to `/fr-ca/products/<handle>` on a hydrogen host, the config element has `"cartEndpoint":"/fr-ca/api/cart"`, EVERY `form[method="post"]` inside an `rp-cart` or `rp-product-form` root has `action="/fr-ca/api/cart"`, and the store's first read is `GET /fr-ca/api/cart` (when not seeded). For a request without a prefix all three are `/api/cart`. | not run |
+| C-36 | 5 E | Add with a line-keyed message (D-119): the variant is already in the cart and `[data-rp-line]` for it is rendered in the closed CartDrawer. (a) `updateCart` answers with a `userErrors` entry whose field targets that line: the PRODUCT FORM error part shows the API message (not `Something went wrong. Try again.`), no `action` event, the cart stays closed. (b) `updateCart` answers with only a `warnings` entry targeting that line: the product form error part shows the warning text, `action` IS dispatched, the cart opens, and `Added to cart` is not announced. | not run |
+| C-37 | 5 | `rp-view-event` re-publish (D-123), hydrogen backend, with a stub `window.Shopify.analytics.publish`: an element connected with payload A publishes once; `setAttribute("view-event-payload", B)` on the SAME element publishes exactly once more with B's event and payload; setting B again publishes nothing; removing and re-inserting the element with B publishes nothing more for that element instance (same value) while a NEW element with B publishes once. | not run |
+| C-33 | 5 | hydrogen host, JavaScript on (D-116): clear a cart line's quantity input and press Enter (the test removes the `required` attribute first, so that the script guard and not native validation is under test): zero `POST /api/cart` requests, the line stays in the DOM, the status part stays empty. Second case with `required` in place: same observations. | not run |
+| C-38 | 5 E | Liquid note baseline (D-126), emulated Standard Actions: the cart renders with note `""`. Type `gift` and blur: one `updateCart` call with `{"note":"gift"}`. Clear the field and blur: one more call with `{"note":""}`. Then change a line quantity through the Update button path (`form.requestSubmit(<submit part>)`): the calls made carry NO `note`. A cart-form submit with nothing changed makes no call and the status part stays empty. | not run |
+| C-39 | 5 | hydrogen host (D-127): `document.querySelector("rp-product-form form").requestSubmit()` (no argument) produces exactly one `POST /api/cart` whose body adds the form's `merchandiseId` with its quantity; the `action` event fires; the error part stays hidden. | not run |
 
 ## 15. Evidence and UNVERIFIED
 
@@ -1723,12 +2078,14 @@ Default path (specified above): `adapter-liquid.ts` uses `createCartStore()` wit
 Procedure on the preview store (C-21). Load a product page and a cart page of the Ripple theme and record `Shopify.actions.updateCart` / `getCart` calls and network requests:
 
 1. Start: `getCommerce().usable === true` after `await getCommerce().ready`; `cart.getState().data.totalQuantity` equals `{{ cart.item_count }}`.
+   1a. Configure race (D-122): record whether `window.Shopify.actions.updateCart` exists inside the first `DOMContentLoaded` listener (a `console.log` added to the inline script of `rp-head`). Then add, in the position of `{{ content_for_header }}`, a classic inline script that calls `Shopify.actions.updateCart.configure(...)` in a `DOMContentLoaded` listener: its call MUST return `false` and step 1 MUST still pass. If `Shopify.actions` does not exist at that point, D-122 is wrong for the real platform: report it; the fallback is Hydrogen's own waiting (`cart.connect()` at `createLiquidCommerce`, the spike's order).
 2. Add with quantity 2, a selling plan and one line property: the cart contains the line with all three.
 3. Set a line to 5 using `data-rp-line="{{ item.key }}"` as the id: quantity is 5. This verifies that `item.key` is accepted as the line `id`.
 4. Set a line to 0: the line is gone.
 5. Note update, discount apply with a valid and an invalid code (the invalid code yields a message in `errors.discountCodes` or `errors.cart`), discount remove.
 6. `Shopify.actions.openCart()` from the console opens `#cart-drawer`.
 7. After each step the regions `rp-cart-lines` and `rp-cart-summary` show the new state without a navigation.
+   7a. After each mutation `performance.getEntriesByType("navigation").length` is still `1` and a marker set on `window` before the mutation (`window.__rpNoReload = true`) is still present: the platform did not reload the page (D-121).
 8. Page view: temporarily set `"analytics": false` in the config element (the adapter then dispatches nothing), load a page, and record `shopify:page:view` events on `document` with a listener installed by an inline script at the top of `<head>`. Zero events: the platform does not publish it; the default of 12.3 stays. One event: the platform publishes it.
 9. With `analytics` back to `true`, load a product page: one product view is recorded for the `rp-view-event` of the product blueprint (observed in the Shopify analytics debugger or as the event the element dispatches).
 
@@ -1736,7 +2093,7 @@ Pass for the cart path: steps 1 to 7. Any failure there: apply the cart fallback
 
 ### Fallback (SPIKE-01)
 
-Page view (step 8 recorded one event): delete the `PageViewEvent` dispatch and the `pageViewSent` flag from `startStandardEvents` (12.3); the `rp-view-event` definition stays. C-29 then asserts exactly one event with the adapter dispatching none. No sign-off needed.
+Page view (step 8 recorded one event): delete the `dispatchPageView` function and the `if (document.readyState === "loading") ... else ...` block from `startStandardEvents` (12.3), and remove `PageViewEvent` from the destructured import; KEEP the `standardEventsStarted` flag and the `rp-view-event` definition. C-29 then asserts exactly one event with the adapter dispatching none. No sign-off needed.
 
 Cart (any of steps 1 to 7 failed): needs Ben's sign-off (ledger section 10, Q10). Only `adapter-liquid.ts` changes; `dialect.ts`, the controllers and every other file stay as they are.
 
@@ -1746,9 +2103,9 @@ Cart (any of steps 1 to 7 failed): needs Ben's sign-off (ledger section 10, Q10)
 - `fetch()` / `refresh()`: `const { cart } = await Shopify.actions.getCart()`; store `cart.totalQuantity`; `loading = false`.
 - `handleFormSubmit(event)`: read `event.submitter.value` (intent) and `new FormData(event.target)`; map to one `Shopify.actions.updateCart(input)` call with the payloads of 6.3 (`add`: `{ lines: [{ merchandiseId, quantity, sellingPlanId?, attributes? }] }`; `set` and `remove`: `{ lines: [{ id, quantity }] }`; `note-update`: `{ note }`; `discount-apply` / `discount-remove`: `{ discountCodes: <current codes plus or minus the code> }`; `attributes-update`: `{ attributes: [{ key, value }] }`); set the matching `pending` field before the call and clear it after; copy `userErrors` of the result into `errors.cart` (or `errors.lines` when the error names a line) and set the timestamps with `Date.now()`.
 - `connect`, `destroy`, `hydrate`, `reset`: no-ops.
-- `Shopify.actions.updateCart.configure` is NOT called in this fallback.
+- `configure` (D-121): the fallback store MUST call `Shopify.actions.updateCart.configure({ eventTarget: () => document, handler: (defaultHandler) => defaultHandler() })` exactly once, inside `fetch()` before the first `getCart`, and throw `new Error("Standard Actions updateCart could not be configured.")` when the call returns `false` (so that `isSetupError` matches and forms post natively). Reason: an UNCONFIGURED `updateCart` falls back to a full page reload on a theme whose cart rendering the platform does not recognise (Shopify docs, storefront events and actions: "If it recognizes none, then it falls back to a full page reload"), which would destroy the region refresh, the open drawer and the announcements. The configured handler runs the platform's default write and suppresses that reload. The option names are those Hydrogen itself passes (`configureUpdateCartOnce` in `hydrogen/packages/hydrogen/src/core/cart/cart.ts`).
 
-The result shape `{ cart, userErrors? }` of `updateCart` and the `attributes` payload are taken from `hydrogen/packages/hydrogen/vendor/standard-actions.d.ts` and MUST be re-read there when the fallback is implemented. Tests C-01 to C-08 apply unchanged, except that C-01 expects zero `configure` calls.
+The result shape `{ cart, userErrors? }` of `updateCart` and the `attributes` payload are taken from `hydrogen/packages/hydrogen/vendor/standard-actions.d.ts` and MUST be re-read there when the fallback is implemented. Tests C-01 to C-08 apply unchanged; C-01 still expects exactly one `updateCart.configure` call. Step 7a of the SPIKE-01 procedure (no reload after a mutation) MUST also pass with the fallback store.
 
 ### SPIKE-10 `html-region-refresh`
 
@@ -1806,7 +2163,7 @@ Fallback (SPIKE-11): the two options are removed from the Remix documentation an
 
 ### Other spikes this document depends on
 
-- SPIKE-02 (`liquid-preview-store-rendering`, doc 14): `partials.fetch`, the discount type of `cart.cart_level_discount_applications`.
+- SPIKE-02 (`liquid-preview-store-rendering`, doc 14): `partials.fetch`, the rendered discount code list (cart-level applications plus line-level allocations, D-120).
 - SPIKE-04 (`rp-root-only-primitive`, doc 04): the shell of 7.7 and its fallback.
 - SPIKE-09 (`liquid-recommendations-region`, doc 11): the Liquid recommendations URL used by `rp-recommendations`.
 

@@ -44,6 +44,7 @@ Nesting rules: root children in order: the form part, status. Form children in o
 | `cart` | `cart` | object | `RippleCart` / Liquid `cart` drop | Liquid: the global `cart` | yes (TSX) | no | text content of the field (`cart.note`) |
 | `cartLines` | `cart_lines` | string | the `id` of the CartLines on the page | none | yes on Liquid | no | Liquid: `form="<value>-form"` on the field; ignored on hydrogen hosts |
 | `rows` | `rows` | number | integer 1 or greater | `3` | no | no | `rows` on the field |
+| `action` | none | url | the cart endpoint including the locale path prefix | `/api/cart` | no | no | `action` on the note form (hydrogen hosts); TSX hosts only (CV-17, D-118) |
 
 ### Content model
 

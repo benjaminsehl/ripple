@@ -61,10 +61,12 @@ export interface ProductPageProps {
   recommended: RippleProduct[];
   /** JSON text of the product view event: `{ "event": ..., "payload": ... }` of 05-commerce.md section 12. */
   viewEvent: string;
+  /** Cart endpoint including the locale path prefix (05-commerce.md 10.1 rule 7). Default "/api/cart". */
+  cartAction?: string;
 }
 
 export function ProductPage(props: ProductPageProps) {
-  const { product, variant, search, recommended, viewEvent } = props;
+  const { product, variant, search, recommended, viewEvent, cartAction = "/api/cart" } = props;
   return (
     <>
       <Container py="12 md:20">
@@ -77,7 +79,7 @@ export function ProductPage(props: ProductPageProps) {
               <VariantPicker id="product-options" product={product} search={search} />
               <Stack gap="4" data-rp-region="rp-product-buy">
                 <Price price={variant.price} compareAtPrice={variant.compareAtPrice ?? undefined} />
-                <ProductForm id="product-form" product={product} />
+                <ProductForm id="product-form" product={product} action={cartAction} />
               </Stack>
               {product.descriptionHtml !== "" ? <RichText html={product.descriptionHtml} /> : null}
             </Stack>
@@ -176,7 +178,7 @@ Mapping to `RippleProductDetail`: the field list is owned by `05-commerce.md` se
 
 ### No-JS behaviour
 
-1. VariantPicker is a GET form of radio inputs (or links) with a submit button; choosing a variant reloads the page with that variant selected (D-047).
+1. VariantPicker prints one link per option value (`aria-current="true"` on the selected one); following a link loads the page for that variant (D-047). There are no radio inputs in any layout. In layout `dropdown` each option is a GET form with a native select and an `Apply` submit button (`data-rp-js="fallback"`).
 2. The add-to-cart form posts; the response is a redirect back (hydrogen: 303 to the referring page; Liquid: the cart page), and the header count shows the new total.
 3. The gallery shows the first image and its thumbnails as a scrollable list (Carousel without script, `04-elements.md` section 10.9).
 4. Recommendations: on the hydrogen backend the server renders them inline; on Liquid the list is empty until `rp-recommendations` loads it with script.
@@ -195,6 +197,7 @@ BT-1 to BT-9, plus:
 - **PR-3** (tier 5 and tier 7) Choosing another variant updates the URL with `history.replaceState`, replaces the price text and keeps focus on the chosen option.
 - **PR-4** (tier 6) With JavaScript disabled, submitting the add-to-cart form ends on a page whose cart count is 1.
 - **PR-5** (tier 2) A product with one variant and no description renders with no empty `.rp-rich-text`.
+- **PR-7** (tier 5; hosts react and remix) Client-side navigation from product A to product B (a click on a recommendation link handled by the router, no document load): `window.Shopify.analytics.publish` is called exactly once more, with B's payload (`05-commerce.md` 12.2, D-123).
 - **PR-6** (tier 2) Exactly one `rp-view-event` exists; it is the last element child of `<main>`, is not inside `rp-product-form`, has `view-event-trigger="connect"` and a non-empty `view-event-payload` attribute that parses as JSON. The elements `#product-gallery`, `#product-options` and `#product-form` exist.
 
 ---

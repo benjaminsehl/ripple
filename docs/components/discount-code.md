@@ -43,6 +43,7 @@ Nesting rules: root children in order: the form, status. Form children in order:
 |---|---|---|---|---|---|---|---|
 | `id` | `id` | id | any id | none | yes | no | `id` on the field; `for` on the label |
 | `placeholder` | `placeholder` | string | any text | none | no | no | `placeholder` on the field |
+| `action` | none | url | the cart endpoint including the locale path prefix | `/api/cart` | no | no | `action` on the form (hydrogen hosts); TSX hosts only (CV-17, D-118) |
 
 The component takes no `cart` prop: it prints nothing that depends on the cart.
 
@@ -97,6 +98,7 @@ Upgrade allow-list (mutations permitted when the element upgrades): `{ "select":
 2. On success: `Discount applied` is written to the status part, the regions of the page's `rp-cart` roots refresh (the code appears in CartSummary), and the field is cleared by `form.reset()`.
 3. When Shopify does not accept the code, the store records a discount error and the error part shows its message (for example the API's own text), `hidden` removed. The field keeps its value and focus stays on the Apply button.
 4. Only one code is sent per submit (the hydrogen intent applies one code; `hydrogen/packages/hydrogen/src/core/cart/queries.ts`).
+5. liquid backend, commerce not usable (`getCommerce().usable === false`, for example another script configured `updateCart` first): the form is visible (the elements are defined) but cannot work. `rp-cart` calls `preventDefault()`, writes `Something went wrong. Try again.` (`strings.error`) to the error part and does NOT post: the platform's `/cart` route ignores the field names `discountCode` and `intent` ([05-commerce.md](05-commerce.md) 7.1, D-129).
 
 Step 2's `form.reset()`: UNVERIFIED that `rp-cart` resets the form after `discount-apply`; [05-commerce.md](05-commerce.md) does not state it. If it does not, the field keeps the code until the next navigation; this is acceptable and the test below does not assert the reset.
 

@@ -53,10 +53,12 @@ export interface CartPageProps {
   cart: RippleCart | null;
   /** JSON text of the cart view event: `{ "event": ..., "payload": ... }` of 05-commerce.md section 12. */
   viewEvent: string;
+  /** Cart endpoint including the locale path prefix (05-commerce.md 10.1 rule 7). Default "/api/cart". */
+  cartAction?: string;
 }
 
 export function CartPage(props: CartPageProps) {
-  const { cart, viewEvent } = props;
+  const { cart, viewEvent, cartAction = "/api/cart" } = props;
   const payload = viewEvent.replace(/</g, "\\u003c");
   return (
     <>
@@ -64,12 +66,12 @@ export function CartPage(props: CartPageProps) {
         <Stack gap="8 md:12">
           <Heading level={1}>Cart</Heading>
           <Grid columns="1 lg:3" gap="8 md:12">
-            <CartLines id="cart" cart={cart} span="1 lg:2" />
+            <CartLines id="cart" cart={cart} action={cartAction} span="1 lg:2" />
             {cart !== null && cart.lines.length > 0 ? (
               <Stack gap="4">
-                <CartSummary cart={cart} cartLines="cart" />
-                <DiscountCode id="cart-discount" />
-                <CartNote id="cart-note" cart={cart} />
+                <CartSummary cart={cart} cartLines="cart" action={cartAction} />
+                <DiscountCode id="cart-discount" action={cartAction} />
+                <CartNote id="cart-note" cart={cart} action={cartAction} />
               </Stack>
             ) : null}
           </Grid>
@@ -87,7 +89,7 @@ There is no query constant: the cart comes from `cartHandlers.get({ storefrontCl
 
 This is the one place where a blueprint uses `dangerouslySetInnerHTML`: the JSON body of the child-form view event (section 3, X-10). `<` is escaped as `\u003c` so that the text cannot close the script element.
 
-**Remix**: rules R-1 to R-6; the script is written `<script type="application/json" data-view-event-payload innerHTML={unsafeHTML(payload)} />` with `unsafeHTML` from `remix/component`. **html**: rule H-1 with the sample cart of two lines.
+**Remix**: rules R-1 to R-6; the script is written `<script type="application/json" data-view-event-payload="" innerHTML={unsafeHTML(payload)} />` with `unsafeHTML` from `remix/component`. The attribute MUST be written with the value `""`: a bare JSX attribute is `true`, and Remix prints `true` on a `data-*` name as `data-view-event-payload="true"` (`06-bindings.md` X-12), which would differ from the React and html output. **html**: rule H-1 with the sample cart of two lines.
 
 **Liquid** (`blueprints/cart/liquid/templates/cart.liquid`, complete):
 
@@ -125,6 +127,7 @@ The Liquid cart form has the id `cart-form` (`<CartLines id>-form`, D-092); comp
 | Data | hydrogen backend | liquid backend |
 |---|---|---|
 | Cart | `cartHandlers.get(...)` result mapped to `RippleCart` (`05-commerce.md` section 11.1) | the global `cart`, passed to the region-part snippets |
+| Cart endpoint | `cartAction`: `` `${requestContext.locale.pathPrefix}/api/cart` `` (`05-commerce.md` 10.1 rule 7, D-118) | `routes.cart_url` (printed inside the components) |
 | View event | `viewEvent`: `JSON.stringify` of the cart view of `05-commerce.md` section 12 | `cart \| standard_event_data: 'view', context: 'page'` |
 
 ### No-JS behaviour

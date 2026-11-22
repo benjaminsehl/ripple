@@ -201,7 +201,7 @@ There are no arrow-key shortcuts between triggers (the APG marks them optional; 
 
 Rules specific to this file:
 
-1. The native disclosure marker is removed with BOTH `list-style: none` on the trigger and `.rp-accordion-trigger::marker { content: "" }` (the second is for WebKit versions that ignore the first on `<summary>`; UNVERIFIED which).
+1. The native disclosure marker is removed with THREE mechanisms: `list-style: none` on the trigger; `.rp-accordion-trigger::marker { content: "" }`; and the single-selector rule `.rp-accordion-trigger::-webkit-details-marker { display: none; }` (in WebKit at the floor the `<summary>` triangle is the `::-webkit-details-marker` pseudo-element, which the first two do not remove; the same rule is in `mobile-nav.css` and `filter-group.css`; linter construct L-16 of `03-styling-and-tokens.md`). Not run in WebKit (SPIKE-06 asserts it with a screenshot: no triangle beside the chevron).
 2. The chevron is the `::after` box of the trigger: two borders in `currentColor`, rotated 45 degrees closed and 225 degrees open. It needs no icon file and inherits the text colour, including in forced-colours mode.
 3. The file MUST NOT set `display` on `.rp-accordion-content` and MUST NOT animate `block-size`, `height`, or `::details-content`: the content's visibility is owned by the browser.
 4. The trigger is `display: flex`; the first rule therefore also prevents the marker box from being generated in engines where `display: list-item` is required for it.
@@ -265,6 +265,9 @@ Complete file:
   }
   .rp-accordion-trigger::marker {
     content: "";
+  }
+  .rp-accordion-trigger::-webkit-details-marker {
+    display: none;
   }
   .rp-accordion-trigger::after {
     content: "";
@@ -384,7 +387,7 @@ None.
 ### Evidence and UNVERIFIED
 
 - Evidence: `00-decisions.md` D-011, D-032, D-034, D-036, D-081; `ripple/docs/02-html-contract.md` 11.9 fixture 2, I-2; `ripple/docs/04-elements.md` 10.8; `uisdk/packages/core/src/testing/check-pattern.ts`; Chromium 157 runs in `ripple/docs/research/spikes/components-interactive/`: `t.mjs` (exclusive `<details name>` with scripting disabled), `css-test.mjs` (trigger box 1000 by 52, marker removed, in both writing directions).
-- UNVERIFIED: the first versions with `<details name>` (compatibility tables, not run; AT-10 feature-detects), and which WebKit versions need the `::marker` rule (SPIKE-06); auto-expansion by in-page search outside Chromium; React 19 leaving a user-toggled `open` attribute alone when the JSX value is constant (test 8 is the gate; if it fails, `AccordionItem` prints `open` only in the server render and omits the prop on the client, keeping `suppressHydrationWarning`).
+- UNVERIFIED: the first versions with `<details name>` (compatibility tables, not run; AT-10 feature-detects), and that the three marker rules remove the WebKit disclosure triangle (SPIKE-06: a WebKit screenshot of fixture `default` shows no native triangle beside the chevron); auto-expansion by in-page search outside Chromium; React 19 leaving a user-toggled `open` attribute alone when the JSX value is constant (test 8 is the gate; if it fails, `AccordionItem` prints `open` only in the server render and omits the prop on the client, keeping `suppressHydrationWarning`).
 
 ### Fallback (SPIKE-06)
 

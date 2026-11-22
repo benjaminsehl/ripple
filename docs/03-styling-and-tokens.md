@@ -695,13 +695,40 @@ The two regions between `ripple:start` and `ripple:end` markers are generated (s
 
 @layer rp.props {
   /* ripple:start script-state */
-  :where(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event):not(:defined) [data-rp-js="inflow"] {
+  :where(rp-carousel:not(:defined)) [data-rp-js="inflow"]:not(rp-carousel :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-cart:not(:defined)) [data-rp-js="inflow"]:not(rp-cart :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-dialog:not(:defined)) [data-rp-js="inflow"]:not(rp-dialog :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-live:not(:defined)) [data-rp-js="inflow"]:not(rp-live :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-navigation-menu:not(:defined)) [data-rp-js="inflow"]:not(rp-navigation-menu :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-predictive-search:not(:defined)) [data-rp-js="inflow"]:not(rp-predictive-search :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-product-form:not(:defined)) [data-rp-js="inflow"]:not(rp-product-form :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-quantity:not(:defined)) [data-rp-js="inflow"]:not(rp-quantity :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-recommendations:not(:defined)) [data-rp-js="inflow"]:not(rp-recommendations :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-view-event:not(:defined)) [data-rp-js="inflow"]:not(rp-view-event :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]) {
     visibility: hidden;
   }
-  :where(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event):not(:defined) [data-rp-js="overlay"] {
+  :where(rp-carousel:not(:defined)) [data-rp-js="overlay"]:not(rp-carousel :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-cart:not(:defined)) [data-rp-js="overlay"]:not(rp-cart :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-dialog:not(:defined)) [data-rp-js="overlay"]:not(rp-dialog :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-live:not(:defined)) [data-rp-js="overlay"]:not(rp-live :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-navigation-menu:not(:defined)) [data-rp-js="overlay"]:not(rp-navigation-menu :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-predictive-search:not(:defined)) [data-rp-js="overlay"]:not(rp-predictive-search :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-product-form:not(:defined)) [data-rp-js="overlay"]:not(rp-product-form :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-quantity:not(:defined)) [data-rp-js="overlay"]:not(rp-quantity :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-recommendations:not(:defined)) [data-rp-js="overlay"]:not(rp-recommendations :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-view-event:not(:defined)) [data-rp-js="overlay"]:not(rp-view-event :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]) {
     display: none;
   }
-  :where(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event):defined [data-rp-js="fallback"] {
+  :where(rp-carousel:defined) [data-rp-js="fallback"]:not(rp-carousel :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-cart:defined) [data-rp-js="fallback"]:not(rp-cart :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-dialog:defined) [data-rp-js="fallback"]:not(rp-dialog :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-live:defined) [data-rp-js="fallback"]:not(rp-live :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-navigation-menu:defined) [data-rp-js="fallback"]:not(rp-navigation-menu :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-predictive-search:defined) [data-rp-js="fallback"]:not(rp-predictive-search :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-product-form:defined) [data-rp-js="fallback"]:not(rp-product-form :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-quantity:defined) [data-rp-js="fallback"]:not(rp-quantity :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-recommendations:defined) [data-rp-js="fallback"]:not(rp-recommendations :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]),
+  :where(rp-view-event:defined) [data-rp-js="fallback"]:not(rp-view-event :is(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations, rp-view-event) [data-rp-js]) {
     display: none;
   }
   /* ripple:end script-state */
@@ -717,6 +744,7 @@ The two regions between `ripple:start` and `ripple:end` markers are generated (s
 5. **Shared keyframes.** `rp-spin` and `rp-pulse` are the only keyframes in `base.css`. A component that needs another animation defines `@keyframes rp-<component id>-<name>` in its own file.
 6. **Static display rules** (region `display`). An undefined custom element is `display: inline`. Without a static rule, layout changes when the element upgrades (measured: 50 px shift, CLS 0.014, `ripple/docs/research/styling-spike.md` 5.1). The region holds one grouped rule per display value, then the rule of `rp-dialog`. Every `rp-*` tag is `display: block` (D-080). The values come from the manifest key `elements` (section 4.3). A component class can override the value (within the limit of CSS-30) because `rp.components` follows `rp.base`.
 7. **Script-state rules** (region `script-state`). They implement `data-rp-js` (`00-decisions.md` D-021 item 4). They are written in the file `base.css`, inside an `@layer rp.props` block, not in `rp.base`: a control that carries `data-rp-js` usually also has a component class whose `display` is declared in `rp.components`, and a rule in the earlier layer `rp.base` would lose to it (verified: with the rules in `rp.props`, a `.rp-button` with `data-rp-js="overlay"` computes `display: none` before definition and `inline-flex` after).
+7a. **Nearest owner (D-125).** The owning element of a `data-rp-js` element is its NEAREST `rp-*` ancestor (`02-html-contract.md` PE-4), and owners nest with different defined states: in the CartDrawer the chain is `rp-dialog > rp-cart > rp-quantity`, and `rp-cart` is undefined while `rp-dialog` and `rp-quantity` are defined whenever the commerce layer does not start (`05-commerce.md` 4.5 item 3: Chrome 111 to 115, Safari 16.4 to 17.3; also between the two start steps and when commerce fails). A selector that matched ANY `rp-*` ancestor would then hide the cart's Update button (through `rp-dialog:defined`) and the working stepper buttons (through `rp-cart:not(:defined)`); measured in Chromium 157. The region therefore holds, for each of the three rules, ONE selector per owner tag X that excludes an element with a nearer owner: `:where(X:not(:defined)) [data-rp-js="inflow"]:not(X :is(<all owner tags>) [data-rp-js])`, and the same shape for `overlay` (`:not(:defined)`) and `fallback` (`:defined`). `:not(X :is(O) [data-rp-js])` reads: the element is not inside another owner that is itself inside an X. One limitation: an owner tag nested inside the SAME owner tag (`rp-cart` inside `rp-cart`) is not supported; the inner element's `data-rp-js` descendants then follow no rule. No V1 contract nests an owner tag inside the same owner tag, and `02-html-contract.md` PE-4 forbids it for authored markup.
 8. These three rules are the only CSS in Ripple that selects a `data-rp-*` attribute. Their selectors match ANY descendant element that carries `data-rp-js`, not only controls: `data-rp-js` MAY sit on a `<form>` (the Liquid discount form carries `data-rp-js="inflow"` on the `<form>` itself, D-092). The generator MUST NOT add a tag name or any other restriction before `[data-rp-js=...]`.
 9. No rule may hide content or a working native control (link, submit button, input) before upgrade. A control hidden by `data-rp-js="inflow"` or `"overlay"` stays hidden when the script never loads; everything else works.
 10. **Tabs without JavaScript.** The `@media (scripting: none)` block in layer `ui-sdk` shows every `ui-tabs-panel` (also the ones with `hidden`) and hides the tab list (D-012, D-021 item (d)). It is the second and last `!important` rule of Ripple. It MUST stay in `base.css`: component CSS cannot override the `[hidden]` rule. On a browser without `@media (scripting: none)` the block is ignored and only the default panel is readable without JavaScript (D-081).
@@ -815,18 +843,27 @@ export function generateDisplayRegion(elements: ElementDisplay[]): string {
   return rules.join("\n")
 }
 
-/** Body of the `script-state` region: three rules that name every rp-* tag, sorted by name. */
+/**
+ * Body of the `script-state` region: three rules. Each rule has one selector per rp-* tag X
+ * (sorted by name). A selector matches a data-rp-js element whose NEAREST rp-* ancestor is X
+ * (00-decisions D-125): `:not(X :is(<all owners>) [data-rp-js])` drops elements that have
+ * another owner between X and themselves.
+ */
 export function generateScriptStateRegion(elements: ElementDisplay[]): string {
   const tags = elements
     .map((element) => element.tag)
     .filter((tag) => tag.startsWith("rp-"))
     .sort()
   if (tags.length === 0) return ""
-  const owners = `:where(${tags.join(", ")})`
+  const all = tags.join(", ")
+  const selectors = (state: string, value: string): string =>
+    tags
+      .map((tag) => `:where(${tag}${state}) [data-rp-js="${value}"]:not(${tag} :is(${all}) [data-rp-js])`)
+      .join(`,\n${INDENT}`)
   return [
-    rule(`${owners}:not(:defined) [data-rp-js="inflow"]`, ["visibility: hidden"]),
-    rule(`${owners}:not(:defined) [data-rp-js="overlay"]`, ["display: none"]),
-    rule(`${owners}:defined [data-rp-js="fallback"]`, ["display: none"]),
+    rule(selectors(":not(:defined)", "inflow"), ["visibility: hidden"]),
+    rule(selectors(":not(:defined)", "overlay"), ["display: none"]),
+    rule(selectors(":defined", "fallback"), ["display: none"]),
   ].join("\n")
 }
 
@@ -846,7 +883,9 @@ export function generateBaseCss(baseCss: string, elements: ElementDisplay[]): st
 }
 ```
 
-Expected output: the `display` and `script-state` regions printed in section 4.1. The `script-state` rules name every `rp-*` key of `elements`, `rp-view-event` included; `rp-view-event` never contains a `data-rp-js` element, so naming it has no effect and keeps the generator free of special cases.
+Expected output: the `display` and `script-state` regions printed in section 4.1. The `script-state` rules name every `rp-*` key of `elements`, `rp-view-event` included; `rp-view-event` never contains a `data-rp-js` element, so naming it has no effect and keeps the generator free of special cases. The region printed in section 4.1 was produced by exactly this function shape (run by the fixer in Python with the same string template) and checked in Chromium 157 with the nested fixture of test CSS-NEAR below (D-125).
+
+Acceptance test **CSS-NEAR** (tier 5, Chromium; referenced by `02-html-contract.md` PE-4). Page: `ripple.css` plus `<rp-dialog><dialog open><rp-cart><form><rp-quantity><button class="rp-quantity-button" id="step" data-rp-js="inflow"></button></rp-quantity><button class="rp-button" id="update" data-rp-js="fallback"></button></form></rp-cart></dialog></rp-dialog>`, with no Ripple script. Define `rp-dialog` and `rp-quantity` with `customElements.define(tag, class extends HTMLElement {})` and leave `rp-cart` undefined. Assert: `#update` has a computed `display` other than `none` (its owner `rp-cart` is undefined, although `rp-dialog` is defined); `#step` has computed `visibility: visible` (its owner `rp-quantity` is defined, although `rp-cart` is not). Then define `rp-cart`: `#update` computes `display: none`. Before anything is defined: `#step` computes `visibility: hidden` and `#update` is displayed.
 
 #### Fallback (SPIKE-02)
 
@@ -1855,6 +1894,7 @@ Requirements:
 | L-13 | ONE `transition` declaration that names `inline-size`, inside the motion media query; a second one in the same file is a finding with rule `CSS-15` | any file | CSS-15, section 8 rule 3 |
 | L-14 | An attribute that is a prop of the file's own component, although its name is in a list of section 7.7: `.rp-popover[data-side="top"]`, `.rp-popover[data-align="end"]`, `.rp-carousel[data-columns="3"]`, `.rp-accordion[data-type="single"]`, `.rp-rating[data-value="3.5"]` | any file; for a layout-prop name (`data-align`, `data-columns`) only when `props` has that key | CSS-31 |
 | L-15 | The rule `:root:has(.rp-header[data-sticky])` declaring only `--rp-header-block-size` | only when `id` is `header` | CSS-02 |
+| L-16 | `::-webkit-details-marker` on an own class (`.rp-accordion-trigger::-webkit-details-marker { display: none; }`): in WebKit the `<summary>` disclosure triangle is this pseudo-element, not a list-item `::marker` | any file (used by `accordion.css`, `mobile-nav.css`, `filter-group.css`); the rule has that one selector only | 7.2 STATES |
 
 5. Its own tests (`src/gen/css-lint.test.ts`) MUST include:
    1. the Button file of 7.4, with the context `{ id: "button", classes: ["rp-button"], customElementRootClasses: [], props: { variant: ["primary", "secondary", "outline", "ghost", "link", "destructive"], size: ["sm", "md", "lg"], "full-width": [] }, defaults: { variant: "primary", size: "md" }, tokensCss }`, produces zero findings;
@@ -2027,7 +2067,7 @@ Unit and method (fixed once, by D-064): 1 kB is 1000 bytes. CSS ships unminified
 
 | `size-budget.json` entry | Artifact | Measure | Budget (D-064) | Measured now | Notes |
 |---|---|---|---:|---:|---|
-| `css-tokens-base` | `tokens.css` + `base.css` (concatenated in that order, then minified) | gzip of the minified copy | 2,200 bytes | 2,174 bytes | 26 bytes of headroom: any new token or base rule needs a ledger change of the budget first |
+| `css-tokens-base` | `tokens.css` + `base.css` (concatenated in that order, then minified) | gzip of the minified copy | 2,500 bytes (raised from 2,200 by D-125) | about 2,375 bytes: 2,174 before the nearest-owner script-state rules of section 4.2 rule 7a, which add about 200 bytes (measured by the fixer with esbuild's minifier: 2,181 before, 2,381 after; the size test re-measures with lightningcss) | about 125 bytes of headroom: any new token or base rule that exceeds it needs a ledger change of the budget first |
 | `css-props` | `props.css` | gzip of the minified copy | 5,200 bytes | 5,037 bytes | includes `data-text-align`; 163 bytes of headroom |
 | `css-ripple` | `browser/ripple.css` (all components) | gzip of the minified copy | 45,000 bytes | UNVERIFIED until all component files exist | |
 | `css-component` | each `components/<id>.css` on its own | minified, not gzipped | 6,000 bytes | Button: 3,138 bytes | lint rule CSS-28 |

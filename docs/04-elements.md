@@ -176,7 +176,7 @@ Rules:
 2. `window.rpRuntime` makes the start idempotent even if two copies of the module are loaded by mistake.
 3. Each step runs inside `guard`, so one failing step never stops another (`01-architecture.md` 3.3).
 4. On a server (`typeof document === "undefined"`) the module does nothing.
-5. The runtime owns exactly two globals, both booleans (D-078): `window.rpRuntime` (this file) and `window.rpCommandsPolyfill` (3.3). No other global may be added by any Ripple code.
+5. The runtime owns exactly three globals (D-078 as amended by D-122): the booleans `window.rpRuntime` (this file) and `window.rpCommandsPolyfill` (3.3), and, on Liquid only, the promise `window.rpDomReady` set by the first line of the inline script of `rp-head` (3.3 item 8). No other global may be added by any Ripple code.
 
 ### 3.2 `src/runtime/loader.ts` (complete)
 
@@ -297,7 +297,10 @@ function installCommandsPolyfill(): void {
 // The classic-script copy that Liquid prints inline in snippets/rp-head.liquid
 // (00-decisions D-054 item 7). Same logic in ES5 syntax. This constant is the
 // single source of that script: the inline script MUST equal it byte for byte.
-const INLINE_COMMANDS_POLYFILL = `(function () {
+// Its FIRST line is not part of the polyfill: it creates window.rpDomReady, a promise that
+// resolves inside the first DOMContentLoaded listener of the page (D-122, 05-commerce.md 5.2).
+const INLINE_COMMANDS_POLYFILL = `window.rpDomReady = new Promise(function (resolve) { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { resolve(); }, { once: true }); else resolve(); });
+(function () {
   if ("commandForElement" in HTMLButtonElement.prototype || window.rpCommandsPolyfill) return;
   window.rpCommandsPolyfill = true;
   document.addEventListener("click", function (event) {
@@ -333,10 +336,13 @@ Behaviour:
 6. The `command` event the polyfill dispatches is internal. `rp-dialog` reads it for reasons and focus restore (9.1); it is not public API (ledger section 4.7).
 7. Differences from the base theme's `ripple/theme/snippets/command-polyfill.liquid` (the polyfill is a port, not a copy, D-008 as amended): it dispatches the `command` event with `command` and `source`, and it uses the global `window.rpCommandsPolyfill`.
 
+8. The inline Liquid script (the constant `INLINE_COMMANDS_POLYFILL`) starts with one line that is not polyfill logic: it sets `window.rpDomReady`, a promise resolved by a `DOMContentLoaded` listener that is registered BEFORE `{{ content_for_header }}` is parsed, and therefore before any listener an app registers (D-122). The Liquid commerce adapter awaits it before it connects the cart store (`05-commerce.md` 5.2). The line runs in every browser, also where the polyfill returns early. Hosts other than Liquid do not print it; code that reads it MUST write `window.rpDomReady ?? Promise.resolve()`.
+
 Liquid additionally prints the same logic as a classic inline script in `snippets/rp-head.liquid`, after the config element `#rp-commerce` and before the module script (D-054 item 7), so that commands work while the module is loading. The text between `<script>` and `</script>` is the value of `INLINE_COMMANDS_POLYFILL` above, with one line break after `<script>` and one before `</script>`. The source of `rp-head` (`src/gen/liquid-core/rp-head.liquid`, owned by `07-manifest-registry-cli.md` and `14-liquid-theme.md`) MUST contain exactly this element; `14-liquid-theme.md` embeds it byte for byte; test E-28 compares the built snippet with the constant. The element as printed (complete):
 
 ```html
 <script>
+window.rpDomReady = new Promise(function (resolve) { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { resolve(); }, { once: true }); else resolve(); });
 (function () {
   if ("commandForElement" in HTMLButtonElement.prototype || window.rpCommandsPolyfill) return;
   window.rpCommandsPolyfill = true;
@@ -362,7 +368,7 @@ Liquid additionally prints the same logic as a classic inline script in `snippet
 </script>
 ```
 
-The two copies coordinate through `window.rpCommandsPolyfill`: whichever runs first installs the listener; the other does nothing. `window.rpRuntime` (3.1) and `window.rpCommandsPolyfill` are the only two globals Ripple owns (D-078). `INLINE_COMMANDS_POLYFILL` is not exported by `src/runtime/index.ts` and is in no public entry; because nothing in a browser bundle uses it, Rollup and esbuild drop it from every browser file (checked by E-28).
+The two copies coordinate through `window.rpCommandsPolyfill`: whichever runs first installs the listener; the other does nothing. `window.rpRuntime` (3.1), `window.rpCommandsPolyfill` and, on Liquid, `window.rpDomReady` (item 8 above) are the only three globals Ripple owns (D-078 as amended by D-122). `INLINE_COMMANDS_POLYFILL` is not exported by `src/runtime/index.ts` and is in no public entry; because nothing in a browser bundle uses it, Rollup and esbuild drop it from every browser file (checked by E-28).
 
 ### 3.4 `src/runtime/opener.ts` (complete)
 
@@ -512,7 +518,9 @@ type ToastOptions = {
   duration?: number
   priority?: "polite" | "assertive"
 }
-type ToastModule = { toast: (message: string, options?: ToastOptions) => unknown }
+// UI SDK's own option for the close button. Ripple always passes it (D-124); it is not in ToastOptions.
+type ToastCancel = { cancel: { label: string } }
+type ToastModule = { toast: (message: string, options?: ToastOptions & ToastCancel) => unknown }
 
 guard("lazy chunks", () => {
   registerLazy("tabs", "ui-tabs", () => import("./ui-tabs"))
@@ -526,7 +534,10 @@ guard("lazy chunks", () => {
 // toast chunk (and the shared chunk it imports); the region upgrades then.
 async function toast(message: string, options?: ToastOptions): Promise<void> {
   const chunk = (await loadChunk("toast")) as ToastModule | undefined
-  chunk?.toast(message, options)
+  // Without `cancel.label` UI SDK renders the close button hidden (uisdk/packages/web/src/toast.ts, fill()),
+  // so a toast could not be dismissed. The label is the region's data-close-label (Toast prop closeLabel).
+  const label = document.querySelector("ui-toast-region")?.getAttribute("data-close-label") || "Dismiss"
+  chunk?.toast(message, { ...options, cancel: { label } })
 }
 
 export { toast, type ToastOptions }
@@ -1268,9 +1279,9 @@ Behaviour:
    A cause is matched to the change only when the change follows it within 1000 ms; otherwise the reason is `imperative`.
 3. **Veto.** `openchange` is cancelable. For `api.open()` and `api.close()` a canceled event means nothing happens and the method returns `false`. For a change that the browser already made (command, Escape, light dismiss), a canceled event makes the element put the dialog back (`close()` or `showModal()`); the dialog is in the other state for less than one frame.
 4. **Initial open.** When the `<dialog>` has `data-default-open` and is closed at upgrade, the element calls `showModal()` once per dialog node (a reconnect does not reopen it). `openchange` fires with `value: true`, reason `imperative`. The server MUST NOT print `open` (D-008 item 5). The `open` attribute this adds is the `upgradeAllow` entry `{ "select": "dialog[data-default-open]", "attrs": ["open"] }` (D-071; entry 3 of `02-html-contract.md` section 7.3). When the dialog is already open at upgrade (opened natively before the module loaded), the element adopts that state without an event.
-5. **Light dismiss fallback.** `closedby="any"` gives backdrop dismissal natively. In a browser without `closedby` (`!("closedBy" in HTMLDialogElement.prototype)`), a click whose target is the `<dialog>` itself and whose coordinates are outside the dialog's box closes it with reason `outside-press`. A dialog without `closedby="any"` is never light-dismissed by the element.
+5. **Light dismiss fallback.** `closedby="any"` gives backdrop dismissal natively. In a browser without `closedby` (`!("closedBy" in HTMLDialogElement.prototype)`), a click whose target is the `<dialog>` itself and whose coordinates are outside the dialog's box, PRECEDED by a `pointerdown` whose target was the `<dialog>` itself and whose coordinates were also outside the box, closes it with reason `outside-press` (D-131). The `pointerdown` condition matches native `closedby="any"`: a drag that starts inside the dialog (a text selection in a field) and ends on the backdrop produces a `click` on the `<dialog>` with outside coordinates and MUST NOT close it. A dialog without `closedby="any"` is never light-dismissed by the element.
 6. **Focus.** Opening is `showModal()`, so the browser moves focus into the dialog and makes the rest of the page inert. On close the browser restores focus; the element additionally focuses the opener when focus was lost (opener never focused, or replaced by a node with the same `id`).
-7. **Navigation.** `rp-dialog` closes on navigation ONLY on a Navigation API `navigate` event that has a `sourceElement` (D-008 item 6 as amended). Exactly: when the Navigation API exists, a `navigate` event with `canIntercept === true`, `hashChange === false`, no `downloadRequest`, and a `sourceElement` that is not inside a `[data-rmx-target]` element closes an open dialog with reason `link-press`. Navigations without a `sourceElement` (`history.pushState` and `replaceState` called by `rp-live`) do NOT close it, so a filter drawer stays open while results refresh. Without the Navigation API nothing is closed by the element (D-081); a full document navigation discards the dialog anyway.
+7. **Navigation.** `rp-dialog` closes on navigation ONLY on a Navigation API `navigate` event that has a `sourceElement` (D-008 item 6 as amended). Exactly: when the Navigation API exists, a `navigate` event with `canIntercept === true`, `hashChange === false`, no `downloadRequest`, and a `sourceElement` that is not inside a `[data-rmx-target]` element closes an open dialog with reason `link-press`. Navigations without a `sourceElement` (`history.pushState` and `replaceState` called by `rp-live`) do NOT close it, so a filter drawer stays open while results refresh. Without the Navigation API (Safari and Firefox at the floor) the element closes an open dialog on `pagehide` with `event.persisted === true`, reason `link-press`, so that a back/forward-cache restore never shows a stale open modal (the cache keeps DOM state, including a `showModal()`-opened dialog) (D-131, amends D-081). The `pagehide` listener is registered only when `window.navigation` is undefined. Nothing else closes the dialog on navigation there.
 8. **Writes.** The element writes no attribute on its root, in any state. Inside the root it changes only the dialog's open state through `showModal()` and `close()`.
 9. **Rule for feedback** (D-008 item 7, D-079): while a dialog is open, feedback MUST be rendered inside it (FormMessage with `role="alert"`, or `announce(text, { from })` with `from` inside the dialog, which writes into the dialog's `data-rp-part="status"` element). Code MUST NOT call `toast()` while `document.querySelector("dialog:modal")` is not null.
 
@@ -1312,6 +1323,13 @@ type NavigateEventLike = Event & {
 
 // Dialogs that already honoured data-default-open, so a reconnect does not reopen them.
 const autoOpened = new WeakSet<HTMLDialogElement>()
+// Dialogs whose last pointerdown was on the backdrop (target is the dialog, coordinates outside its box). D-131.
+const downOutside = new WeakSet<HTMLDialogElement>()
+const outsideBox = (dialog: HTMLDialogElement, event: Event) => {
+  const box = dialog.getBoundingClientRect()
+  const mouse = event as MouseEvent
+  return !(mouse.clientX >= box.left && mouse.clientX <= box.right && mouse.clientY >= box.top && mouse.clientY <= box.bottom)
+}
 
 function dialogOf(root: Element | null | undefined): HTMLDialogElement | null {
   const first = root?.querySelector("dialog") ?? null
@@ -1435,6 +1453,20 @@ const rpDialog = definePrimitive({
     navigation?.addEventListener("navigate", onNavigate)
     context.onDestroy(() => navigation?.removeEventListener("navigate", onNavigate))
 
+    // No Navigation API: close before the page enters the back/forward cache (D-131).
+    const onPageHide = (event: Event) => {
+      if (!(event as PageTransitionEvent).persisted) return
+      const dialog = dialogOf(root())
+      if (dialog?.open) {
+        note("link-press", event)
+        dialog.close()
+      }
+    }
+    if (!navigation) {
+      window.addEventListener("pagehide", onPageHide)
+      context.onDestroy(() => window.removeEventListener("pagehide", onPageHide))
+    }
+
     return {
       isOpen: () => context.store.get().open,
       open,
@@ -1457,11 +1489,9 @@ const rpDialog = definePrimitive({
           const dialog = dialogOf(el)
           if (!dialog || event.target !== dialog || !dialog.open) return
           if (dialog.getAttribute("closedby") !== "any" || "closedBy" in HTMLDialogElement.prototype) return
-          const box = dialog.getBoundingClientRect()
-          const mouse = event as MouseEvent
-          const inside =
-            mouse.clientX >= box.left && mouse.clientX <= box.right && mouse.clientY >= box.top && mouse.clientY <= box.bottom
-          if (inside) return
+          // The press must have STARTED on the backdrop too (a drag from inside the dialog does not count).
+          const started = downOutside.delete(dialog)
+          if (!started || !outsideBox(dialog, event)) return
           api.note("outside-press", event)
           dialog.close()
         },
@@ -1484,7 +1514,15 @@ const rpDialog = definePrimitive({
         }
         // A press on the backdrop targets the <dialog> element itself.
         const onPointerdown = (event: Event) => {
-          if (event.target === dialogOf(el)) api.note("outside-press", event)
+          const dialog = dialogOf(el)
+          if (!dialog) return
+          if (event.target === dialog) {
+            api.note("outside-press", event)
+            if (outsideBox(dialog, event)) downOutside.add(dialog)
+            else downOutside.delete(dialog)
+          } else {
+            downOutside.delete(dialog)
+          }
         }
         // Another close request (for example the Android back gesture).
         const onCancel = (event: Event) => {
@@ -1794,7 +1832,8 @@ Parts: `item` (each top-level `<li>`). The panel of an item is the first `[popov
 Behaviour:
 
 1. Opening and closing a panel by its disclosure button, closing by Escape, closing by a press outside, and returning focus to the button are NATIVE (`popovertarget` + `popover`). The element adds only items 2 and 3.
-2. **Hover intent** (mouse pointers only; touch and pen are ignored). The pointer resting on an item that has a panel opens that panel after 120 ms (`showPopover()`); opening one auto popover closes the others natively. The pointer moving onto an item without a panel, or leaving every item, closes all panels of this menu after 250 ms. Moving between an item and its own panel cancels the pending close, because the panel is a DOM descendant of the item.
+2. **Hover intent** (mouse pointers only; touch and pen are ignored). The pointer resting on an item that has a panel opens that panel after 120 ms (`showPopover()`); opening one auto popover closes the others natively. Positioning does not depend on the popover invoker: the panel is anchored to its item's trigger by a named anchor (`components/navigation-menu.md` required rule 5, D-114), so script-opened and button-opened panels are placed identically. The pointer moving onto an item without a panel, or leaving every item, closes all panels of this menu after 250 ms. Moving between an item and its own panel cancels the pending close, because the panel is a DOM descendant of the item.
+   2a. **Click after hover** (D-115). The native `popovertarget` action TOGGLES: a click on the trigger of a panel that hover just opened would close it (measured in Chromium 157). The element therefore keeps a set `openedByHover` of panels: a panel is added when the 120 ms timer calls `showPopover()` on it; it is removed when the element closes panels (`close()`), when ArrowDown opens it, and on every click on its trigger. In a `click` listener on the root: when the click target is inside a `[popovertarget]` button of an item whose panel is in `openedByHover` AND matches `:popover-open`, the element calls `event.preventDefault()` (this suppresses the native toggle; the panel stays open) and removes the panel from the set, so the next click closes natively. In every other case the click is left alone and the panel is removed from the set.
 3. **Arrow keys**, when focus is on a top-level entry (not inside a panel): ArrowRight (ArrowLeft in RTL) focuses the entry of the next item, wrapping; ArrowLeft (ArrowRight in RTL) the previous, wrapping; Home the first; End the last; each of these closes open panels first. ArrowDown on an item with a panel opens the panel and focuses its first link or enabled button. Tab order is unchanged: every link and button stays in the tab sequence.
 4. The element writes no attribute and dispatches no event. It sets no `aria-expanded` (`02-html-contract.md` rule I-2: the browser exposes the popover state of a `popovertarget` button). Its whole public surface is `api.close()` (D-017 as amended, D-023).
 5. In a browser without the popover API (`!("popover" in HTMLElement.prototype)`) the element does nothing. This is decided (D-081, ledger Q15): the floor of D-032 is kept; below Chrome 114 / Safari 17.0 the popover panels are ordinary in-flow content, always visible, every link in them is reachable, the disclosure buttons do nothing, and there is no polyfill.
@@ -1853,6 +1892,8 @@ const rpNavigationMenu = definePrimitive({
     const root = () => context.element("root")
     let openTimer: ReturnType<typeof setTimeout> | undefined
     let closeTimer: ReturnType<typeof setTimeout> | undefined
+    // Panels whose current open state was produced by the hover timer (item 2a).
+    const openedByHover = new WeakSet<HTMLElement>()
     const clear = () => {
       clearTimeout(openTimer)
       clearTimeout(closeTimer)
@@ -1864,6 +1905,7 @@ const rpNavigationMenu = definePrimitive({
       const el = root()
       if (!el || !SUPPORTED) return
       for (const panel of el.querySelectorAll<HTMLElement>("[popover]")) {
+        openedByHover.delete(panel)
         if (isOpen(panel)) panel.hidePopover()
       }
     }
@@ -1880,8 +1922,22 @@ const rpNavigationMenu = definePrimitive({
         }
         if (isOpen(panel)) return
         openTimer = setTimeout(() => {
-          if (panel.isConnected && !isOpen(panel)) panel.showPopover()
+          if (panel.isConnected && !isOpen(panel)) {
+            panel.showPopover()
+            openedByHover.add(panel)
+          }
         }, OPEN_DELAY)
+      },
+      // Internal: a click inside the menu. Keeps a hover-opened panel open on the first trigger click (item 2a).
+      click: (event: Event) => {
+        const el = root()
+        const target = event.target instanceof Element ? event.target : null
+        const trigger = target?.closest<HTMLElement>("[popovertarget]") ?? null
+        const item = el && trigger ? itemOf(el, trigger) : null
+        const panel = item ? panelOf(item) : null
+        if (!panel) return
+        if (openedByHover.has(panel) && isOpen(panel)) event.preventDefault()
+        openedByHover.delete(panel)
       },
       // Internal: the mouse left every item.
       leave: () => {
@@ -1903,6 +1959,7 @@ const rpNavigationMenu = definePrimitive({
           const panel = panelOf(item)
           if (!panel) return
           event.preventDefault()
+          openedByHover.delete(panel)
           if (!isOpen(panel)) panel.showPopover()
           panel.querySelector<HTMLElement>("a[href], button:not([disabled])")?.focus()
           return
@@ -1936,6 +1993,7 @@ const rpNavigationMenu = definePrimitive({
           if (!itemOf(el, to)) api.leave()
         },
         keydown: (event, { api }) => api.key(event as KeyboardEvent),
+        click: (event, { api }) => api.click(event),
       },
     }),
   }),
@@ -2125,7 +2183,7 @@ One region per page, printed empty by the `layout` blueprint (`12-components-chr
 Source: `10-components-interactive.md`, Toast, fixture `default` (no props):
 
 ```html
-<ui-toast-region class="rp-toast" aria-label="Notifications" data-slot="toast-region" data-side="bottom" data-align="end" popover="manual"></ui-toast-region>
+<ui-toast-region class="rp-toast" aria-label="Notifications" data-close-label="Dismiss" data-slot="toast-region" data-side="bottom" data-align="end" popover="manual"></ui-toast-region>
 ```
 
 Rules:
@@ -2141,7 +2199,7 @@ import { toast } from "<pkg>/elements"   // html and remix: from the URL of the 
 await toast("Added to cart", { description: "Linen shirt, size M", type: "success", duration: 5000 })
 ```
 
-`toast(message: string, options?: ToastOptions): Promise<void>` (D-083 item 2). `message` is the toast's title text. `ToastOptions` is exactly: `id?: string`, `description?: string`, `type?: "default" | "success" | "error" | "warning" | "info" | "loading"`, `duration?: number` (milliseconds), `priority?: "polite" | "assertive"`. The helper loads the chunk on first use and resolves after UI SDK's `toast()` has been called; when the chunk fails to load it resolves without showing anything. Action buttons inside toasts are not supported in V1.
+`toast(message: string, options?: ToastOptions): Promise<void>` (D-083 item 2). `message` is the toast's title text. `ToastOptions` is exactly: `id?: string`, `description?: string`, `type?: "default" | "success" | "error" | "warning" | "info" | "loading"`, `duration?: number` (milliseconds), `priority?: "polite" | "assertive"`. The helper additionally passes UI SDK's `cancel: { label }` option on every call, with `label` read from the `data-close-label` attribute of the page's `ui-toast-region` (fallback `Dismiss`), because UI SDK hides the close button of a toast that has no `cancel.label` (measured: `<ui-toast-close hidden>`); callers cannot pass `cancel` (D-124). The helper loads the chunk on first use and resolves after UI SDK's `toast()` has been called; when the chunk fails to load it resolves without showing anything. Action buttons inside toasts are not supported in V1.
 
 5. `toast()` MUST NOT be called while a modal dialog is open (9.1 item 9).
 6. A page with no `ui-toast-region` shows no toasts: UI SDK has no region to render into. UNVERIFIED whether UI SDK creates a region itself in that case; Ripple layouts always print one.
@@ -2260,7 +2318,7 @@ Source: `10-components-interactive.md`, Carousel, fixture `default` (`id="featur
 Rules:
 
 1. Root `id` REQUIRED; the viewport id is `<id>-list`.
-2. The viewport is the scroll container (CSS: `overflow-x: auto; scroll-snap-type: x mandatory`; each item `scroll-snap-align: start`; owned by the component CSS) and has `tabindex="0"` so that arrow keys scroll it.
+2. The viewport is the scroll container (CSS: `overflow-x: auto; scroll-snap-type: inline mandatory`; each item `scroll-snap-align: start`; owned by the component CSS) and has `tabindex="0"` so that arrow keys scroll it.
 3. The previous and next buttons have class `rp-carousel-control` (D-016), carry `data-rp-part="prev"` / `"next"` and `data-rp-js="inflow"`, and MUST be outside the viewport. Their accessible names come from the props `previousLabel` and `nextLabel`.
 4. `prev` is printed with `disabled`; `next` is printed without it (9.2 item 6).
 5. No `aria-hidden`, `inert` or `hidden` on slides.
@@ -2616,8 +2674,10 @@ The spike page `ripple/docs/research/spikes/elements-runtime/site/index.html` is
 | E-26 X | 5 | `valuechange` veto on `rp-quantity` (D-036): section 8.6 cases Q-6, Q-13 and Q-14. | A `valuechange` listener that calls `preventDefault()` leaves `input.value` unchanged and the element's `value` property equal to the previous value, for a button press, a typed commit, `api.setValue` and `api.decrement`; a later write to the `value` property still applies. |
 | E-27 | 5 | Toast loading (D-054 item 2, D-083). Load a page whose `<body>` contains only the Toast `default` fixture (an empty `ui-toast-region`), with `browser/ripple.elements.js`. Record script requests for 1000 ms after `load` without calling `toast()`. Then call `await toast("Saved")`. Repeat the whole test with `browser/ripple.js`. | Before the call: no request whose file name is `ripple.elements-toast.js` or `ripple.elements-shared.js` (second run: `ripple-toast.js`, `ripple-shared.js`); `customElements.get("ui-toast-region")` is `undefined`; zero mutations inside the region. After the call: the `toast` chunk and the `shared` chunk of the loaded set have each been requested exactly once, and a `ui-toast` element whose text contains `Saved` is inside the region. |
 | E-28 | 1 | Inline polyfill (D-008, D-054 item 7, D-078). Read `pkg/registry/liquid/snippets/rp-head.liquid`; take the text of its one classic `<script>` element that contains `rpCommandsPolyfill`. Search every `.js` file of `pkg/browser/` and `pkg/registry/liquid/assets/` for the string `button[commandfor]`. | The script text equals `"\n" + INLINE_COMMANDS_POLYFILL + "\n"` (the constant of `src/runtime/commands-polyfill.ts`) byte for byte. The string `button[commandfor]` occurs exactly once in each main file (`ripple.js`, `ripple.elements.js`, and the Liquid `ripple.js`) and in no chunk: the constant is not shipped to browsers. |
-| E-29 | 5 | Globals (D-078). On page P after upgrade, compare `Object.keys(window)` with the same list taken in an identical page that loads no Ripple script. | The only added keys that start with `rp` are `rpRuntime`, and `rpCommandsPolyfill` when the browser lacks Invoker Commands. Ripple adds no other global. |
+| E-29 | 5 | Globals (D-078). On page P after upgrade, compare `Object.keys(window)` with the same list taken in an identical page that loads no Ripple script. | The only added keys that start with `rp` are `rpRuntime`, `rpCommandsPolyfill` when the browser lacks Invoker Commands, and `rpDomReady` on a Liquid page (set by the inline script of `rp-head`, D-122). Ripple adds no other global. |
 | E-30 | 1 | Server import (D-054 item 5). Under Node, with no DOM globals defined, run `await import()` on the built `dist/elements/index.mjs` and on `dist/commerce/index.mjs`. | Neither import rejects, nothing is written to stderr, and no global is added to `globalThis`. If this test fails, the fix is to wrap every `createParts(...)` call and the `guard("lazy chunks", ...)` call in `if (typeof document !== "undefined") { ... }`; no contract changes. UNVERIFIED until run (section 14 item 4). |
+| E-31 | 5 | Light dismiss fallback (D-131). Before any script runs, `delete HTMLDialogElement.prototype.closedBy` (`addInitScript`). Open the Drawer of 10.1 that has `closedby="any"` and contains a text input. (a) `mouse.move` to the centre of the input, `mouse.down`, `mouse.move` to viewport (2, 2), `mouse.up`. (b) Then `mouse.click(2, 2)`. | After (a) the dialog is open and no `openchange` fired. After (b) it is closed with reason `outside-press`. |
+| E-32 | 5 | bfcache (D-131). Before any script runs, make `window.navigation` undefined (`addInitScript`: `Object.defineProperty(window, "navigation", { value: undefined })`). Open the dialog; dispatch `new PageTransitionEvent("pagehide", { persisted: true })` on `window`. Second case: the same with `persisted: false`. | First: `dialog.open === false` and one `openchange` with reason `link-press`. Second: the dialog stays open. |
 
 ---
 
@@ -2745,7 +2805,7 @@ export { RippleElement, defineElement, type ChangeDetail }
 
 3. The public surface (tags, markup, events, `detail`, `api` methods, properties, state attributes) is identical. No contract, fixture, binding or CSS changes. `01-architecture.md` gives the import-rule change.
 4. Agent bridge: the elements are no longer kernel primitives, so the bridge does not list them. Manual registration is required by the ledger; the API for registering a non-primitive with the bridge is UNVERIFIED (start from `uisdk/packages/core/src/page/observe/registry.ts`). Until it is verified, the `rp-*` elements are reachable by in-page agents only through their native controls, and the manifest key `agent.surface` for the affected components is `accessibility-tree`.
-5. Tests E-01 to E-30 apply unchanged, except E-17 (replaced by: the snapshot lists the native buttons inside each root) and E-24 (replaced by: each file contains exactly one `extends RippleElement` and one `defineElement(`).
+5. Tests E-01 to E-32 apply unchanged, except E-17 (replaced by: the snapshot lists the native buttons inside each root) and E-24 (replaced by: each file contains exactly one `extends RippleElement` and one `defineElement(`).
 
 ### Fallback (SPIKE-05)
 

@@ -638,6 +638,7 @@ Source: `src/gen/liquid-core/rp-head.liquid`. Order is fixed by D-054 item 7: th
 }
 </script>
 <script>
+window.rpDomReady = new Promise(function (resolve) { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { resolve(); }, { once: true }); else resolve(); });
 (function () {
   if ("commandForElement" in HTMLButtonElement.prototype || window.rpCommandsPolyfill) return;
   window.rpCommandsPolyfill = true;
@@ -666,6 +667,7 @@ Source: `src/gen/liquid-core/rp-head.liquid`. Order is fixed by D-054 item 7: th
 
 Rules:
 
+0. The first line of the inline script (`window.rpDomReady = ...`) is part of the constant `INLINE_COMMANDS_POLYFILL` ([04-elements.md](04-elements.md) section 3.3 item 8) and MUST NOT be removed or moved after `{{ content_for_header }}`: it registers the page's first `DOMContentLoaded` listener, which is what lets Hydrogen inside `ripple.js` make the one `Shopify.actions.updateCart.configure` call before any app code (D-122; [05-commerce.md](05-commerce.md) sections 5.2 and 10.4). Shopify's guidance for a theme-owned configuration is the same placement: a `DOMContentLoaded` listener registered above `{{ content_for_header }}`.
 1. `rp-head` is rendered by BOTH layouts (`theme.liquid`, `password.liquid`).
 2. The `src` of the module script and the import-map value of `ripple` are the same filter on the same file name, so the browser creates one module instance ([04-elements.md](04-elements.md) section 5.4 rule 1).
 3. Config element (D-087). Its keys are exactly `host`, `cartUrl`, `cartAddUrl`, `cartDrawer` (the literal `"cart-drawer"`, which MUST equal the id of the CartDrawer `<dialog>`, T-24) and `strings`. `strings` has exactly the seven keys `added`, `updated`, `removed`, `discountApplied`, `discountRemoved`, `noteSaved`, `error`, each sourced from the one locale key shown. `analytics` is NOT printed; its default is `true`. No other option is printed. The config element is printed here and NOT in the layout file (D-087 item 3).
@@ -839,7 +841,7 @@ Each is one sentence; the template text is in doc 12.
    <rp-view-event view-event-trigger="connect"><script type="application/json" data-view-event-payload>{{ cart | standard_event_data: 'view', context: 'page' }}</script></rp-view-event>
    ```
 
-   In the attribute form the object is `product`, `collection` or `search` and the output is escaped; in the child form the output is NOT escaped. The payload is ALWAYS the output of `standard_event_data`; hand-built JSON is prohibited (D-089 item 4). Evidence: F-12. `standard_event_data` on the `search` object is UNVERIFIED (SPIKE-02 question V-20).
+   In the attribute form the object is `product`, `collection` or `search` and the output is escaped (the collection view is written `{{ collection | standard_event_data: 'view' | escape }}`, with no `context` argument: the base theme passes none and the Liquid reference says `context` is ignored for collections); in the child form the output is NOT escaped. The payload is ALWAYS the output of `standard_event_data`; hand-built JSON is prohibited (D-089 item 4). Evidence: F-12. `standard_event_data` on the `search` object is UNVERIFIED (SPIKE-02 question V-20).
 
 ---
 
@@ -1101,7 +1103,7 @@ Needs: a development store with the feature preview `liquid_july_26_changes`, th
 | V-9 | Is `window.Shopify.actions` defined before module scripts run? | Yes | Report to doc 05: the Liquid adapter MUST then wait for `DOMContentLoaded` before the first cart read |
 | V-10 | After Hydrogen's handler calls the default `updateCart` handler, does the platform reload the page ("falls back to a full page reload" on a theme it does not recognise)? | No reload when a handler is configured (the base theme relies on this) | This is SPIKE-01 territory: report to doc 05 |
 | V-11 | Does the platform publish the page view itself? (Also asked by SPIKE-01.) | No (the base theme dispatches it; the Liquid adapter does, D-089) | If yes: the adapter's page-view dispatch is removed, for page views only; `analytics: false` is NOT printed and cart analytics are unchanged. Report to doc 05. The theme does not change |
-| V-12 | Which drop lists applied discount codes, and is `discount_application.type` equal to `discount_code`? | `cart.cart_level_discount_applications`, `type == 'discount_code'` (D-092 item 4) | Correct `snippets/rp-cart-summary-totals.liquid` (doc 11, CartSummary) |
+| V-12 | Does the code list of CartSummary show every applied discount code, including a code that applies to specific products? | The unique titles of `cart.cart_level_discount_applications` and of each item's `line_level_discount_allocations[].discount_application`, both filtered by `type == 'discount_code'` (D-092 item 4 as amended, D-120) | Correct `snippets/rp-cart-summary-totals.liquid` (doc 11, CartSummary) |
 | V-13 | How does a `boolean` filter expose its value; are `filter.min_value.value` and `filter.range_max` in subunits for every currency? | Through `filter.values`; yes | Correct `rp-filter-group` / `rp-price-range` (doc 11) |
 | V-14 | Does the theme editor let a merchant select a block rendered with `{% block %}` without `block.shopify_attributes`? | Yes | Report to doc 06; a root attribute would be added to every block by the generator |
 | V-15 | Do `font_picker` defaults `system_ui_n4` and the `color_palette` id `rp_palette` validate on upload? | Yes | Correct section 6.1 and report to the ledger (D-098) |
@@ -1110,6 +1112,7 @@ Needs: a development store with the feature preview `liquid_july_26_changes`, th
 | V-18 | Which values does `request.page_type` return for the 13 templates (the layout prints it as `data-template`; `meta-tags` tests `product`, `article`, `password`, `search`, `cart`, `404`, `index`)? | The values the base theme tests in `theme/snippets/meta-tags.liquid` | Correct section 7.6; report the list to doc 05 (page-view `template`) |
 | V-19 | Does a `font` object returned by a `font_picker` setting have the member `system?`, true for `system_ui_n4`, and does `font_face` print nothing harmful for it? | `system?` exists and is true for system fonts | Replace the four conditions of section 6.3 by a comparison of `font_body.family` and `font_heading.family` with the family name the store returns for `system_ui_n4`, recorded here |
 | V-20 | Does `standard_event_data: 'view', context: 'page'` produce a payload that the element defined by `createViewEventElement()` under the tag `rp-view-event` accepts, for `product` and `collection` (attribute form), `search` (attribute form) and `cart` (child form)? | Yes for all four | For an object the filter rejects (`search` is the one not seen in the base theme): doc 12 omits the element on that template. If the tag name matters: report to doc 05 |
+| V-21 | With a shop name and search terms that contain `&` and `<`: do the layout copyright line, the Footer default body and the search count line (each passes a value escaped with `| escape` BEFORE the `t` call) render the value escaped exactly once? | Yes (`&amp;`, `&lt;` in the source, never `&amp;amp;`) | If the platform also escapes interpolated values of a key without the `_html` suffix: remove the three `| escape` assigns (`blueprints/layout.md`, `components/footer.md`, `blueprints/search.md`) |
 
 ### Fallback (SPIKE-02)
 

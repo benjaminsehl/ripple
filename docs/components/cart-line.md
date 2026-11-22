@@ -47,6 +47,7 @@ Nesting rules: root children in order: media, details, actions, price, error. Me
 | `line` | `line` | object | `RippleLine` / Liquid `line_item` drop | none | yes | no | every part |
 | `disabled` | none | boolean | `true false` | `false` | no | no | `disabled` on the quantity input, the steppers, Update and remove; React host only (optimistic lines) |
 | `locale` | none | string | BCP 47 tag | `en-US` | no | no | passed to Price (CV-1) |
+| `action` | none | url | the cart endpoint including the locale path prefix | `/api/cart` | no | no | `action` on the actions form (hydrogen hosts); TSX hosts only (CV-17, D-118) |
 
 ### Content model
 
@@ -71,11 +72,11 @@ Fixture `default` (`line`: `line.basic`; hosts `html`, `react`, `remix`):
       <button type="submit" name="intent" value="set" hidden></button>
       <rp-quantity class="rp-quantity" data-size="md" data-slot="rp-quantity">
         <button class="rp-quantity-button" type="button" aria-label="Decrease quantity" data-rp-part="decrement" data-rp-js="inflow"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
-        <input class="rp-quantity-input" type="number" inputmode="numeric" name="quantity" min="0" step="1" value="2" aria-label="Quantity for Linen Shirt" data-rp-part="input" data-rp-field="quantity">
+        <input class="rp-quantity-input" type="number" inputmode="numeric" name="quantity" min="0" step="1" value="2" required aria-label="Quantity for Linen Shirt" data-rp-part="input" data-rp-field="quantity">
         <button class="rp-quantity-button" type="button" aria-label="Increase quantity" data-rp-part="increment" data-rp-js="inflow"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
       </rp-quantity>
       <button class="rp-button rp-cart-line-update" type="submit" name="intent" value="set" data-variant="outline" data-size="sm" data-rp-part="submit" data-rp-js="fallback">Update</button>
-      <button class="rp-icon-button rp-cart-line-remove" type="submit" name="intent" value="remove" data-variant="ghost" data-size="sm" aria-label="Remove Linen Shirt"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M4 7h16M10 7V4h4v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg></button>
+      <button class="rp-icon-button rp-cart-line-remove" type="submit" name="intent" value="remove" formnovalidate data-variant="ghost" data-size="sm" aria-label="Remove Linen Shirt"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M4 7h16M10 7V4h4v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg></button>
     </form>
   </div>
   <div class="rp-cart-line-price">
@@ -84,6 +85,8 @@ Fixture `default` (`line`: `line.basic`; hosts `html`, `react`, `remix`):
   <p class="rp-form-message" data-rp-part="error" data-tone="destructive" role="alert" hidden></p>
 </li>
 ```
+
+Hydrogen-only attributes (D-116; they apply to every hydrogen fixture of this file: `default`, `sale`, `attributes`, `no-image`, `class`, `escaping`): the quantity input carries `required` (CartLine passes `required` to the embedded QuantityInput) and the remove button carries `formnovalidate` (the binding prints the button itself, so it prints the attribute itself). Reason: on the hydrogen backend an empty quantity is read as `0` and removes the line; `required` blocks an empty `set` natively, and `formnovalidate` lets the remove button work while the quantity is invalid. The `liquid-*` fixtures carry neither attribute.
 
 Fixture `liquid-default` (same props; host `liquid`): identical to `default` except `data-rp-line="11:abc"` and the actions part:
 
@@ -152,7 +155,7 @@ hydrogen backend: the quantity field and the Update button post `intent=set`; th
 
 | Key | Action |
 |---|---|
-| Enter in the quantity input | submits the set (see CartLines) |
+| Enter in the quantity input | submits the set (see CartLines). With an empty or non-numeric value nothing is sent: natively the `required` input blocks the submit (hydrogen), and with JavaScript `rp-cart` ignores it (`05-commerce.md` 7.1, D-116) |
 | ArrowUp, ArrowDown in the quantity input | native number stepping; the change is sent after 250 ms |
 
 ### Styling
@@ -175,7 +178,7 @@ Required rules: root `display: grid; grid-template-columns: var(--rp-cart-line-m
 ### Host notes
 
 - HTML: copy the `default` contract per line.
-- React: `CartLine(props: { line: RippleLine; disabled?: boolean; locale?: string; className?: string })`. No hook, no directive. Image: the embedded Image, `<Image image={line.image} sizes="6rem" ratio="1/1" />` (Image prints `src` and `srcset`, doc 09). Sale test: `line.compareAtTotalPrice !== null`. The remove control and the update button compose IconButton and Button by contract (D-070; class pairs `rp-icon-button rp-cart-line-remove` and `rp-button rp-cart-line-update`, section 0.2): the binding prints both elements itself. The quantity control is the embedded QuantityInput.
+- React: `CartLine(props: { line: RippleLine; disabled?: boolean; locale?: string; action?: string; className?: string })`. No hook, no directive. The binding passes `required` to the embedded QuantityInput and prints `formNoValidate` on the remove button (D-116); `action` (default `/api/cart`) is the form's `action` (CV-17). Image: the embedded Image, `<Image image={line.image} sizes="6rem" ratio="1/1" />` (Image prints `src` and `srcset`, doc 09). Sale test: `line.compareAtTotalPrice !== null`. The remove control and the update button compose IconButton and Button by contract (D-070; class pairs `rp-icon-button rp-cart-line-remove` and `rp-button rp-cart-line-update`, section 0.2): the binding prints both elements itself. The quantity control is the embedded QuantityInput.
 - Remix: no `data-rmx-*` attribute on the `li`; the actions form prints `data-rmx-document` (a cart form, D-034 item 3).
 - Liquid: `line` is a `line_item` drop. Title `line.product.title`; variant `line.variant.title` unless `line.product.has_only_default_variant`; attributes `line.properties` (skip a key whose first character is `_` and a blank value); price `line.final_line_price`, compare-at `line.original_line_price` when greater. No schema settings. Locale keys: `ripple.cart-line.remove` = `Remove {{ title }}`; `ripple.cart-line.quantity` = `Quantity for {{ title }}`; `ripple.cart-line.update` = `Update`.
 
@@ -205,6 +208,8 @@ RP104 (`line`), RP110, RP203 (image), RP301 (every button has a form ancestor or
 2. Tier 5: in the hydrogen fixture the first `button[type="submit"]` of the form is `name="intent" value="set"` with `hidden`.
 3. Tier 5: an attribute with key `_bundle` is not in the DOM.
 4. Tier 6: hydrogen dev server, scripting disabled: pressing the remove button yields a page without the line.
+5. Tier 2: in every hydrogen fixture the quantity input has `required` and the `value="remove"` button has `formnovalidate`; in every `liquid-*` fixture neither attribute exists.
+6. Tier 5 (hydrogen host, JavaScript on): clear the quantity input and press Enter: zero `POST /api/cart` requests are made and the line is still in the DOM (`05-commerce.md` test C-33).
 
 ### Evidence and UNVERIFIED
 

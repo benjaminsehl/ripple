@@ -29,8 +29,8 @@ Not owned here (linked, never restated):
 | What each host adapter asserts (Q-1 to Q-22), `REACT_HYDRATION_ALLOW` | `06-bindings.md` section 11 |
 | `pnpm gen`, `pnpm gen --check`, `pnpm gen --snapshot`, checker rules RP601 to RP609 | `07-manifest-registry-cli.md` |
 | CSS acceptance tests A-01 to A-23, the measuring minifier | `03-styling-and-tokens.md` sections 5.4, 15 |
-| Element acceptance tests E-01 to E-25 | `04-elements.md` section 13 |
-| Commerce acceptance tests C-01 to C-23, `fake-sa.js` | `05-commerce.md` section 14 |
+| Element acceptance tests E-01 to E-32 | `04-elements.md` section 13 |
+| Commerce acceptance tests C-01 to C-39, `fake-sa.js` | `05-commerce.md` section 14 |
 | Eval suite (tier 11) | `08-agent-kit-and-evals.md` |
 | Per-component acceptance tests | `09-components-foundation.md` to `12-components-chrome-and-blueprints.md` |
 | Complete text of every blueprint file, including Liquid layouts and templates | `12-components-chrome-and-blueprints.md` (D-099) |
@@ -652,6 +652,7 @@ A fixture references commerce data only as `{ "$resource": "<type>.<name>" }` (`
 | `cart.two-lines` | `line.basic` and 1 of "Wool Socks"; total quantity 3; total 108.00 USD | doc 11 section 0.5 |
 | `cart.empty` | no lines | doc 11 section 0.5 |
 | `cart.discounted` | `cart.two-lines` with code `SAVE10` applied; discount 10.80; total 97.20 USD | doc 11 section 0.5 |
+| `cart.line-discounted` | `cart.two-lines` with code `SHIRT5` applied to the first line only (Liquid: line-level allocation, empty cart-level list); subtotal and total 103.00 USD | doc 11 section 0.5 (D-120) |
 | `filters.basic` | filters, sort options and form action of `/collections/summer?filter.v.availability=1&filter.v.price.lte=50` | doc 11 section 0.5 |
 | `search.shirt` | terms `shirt`, 2 results (`product.basic`, `product.sale`) | doc 11 section 0.5 |
 | `menu.main`, `menu.deep`, `menu.footer`, `menu.empty` | menus | doc 12 section 1.6 |
@@ -895,14 +896,23 @@ function line(l: LineDef): { hydrogen: any; liquid: any } {
       final_line_price: total,
       original_line_price: original,
       properties: {},
+      line_level_discount_allocations: [],
     },
   }
 }
 
-function cart(lines: LineDef[], discount: { code: string; cents: number } | null): ResourceFixture {
+// `discount.line: true` (D-120): the code applies to the first line only. Liquid then lists it in that item's
+// line_level_discount_allocations and NOT in cart_level_discount_applications; the subtotal already includes it.
+function cart(lines: LineDef[], discount: { code: string; cents: number; line?: boolean } | null): ResourceFixture {
   const built = lines.map(line)
-  const subtotal = built.reduce((sum, l) => sum + l.liquid.final_line_price, 0)
-  const total = subtotal - (discount?.cents ?? 0)
+  const lineLevel = discount?.line === true
+  if (lineLevel && discount && built[0]) {
+    built[0].liquid.line_level_discount_allocations = [
+      { amount: discount.cents, discount_application: { title: discount.code, type: "discount_code" } },
+    ]
+  }
+  const subtotal = built.reduce((sum, l) => sum + l.liquid.final_line_price, 0) - (lineLevel ? (discount?.cents ?? 0) : 0)
+  const total = subtotal - (lineLevel ? 0 : (discount?.cents ?? 0))
   const count = built.reduce((sum, l) => sum + l.liquid.quantity, 0)
   const money = (cents: number) => usd((cents / 100).toFixed(2))
   return {
@@ -922,7 +932,7 @@ function cart(lines: LineDef[], discount: { code: string; cents: number } | null
       items: built.map((l) => l.liquid),
       items_subtotal_price: subtotal,
       total_price: total,
-      cart_level_discount_applications: discount ? [{ title: discount.code, type: "discount_code", total_allocated_amount: discount.cents }] : [],
+      cart_level_discount_applications: discount && !lineLevel ? [{ title: discount.code, type: "discount_code", total_allocated_amount: discount.cents }] : [],
     },
   }
 }
@@ -1086,6 +1096,7 @@ export const RESOURCES: Record<string, ResourceFixture> = {
   "cart.two-lines": cart([LINE_BASIC, LINE_SALE], null),
   "cart.empty": cart([], null),
   "cart.discounted": cart([LINE_BASIC, LINE_SALE], { code: "SAVE10", cents: 1080 }),
+  "cart.line-discounted": cart([LINE_BASIC, LINE_SALE], { code: "SHIRT5", cents: 500, line: true }),
   "filters.basic": {
     hydrogen: filtersHydrogen,
     liquid: liquidCollection({ availability: "1", priceLte: "50" }),
@@ -3273,8 +3284,8 @@ A test asserts an announcement by polling (at most 2 s, with `page.waitForFuncti
 |---|---|---|
 | A-02 to A-09, A-11, A-14, A-18 to A-22 (tokens, dials, schemes, props, focus, motion, RTL, hidden, display of custom elements, Tabs without JS, scroll padding, `data-rp-js` on a form) | `css/styling.test.ts` | `03-styling-and-tokens.md` 15 |
 | A-23 (the linter's own tests) | `src/gen/css-lint.test.ts` | `03-styling-and-tokens.md` 7.9, 15 |
-| E-02 to E-30 | `src/elements/<tag>.test.ts`, `src/runtime/<name>.test.ts` (the file of each test is stated in `04-elements.md` 13) | `04-elements.md` 13 |
-| C-01 to C-32 | `test/commerce/liquid.test.ts`, `test/commerce/hydrogen.test.ts` (the file of each test is stated in `05-commerce.md` 14) | `05-commerce.md` 14 |
+| E-02 to E-32 | `src/elements/<tag>.test.ts`, `src/runtime/<name>.test.ts` (the file of each test is stated in `04-elements.md` 13) | `04-elements.md` 13 |
+| C-01 to C-39 | `test/commerce/liquid.test.ts`, `test/commerce/hydrogen.test.ts` (the file of each test is stated in `05-commerce.md` 14) | `05-commerce.md` 14 |
 
 ---
 
@@ -3453,7 +3464,7 @@ Tests in `test/liquid/live.test.ts`:
 | `[T8] liquid: one page view per load` | Load `/`, a product page, a collection page and `/cart`; on each, record Standard Events page views with the hook the SPIKE-01 report names (UNVERIFIED until that report exists; D-089) | exactly one page view per document load; when the platform publishes the page view by itself, the adapter's dispatch is removed and this test still expects exactly one |
 | `[T8] liquid: SPIKE-02 argument and setting questions` | On the fixtures page: a block called with the argument `as`; a block whose schema has a bare setting; a cart with a discount code applied; `{{ request.page_type }}`; a font setting's `system?`; `{{ ... \| standard_event_data: 'view', context: 'page' }}` inside `rp-view-event` | `as` reaches the block; the bare setting is accepted by the theme upload; the `type` of the discount-code `discount_application` is recorded in the report; `request.page_type` equals the template name; `system?` is a boolean; the filter prints JSON. Each failing line names the fallback of `00-decisions.md` section 3 (SPIKE-02) to apply |
 
-UNVERIFIED and to be settled by the first live run: that `?view=rp-fixtures` selects an alternate Liquid template in the developer preview; that `{% block %}` is legal in such a template; the platform questions V-1 to V-20 of `14-liquid-theme.md` (SPIKE-02), which include the ones SPIKE-02 gained (D-108): whether `as` is a legal block argument, whether a bare schema setting is accepted, the `type` value of a discount-code `discount_application`, the value of `request.page_type`, `font.system?`, and `standard_event_data` under `rp-view-event`.
+UNVERIFIED and to be settled by the first live run: that `?view=rp-fixtures` selects an alternate Liquid template in the developer preview; that `{% block %}` is legal in such a template; the platform questions V-1 to V-21 of `14-liquid-theme.md` (SPIKE-02), which include the ones SPIKE-02 gained (D-108): whether `as` is a legal block argument, whether a bare schema setting is accepted, the `type` value of a discount-code `discount_application`, the value of `request.page_type`, `font.system?`, and `standard_event_data` under `rp-view-event`.
 
 ---
 
@@ -3549,7 +3560,7 @@ When `RIPPLE_SCREENSHOTS=1`, `style.test.ts` also writes `node_modules/.cache/ri
     { "id": "js-elements-agent", "files": ["pkg/browser/ripple.elements-agent.js"], "measure": "gzip", "max": 14000, "source": "D-064" },
     { "id": "js-shared", "files": ["pkg/browser/ripple-shared.js"], "measure": "gzip", "max": 10000, "source": "D-064" },
     { "id": "js-elements-shared", "files": ["pkg/browser/ripple.elements-shared.js"], "measure": "gzip", "max": 10000, "source": "D-064" },
-    { "id": "css-tokens-base", "files": ["pkg/css/tokens.css", "pkg/css/base.css"], "measure": "min-gzip", "max": 2200, "source": "D-064" },
+    { "id": "css-tokens-base", "files": ["pkg/css/tokens.css", "pkg/css/base.css"], "measure": "min-gzip", "max": 2500, "source": "D-064" },
     { "id": "css-props", "files": ["pkg/css/props.css"], "measure": "min-gzip", "max": 5200, "source": "D-064" },
     { "id": "css-ripple", "files": ["pkg/browser/ripple.css"], "measure": "min-gzip", "max": 45000, "source": "D-064" },
     { "id": "css-component", "glob": "pkg/css/components/*.css", "measure": "min", "max": 6000, "source": "D-064" }
@@ -3564,7 +3575,7 @@ Format rules:
 - **SZ-3** `files` are concatenated in the listed order and measured as one. `glob` measures every matching file on its own against `max`.
 - **SZ-4** Every entry has a non-empty `source` naming the decision or document that set the number.
 - **SZ-5** A missing file is a failure (`missing`), not a pass.
-- **SZ-6** Every entry's `source` is `D-064`, and no entry may have a `max` greater than the ledger's value: `ripple.js` 45000 (both the `pkg/browser/` file and the Liquid build), `ripple.elements.js` 30000, tabs chunk 10000, tooltip chunk 22000, toast chunk 15000, shared chunk 10000, agent chunk 14000 (each chunk in both chunk sets), tokens plus base 2200, props 5200, `ripple.css` 45000, one component CSS file 6000 minified. `src/gen/size.test.ts` holds those values as constants and fails when the file exceeds them; raising one needs a ledger change first. An entry added later with another `source` is raised only in a change whose description contains a line `Size budget: <id> <old> -> <new>: <reason>` (`03-styling-and-tokens.md` section 14 rule 1).
+- **SZ-6** Every entry's `source` is `D-064`, and no entry may have a `max` greater than the ledger's value: `ripple.js` 45000 (both the `pkg/browser/` file and the Liquid build), `ripple.elements.js` 30000, tabs chunk 10000, tooltip chunk 22000, toast chunk 15000, shared chunk 10000, agent chunk 14000 (each chunk in both chunk sets), tokens plus base 2500 (D-064 as amended by D-125), props 5200, `ripple.css` 45000, one component CSS file 6000 minified. `src/gen/size.test.ts` holds those values as constants and fails when the file exceeds them; raising one needs a ledger change first. An entry added later with another `source` is raised only in a change whose description contains a line `Size budget: <id> <old> -> <new>: <reason>` (`03-styling-and-tokens.md` section 14 rule 1).
 - **SZ-7** The Liquid build has no chunk entries of its own: D-064 budgets only its `ripple.js` (`js-ripple-liquid`), and the two chunk sets it names are the `ripple-*.js` and `ripple.elements-*.js` files of `pkg/browser/`.
 
 ### 15.2 `src/gen/size.ts` (complete, RUN)
@@ -3678,7 +3689,7 @@ export function formatSizes(results: SizeResult[]): string {
 | `[T10] size: measureSizes reports ok, over and missing` | with a temporary budget file and temporary files: statuses `["ok", "over", "ok", "missing"]` for a `min-gzip` entry within budget, a `gzip` entry over budget, a `glob` `min` entry, and an entry whose file does not exist (RUN) |
 | `[T10] size: the median component CSS is at most 2500 bytes minified` | reported with `console.log` as `warning: median component CSS <n> bytes` when above; never fails (`03-styling-and-tokens.md` section 14) |
 
-Ledger values for the second test: `js-ripple` 45000, `js-ripple-liquid` 45000, `js-elements` 30000, `js-tabs` 10000, `js-elements-tabs` 10000, `js-tooltip` 22000, `js-elements-tooltip` 22000, `js-toast` 15000, `js-elements-toast` 15000, `js-agent` 14000, `js-elements-agent` 14000, `js-shared` 10000, `js-elements-shared` 10000, `css-tokens-base` 2200, `css-props` 5200, `css-ripple` 45000, `css-component` 6000 (per file).
+Ledger values for the second test: `js-ripple` 45000, `js-ripple-liquid` 45000, `js-elements` 30000, `js-tabs` 10000, `js-elements-tabs` 10000, `js-tooltip` 22000, `js-elements-tooltip` 22000, `js-toast` 15000, `js-elements-toast` 15000, `js-agent` 14000, `js-elements-agent` 14000, `js-shared` 10000, `js-elements-shared` 10000, `css-tokens-base` 2500, `css-props` 5200, `css-ripple` 45000, `css-component` 6000 (per file).
 
 `src/gen/size.ts` is listed in `00-decisions.md` section 5.1. It may import `lightningcss` (add `lightningcss` to the allowed external imports of `src/gen/**` in `IMPORT_RULES`, `01-architecture.md` 2.2).
 

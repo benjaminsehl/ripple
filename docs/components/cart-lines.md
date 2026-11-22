@@ -45,8 +45,9 @@ Nesting rules, hydrogen backend: root children in order: list, error, status. Li
 | `cart` | `cart` | object | `RippleCart` or `null` / Liquid `cart` drop | Liquid: the global `cart`; TSX: `null` | no | no | the lines, or the empty text. TSX: `null` or unset (the buyer has no cart yet) prints the empty text, the same output as a cart with zero lines (D-110) |
 | `refresh` | `refresh` | string | region names | `rp-cart-lines rp-cart-summary` | no | no | `data-rp-refresh` on root |
 | `locale` | none | string | BCP 47 tag | `en-US` | no | no | passed to CartLine (CV-1) |
+| `action` | none | url | the cart endpoint including the locale path prefix | `/api/cart` | no | no | passed to every CartLine (the `action` of each line form); TSX hosts only (CV-17, D-118) |
 
-The region part takes `cart` and `locale` only (Liquid: the snippet `rp-cart-lines-list` takes exactly `cart`; D-091 item 4).
+The region part takes `cart`, `locale` and `action` only (Liquid: the snippet `rp-cart-lines-list` takes exactly `cart`; D-091 item 4).
 
 ### Content model
 
@@ -149,7 +150,7 @@ hydrogen backend: each line has its own form; the Update button of a line posts 
 
 | Key | Action |
 |---|---|
-| Enter in a quantity input | hydrogen backend: submits `intent=set` for that line (hidden first button); liquid backend: submits `update` |
+| Enter in a quantity input | hydrogen backend: submits `intent=set` for that line (hidden first button); liquid backend: submits `update`. An empty or non-numeric value sends nothing (hydrogen: the input is `required`, and `rp-cart` ignores the submit; `05-commerce.md` 7.1, D-116) |
 
 ### Styling
 
@@ -170,8 +171,8 @@ Required rules: root `display: block`; `.rp-cart-lines-items { list-style: none;
 
 ### Host notes
 
-- HTML: copy the `default` contract; per-line forms post to `/api/cart`.
-- React: file `cart-lines.tsx`, first line `"use client";`. Exports `CartLines(props: { id: string; cart?: RippleCart | null; refresh?: string; locale?: string; className?: string; children?: ReactNode })`, `CartLinesList(props: { cart?: RippleCart | null; locale?: string })` (`null` or unset is the empty cart, D-110), The pure helpers `toRippleCart(cart: HydrogenCart): RippleCart` and `toRippleLine(line: HydrogenCartLine): RippleLine` (`import type` of the cart types from `@shopify/hydrogen`) are NOT in this file: a `"use client"` file exports components only (D-094). They live in `cart-lines.data.ts` (file key `data`, no directive; CV-10), imported here as `./cart-lines.data` and by blueprints as `@components/cart-lines.data`. `CartLinesList` reads the live cart with `useCart` ([06-bindings.md](06-bindings.md) rule R-12; the exact selector signature is owned by doc 06), using the `cart` prop as the server value, and maps it with `toRippleCart`. Each `<li>` uses `key={line.id}`. Error and status parts carry `suppressHydrationWarning`.
+- HTML: copy the `default` contract; per-line forms post to the cart endpoint (`/api/cart`, or `/<locale prefix>/api/cart` on a prefixed page; CV-17).
+- React: file `cart-lines.tsx`, first line `"use client";`. Exports `CartLines(props: { id: string; cart?: RippleCart | null; refresh?: string; locale?: string; className?: string; children?: ReactNode })`, `CartLinesList(props: { cart?: RippleCart | null; locale?: string })` (`null` or unset is the empty cart, D-110), The pure helpers `toRippleCart(cart: CartData): RippleCart` and `toRippleLine(line: CartData["lines"]["nodes"][number]): RippleLine` (`import type { CartData } from "@shopify/hydrogen"`; complete source below) are NOT in this file: a `"use client"` file exports components only (D-094). They live in `cart-lines.data.ts` (file key `data`, no directive; CV-10), imported here as `./cart-lines.data` and by blueprints as `@components/cart-lines.data`. `CartLinesList` reads the live cart with `useCart` ([06-bindings.md](06-bindings.md) rule R-12; the exact selector signature is owned by doc 06), using the `cart` prop as the server value, and maps it with `toRippleCart`. Each `<li>` uses `key={line.id}`. Error and status parts carry `suppressHydrationWarning`.
 - Remix: `data-rmx-key="<id>"` on root; default body renders `CartLinesList` inline (RS-5).
 - Liquid: root, form, update button, error and status are in `snippets/rp-cart-lines.liquid`; the list in `snippets/rp-cart-lines-list.liquid`, which loops `cart.items` and renders `rp-cart-line` with `line: item`. The update button composes Button by contract (D-070; class pair `rp-button rp-cart-lines-update`): the snippet prints the `<button>` itself with `data-rp-part="submit" data-rp-js="fallback"`; it is the FIRST submit button of the cart form (D-092). The cart form is a plain `<form class="rp-cart-lines-form" id="{{ id }}-form" method="post" action="{{ routes.cart_url }}">` (not `{% form %}`); it is the ONE Liquid cart form (D-092). The block's `{{ attributes }}` go on the `rp-cart` root, printed last (D-035). The region-part snippet is always called as `{% render 'rp-cart-lines-list', cart: cart %}` (D-091 item 4). No schema settings. Locale keys: `ripple.cart-lines.empty` = `Your cart is empty.`; `ripple.cart-lines.update` = `Update cart`; `ripple.cart-lines.updated`, `ripple.cart-lines.removed`, `ripple.cart-lines.error` as in [05-commerce.md](05-commerce.md) section 4.3.
 
@@ -183,11 +184,62 @@ Required rules: root `display: block`; `.rp-cart-lines-items { list-style: none;
 | `quantity` | `line.quantity` |
 | `title` | `line.merchandise.product.title` |
 | `variantTitle` | `line.merchandise.title`, or `""` when it equals `Default Title` |
-| `url` | `/products/<line.merchandise.product.handle>?<buildProductSelectionSearchParams(line.merchandise.selectedOptions)>`; the project MAY replace the path template |
+| `url` | `/products/<handle>?variant=<numeric variant id>`, built with `buildProductSelectionSearchParams({ style: "variant", ... })` exactly as in the source below (the function takes ONE object and iterates `optionNames`; `hydrogen/packages/hydrogen/src/core/product/url.ts`). `handleShopifyRoutes` redirects `?variant=<numeric id>` to the option params. The project MAY replace the path template |
 | `image` | `line.merchandise.image` or `null` |
 | `totalPrice` | `line.cost.totalAmount` |
 | `compareAtTotalPrice` | `line.cost.subtotalAmount` when its amount is greater than `totalAmount`, else `null` (D-049) |
 | `attributes` | `line.attributes` |
+
+Complete source of `components/cart-lines/react/cart-lines.data.ts` (no directive; the only value import from `@shopify/hydrogen` is the pure function `buildProductSelectionSearchParams`, allowed by D-094 and CV-9):
+
+```ts
+import { buildProductSelectionSearchParams } from "@shopify/hydrogen";
+import type { CartData } from "@shopify/hydrogen";
+import type { RippleCart, RippleLine } from "__PKG__";
+
+type HydrogenLine = CartData["lines"]["nodes"][number];
+
+export function toRippleLine(line: HydrogenLine): RippleLine {
+  const merchandise = line.merchandise;
+  const selectedOptions = merchandise?.selectedOptions ?? [];
+  const query = merchandise
+    ? buildProductSelectionSearchParams({
+        style: "variant",
+        variant: { id: merchandise.id },
+        selectedOptions,
+        optionNames: selectedOptions.map((option) => option.name),
+      }).toString()
+    : "";
+  const handle = merchandise?.product.handle ?? "";
+  const image = merchandise?.image;
+  const total = line.cost.totalAmount;
+  const subtotal = line.cost.subtotalAmount;
+  return {
+    id: line.id,
+    quantity: line.quantity,
+    title: merchandise?.product.title ?? "",
+    variantTitle: !merchandise?.title || merchandise.title === "Default Title" ? "" : merchandise.title,
+    url: `/products/${handle}${query ? `?${query}` : ""}`,
+    image: image ? { url: image.url, altText: image.altText ?? null, width: image.width ?? 0, height: image.height ?? 0 } : null,
+    totalPrice: total,
+    compareAtTotalPrice: Number(subtotal.amount) > Number(total.amount) ? subtotal : null,
+    attributes: line.attributes ?? [],
+  };
+}
+
+export function toRippleCart(cart: CartData): RippleCart {
+  return {
+    id: cart.id,
+    totalQuantity: cart.totalQuantity,
+    checkoutUrl: cart.checkoutUrl ?? "",
+    note: cart.note ?? "",
+    subtotal: cart.cost.subtotalAmount,
+    total: cart.cost.totalAmount,
+    discountCodes: cart.discountCodes.map((discount) => ({ code: discount.code, applicable: discount.applicable })),
+    lines: cart.lines.nodes.map(toRippleLine),
+  };
+}
+```
 
 ```tsx
 <CartLines id="cart" cart={cart} />

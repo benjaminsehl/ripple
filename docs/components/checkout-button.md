@@ -101,7 +101,7 @@ Upgrade allow-list (mutations permitted when the element upgrades): None.
 
 ### Behaviour with JavaScript
 
-1. None. `rp-cart` never intercepts a submitter named `checkout` and never intercepts links; the navigation is native in every host.
+1. No element of its own. `rp-cart` never intercepts a submitter named `checkout`. On the hydrogen backend the commerce adapter delays a plain primary click on `a.rp-checkout-button[href]` while a cart change is unsent or in flight: it calls `preventDefault()`, waits for `settle()` (at most 5000 ms) and then calls `location.assign(link.href)` (`05-commerce.md` 5.1 step 5 "Checkout guard", D-117). With nothing unsettled, with a modified click, and on Liquid, the navigation is native.
 2. A host agent MUST ask the user for confirmation before activating an element with `data-agent-confirm` (D-050, D-095; [08-agent-kit-and-evals.md](08-agent-kit-and-evals.md) section 7.3). Whether the UI SDK bridge enforces this is UNVERIFIED (SPIKE-08).
 3. With `disabled` the control does nothing: a disabled button does not submit; a link without `href` does not navigate.
 
@@ -176,6 +176,7 @@ RP101 (`variant`, `size`), RP104 (`href` on hydrogen hosts), RP110 (class on `a`
 3. Tier 5: `ripple check` on HTML with the `data-agent-confirm` attribute removed reports RP320.
 4. Tier 6: scripting disabled: hydrogen dev server navigates to the checkout URL; Liquid shim receives a POST to `/cart` containing `checkout`.
 5. Tier 2 and tier 5: fixture `disabled` has no `href` and is skipped by Tab; fixture `liquid-disabled` matches `:disabled` and a click sends no request.
+6. Tier 5: [05-commerce.md](05-commerce.md) test C-34 (checkout guard, D-117): on a hydrogen host a click on the link while a quantity change is unsent waits for the `POST /api/cart` before navigating.
 
 ### Evidence and UNVERIFIED
 

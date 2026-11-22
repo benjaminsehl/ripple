@@ -51,6 +51,7 @@ Root (`QuantityInput`):
 | `max` | `max` | number | integer, at least `min` | none | no | no | `max` on the input; absent when not passed |
 | `step` | `step` | number | integer, at least 1 | `1` | no | no | `step` on the input |
 | `size` | `size` (setting) | enum | `sm` `md` `lg` | `md` | no | no | `data-size` on the root (default printed) |
+| `required` | `required` | boolean | `true` `false` | `false` | no | no | `required` on the input when true, printed directly after `value` (after `form` when `formId` is passed) and before `disabled`; absent when false. Used by CartLine on the hydrogen backend (D-116) |
 | `disabled` | `disabled` | boolean | `true` `false` | `false` | no | no | `disabled` on the input and on both buttons when true |
 | `formId` | `form_id` | id | the `id` of a `<form>` | none | no | no | the native `form` attribute on the input; absent when not passed. The prop is not named `form` because that name is reserved in Liquid (D-015, D-020) |
 | `ariaLabel` | `aria_label` | string | any non-empty text | locale key `ripple.quantity-input.label` (English: `Quantity`) | no | no | `aria-label` on the input |
@@ -412,7 +413,7 @@ export function Quantity() {
 -%}
 <rp-quantity class="rp-quantity {{ class | escape }}" {% if id != blank %}id="{{ id | escape }}"{% endif %} data-size="{{ size }}" data-slot="rp-quantity" {{ attributes }}>
   <button class="rp-quantity-button" type="button" {% if dec_disabled %}disabled{% endif %} aria-label="{{ decrease_label | escape }}" data-rp-part="decrement" data-rp-js="inflow">{% render 'rp-icon', name: 'minus' %}</button>
-  <input class="rp-quantity-input" type="number" inputmode="numeric" name="{{ name | escape }}" min="{{ min }}" {% if max != blank %}max="{{ max }}"{% endif %} step="{{ step }}" value="{{ default_value }}" {% if form_id != blank %}form="{{ form_id | escape }}"{% endif %} {% if disabled == true %}disabled{% endif %} aria-label="{{ aria_label | escape }}" data-rp-part="input" data-rp-field="quantity">
+  <input class="rp-quantity-input" type="number" inputmode="numeric" name="{{ name | escape }}" min="{{ min }}" {% if max != blank %}max="{{ max }}"{% endif %} step="{{ step }}" value="{{ default_value }}" {% if form_id != blank %}form="{{ form_id | escape }}"{% endif %} {% if required == true %}required{% endif %} {% if disabled == true %}disabled{% endif %} aria-label="{{ aria_label | escape }}" data-rp-part="input" data-rp-field="quantity">
   <button class="rp-quantity-button" type="button" {% if inc_disabled %}disabled{% endif %} aria-label="{{ increase_label | escape }}" data-rp-part="increment" data-rp-js="inflow">{% render 'rp-icon', name: 'plus' %}</button>
 </rp-quantity>
 ```
@@ -458,6 +459,7 @@ QuantityInput is not a commerce component and reads no commerce data. Its one co
 13. T4 (React): hydration of `default` logs no warning in both script orders; with `value={3}` and an `onValueChange` that does not update state, a click on Increase leaves `input.value` at `"3"` and calls the callback once with `(4, detail)`; with an `onValueChange` that sets state, the input shows 4 and Increase's `disabled` follows.
 14. T4 (Remix; fixture `default-value` rendered with `rmxKey="qty"`): after two clicks on Increase, a morph navigation to a URL that renders the same QuantityInput with unchanged server HTML and the same `rmxKey` leaves `input.value` at `"5"`, Increase `disabled`, and the `rp-quantity` element the same object (`06-bindings.md` Q-15).
 15. T9: tests 3, 5 and 12 pass in WebKit and Gecko.
+16. T2 (prop `required`, D-116): no QuantityInput fixture passes `required`; the prop is exercised by the hydrogen fixtures of CartLine (`components/cart-line.md`), whose embedded input prints `required` directly after `value`. A unit test of each binding asserts that `required={true}` (Liquid `required: true`) adds exactly the attribute `required` to the input and nothing else.
 
 ### Evidence and UNVERIFIED
 

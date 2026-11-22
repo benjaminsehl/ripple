@@ -34,9 +34,12 @@ The product page image gallery: a scroll-snap Carousel of product images, each o
 | zoom | printed by media | same | `a` | `rp-product-gallery-zoom` | `data-rp-open="<id>-content"` | yes (per image) | none |
 | lightbox | printed by root | `blocks/product-gallery.liquid` | `rp-dialog` | `rp-dialog rp-product-gallery-lightbox` | `data-slot="rp-dialog"` | when there is at least one image | none |
 | lightbox panel | printed by root | same | `dialog` | `rp-dialog-panel` | none | with lightbox | `<id>-content` |
-| lightbox title | printed by root | same | `h2` | `rp-dialog-title rp-visually-hidden` | none | with lightbox | `<id>-content-title` |
+| lightbox header | printed by root | same | `div` | `rp-dialog-header` | none | with lightbox | none |
+| lightbox title | printed by root | same | `h2` (child of the lightbox header) | `rp-dialog-title rp-visually-hidden` | none | with lightbox | `<id>-content-title` |
+| lightbox close | printed by root (embedded IconButton, child of the lightbox header, after the title) | same | `button` | `rp-icon-button` | none | with lightbox | none |
+| lightbox body | printed by root | same | `div` | `rp-dialog-body` | none | with lightbox | none |
 
-Nesting rules: root has two children: the media region part, then the lightbox. The lightbox `rp-dialog` MUST be outside the region part (RS-7, D-046 item 5). The `id` prop is printed on the `rp-carousel`, not on root. `prev` and `next` buttons are children of `rp-carousel`, outside the viewport ([04-elements.md](04-elements.md) section 10.9).
+Nesting rules: root has two children: the media region part, then the lightbox. The lightbox `rp-dialog` MUST be outside the region part (RS-7, D-046 item 5). The children of the lightbox `<dialog>` are exactly, in this order: the header (`div.rp-dialog-header`, containing the visually hidden title and then the close button) and the body (`div.rp-dialog-body`, containing the images). This is Dialog's nesting rule 2 (`components/dialog.md`: header, then body; no other element may be a child of the `<dialog>`); the close button is therefore INSIDE the header, first in the dialog's tab order and at the top of the panel, never a bare child after the body. The `id` prop is printed on the `rp-carousel`, not on root. `prev` and `next` buttons are children of `rp-carousel`, outside the viewport ([04-elements.md](04-elements.md) section 10.9).
 
 ### Props
 
@@ -78,12 +81,14 @@ Fixture `default` (`id`: `gallery`, `media`: media of `product.basic`):
   </div>
   <rp-dialog class="rp-dialog rp-product-gallery-lightbox" data-slot="rp-dialog">
     <dialog class="rp-dialog-panel" id="gallery-content" data-size="full" aria-labelledby="gallery-content-title" closedby="any">
-      <h2 class="rp-dialog-title rp-visually-hidden" id="gallery-content-title">Product images</h2>
+      <div class="rp-dialog-header">
+        <h2 class="rp-dialog-title rp-visually-hidden" id="gallery-content-title">Product images</h2>
+        <button class="rp-icon-button" type="button" commandfor="gallery-content" command="close" data-variant="ghost" data-size="md" aria-label="Close"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
       <div class="rp-dialog-body">
         <img class="rp-image" src="https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=800" srcset="https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=200 200w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=400 400w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=600 600w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=800 800w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=1200 1200w, https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=1600 1600w" sizes="100vw" alt="Linen shirt on a hanger" width="1200" height="1200" loading="lazy" decoding="async" data-ratio="auto" data-fit="contain" data-radius="none">
         <img class="rp-image" src="https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=800" srcset="https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=200 200w, https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=400 400w, https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=600 600w, https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=800 800w, https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=1200 1200w, https://cdn.shopify.com/s/files/1/0001/linen-shirt-back.jpg?width=1600 1600w" sizes="100vw" alt="Back of the linen shirt" width="1200" height="1200" loading="lazy" decoding="async" data-ratio="auto" data-fit="contain" data-radius="none">
       </div>
-      <button class="rp-icon-button" type="button" commandfor="gallery-content" command="close" data-variant="ghost" data-size="md" aria-label="Close"><svg class="rp-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </dialog>
   </rp-dialog>
 </div>
@@ -167,12 +172,12 @@ The image list scrolls and snaps by touch, trackpad and keyboard. The previous a
 |---|---|
 | None. | |
 
-Required rules: `.rp-product-gallery .rp-carousel-item { flex: 0 0 var(--rp-product-gallery-slide-size) }`; `.rp-product-gallery-zoom { display: block; cursor: zoom-in }`; `.rp-product-gallery-lightbox .rp-dialog-body { display: grid; gap: var(--rp-product-gallery-gap); justify-items: center; overflow-y: auto }`.
+Required rules: `.rp-product-gallery .rp-carousel-item { flex: 0 0 var(--rp-product-gallery-slide-size) }`; `.rp-product-gallery-zoom { display: block; cursor: zoom-in }`; `.rp-product-gallery-lightbox .rp-dialog-body { display: grid; gap: var(--rp-product-gallery-gap); justify-items: center; overflow-y: auto }`; `.rp-product-gallery-lightbox .rp-dialog-header { justify-content: flex-end }` (the title is visually hidden, so the close button sits at the inline end of the header).
 
 ### Host notes
 
 - HTML: None.
-- React: `ProductGallery(props: { id: string; media: RippleMedia[]; variant?: RippleVariant | null; ratio?: Ratio; ariaLabel?: string; onIndexChange?: (value: number, detail: object) => void; onOpenChange?: (value: boolean, detail: object) => void; className?: string; children?: ReactNode })` where `RippleMedia` is imported as a type from `<pkg>` ([05-commerce.md](05-commerce.md) section 11.1, D-094); this component reads its fields `id: string` and `image: RippleImage`. The file starts with `"use client"` because it calls `useElement` for the two callbacks (R-4). `ProductGalleryMedia` is exported from the same file. The carousel is the embedded Carousel (controls `rp-carousel-control`, doc 10). The lightbox composes Dialog by contract (D-070; class pairs `rp-dialog rp-product-gallery-lightbox` and `rp-dialog-title rp-visually-hidden`, section 0.2): the binding prints the `rp-dialog`, the `<dialog class="rp-dialog-panel">`, the title and the body itself; the close button is the embedded IconButton. Manifest `dependencies.components`: `carousel`, `dialog`, `image`, `placeholder`, `icon-button`, `icon`, `visually-hidden`.
+- React: `ProductGallery(props: { id: string; media: RippleMedia[]; variant?: RippleVariant | null; ratio?: Ratio; ariaLabel?: string; onIndexChange?: (value: number, detail: object) => void; onOpenChange?: (value: boolean, detail: object) => void; className?: string; children?: ReactNode })` where `RippleMedia` is imported as a type from `<pkg>` ([05-commerce.md](05-commerce.md) section 11.1, D-094); this component reads its fields `id: string` and `image: RippleImage`. The file starts with `"use client"` because it calls `useElement` for the two callbacks (R-4). `ProductGalleryMedia` is exported from the same file. The carousel is the embedded Carousel (controls `rp-carousel-control`, doc 10). The lightbox composes Dialog by contract (D-070; class pairs `rp-dialog rp-product-gallery-lightbox` and `rp-dialog-title rp-visually-hidden`, section 0.2): the binding prints the `rp-dialog`, the `<dialog class="rp-dialog-panel">`, the header `<div class="rp-dialog-header">`, the title (inside the header) and the body itself; the close button is the embedded IconButton, printed inside the header after the title (Dialog nesting rule 2). The Liquid block and all three TSX bindings print this same order. Manifest `dependencies.components`: `carousel`, `dialog`, `image`, `placeholder`, `icon-button`, `icon`, `visually-hidden`.
 - Remix: `data-rmx-key="<id>"` on the `rp-carousel` and `data-rmx-key="<id>-content"` on the `rp-dialog`; the `prev` and `next` buttons print `data-rmx-preserve-attrs="disabled"`; the `dialog` prints `data-rmx-preserve-attrs="open"`.
 - Liquid: the block prints root and lightbox and renders `rp-product-gallery-media` as its default body. Media loop: `{% for item in media %}{% if item.media_type == 'image' %}` reading `item.preview_image` and `item.alt`. No schema settings. Locale keys: `ripple.product-gallery.label` = `Product images`; `ripple.product-gallery.zoom` = `View larger image`; `ripple.product-gallery.previous` = `Previous`; `ripple.product-gallery.next` = `Next`; `ripple.product-gallery.close` = `Close`.
 
@@ -206,6 +211,7 @@ RP104 (`id`, `media`), RP114 (derived ids), RP203 (every image), RP302 (zoom lin
 4. Tier 5: pressing `next` scrolls the viewport and dispatches `indexchange` with `value: 1`.
 5. Tier 6: with scripting disabled, a click on a zoom link navigates to a URL ending in `width=2000`.
 6. Tier 5: after `getCommerce().refresh(["rp-product-media"], { url })` the lightbox `dialog` element is the same node as before.
+7. Tier 2: the element children of `#gallery-content` are exactly `div.rp-dialog-header` then `div.rp-dialog-body`; the header's children are the `h2.rp-dialog-title` then the close `button`. Tier 5: after opening the lightbox, the first Tab stop inside the dialog is the close button.
 
 ### Evidence and UNVERIFIED
 

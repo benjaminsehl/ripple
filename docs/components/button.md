@@ -171,6 +171,7 @@ Host-owned regions and masks: None.
 | `data-pending`, `aria-busy` | root | server | `pending` is true | `""` and `true`, or absent |
 | `data-rp-open` | `<a>` root | server | `dialog` is set and `href` is set | the dialog id, or absent |
 | `aria-describedby`, `data-slot` | `<button>` root | server | `tooltip` is set and `href` is unset | `<tooltip>-content` and `tooltip-trigger`, or absent |
+| `style` (`anchor-name: --ui-anchor-<n>`) | `<button>` root | element (UI SDK `ui-tooltip`) | `tooltip` is set and `href` is unset; written while the tooltip is open, removed when it closes | absent |
 | `aria-haspopup`, `aria-controls` | `<a>` root | runtime opener listener (`04-elements.md`) | after upgrade, on a link with `data-rp-open` whose target is a `<dialog>` inside a defined `rp-dialog` | absent |
 
 Upgrade allow-list (mutations permitted when the element upgrades): `aria-haspopup="dialog"` and `aria-controls="<dialog id>"` on an `<a>` root that has `data-rp-open`. This is the global entry for `a[data-rp-open]` (D-009, D-071 item 2; `02-html-contract.md` section 7.3 entry 1); the Button manifest entry has an empty `upgradeAllow[]`. Nothing else. (Commerce elements set `data-pending` and `aria-busy` on their own roots and forms, never on a Button; `05-commerce.md`. A tooltip trigger button inside `ui-tooltip` is covered by the Tooltip contract of `10-components-interactive.md`.)
@@ -233,7 +234,7 @@ Fully functional. Submit and reset buttons act on their form; links navigate; `p
 
 - HTML: None.
 - React: `export function Button(props: ButtonProps)`; generated; complete file in `06-bindings.md` section 6.4 (a copy of this contract, D-069; it MUST include `formId`, `dialog` and `tooltip`). An `onClick` handler MAY be passed through rest props; the Button MUST still satisfy the nesting rule above. `formId` is printed with the JSX prop `form`; `aria-describedby`, `data-slot` and `data-rp-open` are printed as literal attribute names after the rest-props spread.
-- Remix: complete file in `06-bindings.md` section 7.4. No `data-rmx-*` attribute is printed by Button; a cart or checkout link gets `data-rmx-document` through rest props (D-034 item 3).
+- Remix: complete file in `06-bindings.md` section 7.4. Button prints one `data-rmx-*` attribute of its own: `data-rmx-preserve-attrs="style"` on the `<button>` when `tooltip` is set and `href` is unset (X-4: UI SDK writes inline `anchor-name` on the tooltip trigger while the tooltip is open; D-132). Otherwise none; a cart or checkout link gets `data-rmx-document` through rest props (D-034 item 3).
 - Liquid: complete files in `06-bindings.md` section 8.4. Params `form_id`, `dialog`, `tooltip`. `{{ attributes }}` is printed LAST in the opening tag (D-035). Schema settings: `variant`, `size` (label keys of section 0.5). Locale keys: `ripple.button.name`.
 
 ```tsx

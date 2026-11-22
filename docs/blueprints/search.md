@@ -102,6 +102,8 @@ export function SearchPage(props: SearchPageProps) {
 ```liquid
 {%- liquid
   assign terms = search.terms | strip
+  # Escape before `t`: a filter after a `t:` named argument applies to the translated output.
+  assign terms_escaped = terms | escape
 -%}
 {% block 'container', py: '12 md:20' %}
   {% block 'stack', gap: '8 md:12' %}
@@ -111,7 +113,7 @@ export function SearchPage(props: SearchPageProps) {
       {% paginate search.results by 24 %}
         {% block 'stack', gap: '8 md:12', attributes: 'data-rp-region="rp-search-results"' %}
           {%- if search.performed and terms != blank -%}
-            {% block 'text', tone: 'muted' %}{{ 'ripple.blueprints.search.count' | t: count: search.results_count, terms: terms | escape }}{% endblock %}
+            {% block 'text', tone: 'muted' %}{{ 'ripple.blueprints.search.count' | t: count: search.results_count, terms: terms_escaped }}{% endblock %}
             {%- if search.results_count > 0 -%}
               {% block 'grid', as: 'ul', columns: '2 lg:4', gap: '4 md:6' %}
                 {%- for result in search.results -%}
@@ -141,7 +143,7 @@ export function SearchPage(props: SearchPageProps) {
 
 Locale keys (`ripple.blueprints.search.*`): `title` "Search"; `count.one` "{{ count }} result for "{{ terms }}""; `count.other` "{{ count }} results for "{{ terms }}""; `empty` "No results".
 
-Notes: the `t` filter does not escape its arguments, so `terms` is escaped at the call (the translated string is printed unescaped). SearchForm on Liquid MUST add `<input type="hidden" name="type" value="product">` so that the platform returns products only; that input is part of the SearchForm contract in `11-components-commerce.md`. Mask for BT-3: `{ "select": "rp-view-event", "op": "attr", "name": "view-event-payload" }`. Evidence: `ripple/theme/templates/search.liquid` (`search.terms`, `search.performed`, `search.results_count`, `{% paginate search.results by 20 %}`, `routes.search_url`). UNVERIFIED: `result.object_type`; that the filter `standard_event_data` accepts the `search` object (the base theme's `templates/search.liquid`, as read, does not use it). Check: SPIKE-02, on the preview store, the rendered attribute parses as JSON and names the search terms.
+Notes: `terms` is escaped BEFORE the `t` call (`terms_escaped`; `ripple/theme/AGENTS.md`: a filter written after a `t:` named argument applies to the translated output, not to that argument; the base theme does the same in `ripple/theme/templates/search.liquid`). UNVERIFIED on a store that the terms then render once-escaped (`14-liquid-theme.md` V-21). SearchForm on Liquid MUST add `<input type="hidden" name="type" value="product">` so that the platform returns products only; that input is part of the SearchForm contract in `11-components-commerce.md`. Mask for BT-3: `{ "select": "rp-view-event", "op": "attr", "name": "view-event-payload" }`. Evidence: `ripple/theme/templates/search.liquid` (`search.terms`, `search.performed`, `search.results_count`, `{% paginate search.results by 20 %}`, `routes.search_url`). UNVERIFIED: `result.object_type`; that the filter `standard_event_data` accepts the `search` object (the base theme's `templates/search.liquid`, as read, does not use it). Check: SPIKE-02, on the preview store, the rendered attribute parses as JSON and names the search terms.
 
 #### Fallback (SPIKE-02, search view event)
 

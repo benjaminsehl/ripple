@@ -128,6 +128,7 @@ Format of each entry: Decision / Rationale / Evidence / Rejected.
 - Evidence: `ripple/theme/snippets/command-polyfill.liquid`; `ripple/theme/snippets/drawer.liquid`; `ripple/theme/assets/s-dialog.js`; `ripple/docs/research/base-theme.md`; `ripple/docs/research/remix-3.md` (`commandfor` / `command` are typed on buttons; `dialog[open]` preserved).
 - Rejected: `ui-dialog` and `ui-drawer` (used by four of the eight reports as the working example). Reasons: closed content is visible before upgrade unless the server writes `hidden`; the open state writes `inert` on siblings and `style` on `<html>`, which React and Remix must then be told to preserve; drawer creates `ui-drawer-viewport` at upgrade; 33 to 48 kB gzip; beta API. Writers MUST treat every `ui-dialog` example in the research reports as superseded.
 - Amended: (a) Item 3: the polyfill is a port, not a copy. It dispatches a `command` event that carries `source`, and it uses the globals `window.rpCommandsPolyfill` and `window.rpRuntime` (D-078). The inline Liquid script MUST be byte-identical to the generated output of `src/runtime/commands-polyfill.ts`. (b) Item 6 is narrowed: `rp-dialog` closes only on a Navigation API `navigate` event that has a `sourceElement`. A `pushState` from `rp-live` therefore does not close a filter drawer. Without the Navigation API nothing is closed (doc 04 L-10). (c) Item 7: element feedback goes through `announce(text, { from })`, which writes into a `data-rp-part="status"` element inside the open dialog (D-079). (d) Parts of Dialog and Drawer: `panel`, `header`, `title`, `description`, `body`, `footer`. There is no `describedBy` prop (doc 10). (e) Item 5 needs one allow-list entry: selector `dialog[data-default-open]`, attribute `open` (doc 02). (f) Item 2: Link is an opener only through its `dialog` prop (D-009), never through `commandFor`. (g) The root `rp-dialog` is `display: block; position: absolute; inline-size: 0; block-size: 0` (D-080).
+- Amended (review, 13.4): Without the Navigation API, `rp-dialog` closes an open dialog on `pagehide` with `persisted === true` (reason `link-press`). The backdrop-click fallback additionally requires that the preceding `pointerdown` was on the backdrop too (D-131).
 
 #### D-009 Opener pattern for overlays that have a page equivalent
 
@@ -164,6 +165,7 @@ Format of each entry: Decision / Rationale / Evidence / Rejected.
 - Evidence: `ripple/docs/research/uisdk-web-elements.md` (weights: tooltip 33.6, toast 26.7 kB gzip including kernel); `ripple/docs/research/react-and-custom-elements.md` (toast not idempotent); `uisdk/packages/web/src/tooltip.ts`, `uisdk/packages/web/src/toast.ts`.
 - Rejected: cutting Tooltip (swatch and icon-button hints are common); a Ripple toast element.
 - Amended: Tooltip trigger wiring, option attributes and the ban on link triggers are D-082. Toast root class, the `toast()` signature and its loading rule are D-083. The sentence "Both load as lazy chunks" stands, with the Toast chunk loaded on the first `toast()` call.
+- Amended (review, 13.4): Toast: UI SDK renders a visible close button only when a `cancel.label` is passed; the `toast()` helper passes `cancel: { label }` read from `data-close-label` on the region (prop `closeLabel` / `close_label`, default the locale key `ripple.toast.close`, English `Dismiss`). The region's run-time attributes `role`, `aria-label`, `aria-keyshortcuts` and `data-expanded` are part of the contract (D-124). Tooltip: UI SDK writes inline `anchor-name` on the trigger button while open; the Remix Button and IconButton print `data-rmx-preserve-attrs="style"` when `tooltip` is set (D-132).
 
 #### D-014 Form controls are native; Field is static
 
@@ -178,6 +180,7 @@ Format of each entry: Decision / Rationale / Evidence / Rejected.
 - Evidence: `ripple/docs/research/uisdk-web-elements.md` (`ui-number-input` rewrites the input to `type="text"` and a formatted value such as `1,235`); `ripple/theme/assets/s-quantity-selector.js`; `ripple/theme/assets/quantity-rules.js`.
 - Rejected: `ui-number-input`.
 - Amended: (a) Root class `rp-quantity` is the ONE exception to the class rule of section 4.1: the manifest `root.class` is authoritative, part classes are `rp-quantity-button` and `rp-quantity-input`, and the CSS file is `quantity-input.css`. (b) The buttons contain Icons `minus` and `plus`, not text. (c) The input always prints `data-rp-field="quantity"`. (d) Added props: `formId` (prints the native `form` attribute; the name `form` is reserved in Liquid), `decreaseLabel`, `increaseLabel`; Remix-only `rmxKey` when there is no `id`. (e) The announcement after a step is "<accessible name> <value>", with no new locale key (doc 04 L-12). (f) `valuechange` is cancelable (D-036); doc 04 adds the veto test. Doc 04 section 8.1 MUST show the markup of doc 10 byte for byte (D-069).
+- Amended (review, 13.4): QuantityInput has the prop `required` (Liquid `required`), which prints `required` on the input; CartLine passes it on the hydrogen backend (D-116).
 
 #### D-016 Carousel: scroll-snap + `rp-carousel`
 
@@ -192,6 +195,7 @@ Format of each entry: Decision / Rationale / Evidence / Rejected.
 - Evidence: `ripple/docs/research/uisdk-web-elements.md` (`ui-navigation-menu` moves content into a viewport on open; 35.3 kB gzip); `ripple/theme/assets/s-nav-dropdown.js`, `ripple/theme/assets/s-mobile-nav.js`; `ripple/docs/research/base-theme.md` (mobile nav sublevels fail without JS).
 - Rejected: `ui-navigation-menu`.
 - Amended: (a) Panel ids are `<id>-item-<n>`, with `n` the 1-based position of the top-level item (D-020). Doc 04's `-content-<handle>` is replaced. (b) `rp-navigation-menu` dispatches no event and exposes `api.close()` only. (c) MobileNav composes Drawer by contract (D-070): its root is `<rp-dialog class="rp-drawer rp-mobile-nav">` with Drawer's part classes, and Drawer's CSS styles the panel. MobileNav's own classes are for its own parts only. Doc 12's separate panel CSS is removed.
+- Amended (review, 13.4): (a) The panel is positioned with an explicit, scoped named anchor (`anchor-name` on the trigger, `anchor-scope` on the item, `position-anchor` on the panel), not with the implicit anchor of the invoker, which does not exist for a panel opened by script and is not used by bare `anchor()` functions (D-114). (b) A click on a trigger whose panel was opened by hover keeps the panel open (D-115).
 
 #### D-018 Menu is cut from V1
 
@@ -233,6 +237,7 @@ Format of each entry: Decision / Rationale / Evidence / Rejected.
 - Evidence: `ripple/docs/research/uisdk-web-elements.md` sections 1, 9.4; `ripple/docs/research/styling-spike.md` (pre-upgrade section; `ripple/docs/research/spikes/uisdk-web/` `site/pre-upgrade.css`).
 - Rejected: `data-state`; hiding with utility classes.
 - Amended: (a) Item 3: the display value comes from the manifest key `elements` and is `block` for every `rp-*` tag (D-080); `rp-dialog` is additionally absolutely positioned with zero size; `rp-view-event` is `display: block`. (b) Item 4 was corrected in place: the generated `data-rp-js` rules are in the file `base.css` but in layer `rp.props`. In `rp.base` they lose to any component `display` rule, and `!important` is not allowed (doc 03, measured). (c) `data-rp-js` MAY sit on a `<form>` (the Liquid discount form, D-092). (d) There are exactly two `!important` rules, both in `@layer ui-sdk`: the `[hidden]` rule, and the Tabs `@media (scripting: none)` block that shows every panel and hides the tab list (D-012). (e) `data-starting-style` and `data-ending-style` (written by UI SDK for animation) MAY be selected in Tabs, Tooltip and Toast CSS, with the component class in the selector.
+- Amended (review, 13.4): The generated script-state rules select the NEAREST owner: a `data-rp-js` control is governed only by its closest element root, so a defined (or undefined) element nested in another element's root does not show (or hide) the outer element's controls (D-125).
 
 #### D-022 UI SDK usage rules
 
@@ -477,6 +482,7 @@ Format of each entry: Decision / Rationale / Evidence / Rejected.
 - Evidence: `ripple/docs/research/hydrogen-core.md` (R2 verdict, conditions C1 to C7; spike `ripple/docs/research/spikes/hydrogen-core/`); `hydrogen/packages/hydrogen/src/core/cart/`; `ripple/theme/snippets/standard-actions-config.liquid`; `ripple/theme/assets/standard-actions-override.js`; `ripple/theme/assets/s-cart.js`.
 - Rejected: Ajax Cart API and Section Rendering API (Ben decision 4); a Ripple-owned cart store; `CartProvider`.
 - Amended: (a) Item 1 was corrected in place. The research report gave the server handlers as `GET(request)` / `POST(request)`; the source has `createCartServerHandlers()` returning `{ get, post }` (doc 05, read in `hydrogen/packages/hydrogen/src/core/cart/`). (b) The Hydrogen script tags are required on the hydrogen backend too (verified in the commerce spike, D-088). (c) Item 7 is refined: when the first cart read fails AFTER the elements are defined, fallback controls are already hidden by CSS; controllers then submit natively through the hidden fallback button. (d) Caching: on the hydrogen backend a page that prints cart markup from a server cart read is personalised. A publicly cached page prints a hidden zero count and MUST NOT seed `initialCart`.
+- Amended (review, 13.4): Item 5 timing on Liquid: the one `configure` call happens in `probe`, after `window.rpDomReady` (the first `DOMContentLoaded` listener of the page, registered by the inline script of `rp-head`), not at module evaluation, because `Shopify.actions` does not exist earlier (D-122). The hydrogen cart endpoint includes the locale path prefix (D-118).
 
 #### D-042 The commerce adapter
 
@@ -488,7 +494,7 @@ Format of each entry: Decision / Rationale / Evidence / Rejected.
     host: "html" | "react" | "remix" | "liquid";
     cart: CartStore;                       // from @shopify/hydrogen
     dialect: FormDialect;                  // field-name table, D-043
-    submitCart(form: HTMLFormElement, submitter: HTMLElement | null, event: SubmitEvent): Promise<void>;
+    submitCart(form: HTMLFormElement, submitter: HTMLElement | null, event: SubmitEvent): Promise<boolean>;   // true when an operation was sent (D-126)
     setLineQuantity(lineId: string, quantity: number): Promise<void>;
     refresh(regions: string[], options?: { url?: string; reason?: string }): Promise<void>;
     openCart(): void;
@@ -501,6 +507,7 @@ Format of each entry: Decision / Rationale / Evidence / Rejected.
 - Evidence: `ripple/docs/research/hydrogen-core.md` section 4 (adapter interface, element-to-API table 6.3); `CartStore` in `hydrogen/packages/hydrogen/src/core/cart/`.
 - Rejected: elements calling Hydrogen or `Shopify.actions` directly; one adapter per element.
 - Amended: (a) Options are delivered by `configureCommerce(options)` or by a config element `<script type="application/json" id="rp-commerce">` read at a microtask-delayed lazy start; after start only `navigate`, `reloadFrames` and `strings` may change. The `CommerceOptions` shape is owned by doc 05 and summarised in D-087. (b) `openCart()` opens the dialog whose id is `options.cartDrawer` (default `cart-drawer`); when no such dialog is on the page it navigates to `cartUrl`. (c) `adapter.ts` has further internal exports (doc 05); only `getCommerce` and `configureCommerce` are public. (d) `ripple.js` re-exports `getCommerce`, `configureCommerce`, `toast`, `announce` and `loadAgent`, because `<pkg>/commerce` does not resolve on prebuilt pages (D-054).
+- Amended (review, 13.4): `submitCart` resolves `boolean` (`true` when at least one operation was sent; D-126). `adapter.ts` additionally exports `registerFlush`, `hasUnsettled`, `settle` (D-117) and `hasUserError`, and `errorMessage` has the scope `"add"` (D-119).
 
 #### D-043 Two cart form dialects (resolves R3)
 
@@ -622,6 +629,7 @@ Format of each entry: Decision / Rationale / Evidence / Rejected.
 - Evidence: `ripple/docs/research/uisdk-web-elements.md` (own bundle sharing one core copy; weights); `ripple/docs/research/liquid-blocks-partials.md` (loading section; no relative imports; one import map); `ripple/docs/research/remix-3.md` (prebuilt `public/ripple/`); `ripple/theme/snippets/import-map.liquid`.
 - Rejected: one JS file per element loaded per template (base theme model: many requests, duplicated kernel risk); bundling through the Remix asset server.
 - Amended: Items 1 to 8 were corrected in place. What changed and why: (a) a fifth chunk `shared` (9.2 kB gzip of UI SDK code used by Tooltip and Toast; putting it in the main file costs every page 9.2 kB, duplicating it breaks the one-copy rule; measured in doc 04); (b) a full second chunk set `ripple.elements-<chunk>.js` (two main files cannot share chunks); (c) refresh strategies live under `src/commerce/` (tree 5.1) and are therefore absent from `ripple.elements.js`; (d) the Toast chunk loads on the first `toast()` call, not on tag presence, because every layout prints `ui-toast-region` and the old rule cost every page 19.5 kB gzip (measured, doc 04 L-5; doc 10 already specifies and tests this); (e) Rollup for browser files (doc 04 L-3, run); (f) six import-map entries on Liquid; (g) the config element in `rp-head`; (h) re-exports from the main files, because `<pkg>/commerce` does not resolve on prebuilt pages. `ripple.elements.js` and its chunks are never scaffolded by the CLI in any host (doc 07); `ripple-agent.js` is always copied and is opt-in by loading. Library JavaScript files in a project are never merged: `upgrade` overwrites them with a warning.
+- Amended (review, 13.4): Item 7: the inline script of `rp-head` starts with one line that sets `window.rpDomReady` (D-122); the byte-identity rule for the inline polyfill covers that line.
 
 #### D-055 CSS delivery
 
@@ -708,10 +716,11 @@ Format of each entry: Decision / Rationale / Evidence / Rejected.
 
 #### D-064 Size budgets
 
-- Decision: Budgets live in `size-budget.json` and fail CI when exceeded. 1 kB is 1000 bytes. JavaScript is measured as gzip (level 9) of the shipped file. CSS ships unminified and is measured as gzip (level 9) of a copy minified with the fixed lightningcss options of doc 03. Budgets: `ripple.js` at most 45 kB (the same limit applies to the Liquid build `registry/liquid/assets/ripple.js`); `ripple.elements.js` at most 30 kB; lazy chunks, in each of the two sets: tabs 10 kB, tooltip 22 kB, toast 15 kB, shared 10 kB, agent 14 kB; CSS: tokens + base at most 2.2 kB, `props.css` at most 5.2 kB, full `ripple.css` at most 45 kB; each component CSS file at most 6,000 bytes minified (not gzipped). The base-theme research's idea "JS no larger than the base theme (32.6 kB gzip)" is NOT adopted: the UI SDK kernel (12.8 kB) and the Hydrogen cart subset (13.2 kB) are fixed costs of Ben decisions 3 and 4.
+- Decision: Budgets live in `size-budget.json` and fail CI when exceeded. 1 kB is 1000 bytes. JavaScript is measured as gzip (level 9) of the shipped file. CSS ships unminified and is measured as gzip (level 9) of a copy minified with the fixed lightningcss options of doc 03. Budgets: `ripple.js` at most 45 kB (the same limit applies to the Liquid build `registry/liquid/assets/ripple.js`); `ripple.elements.js` at most 30 kB; lazy chunks, in each of the two sets: tabs 10 kB, tooltip 22 kB, toast 15 kB, shared 10 kB, agent 14 kB; CSS: tokens + base at most 2.5 kB (raised from 2.2 kB by D-125), `props.css` at most 5.2 kB, full `ripple.css` at most 45 kB; each component CSS file at most 6,000 bytes minified (not gzipped). The base-theme research's idea "JS no larger than the base theme (32.6 kB gzip)" is NOT adopted: the UI SDK kernel (12.8 kB) and the Hydrogen cart subset (13.2 kB) are fixed costs of Ben decisions 3 and 4.
 - Evidence: `ripple/docs/research/uisdk-web-elements.md` (weights); `ripple/docs/research/hydrogen-core.md` (bundle sizes); `ripple/docs/research/styling-spike.md` (CSS budgets); `ripple/docs/research/base-theme.md` (base theme sizes).
 - Rejected: no budgets.
 - Amended: The budget sentence was corrected in place: the agent chunk is 14 kB, not 13 kB (measured 12.98 kB with terser, 15 bytes of margin; 13.9 kB with esbuild's minifier; doc 04 L-15); a 10 kB budget exists for the `shared` chunk (measured 9.2 kB); every chunk budget applies to both sets; the Liquid `ripple.js` has the `ripple.js` budget; the unit and the measuring method are fixed (docs 03 and 13); the per-component CSS cap of 6,000 bytes is new (doc 03). Measured today (doc 04): `ripple.elements.js` 22.3 kB, tabs 6.6, tooltip 11.5, toast 10.3; the commerce layer alone 22.5 kB (doc 05); the size of the real `ripple.js` is UNVERIFIED until both are built together.
+- Amended (review, 13.4): Tokens plus base: 2.5 kB (2,500 bytes), raised from 2.2 kB by D-125 (the nearest-owner selectors measure about 2,375 bytes; estimate from an esbuild-minified build, to be confirmed with the lightningcss options of doc 03).
 
 #### D-065 Agent surface
 
@@ -1126,6 +1135,7 @@ A component MUST use these names and values for these meanings and MUST NOT inve
 | `autoComplete`, `pattern`, `rows` | `auto_complete`, `pattern`, `rows` | `autocomplete`, `pattern`, `rows` | Input; Textarea (`rows`) |
 | `previousLabel`, `nextLabel` | `previous_label`, `next_label` | accessible names of previous / next controls | Carousel, Pagination |
 | `decreaseLabel`, `increaseLabel` | `decrease_label`, `increase_label` | accessible names of the stepper buttons | QuantityInput |
+| `closeLabel` | `close_label` | `data-close-label` on `ui-toast-region` | Toast: the text of each toast's close button, passed by the `toast()` helper as `cancel.label` (D-124) |
 | `poster`, `autoplay` | same | same | Video (`controls`, `playsinline`, `preload="metadata"` are always printed; `autoplay` prints the three attributes `autoplay muted loop`; there is no `muted` or `loop` prop, D-110 row 14) |
 | `describedBy` | `described_by` | `aria-describedby` | form controls |
 | `commandFor` | `command_for` | `commandfor` | Button, IconButton |
@@ -1555,7 +1565,8 @@ Only items that evidence cannot settle. Work proceeds on the default; none of th
 | Q22 | On the hydrogen backend `password` and `gift-card` have no data source, and newsletter and contact have no server operation. The blueprints are presentational there and call project-supplied `subscribe` / `send` functions. Acceptable? | Yes (D-107). | 12 |
 | Q23 | The Liquid theme keeps the base theme's whole `snippets/meta-tags.liquid` (JSON-LD, `og:price`, `hreflang` links, title suffixes), which widens the Liquid subset for infrastructure snippets by seven filters. The alternative is a reduced file that stays in the old subset and loses that SEO output. Which? | Keep the base file with two locale-key renames (D-109). | 12, 13, 14 |
 | Q24 | Tier 7 runs against mock.shop, whose data for menus, blogs, pages, localization and the `frontpage` collection is unverified. When mock.shop lacks one of them the test is skipped, and a skip fails the nightly run under `--no-skips`. Should that also block merges? | No: tier 7 is nightly only and never a merge gate; the nightly failure is the report (D-110 row 27). | 13 |
-| Q25 | Tokens plus base CSS measure 2,174 bytes of the 2,200 byte budget (D-064). Any further base rule needs the budget raised. Raise it now? | No: keep 2,200; a change that exceeds it must amend D-064 in the same commit (D-110 row 28). | 03 |
+| Q25 | The review fix D-125 (nearest-owner script-state selectors, needed so that a nested undefined or defined element does not show or hide another element's controls) grows tokens plus base CSS from 2,174 to an estimated 2,375 bytes. The budget was raised from 2,200 to 2,500 bytes. Accept the 2,500 byte budget, or keep 2,200 and accept the nesting defect? | Budget is 2,500 (D-125, amends D-064); any further change that exceeds it must amend D-064 in the same commit (D-110 row 28). | 03 |
+| Q26 | On the hydrogen backend, `initializeShopifyScripts` now always runs (it sets up `Shopify.routes` and the WebMCP tools), so `analytics: false` no longer stops Hydrogen's page-view events; it stops only cart events and `rp-view-event`. The `password` blueprint passes `analytics: false`. Should `analytics: false` also suppress page views (which needs a Hydrogen option that does not exist today)? | No: page views follow the platform's consent handling; `analytics: false` covers cart events and view events only (D-130). | 05, 12 |
 
 ---
 
@@ -1645,6 +1656,7 @@ Evidence rule used throughout: a result that was RUN beats a source reading; a s
   4. A same-value attribute write is not a mutation and has no entry (D-002). Doc 10 removes its Tabs `role` entry.
   5. React hydration is judged against a separate list, `REACT_HYDRATION_ALLOW` (`test/hydration/react-allow.ts`, content owned by doc 06): same-value `type` / `value` / `name` / `checked` writes on `<input>` and the `<textarea>` text reset.
   6. Checker rule RP601 and tier 3 read `upgradeAllow` from the manifest; neither has a second table.
+- Amended (review, 13.4): Item 3: the Toast region entry lists the attributes `data-slot`, `data-side`, `data-align`, `popover`, `style`, `role`, `aria-label`, `aria-keyshortcuts`, `data-expanded` (D-124).
 
 #### D-072 Which bindings are generated
 
@@ -1700,8 +1712,9 @@ Evidence rule used throughout: a result that was RUN beats a source reading; a s
 
 #### D-078 Runtime globals and the polyfill
 
-- Decision: The runtime owns exactly two globals. `window.rpRuntime` (boolean) makes the runtime start idempotent when two copies load. `window.rpCommandsPolyfill` (boolean) lets the inline Liquid copy and the module copy of the polyfill coordinate: the first to run installs the listener, the other does nothing. The polyfill dispatches a `command` event (with `command` and `source`) on the target, as the native feature does. No other global may be added. Doc 14 embeds the inline script byte for byte from the generator output.
+- Decision: The runtime owns exactly three globals (the third, `window.rpDomReady`, Liquid only, was added by D-122; see the Amended line). `window.rpRuntime` (boolean) makes the runtime start idempotent when two copies load. `window.rpCommandsPolyfill` (boolean) lets the inline Liquid copy and the module copy of the polyfill coordinate: the first to run installs the listener, the other does nothing. The polyfill dispatches a `command` event (with `command` and `source`) on the target, as the native feature does. No other global may be added. Doc 14 embeds the inline script byte for byte from the generator output.
 - Evidence: doc 04 sections 3.1 and 3.3 (run in Chromium with native support hidden).
+- Amended (review, 13.4): A third global, `window.rpDomReady` (`Promise<void>`, resolved by the first `DOMContentLoaded` listener of the page or immediately when the document is already parsed), is set, on Liquid only, by the first line of the inline script of `rp-head`; the Liquid adapter awaits it before it lets Hydrogen configure `Shopify.actions.updateCart` (D-122).
 
 #### D-079 Announcements
 
@@ -1734,11 +1747,12 @@ Evidence rule used throughout: a result that was RUN beats a source reading; a s
 | `@media (scripting: none)` | Tabs without JS shows only the default panel (D-012). |
 | `closedby` | `rp-dialog` backdrop-click fallback (D-008). |
 | `AbortSignal.any`, `crypto.randomUUID` | The commerce runtime does not start; forms post natively (D-032). |
-| Navigation API | `rp-dialog` does not close on navigation (D-008). |
+| Navigation API | `rp-dialog` does not close on navigation (D-008), except on `pagehide` with `persisted === true`, so that a back/forward-cache restore shows no stale open dialog (D-131). |
 
   - Tests for a feature above the floor MUST feature-detect and skip, not fail, on an engine without it.
   - Amended (closing pass): further rows, owned by doc 03 section 12 (all version numbers UNVERIFIED, SPIKE-06): `:dir(rtl)` (the rule is dropped; the left-to-right form stays); `:has()` (the one `header.css` rule is dropped; `scroll-padding` stays `0px`); unprefixed `mask-image` and `::backdrop` custom-property inheritance (fallbacks in docs 09 and 10); exclusive `<details name>` also on Firefox below 130 (behaves as `multiple`).
   - Raising the floor instead is Ben's choice (Q15).
+- Amended (review, 13.4): Navigation API row: see D-131 (`pagehide` close). CSS anchor positioning also gates the NavigationMenu panel position (D-114): without `anchor-scope` support the panel uses the non-anchored branch.
 
 #### D-082 Tooltip
 
@@ -1759,6 +1773,7 @@ Evidence rule used throughout: a result that was RUN beats a source reading; a s
   3. The `toast` chunk (and `shared`) is imported on the first `toast()` call. A `ui-toast-region` in the document does not trigger a load, so the loader MUST NOT register the toast chunk by tag.
   4. `toast` is exported by `<pkg>/elements`, `ripple.js` and `ripple.elements.js` (Liquid: specifier `ripple`). A binding file MUST NOT re-export `toast` and MUST NOT import `<pkg>/elements`; the Toast binding prints the region and nothing else.
 - Evidence: doc 04 L-5 (19.5 kB gzip per page under the old rule), doc 10 Toast spec.
+- Amended (review, 13.4): The helper passes `cancel: { label }` so that every toast has a close button; the region carries `data-close-label` (D-124). Item 2's option list is unchanged.
 
 #### D-084 Interactive components: settled points
 
@@ -1817,11 +1832,12 @@ Doc 09 is normative. Points that other documents must follow, and points doc 09 
 #### D-087 Commerce options and the config element
 
 - Decision (doc 05 owns the `CommerceOptions` type):
-  1. Options: `host`, `cartEndpoint`, `cartUrl`, `cartAddUrl`, `cartDrawer` (default `"cart-drawer"`), `initialCart`, `analytics` (default `true`), `consent`, `strings`, `navigate`, `reloadFrames`.
+  1. Options: `host`, `cartEndpoint`, `cartUrl`, `cartAddUrl`, `cartDrawer` (default `"cart-drawer"`), `initialCart`, `analytics` (default `true`), `consent`, `strings`, `routes` (D-130), `navigate`, `reloadFrames`.
   2. They arrive through `configureCommerce(options)` or through the config element `<script type="application/json" id="rp-commerce">`, which carries the JSON-serialisable options. The runtime starts lazily one microtask after the commerce module (`ripple.js`, or `<pkg>/commerce`) is evaluated, so that a `configureCommerce` call in the same task still applies; after start only `navigate`, `reloadFrames` and `strings` may change. (Amended by the closing pass: the text said "after the first element connects"; the spike and doc 05 section 4.5 start after module evaluation. The observable rule is unchanged: options are read once, before any commerce element upgrades.)
   3. Placement of the config element: Liquid: inside `snippets/rp-head.liquid` (D-054 item 7), NOT in the layout file. hydrogen backend: in `<head>` before the module script, printed by the `layout` blueprint. Checker RP309 reports commerce elements on a page with no config element and no `configureCommerce` call.
   4. `strings` carries the texts JavaScript announces. It has exactly seven keys, each sourced from one locale key: `added` (`ripple.product-form.added`), `updated` (`ripple.cart-lines.updated`), `removed` (`ripple.cart-lines.removed`), `discountApplied` (`ripple.discount-code.applied`), `discountRemoved` (`ripple.discount-code.removed`), `noteSaved` (`ripple.cart-note.saved`), `error` (`ripple.cart-lines.error`). Source: `locales/en.default.json`. Liquid prints them into the config element with `| t`; TSX hosts pass them or rely on the English defaults built into the adapter.
   5. The CartDrawer `<dialog>` id MUST equal `cartDrawer`; every blueprint uses `cart-drawer`.
+- Amended (review, 13.4): New JSON option `routes` (the app's route templates), passed to `initializeShopifyScripts`, which the hydrogen adapter now calls regardless of `analytics` (D-130). `cartEndpoint` and `cartUrl` include the locale path prefix (D-118).
 
 #### D-088 Hydrogen wiring on both backends
 
@@ -1845,6 +1861,7 @@ Doc 09 is normative. Points that other documents must follow, and points doc 09 
   7. Not in V1: per-card impression events (`view-event-trigger="intersect"` around each product card) and the cart view inside the CartDrawer.
 - Evidence: `ripple/theme/templates/product.liquid`, `ripple/theme/templates/collection.liquid`, `ripple/theme/templates/cart.liquid` (both forms, `standard_event_data`); `ripple/theme/assets/page-view-event.js`, `ripple/theme/assets/page-view-event-init.js`. UNVERIFIED: that `createViewEventElement()` accepts the same markup under the tag name `rp-view-event`, and whether the platform also publishes a page view (SPIKE-01).
 - Rejected: doc 05's "published by the platform" for Liquid page views (contradicted by the base theme); doc 14's theme-owned `assets/page-view.js` (D-039); hand-built JSON payloads in doc 12's Liquid blueprints (UNVERIFIED against the platform element).
+- Amended (review, 13.4): The hydrogen `rp-view-event` observes `view-event-payload` and publishes once per payload value, so a reused element (React or Remix navigation) publishes the new view (D-123). The collection payload on Liquid is `standard_event_data: 'view'` without `context` (the platform ignores it for collections).
 
 #### D-090 Refresh reasons and strategies
 
@@ -1893,9 +1910,10 @@ Doc 09 is normative. Points that other documents must follow, and points doc 09 
   1. On Liquid the cart is ONE `<form>` printed by CartLines, with id `<cart lines id>-form`. CartNote, cart attribute inputs and CheckoutButton join it with the native `form` attribute; they receive the CartLines id through the param `cart_lines`.
   2. The form's FIRST submit button is the Update button, `data-rp-part="submit" data-rp-js="fallback"`, so that Enter in a quantity field updates the cart without JS.
   3. The Liquid DiscountCode form carries `data-rp-js="inflow"` on the `<form>` and a `name="intent"` submitter; it is JS-only (D-043).
-  4. Applied discount codes on Liquid are read from `cart.cart_level_discount_applications` filtered by `type == 'discount_code'`; the type value is UNVERIFIED (SPIKE-02).
+  4. Applied discount codes on Liquid are the unique titles of `cart.cart_level_discount_applications` AND of every `item.line_level_discount_allocations[].discount_application`, each filtered by `type == 'discount_code'` (corrected in place by D-120); the type value and the line-level drop members are UNVERIFIED (SPIKE-02).
   5. hydrogen backend forms: D-043 and D-044 as amended.
   6. Error, status and count parts: D-045 as amended.
+- Amended (review, 13.4): Item 4 was corrected in place (D-120). On Liquid, note and cart-attribute controls are compared against a baseline of the last accepted value, not against `defaultValue` (D-126).
 
 #### D-093 Commerce components: settled points
 
@@ -2433,13 +2451,14 @@ These decisions were made by the closing pass, after the per-document worklists 
 | 25 | Commerce | The adapter starts one microtask after the commerce module is evaluated (D-087 item 2 as amended). `rp-cart` announces through its own status part when present, otherwise `announce(text, { from: root })`. `rp:refreshed` MUST NOT be relied on in the `react` host. The page view is dispatched by `startStandardEvents()` whenever `options.analytics` is true, independent of `usable`. Server import of `<pkg>/elements` and `<pkg>/commerce` is gated by test E-30. | 05 |
 | 26 | Manifest and CLI | MB-8 enforces `full` for the 12 ids D-005 names; other components state their level in their own document. The `__PKG__` install transform is a no-op on a built registry. `generateBlueprintHtml` (G10) is a function in `src/gen/index.ts`; `installTransform` is in `src/cli/plan.ts`. `rp-icon` is installed as `core/snippet:icon`. RP309 detection is the text search of doc 07. `agent.actions[]` entries are objects with `name`, `description`, `confirm` (doc 11 names them; doc 08 owns descriptions). `settingType` is `select`. `:scope` is doc 07's extension for `rules[]` and means the root. The `.data` specifier is written with `.ts` on Remix. RP118 accepts the three test attributes only under `test/` or `.ripple-conformance/`. A locale patch creates `locales/en.default.json` or `en.default.schema.json` when absent; the storefront file has the single top-level key `ripple`. `span` and `hidden` are listed in manifest `props[]` (doc 09 FC-4); doc 07 adds them at emission when a component file omits them. The fixture theme `test/fixtures/theme-min/layout/theme.liquid` contains a `{{ content_for_header }}` line, the anchor that `core/patch:head` needs. | 07 |
 | 27 | Tier 7 skips | A `mock.shop has no <thing>` skip fails the nightly run under `--no-skips` and is never a merge gate (Q24). | 13 |
-| 28 | CSS | Tokens plus base stay within 2,200 bytes (Q25). A class token is owned by the component whose manifest lists it; `rp-visually-hidden` is owned by `base.css`. `rp-view-event` stays in the generated script-state selector lists (no effect). The spike files under `research/spikes/styling-doc03/` are historical and MUST NOT be copied. | 03 |
+| 28 | CSS | Tokens plus base stay within 2,500 bytes (Q25; was 2,200, raised by D-125). A class token is owned by the component whose manifest lists it; `rp-visually-hidden` is owned by `base.css`. `rp-view-event` stays in the generated script-state selector lists (no effect). The spike files under `research/spikes/styling-doc03/` are historical and MUST NOT be copied. | 03 |
 | 29 | Evals | Start states use the overlays of doc 08 that remove the pre-solved pieces of the layout blueprint. Reference solutions exist for the npm hosts by M4 and for Liquid by M5 (D-067). T16 "payment icons" is an escape-hatch task (no component). The nightly `evals` job of doc 08 section 8.14 is part of `nightly.yml`; its secret is `RIPPLE_EVAL_API_KEY`. | 08, 13 |
 | 30 | Bindings lint | `dangerouslySetInnerHTML` is allowed in exactly three React files: `predictive-search.tsx`, `product-recommendations.tsx`, `rich-text.tsx`. | 06 |
 
 - Rationale: each row is the simplest rule that matches what was run or read in source, or the text of the owning document under D-069.
 - Rejected: leaving any of these to the implementer.
 - Evidence: the appliers' reports; the documents named in the Owner column.
+- Amended (review, 13.4): Row 28: the budget is 2,500 bytes (D-125).
 
 #### D-111 Rule kind `custom`
 
@@ -2475,3 +2494,154 @@ These decisions were made by the closing pass, after the per-document worklists 
 - Rationale: the code could not be executed in the writing environment (no browsers for every tier, no mock.shop access); naming the gate and the direction of repair removes the ambiguity. Rewriting twelve example bindings by hand would create unchecked copies of docs 09 to 11.
 - Rejected: marking the code as illustrative only (the harness would then have no starting text).
 - Owner: doc 13 section 0; doc 06 sections named above.
+
+### 13.4 Review decisions
+
+Decisions made while fixing the findings of the three feasibility reviews (commerce, elements, hosts). Each amends the decisions named in its title line; the amended decisions carry an "Amended (review, 13.4)" line.
+
+#### D-114 NavigationMenu panel: explicit scoped anchor
+
+- Decision: `navigation-menu.css` positions the panel with a named anchor: inside `@supports (anchor-scope: --rp-navigation-menu-trigger) and (inset-block-start: anchor(end))`, `.rp-navigation-menu-item { anchor-scope: --rp-navigation-menu-trigger }`, `.rp-navigation-menu-trigger { anchor-name: --rp-navigation-menu-trigger }`, and the panel has `position: fixed; position-anchor: --rp-navigation-menu-trigger; inset-block-start: anchor(end); inset-inline-start: anchor(start); position-try-fallbacks: flip-inline`. Browsers with the Popover API but without `anchor-scope` use the non-anchored branch; browsers without the Popover API show the panel in the flow. Tests AT-10 to AT-12 of `components/navigation-menu.md`.
+- Evidence: run in Chromium 157: bare `anchor()` functions with the implicit anchor leave the panel at (0, 0) (the initial `position-anchor` no longer uses the implicit anchor without `position-area`), and a panel opened by `showPopover()` has no implicit anchor at all; the named scoped anchor positions the panel for click, `showPopover()` and `showPopover({ source })`.
+- Rejected: `position-anchor: auto` (works only for invoker-opened panels).
+- Owner: `components/navigation-menu.md`; doc 04 section 9.3. Amends D-017.
+
+#### D-115 NavigationMenu: a click after hover keeps the panel open
+
+- Decision: `rp-navigation-menu` records panels it opened by hover in a `WeakSet` (`openedByHover`). A `click` on the trigger of such a panel calls `preventDefault()` (the native `popovertarget` toggle would close it) and removes the record; the next click toggles natively.
+- Evidence: doc 04 section 9.3 item 2a; a hover-opened panel was closed by the click that follows the hover on every pointer device.
+- Rejected: opening on hover without handling the click.
+- Owner: doc 04 section 9.3. Amends D-017.
+
+#### D-116 An empty quantity never removes a line
+
+- Decision: (1) `rp-cart` prevents a `set` submit whose quantity field is empty or not a number and sends nothing. (2) On the hydrogen backend CartLine prints `required` on the quantity input (new QuantityInput prop `required` / `required`) and `formnovalidate` on the remove button. Test C-33.
+- Evidence: Hydrogen reads an empty quantity as `0` and removes the line (`getLineQuantityPayload` in `hydrogen/packages/hydrogen/src/core/cart/cart.ts`); `register("remove")` returns `formNoValidate: true`.
+- Rejected: relying on native validation alone (a script can submit past it).
+- Owner: doc 05 sections 6.2 and 7.1; `components/cart-line.md`; `components/quantity-input.md`. Amends D-015.
+
+#### D-117 Checkout guard on the hydrogen backend
+
+- Decision: `adapter.ts` exports `registerFlush`, `hasUnsettled` and `settle` (5,000 ms timeout). `rp-cart` registers its pending quantity timers and in-flight actions. The hydrogen adapter adds one document `click` listener: a plain primary click on `a.rp-checkout-button[href]` while something is unsettled is prevented, `settle()` runs, then `location.assign(href)`. Liquid has no guard (the checkout button submits the cart form). Test C-34.
+- Evidence: the hydrogen checkout control is a link; a navigation cancels a debounced or in-flight quantity or note change.
+- Rejected: disabling the link while pending (a no-JS-equivalent link must stay a link); intercepting inside `rp-cart` (the checkout button can sit outside any `rp-cart` root).
+- Owner: doc 05 sections 4.6, 5.1, 7.1; `components/checkout-button.md`. Amends D-042, D-050.
+
+#### D-118 The cart endpoint carries the locale path prefix
+
+- Decision: on the hydrogen backend the server computes `cartAction = `${requestContext.locale.pathPrefix}/api/cart`` once per request. It is the `cartEndpoint` of the config element and the `action` of every cart form: the TSX-only prop `action` on CartLines, CartLine, CartSummary, CartNote, DiscountCode, CartDrawer (ProductForm already had it), passed by the `layout`, `cart` and `product` blueprints through their prop `cartAction` (default `/api/cart`). `cartUrl` is `${pathPrefix}/cart`. Rule CV-17 of doc 11; test C-35.
+- Evidence: `handleShopifyRoutes` serves the cart handlers under every locale prefix and the handler takes the locale from the request URL; an unprefixed endpoint reads and writes the cart in the default market.
+- Rejected: reading the prefix from the config element inside components (components do not read the config element on the server).
+- Owner: doc 05 sections 4.2 and 10.1; doc 11 CV-17; doc 12 DS-3; the three blueprints. Amends D-041, D-087.
+
+#### D-119 Add errors and warnings
+
+- Decision: `errorMessage(state, "add")` returns the first message recorded for the last action at ANY key (cart, line or discount); `hasUserError(state, started)` tells a user error or network error from a warning. `rp-product-form` shows the message in its own error part; with warnings only, the add succeeded: `action` is dispatched and the cart opens, and `added` is not announced. Test C-36.
+- Evidence: Hydrogen keys an add error to the existing cart line when the variant is already in the cart; scope `"cart"` missed it and the form showed the generic text. A warning accompanies a successful mutation.
+- Rejected: showing the message only on the cart line (it can be inside a closed drawer).
+- Owner: doc 05 sections 4.6, 7.2, 9.2; `components/product-form.md`. Amends D-042, D-045.
+
+#### D-120 Liquid discount codes include line-level codes
+
+- Decision: the code list of CartSummary on Liquid is the set of unique titles of `cart.cart_level_discount_applications` and of every `item.line_level_discount_allocations[].discount_application`, each with `type == 'discount_code'`, built with `contains`, `append` and `split` (no `uniq`, which is outside the Liquid subset). New resource `cart.line-discounted` and fixtures `line-discount` / `liquid-line-discount`.
+- Evidence: a code that applies to specific products is not a cart-level application (Shopify Liquid reference). UNVERIFIED on a store (V-12, SPIKE-02).
+- Rejected: cart-level applications only (a product-specific code could not be seen or removed).
+- Owner: `components/cart-summary.md`; doc 11; doc 13 resources. Amends D-092 item 4.
+
+#### D-121 SPIKE-01 fallback store configures `updateCart`
+
+- Decision: when the SPIKE-01 fallback (a Ripple store that calls `Shopify.actions` directly) is taken, the store MUST call `Shopify.actions.updateCart.configure({ eventTarget: () => document, handler: (defaultHandler) => defaultHandler() })` exactly once, inside `fetch()` before the first `getCart`, and throw a setup error when the call returns `false`. SPIKE-01 checks that no mutation reloads the page (step 7a).
+- Evidence: Shopify docs (storefront events and actions): an unconfigured `updateCart` "falls back to a full page reload" on a theme whose cart rendering the platform does not recognise, which would destroy region refresh and the open drawer.
+- Owner: doc 05 section 16.
+
+#### D-122 `window.rpDomReady` and the Liquid connect timing
+
+- Decision: the inline script of `rp-head` (the constant `INLINE_COMMANDS_POLYFILL`; Liquid only) starts with one line that sets `window.rpDomReady`, a promise resolved by the first `DOMContentLoaded` listener of the page. `createLiquidCommerce` creates the store but does NOT call `cart.connect()`; `probe` awaits `window.rpDomReady ?? Promise.resolve()`, rejects when `updateCart.isDefault()` is `false`, then calls `cart.connect()` and `cart.fetch()`. The runtime owns three globals.
+- Evidence: Shopify docs: actions are ready after `DOMContentLoaded`, and only the first `configure` call takes effect. At module evaluation `Shopify.actions` does not exist. UNVERIFIED on a store (SPIKE-01 step 1a): that the continuation runs before the listeners of `content_for_header`.
+- Rejected: connecting at module evaluation (nothing to configure yet); a `DOMContentLoaded` listener registered by the module (it runs after the listeners of scripts that loaded earlier).
+- Owner: doc 05 section 5.2; doc 04 sections 3.1 and 3.3; doc 14 section 7.3. Amends D-041 item 5, D-054 item 7, D-078.
+
+#### D-123 The hydrogen `rp-view-event` re-publishes when its payload changes
+
+- Decision: the hydrogen class has `static observedAttributes = ["view-event-payload"]` and publishes once per distinct payload value per element instance. Test C-37.
+- Evidence: React and Remix reuse the element across client navigations, so `connectedCallback` runs once and later views were never published.
+- Rejected: a `key` on the element in every blueprint (a rule every project would have to remember).
+- Owner: doc 05 section 12.2; doc 12 BP-11. Amends D-089.
+
+#### D-124 Toast close button and region attributes
+
+- Decision: Toast has the prop `closeLabel` (Liquid `close_label`; default the locale key `ripple.toast.close`, English `Dismiss`) printed as `data-close-label` on `ui-toast-region`. The `toast()` helper passes `cancel: { label: <that value> }`. The upgrade allow-list entry of the region lists `data-slot`, `data-side`, `data-align`, `popover`, `style`, `role`, `aria-label`, `aria-keyshortcuts`, `data-expanded`; the Remix preserve list is `aria-keyshortcuts aria-label data-align data-expanded data-side popover role style`.
+- Evidence: run of the pinned `@ui-sdk/web` 0.1.0-beta.14 bundle in Chromium: without `cancel.label` a toast has no visible close button; the region gains `role`, `aria-label` and `aria-keyshortcuts` at upgrade.
+- Rejected: a Ripple-rendered close button (toast items are element-owned).
+- Owner: `components/toast.md`; doc 02 section 7.3 entry 2; doc 04 section 10.6. Amends D-013, D-071 item 3, D-083.
+
+#### D-125 Script-state CSS selects the nearest owner; base CSS budget 2,500 bytes
+
+- Decision: the generated `script-state` region uses per-owner selectors of the form `:where(X:not(:defined)) [data-rp-js="inflow"]:not(X :is(<all owners>) [data-rp-js])`, so that a control is governed only by its closest element root. Test CSS-NEAR. The `css-tokens-base` budget is 2,500 bytes.
+- Evidence: run in Chromium: with the ancestor-anywhere selectors, a defined `rp-quantity` inside a not-yet-defined `rp-cart` showed controls of the outer element, and the reverse. Size: 2,174 bytes before, about 2,375 after (estimate; esbuild minifier, not the lightningcss options of doc 03).
+- Rejected: a lint rule that forbids nesting (CartLine nests `rp-quantity` in `rp-cart` by contract).
+- Owner: doc 03 sections 4.3 and 12; doc 02 PE-4; doc 13 size budget. Amends D-021, D-064, D-110 row 28. Owner question Q25.
+
+#### D-126 Liquid note and attribute baseline; `submitCart` reports whether anything was sent
+
+- Decision: `translateLiquidForm(form, submitter, baseline)` compares the note and cart-attribute controls with `baseline.get(control) ?? control.defaultValue`; an operation carries `sent` pairs, which the Liquid adapter writes to `baseline` after the operation settles without a recorded error. `BackendParts.submit` and `RippleCommerce.submitCart` resolve `boolean`; `rp-cart` announces nothing when the value is `false`. Test C-38.
+- Evidence: on Liquid the note field is outside every refreshed region, so `defaultValue` never changes: clearing a saved note back to the first server value sent nothing, and every later cart-form submit re-sent the note.
+- Rejected: writing `defaultValue` after a save (not defined for selects and checkboxes; React owns the attribute in TSX hosts).
+- Owner: doc 05 sections 4.1, 4.6, 5.2, 6.3, 7.1. Amends D-042, D-092.
+
+#### D-127 hydrogen: a product form submitted without a submitter
+
+- Decision: on the hydrogen backend a submit with `event.submitter === null` of a form that has a `merchandise-id` field is sent as one synthetic `add` built from the form's fields. Test C-39.
+- Evidence: `cart.handleFormSubmit` throws for a null submitter (`requireFormEvent`), while doc 05 section 7.2 intercepts that case and the Liquid path handles it.
+- Rejected: not intercepting the null-submitter case (then `form.requestSubmit()` would behave differently per backend).
+- Owner: doc 05 section 5.1.
+
+#### D-128 `attributes-update` replaces the cart's attribute set
+
+- Decision: documented semantics, no code: with JavaScript, on both backends, `attributes-update` sends the form's attribute controls as the complete set. A form that edits cart attributes MUST print every attribute that must survive (visible or hidden input). No shipped component prints cart attribute controls. Not statically checkable.
+- Evidence: Shopify docs, `UpdateCartPayload.attributes`; Hydrogen `set_attributes`.
+- Owner: doc 05 sections 6.2 and 13.
+
+#### D-129 A JS-only form is never posted natively
+
+- Decision: when `usable` is `false`, `rp-cart` prevents the submit of a form that carries `data-rp-js="inflow"` (the Liquid discount forms) and writes `strings.error` to the form's error part, or to the root's first cart-scope error part; nothing is posted. Test C-05, fourth case.
+- Evidence: those forms use Hydrogen field names that the platform's `/cart` route ignores; a native post reloaded the page with no effect and no message.
+- Owner: doc 05 sections 4.5 and 7.1; `components/discount-code.md`; `components/cart-summary.md`.
+
+#### D-130 `initializeShopifyScripts` always runs on the hydrogen backend; option `routes`
+
+- Decision: the hydrogen adapter calls `initializeShopifyScripts({ consent, routes, navigate })` in `afterReady` regardless of `options.analytics`. `routes` is a new JSON option (the app's route templates, the same object passed to `handleShopifyRoutes`); `navigate` wraps `options.navigate`. `analytics: false` now skips only `trackCartAnalytics` and `rp-view-event`; Hydrogen's page views are part of `initializeShopifyScripts` and are not switched off by it. An app MUST NOT call `initializeShopifyScripts` itself.
+- Evidence: `hydrogen/packages/hydrogen/src/core/shopify-scripts/initialize.ts` and `global.ts`: the call also assigns `Shopify.routes` and loads the WebMCP tools; Hydrogen's routing skill requires the same route templates in this call.
+- Rejected: leaving the call to the app (two owners of `Shopify.routes`).
+- Owner: doc 05 sections 4.2, 5.1, 10.1, 12.1; doc 12 DS-3. Amends D-087. Owner question Q26.
+
+#### D-131 `rp-dialog`: backdrop press and back/forward cache
+
+- Decision: (1) The backdrop-click fallback (browsers without `closedby`) closes only when the preceding `pointerdown` was also on the backdrop. (2) Without the Navigation API, `rp-dialog` closes an open dialog on `pagehide` with `persisted === true`, reason `link-press`. Tests E-31, E-32.
+- Evidence: a drag from a field inside the dialog to the backdrop produces a `click` on the `<dialog>` with outside coordinates (run by the reviewer in Chromium 157 with `closedBy` hidden); the back/forward cache keeps a `showModal()`-opened dialog (documented behaviour, not reproduced in a run).
+- Owner: doc 04 section 9.1; `components/dialog.md`. Amends D-008, D-081.
+
+#### D-132 Tooltip trigger `style` on Remix
+
+- Decision: UI SDK writes inline `anchor-name` on the tooltip trigger button while the tooltip is open. Button and IconButton state tables list it; their Remix bindings print `data-rmx-preserve-attrs="style"` on the `<button>` when `tooltip` is set and `href` is unset. The upgrade allow-list of Tooltip stays `[]` (the write happens after upgrade).
+- Evidence: `uisdk/packages/core/src/foundation/platform/anchoring.ts`; reviewer run of the IconButton fixture.
+- Owner: `components/tooltip.md`, `components/button.md`, `components/icon-button.md`; doc 06 section 7.4. Amends D-013.
+
+#### D-133 Small corrections from the review (no contract change beyond what is stated)
+
+| # | Area | Correction |
+|---|---|---|
+| 1 | CartLines | `toRippleLine` builds `url` with `buildProductSelectionSearchParams({ style: "variant", variant, selectedOptions, optionNames })` (one object argument); the complete `cart-lines.data.ts` is printed in `components/cart-lines.md`. |
+| 2 | Hydrogen server | `createStorefrontClient({ type, requestContext, config })` with the per-request `requestContext`; `renderShopifyScriptTags` takes `i18n: requestContext.locale` (doc 05 section 10.1). |
+| 3 | Product query | `adjacentVariants(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true)` (doc 11 section 0.6). |
+| 4 | ProductGallery | The lightbox dialog has a `rp-dialog-header` with the title and the close button, then `rp-dialog-body`. |
+| 5 | Remix | A bare `data-*` or `aria-*` attribute is printed as `="true"`; presence attributes are written `=""` (doc 06 X-12). The `popover` attribute is written `popover={true}`. The Button example uses `tabindex`. |
+| 6 | Accordion | Third marker rule `.rp-accordion-trigger::-webkit-details-marker { display: none; }`; linter construct L-16 (doc 03). |
+| 7 | Carousel | Doc 04 section 10.9 says `scroll-snap-type: inline mandatory`, as `components/carousel.md`. |
+| 8 | Landmarks | MobileNav prints no `<nav>` (doc 02 A-10). |
+| 9 | Layout blueprint (Liquid) | Footer strings are the keys `ripple.blueprints.layout.footer_menu`, `policies`, `copyright`. |
+| 10 | Liquid `t` arguments | A value is escaped BEFORE the `t` call (`assign x = value \| escape`), never with a filter after the `t:` argument (layout, Footer, search). UNVERIFIED on a store (doc 14 V-21). |
+| 11 | Collection blueprint | The view payload is `standard_event_data: 'view'` (no `context`); the React file imports `RippleFilterChip` and `RippleSortOption`. |
+| 12 | Product blueprint | No-JS text: VariantPicker is links; layout `dropdown` is a GET form with a select. |
+
+- Owner: the documents named in each row.

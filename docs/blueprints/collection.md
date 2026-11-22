@@ -37,7 +37,7 @@ Below `lg` the filters are above the results in one column; from `lg` they are t
 **React** (`blueprints/collection/react/collection.tsx`, complete except the `COLLECTION_QUERY` constant):
 
 ```tsx
-import type { RippleCollection, RippleFilter, RippleProduct } from "__PKG__";
+import type { RippleCollection, RippleFilter, RippleFilterChip, RippleProduct, RippleSortOption } from "__PKG__";
 import { Button } from "@components/button";
 import { Container } from "@components/container";
 import { EmptyState } from "@components/empty-state";
@@ -176,7 +176,7 @@ export function CollectionPage(props: CollectionPageProps) {
     {% endblock %}
   {% endblock %}
 {% endblock %}
-<rp-view-event view-event-trigger="connect" view-event-payload="{{ collection | standard_event_data: 'view', context: 'page' | escape }}"></rp-view-event>
+<rp-view-event view-event-trigger="connect" view-event-payload="{{ collection | standard_event_data: 'view' | escape }}"></rp-view-event>
 ```
 
 Locale keys (`ripple.blueprints.collection.*`): `count.one` "{{ count }} product"; `count.other` "{{ count }} products"; `empty` "No products found"; `clear` "Clear filters".
@@ -185,7 +185,7 @@ The Filters, SortSelect and FilterChips blocks read the global `collection` them
 
 Differences between backends, masked for BT-3: the count text (Liquid prints the collection total, `collection.products_count`; the hydrogen backend prints the number on the page) and the view-event payload, which is masked as a whole (D-089 item 3: Liquid prints the platform filter's output, the hydrogen backend the JSON of `05-commerce.md` section 12). Mask list: `{ "select": "[data-rp-region=\"rp-collection-toolbar\"] > .rp-text", "op": "text" }`, `{ "select": "rp-view-event", "op": "attr", "name": "view-event-payload" }`.
 
-Evidence: `ripple/theme/templates/collection.liquid` (the `standard_event_data: 'view', context: 'page'` view event; `collection.title`, `collection.description`, `collection.url`, `{% paginate collection.products by 20 %}` inside `{% partial 'collection-grid' %}`, a block call inside the product loop). `paginate.previous`, `paginate.next`: see `09-components-foundation.md`, Pagination, Evidence. UNVERIFIED: `collection.filters`, `collection.sort_options`, `collection.sort_by`, `collection.default_sort_by`, `collection.products_count` were not re-read in this session (they are documented Liquid drops by general knowledge); the hydrogen-backend payload shape of the collection view (`05-commerce.md` section 12; section 5 of this document).
+Evidence: `ripple/theme/templates/collection.liquid` (the `standard_event_data: 'view'` view event, printed without a `context` argument; `collection.title`, `collection.description`, `collection.url`, `{% paginate collection.products by 20 %}` inside `{% partial 'collection-grid' %}`, a block call inside the product loop). `paginate.previous`, `paginate.next`: see `09-components-foundation.md`, Pagination, Evidence. UNVERIFIED: `collection.filters`, `collection.sort_options`, `collection.sort_by`, `collection.default_sort_by`, `collection.products_count` were not re-read in this session (they are documented Liquid drops by general knowledge); the hydrogen-backend payload shape of the collection view (`05-commerce.md` section 12; section 5 of this document).
 
 ### Data requirements per backend
 
@@ -195,7 +195,7 @@ Evidence: `ripple/theme/templates/collection.liquid` (the `standard_event_data: 
 | Products | `collection.products(first: 24, after:, before:, last:, filters:, sortKey:, reverse:)` | `collection.products` inside `{% paginate ... by 24 %}` |
 | Filters | `collection.products.filters { id label type values { id label count input } }`, mapped by `toRippleFilters(filters, searchParams, pathname)` (`@components/filters.data`); chips by `toFilterChips` (`@components/filter-chips.data`) | `collection.filters` (read inside the components) |
 | Sort | URL param `sort_by`; options are a constant list in the route code (CO-R1); `params` from `sortParams(searchParams)` (`@components/sort-select.data`) | `collection.sort_options`, `collection.sort_by` (read inside SortSelect) |
-| View event | `viewEvent`: `JSON.stringify` of the collection view of `05-commerce.md` section 12 | `collection \| standard_event_data: 'view', context: 'page'` |
+| View event | `viewEvent`: `JSON.stringify` of the collection view of `05-commerce.md` section 12 | `collection \| standard_event_data: 'view'` (no `context`; it is ignored for collections) |
 | Pagination | `pageInfo`; URLs carry `after=<endCursor>` or `before=<startCursor>` with every other param kept | `paginate.previous.url`, `paginate.next.url` |
 
 ```graphql
@@ -239,6 +239,7 @@ BT-1 to BT-9, plus:
 - **CL-3** (tier 5 and tier 7) Choosing a sort option changes the URL to contain `sort_by=price-ascending` without a document navigation, and the first product card changes; focus stays on the sort control.
 - **CL-4** (tier 6) With JavaScript disabled, submitting the filter form navigates to a URL containing the chosen `filter.` param, and the chosen value is checked in the response.
 - **CL-5** (tier 1) Route helper tests for CO-R1 to CO-R3 with the seven sort values, an unknown value, and both pagination directions.
+- **CL-7** (tier 5; hosts react and remix) Client-side navigation from a collection page to a product page: `window.Shopify.analytics.publish` is called exactly once more, with the product view (`05-commerce.md` 12.2, D-123).
 - **CL-6** (tier 2) Exactly one `rp-view-event` exists; it is the last element child of `<main>`, has `view-event-trigger="connect"`, a non-empty `view-event-payload` attribute that parses as JSON, and no child element. `#collection-filters` and `#collection-sort` exist; no element has the id `filters`. The Filters root is not inside a `<dialog>`.
 
 ---

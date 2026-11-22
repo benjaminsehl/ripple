@@ -33,7 +33,7 @@ Nesting rules:
 1. A document MUST contain at most one Toast root. The `layout` blueprint (`12-components-chrome-and-blueprints.md`) prints it as the last element child of `<body>`. Page templates and other blueprints MUST NOT print one.
 2. The root is printed EMPTY. The server MUST NOT print a toast inside it.
 3. The root MUST NOT be inside a `<dialog>`, a `[popover]`, an `<a>`, a `<button>`, a `data-rp-region` element, or a Remix `<Frame>`.
-4. Elements that UI SDK creates inside the root at run time are not parts of the contract and carry no Ripple class (D-083 item 1): `<ol data-slot="toast-list">` and, per toast, `ui-toast`, `ui-toast-title`, `ui-toast-description`, `ui-toast-close` (structure under "Behaviour with JavaScript").
+4. Elements that UI SDK creates inside the root at run time are not parts of the contract and carry no Ripple class (D-083 item 1): `<ol data-slot="toast-list">` and, per toast, `ui-toast`, `ui-toast-title`, `ui-toast-description`, `ui-toast-action` (always `hidden` in V1), `ui-toast-close` (structure under "Behaviour with JavaScript").
 
 ### Props
 
@@ -42,6 +42,7 @@ Root (`Toast`):
 | Prop (TSX) | Liquid param | Type | Values | Default | Required | Responsive | Renders as |
 |---|---|---|---|---|---|---|---|
 | `ariaLabel` | `aria_label` | string | any non-empty text | locale key `ripple.toast.label` (English: `Notifications`) | no | no | `aria-label` on the root |
+| `closeLabel` | `close_label` | string | any non-empty text | locale key `ripple.toast.close` (English: `Dismiss`) | no | no | `data-close-label` on the root, printed directly after `aria-label` (always printed). The `toast()` helper reads it and passes it to UI SDK as the text of each toast's close button (D-124) |
 | `rmxKey` | none (Remix only) | string | any non-empty text, unique among siblings | none | no | no | `data-rmx-key` on the root; the attribute is omitted when the prop is unset (D-034, `06-bindings.md` X-3). Host extra: absent from fixtures, React and Liquid |
 | `side` | `side` (setting) | enum | `top` `bottom` | `bottom` | no | no | `data-side` on the root (default printed); additionally the UI SDK option attribute `side` when the value is `top` |
 | `align` | `align` (setting) | enum | `start` `center` `end` | `end` | no | no | `data-align` on the root (default printed); additionally the UI SDK option attribute `align` when the value is not `end` |
@@ -57,31 +58,31 @@ Why two attributes: UI SDK reads the OPTION attributes `side` / `align` and refl
 Fixture `default` (no props):
 
 ```html
-<ui-toast-region class="rp-toast" aria-label="Notifications" data-slot="toast-region" data-side="bottom" data-align="end" popover="manual"></ui-toast-region>
+<ui-toast-region class="rp-toast" aria-label="Notifications" data-close-label="Dismiss" data-slot="toast-region" data-side="bottom" data-align="end" popover="manual"></ui-toast-region>
 ```
 
 Fixture `placement` (`side="top"`, `align="center"`):
 
 ```html
-<ui-toast-region class="rp-toast" side="top" align="center" aria-label="Notifications" data-slot="toast-region" data-side="top" data-align="center" popover="manual"></ui-toast-region>
+<ui-toast-region class="rp-toast" side="top" align="center" aria-label="Notifications" data-close-label="Dismiss" data-slot="toast-region" data-side="top" data-align="center" popover="manual"></ui-toast-region>
 ```
 
 Fixture `escaping` (`ariaLabel` is the text `Say "hi" & <go>`):
 
 ```html
-<ui-toast-region class="rp-toast" aria-label="Say &quot;hi&quot; &amp; &lt;go&gt;" data-slot="toast-region" data-side="bottom" data-align="end" popover="manual"></ui-toast-region>
+<ui-toast-region class="rp-toast" aria-label="Say &quot;hi&quot; &amp; &lt;go&gt;" data-close-label="Dismiss" data-slot="toast-region" data-side="bottom" data-align="end" popover="manual"></ui-toast-region>
 ```
 
 Fixture `invalid-enum-falls-back` (`side="bogus"`):
 
 ```html
-<ui-toast-region class="rp-toast" aria-label="Notifications" data-slot="toast-region" data-side="bottom" data-align="end" popover="manual"></ui-toast-region>
+<ui-toast-region class="rp-toast" aria-label="Notifications" data-close-label="Dismiss" data-slot="toast-region" data-side="bottom" data-align="end" popover="manual"></ui-toast-region>
 ```
 
 Fixture `class` (`class="custom-a custom-b"`):
 
 ```html
-<ui-toast-region class="rp-toast custom-a custom-b" aria-label="Notifications" data-slot="toast-region" data-side="bottom" data-align="end" popover="manual"></ui-toast-region>
+<ui-toast-region class="rp-toast custom-a custom-b" aria-label="Notifications" data-close-label="Dismiss" data-slot="toast-region" data-side="bottom" data-align="end" popover="manual"></ui-toast-region>
 ```
 
 The server MUST NOT print on the root: `style`, `role`, `aria-live`, `hidden`, `tabindex`, or any child node.
@@ -95,17 +96,23 @@ Host-owned regions and masks: the whole content of the root is element-owned aft
 | `style` | root | element (UI SDK) | at upgrade and on every viewport or toast change (inline custom properties and position) | absent |
 | `popover` | root | element (UI SDK) | at upgrade UI SDK re-writes the same value `manual`; a same-value write is not a mutation (D-002) and is not what the allow-list entry is for; the region is shown in the top layer while it has toasts | `manual` |
 | `data-side`, `data-align` | root | element (UI SDK) | reflected from the options; same values as printed (same-value writes, D-002) | `bottom` / `end`, or the prop values |
+| `role` | root | element (UI SDK) | `region` while at least one toast exists; REMOVED when the region is empty (measured, Chromium 157) | not printed |
+| `aria-keyshortcuts` | root | element (UI SDK) | `F6` while at least one toast exists; removed when the region is empty | not printed |
+| `aria-label` | root | server, then element (UI SDK) | printed by the server. UI SDK remembers the printed value, REMOVES the attribute when the last toast leaves, and writes the same value back when a toast appears (measured). Before the first `toast()` call the server value is present | the `ariaLabel` text |
+| `data-close-label` | root | server | never written by an element; read by the `toast()` helper | the `closeLabel` text |
+| `data-expanded` | root and `ui-toast` (run time only) | element (UI SDK) | while the stack is expanded (pointer over the region or focus inside it) | not printed |
 | children | root | element (UI SDK) | `<ol data-slot="toast-list">` appended at upgrade; one `ui-toast` per message | none |
+| `tabindex`, `data-slot`, `data-front`, `aria-labelledby`, `aria-describedby`, `style` | `ui-toast` (run time only) | element (UI SDK) | every toast is a tab stop (`tabindex="0"`) named by its title | not printed |
 | `data-type` | `ui-toast` (run time only) | element (UI SDK) | the `type` option of the message | not printed |
 | `data-starting-style`, `data-ending-style` | `ui-toast` (run time only) | element (UI SDK) | enter and exit transitions | not printed |
 
-Upgrade allow-list (mutations permitted when the element upgrades). It is ONE entry, identical key for key and value for value to entry 2 of `02-html-contract.md` 7.3 (D-071 item 3; the two documents MUST print the same entry, and it MUST NOT be widened). The entry exists because the region is element-owned: UI SDK changes `style` and the child list at upgrade and at run time. `data-slot`, `data-side`, `data-align` and `popover` are listed for the element-owned subtree and for run-time changes; at upgrade their writes on the root are same-value writes, which need no entry (D-002):
+Upgrade allow-list (mutations permitted when the element upgrades). It is ONE entry, identical key for key and value for value to entry 2 of `02-html-contract.md` 7.3 (D-071 item 3; the two documents MUST print the same entry, and it MUST NOT be widened). The entry exists because the region is element-owned: UI SDK changes `style` and the child list at upgrade and at run time. `data-slot`, `data-side`, `data-align` and `popover` are listed for the element-owned subtree and for run-time changes; at upgrade their writes on the root are same-value writes, which need no entry (D-002). `role`, `aria-label`, `aria-keyshortcuts` and `data-expanded` are listed because UI SDK adds and removes them on the root at run time as toasts come and go (D-124; the list was widened once, by that decision, from a run against the UI SDK source):
 
 ```json
 [
   {
     "select": "ui-toast-region",
-    "attrs": ["data-slot", "data-side", "data-align", "popover", "style"],
+    "attrs": ["data-slot", "data-side", "data-align", "popover", "style", "role", "aria-label", "aria-keyshortcuts", "data-expanded"],
     "childList": true,
     "text": true,
     "subtree": true,
@@ -128,24 +135,27 @@ Upgrade allow-list (mutations permitted when the element upgrades). It is ONE en
    await toast("Added to cart", { description: "Linen shirt, size M", type: "success", duration: 5000 });
    ```
 
-   Signature (D-083 item 2): `toast(message: string, options?: ToastOptions): Promise<void>`. `ToastOptions` is exactly `{ id?: string; description?: string; type?: "default" | "success" | "error" | "warning" | "info" | "loading"; duration?: number; priority?: "polite" | "assertive" }`. `message` is the toast's title text. `duration` is milliseconds. Toast actions are not supported in V1. The source of the helper is owned by `04-elements.md`.
+   Signature (D-083 item 2): `toast(message: string, options?: ToastOptions): Promise<void>`. `ToastOptions` is exactly `{ id?: string; description?: string; type?: "default" | "success" | "error" | "warning" | "info" | "loading"; duration?: number; priority?: "polite" | "assertive" }`. `message` is the toast's title text. `duration` is milliseconds. Toast actions are not supported in V1. The helper ALWAYS adds UI SDK's `cancel: { label: <close label> }` option, where the close label is the `data-close-label` of the page's `ui-toast-region` (fallback `Dismiss`); without it UI SDK renders the close button `hidden` and a toast could not be dismissed by pointer or keyboard (D-124). `cancel` is not part of `ToastOptions`: callers cannot pass it. The source of the helper is owned by `04-elements.md`.
 
    Where callers get `toast` (D-083 item 4, D-054 item 1): `<pkg>/elements` in bundled apps; the specifier `ripple` on Liquid; the export of the main browser file (`ripple.js` or `ripple.elements.js`) on `html` and `remix`. The Toast binding file (`toast.tsx`, `blocks/toast.liquid`) prints the region and nothing else: it MUST NOT re-export `toast` and MUST NOT import `<pkg>/elements`.
 3. The promise resolves after UI SDK has accepted the message. When the chunk cannot be loaded, or the document has no `ui-toast-region`, the promise resolves and nothing is shown; the helper MUST NOT throw.
 4. DOM that UI SDK renders for one message (from `uisdk/packages/web/src/toast.ts`, function `fromData`), inside `<ol data-slot="toast-list">`:
 
    ```html
-   <ui-toast toast="<id>" role="listitem">
+   <ui-toast toast="<id>" role="listitem" data-slot="toast" tabindex="0" data-type="success" data-front="" aria-labelledby="<generated id>" aria-describedby="<generated id>" style="...">
      <div>
-       <ui-toast-title>Added to cart</ui-toast-title>
-       <ui-toast-description>Linen shirt, size M</ui-toast-description>
+       <ui-toast-title data-slot="toast-title" id="<generated id>">Added to cart</ui-toast-title>
+       <ui-toast-description data-slot="toast-description" id="<generated id>">Linen shirt, size M</ui-toast-description>
      </div>
-     <ui-toast-close><button type="button"></button></ui-toast-close>
+     <ui-toast-action hidden><button type="button" data-slot="toast-action"></button></ui-toast-action>
+     <ui-toast-close><button type="button" data-slot="toast-close">Dismiss</button></ui-toast-close>
    </ui-toast>
    ```
 
+   Measured in Chromium 157 (D-124). Without a `description` the `ui-toast-description` element is present with `hidden`. `ui-toast-action` is always present and `hidden` (V1 passes no action). The close button's text is the close label; it is the button's accessible name.
+
    These elements have no Ripple class. `toast.css` styles them as `.rp-toast :where(<tag>)`. Action buttons inside a toast (`ui-toast-action`) are not supported in V1: `ToastOptions` has no `action`.
-5. A message is removed after its `duration` (UI SDK default when omitted), or when its close button is pressed. Timers pause while the pointer is over the region or focus is inside it (UI SDK behaviour; agent action `pause`).
+5. A message is removed after its `duration` (UI SDK default when omitted), when its close button is pressed, or when Escape is pressed while the toast has focus. Timers pause while the pointer is over the region or focus is inside it (UI SDK behaviour; agent action `pause`).
 6. Calling `toast()` with the `id` of a message that is still shown replaces that message instead of adding one (UI SDK behaviour, UNVERIFIED in a browser).
 7. Callers MUST NOT call `toast()` while a modal dialog is open (D-008 item 7, D-079 item 4; `04-elements.md` 9.1 item 9): commerce elements test `document.querySelector("dialog:modal")` and use `announce(text, { from })` and the dialog's status part instead.
 8. Rules for message text: `title` at most 60 characters, no trailing full stop, no HTML (the helper passes text, not markup). An `error` toast MUST be accompanied by a persistent message at the place of the error (FormMessage or the `data-rp-part="error"` element of the commerce component): a toast alone is never the only report of a failure.
@@ -170,13 +180,15 @@ No event and no command.
 
 - Pattern: a labelled notification region whose items are announced by UI SDK live regions; `checkPattern`: `null`.
 - Accessible name: REQUIRED on the root, from `aria-label` (default "Notifications").
-- Focus: showing a toast never moves focus. The close button inside a toast is reachable with Tab while the toast is shown. A keyboard shortcut that jumps to the region is UI SDK's and is not specified by Ripple (UNVERIFIED).
+- Focus: showing a toast never moves focus. Each visible toast is a tab stop (`ui-toast` has `tabindex="0"`), followed by its close button. F6 moves focus to the region (UI SDK; announced through `aria-keyshortcuts="F6"` on the region while it has toasts).
 - Announcements: each message is announced once when it appears; `priority: "polite"` (default) waits for the current speech, `priority: "assertive"` interrupts and is reserved for errors.
 
 | Key | Action |
 |---|---|
-| Tab | Reaches the close button of a visible toast in document order (the region is the last element of `<body>`) |
+| Tab | Reaches each visible toast (`ui-toast`, `tabindex="0"`) and then its close button, in document order (the region is the last element of `<body>`) |
+| Escape on a focused toast | Removes that toast |
 | Enter or Space on the close button | Removes that toast |
+| F6 | Moves focus to the region (UI SDK) |
 
 ### Styling
 
@@ -201,7 +213,7 @@ Rules specific to this file:
 2. Toasts are laid out as a plain vertical list (`flex-direction: column`). The file MUST NOT read UI SDK's inline stacking custom properties: CSS-11 forbids reading custom properties that are not Ripple tokens, so V1 has no overlapped "stack" effect.
 3. The region has `pointer-events: none` and each toast `pointer-events: auto`, so the empty margin around toasts does not block the page.
 4. The file MUST NOT set `position`, `inset` or `display` on `.rp-toast`: UI SDK and the user-agent popover rules own them.
-5. The close button gets a visible label from CSS only if UI SDK prints none; V1 does not add one. Whether the UI SDK close button has an accessible name is UNVERIFIED and is checked by acceptance test 7.
+5. The close button's visible text and accessible name is the close label the helper passes (`data-close-label`, default `Dismiss`; D-124). The CSS adds no generated content to it. The `hidden` run-time elements (`ui-toast-action`, and `ui-toast-description` when there is no description) are hidden by the `[hidden]` rule of `base.css`; this file writes no rule for them.
 
 Complete file:
 
@@ -326,9 +338,9 @@ Complete file:
 ### Host notes
 
 - HTML: copy fixture `default` to the end of `<body>`. Load `ripple.js` (or `ripple.elements.js`). Call `toast()` from a module script that imports it from the SAME main browser file the page loads, for example `import { toast } from "/ripple/ripple.js"` (`public/ripple/` is the default `paths.public`, D-054 item 4).
-- React: `export function Toast(props: ToastProps): JSX.Element` in `toast.tsx`, hand-written below the generated header region (D-072). The binding prints the region and nothing else (D-083 item 4): the root with `suppressHydrationWarning` and no children. It calls no hook, so the file has NO `"use client"` directive (D-033 item (b)). It imports only `react` types and `<pkg>` helpers; it MUST NOT import `<pkg>/elements` and MUST NOT export `toast` (D-096 item 3). A caller imports the helper itself, `import { toast } from "<pkg>/elements"`, in a client module and writes `onClick={() => { void toast("Saved"); }}`. Default string in TSX: `ariaLabel = "Notifications"`. No controlled prop, no callback.
-- Remix: generated. The root has no required `id`, so the Remix-only prop `rmxKey` is optional: when passed, the root prints `data-rmx-key="<rmxKey>"`; when unset, the attribute is omitted (D-034, `06-bindings.md` X-3). The root prints `data-rmx-preserve-attrs="data-align data-side popover style"`. The root MUST be rendered by the root layout, outside every `<Frame>`. Callers get `toast` from the main browser file (`/ripple/ripple.js`).
-- Liquid: one block file, generated: `blocks/toast.liquid`, called once from `layout/theme.liquid` as `{% block 'toast' %}{% endblock %}`. Schema settings: `side`, `align`; label keys per G-8. Locale keys for strings the component prints: `ripple.toast.label` (English: `Notifications`). Theme code gets the helper with `import { toast } from "ripple"`.
+- React: `export function Toast(props: ToastProps): JSX.Element` in `toast.tsx`, hand-written below the generated header region (D-072). The binding prints the region and nothing else (D-083 item 4): the root with `suppressHydrationWarning` and no children. It calls no hook, so the file has NO `"use client"` directive (D-033 item (b)). It imports only `react` types and `<pkg>` helpers; it MUST NOT import `<pkg>/elements` and MUST NOT export `toast` (D-096 item 3). A caller imports the helper itself, `import { toast } from "<pkg>/elements"`, in a client module and writes `onClick={() => { void toast("Saved"); }}`. Default strings in TSX: `ariaLabel = "Notifications"`, `closeLabel = "Dismiss"`. No controlled prop, no callback.
+- Remix: generated. The root has no required `id`, so the Remix-only prop `rmxKey` is optional: when passed, the root prints `data-rmx-key="<rmxKey>"`; when unset, the attribute is omitted (D-034, `06-bindings.md` X-3). The root prints `data-rmx-preserve-attrs="aria-keyshortcuts aria-label data-align data-expanded data-side popover role style"` (every attribute UI SDK writes or removes on the root at run time, D-124; names in alphabetical order). The root MUST be rendered by the root layout, outside every `<Frame>`. Callers get `toast` from the main browser file (`/ripple/ripple.js`).
+- Liquid: one block file, generated: `blocks/toast.liquid`, called once from `layout/theme.liquid` as `{% block 'toast' %}{% endblock %}`. Schema settings: `side`, `align`; label keys per G-8. Locale keys for strings the component prints: `ripple.toast.label` (English: `Notifications`), `ripple.toast.close` (English: `Dismiss`). Theme code gets the helper with `import { toast } from "ripple"`.
 
 ```tsx
 // layout.tsx (server or client): prints the region
@@ -376,8 +388,11 @@ export function SaveButton() {
   if aria_label == blank
     assign aria_label = 'ripple.toast.label' | t
   endif
+  if close_label == blank
+    assign close_label = 'ripple.toast.close' | t
+  endif
 -%}
-<ui-toast-region class="rp-toast {{ class | escape }}" {% if side != 'bottom' %}side="{{ side }}"{% endif %} {% if align != 'end' %}align="{{ align }}"{% endif %} aria-label="{{ aria_label | escape }}" data-slot="toast-region" data-side="{{ side }}" data-align="{{ align }}" popover="manual" {{ attributes }}></ui-toast-region>
+<ui-toast-region class="rp-toast {{ class | escape }}" {% if side != 'bottom' %}side="{{ side }}"{% endif %} {% if align != 'end' %}align="{{ align }}"{% endif %} aria-label="{{ aria_label | escape }}" data-close-label="{{ close_label | escape }}" data-slot="toast-region" data-side="{{ side }}" data-align="{{ align }}" popover="manual" {{ attributes }}></ui-toast-region>
 ```
 
 ### Commerce
@@ -393,7 +408,7 @@ None. Commerce elements call `toast()` as specified in `05-commerce.md` and `11-
 - RP101: `side` or `align` outside its enumeration.
 - RP113 with these manifest `rules[]` entries:
   - `toast-one-region`: kind `max-count`, selector `ui-toast-region`, count `1`. Message: "The document has more than one toast region." Fix: "Keep the one printed by the layout."
-  - `toast-region-needs-label`: kind `requires-attribute`, selector `ui-toast-region`, target `aria-label` (an attribute name). Message: "The toast region has no accessible name." Fix: "Use the Toast component, which prints aria-label."
+  - `toast-region-needs-label`: kind `requires-attribute`, selector `ui-toast-region`, target `aria-label` (an attribute name). Message: "The toast region has no accessible name." Fix: "Use the Toast component, which prints aria-label." (Applies to documents with `serverHtml: true` only, like `toast-region-empty`: on a live page UI SDK removes `aria-label` while the region is empty, D-124.)
   - `toast-region-empty`: kind `forbids-descendant`, selector `ui-toast-region`, target `*`. Message: "The server printed content inside the toast region." Fix: "Print the region empty; show server messages with Banner or FormMessage." (Applies to documents with `serverHtml: true` only.)
   - `toast-region-placement`: kind `forbids-ancestor`, selector `ui-toast-region`, target `dialog, [popover], a, button, [data-rp-region]`. Message: "The toast region is inside an overlay, a control or a refreshable region." Fix: "Move it to the end of <body> in the layout."
 - RP111: the class `rp-toast-region` is not in the manifest and is reported; the root class is `rp-toast` (D-083).
@@ -401,12 +416,12 @@ None. Commerce elements call `toast()` as specified in `05-commerce.md` and `11-
 ### Acceptance tests
 
 1. T2: fixtures `default`, `placement`, `escaping`, `invalid-enum-falls-back`, `class` are canonical-equal in `html`, `react`, `remix`, `liquid`.
-2. T3: after `await toast("x")` has forced the chunk to load on a page with fixture `default`, every mutation inside the root is covered by the allow-list (same-value writes are reported as information and do not fail, D-002); `aria-label` and `class` are never written.
+2. T3: after `await toast("x")` has forced the chunk to load on a page with fixture `default`, every mutation inside the root is covered by the allow-list (same-value writes are reported as information and do not fail, D-002); `class` and `data-close-label` are never written; whenever `aria-label` is present its value is the server value. After the toast has gone the root has no `role`, no `aria-keyshortcuts` and no `aria-label`; after a second `toast()` call all three are back.
 3. T5 (D-083 item 3): on a page with fixture `default`, before the first `toast()` call no network request for the `toast` or the `shared` chunk has been made (`page.on("request")` sees no URL whose file name is `ripple-toast.js`, `ripple-shared.js`, `ripple.elements-toast.js` or `ripple.elements-shared.js`). After the first `toast()` call the `toast` and `shared` chunks of the loaded set have each been requested exactly once.
 4. T5: `await toast("Added to cart", { description: "Linen shirt", type: "success", duration: 1000 })` results in exactly one `ui-toast` inside the root whose text content contains both strings and whose `data-type` is `success`; after 2500 ms the root contains no `ui-toast`.
 5. T5: three calls in a row produce three `ui-toast` elements whose boxes do not overlap and are 8 px apart with the default tokens (`--rp-toast-gap`).
-6. T5: pressing the `button` inside `ui-toast-close` removes that toast within 1000 ms.
-7. T5 (a11y): the accessibility snapshot contains a node named "Notifications"; the close button of a visible toast has a non-empty accessible name. (UNVERIFIED, D-108. If the second assertion fails, the `toast()` helper of `04-elements.md` sets `aria-label` on that button from a new locale key `ripple.toast.close`, English `Dismiss`, and this section's "Host notes" gains that key; the root contract does not change.)
+6. T5: `ui-toast-close` is NOT `hidden` and its `button` has the text `Dismiss` (the `data-close-label` of the fixture); pressing it removes that toast within 1000 ms. With focus on the `ui-toast`, Escape removes it.
+7. T5 (a11y): WHILE a toast is visible, the accessibility snapshot contains a region named "Notifications" and the toast's close button has the accessible name `Dismiss`; with `closeLabel="Fermer"` (Liquid `close_label`) the name is `Fermer` (D-124).
 8. T5: on a page with no `ui-toast-region`, `await toast("x")` resolves and logs no error.
 9. T5 (CSS): with one toast shown at viewport 1000 by 700 and default tokens, the toast's right edge is 16 px from the viewport's right edge and its bottom edge 16 px from the bottom; in fixture `placement` it is horizontally centred within 1 px and its top edge is 16 px from the top.
 10. T4 (React): hydration of `default` logs no warning.
@@ -416,7 +431,7 @@ None. Commerce elements call `toast()` as specified in `05-commerce.md` and `11-
 ### Evidence and UNVERIFIED
 
 - Evidence: `00-decisions.md` D-013, D-054, D-071, D-083; `ripple/docs/02-html-contract.md` 7.3 entry 2; `ripple/docs/04-elements.md` 10.6 (helper and `ToastOptions`); `uisdk/packages/web/src/toast.ts` (`fromData`: the DOM of one toast); `uisdk/packages/core/src/components/toast/toast-parts.ts`; Chromium 157 run `ripple/docs/research/spikes/components-interactive/u.mjs` with `site/t.html`: a region printed with `side="top" align="center"` plus `data-side`, `data-align`, `popover="manual"`, `aria-label` produced only `style` writes, one same-value `popover` write and the appended `<ol data-slot="toast-list">`; `ripple/docs/04-elements.md` L-5 (measured cost of loading the toast chunk on every page: 19.5 kB gzip, the reason for the load-on-first-call rule).
-- UNVERIFIED (D-108; each gates a test, not the root contract): the rendered DOM and attributes of a live toast (`data-type`, `data-starting-style`, `data-ending-style` on `ui-toast`; the close button's content and name): two attempts to capture them failed for tooling reasons (`w.mjs`), so item 4 of "Behaviour with JavaScript" and the state selectors in `toast.css` come from source reading only. Acceptance tests 4 to 7 and 9 are the gate; when one fails, the selector in `toast.css` is corrected to the attribute UI SDK really writes and the contract of the root does not change. Also UNVERIFIED: replace-by-`id`; the default duration; toasts surviving a Remix morph navigation; WebKit and Gecko (SPIKE-06).
+- UNVERIFIED (D-108; each gates a test, not the root contract): the rendered DOM and attributes of a live toast (`data-starting-style`, `data-ending-style` on `ui-toast`): the enter and exit attributes were not captured, so those state selectors in `toast.css` come from source reading only. Item 4 of "Behaviour with JavaScript", the root's run-time attributes (`role`, `aria-keyshortcuts`, removal and return of `aria-label`) and the close button were MEASURED in Chromium 157 against `@ui-sdk/web` by the feasibility review and re-run by the fixer (D-124). Acceptance tests 4 to 7 and 9 are the gate; when one fails, the selector in `toast.css` is corrected to the attribute UI SDK really writes and the contract of the root does not change. Also UNVERIFIED: replace-by-`id`; the default duration; toasts surviving a Remix morph navigation; WebKit and Gecko (SPIKE-06).
 
 ### Fallback (SPIKE-nn)
 

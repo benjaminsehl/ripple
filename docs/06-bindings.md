@@ -270,6 +270,7 @@ React and Remix bindings share one shape. Differences are listed in T-12.
 | Class prop | `className` on native elements; `class` on custom elements (R-7) | `class` everywhere |
 | Children type | `ReactNode` | `RemixNode` |
 | Attribute spelling on native elements | React names: `tabIndex`, `popoverTarget`, `htmlFor`; but `commandfor`, `command`, `closedby` lowercase (section 6.3) | HTML names, lowercase: `tabindex`, `popovertarget`, `for`, `commandfor`, `command`, `closedby` |
+| The `popover` attribute with the empty value (Popover panel, NavigationMenu panel) | `popover=""` | `popover={true}` (Remix's type is `'auto' \| 'hint' \| 'manual' \| boolean`, so `""` does not type-check; the server prints the bare attribute `popover`, which parses equal to `popover=""`) |
 | Hooks | `useRef`, `useState` (initialiser only), `useElement`, `useCart`, `useRegionHtml`, only in hand-written files | none |
 | Host extras | `suppressHydrationWarning` (R-6) | `data-rmx-key`, `data-rmx-preserve-attrs`, `data-rmx-document` (section 7.3) |
 | Callback and controlled props | D-036 | none (X-7) |
@@ -340,7 +341,7 @@ import "./jsx.generated.ts";
 
 export { useElement } from "./use-element.ts";
 export type { UseElementOptions } from "./use-element.ts";
-export { useCart } from "./hooks.ts";
+export { useCart, useRegionHtml } from "./hooks.ts";
 
 /** Props a caller may add to a component root: every React HTML attribute and handler that the component does not define itself. */
 export type RestProps<Own> = Omit<HTMLAttributes<HTMLElement>, keyof Own | "className" | "children">;
@@ -1055,7 +1056,7 @@ Notes:
 - **X-9** RichText prints its HTML with `innerHTML={unsafeHTML(html)}`, `unsafeHTML` imported from `remix/component` (D-034 item 6). No other binding uses `innerHTML`.
 - **X-10** A region on Remix is a plain element with `data-rp-region="<name>"`, the same markup as in every other host. The `html` refresh strategy is the default. `reloadFrames` and `navigate` are opt-in `configureCommerce` options that the app passes (D-034 item 4, D-090; UNVERIFIED, SPIKE-11; fallback: the two options are removed from the Remix documentation and Remix uses the `html` strategy only). No binding and no blueprint renders a `<Frame>` or imports `Frame`. An app that opts in to `reloadFrames` passes its own `<Frame>` as the children of the region part.
 - **X-11** `ripple.js` is loaded from `public/ripple/` with a plain `<script type="module" src="/ripple/ripple.js">` in the document shell; it MUST NOT be imported by a binding or passed through the Remix asset server (D-034 item 5).
-- **X-12** Attribute names are HTML names in lowercase (`class`, `tabindex`, `for`, `popovertarget`, `commandfor`). Boolean attributes are passed as `true` or as a bare JSX attribute.
+- **X-12** Attribute names are HTML names in lowercase (`class`, `tabindex`, `for`, `popovertarget`, `commandfor`). Native boolean attributes (`disabled`, `hidden`, `open`, `required`, `checked`, `formnovalidate`) and the two Remix attributes `data-rmx-document` and `data-rmx-preserve-dom` are passed as `true` or as a bare JSX attribute. A presence attribute whose name starts with `data-` or `aria-` MUST be written with the value `""` (`data-pending=""`, `data-full-width={fullWidth === true ? "" : undefined}`), never bare and never `true`: Remix prints `true` on those names as `="true"` (`shouldStringifyBooleanAttribute` in `remix/packages/component/src/runtime/core/props.ts`; `ripple/docs/research/remix-3.md` section 2.3).
 
 ### 7.2 `<pkg>/remix`
 
@@ -1124,7 +1125,7 @@ const DIRECTION_STATE = "data-activation-direction";
 
 ### 7.4 Static pattern: Button (generated)
 
-> Copy rule (D-069). The owning component document is normative for Button (`09-components-foundation.md`, section "Button"). Props the code below does not yet print and that the generated file MUST print as doc 09 defines them: `dialog` / `dialog` (only with `href`; prints `data-rp-open="<dialog id>"`), `tooltip` / `tooltip` (prints `aria-describedby="<id>-content"` and `data-slot="tooltip-trigger"`), `formId` / `form_id` (prints the native `form` attribute). The code in this section illustrates the binding PATTERN of this host (file shape, prop handling, guards, attribute order). Where it differs from the owning document, the owning document wins and this section is the defect; the committed file is whatever `pnpm gen` produces from the manifest entry (generated files) or the code in the owning document (hand-written files).
+> Copy rule (D-069). The owning component document is normative for Button (`09-components-foundation.md`, section "Button"). Props the code below does not yet print and that the generated file MUST print as doc 09 defines them: `dialog` / `dialog` (only with `href`; prints `data-rp-open="<dialog id>"`), `tooltip` / `tooltip` (prints `aria-describedby="<id>-content"` and `data-slot="tooltip-trigger"`, and in THIS host also `data-rmx-preserve-attrs="style"` on the `<button>`, because UI SDK writes inline `anchor-name` on the trigger while the tooltip is open; `components/tooltip.md`, D-132), `formId` / `form_id` (prints the native `form` attribute). The code in this section illustrates the binding PATTERN of this host (file shape, prop handling, guards, attribute order). Where it differs from the owning document, the owning document wins and this section is the defect; the committed file is whatever `pnpm gen` produces from the manifest entry (generated files) or the code in the owning document (hand-written files).
 
 `components/button/remix/button.tsx`:
 
@@ -1190,7 +1191,7 @@ export function Button(handle: Handle<ButtonProps>) {
           data-pending={pending === true ? "" : undefined}
           aria-busy={pending === true ? "true" : undefined}
           aria-disabled={disabled === true ? "true" : undefined}
-          tabIndex={disabled === true ? -1 : undefined}
+          tabindex={disabled === true ? -1 : undefined}
           aria-label={rv(ariaLabel)}
         >
           {children}

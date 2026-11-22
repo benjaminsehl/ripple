@@ -182,6 +182,7 @@ Fixtures reference resources as `{ "$resource": "<type>.<name>" }` (D-074; F-4 o
 | `cart.two-lines` | id `gid://shopify/Cart/c1`; total quantity 3; checkout URL `/checkout`; note empty; subtotal 108.00; total 108.00; no discount codes; lines: `line.basic`, and a line id `gid://shopify/CartLine/2?cart=c1` (Liquid key `21:def`), quantity 1, title `Wool Socks`, variant title empty, url `/products/wool-socks?variant=21`, image of `product.sale`, total 12.00, compare-at total 16.00 |
 | `cart.empty` | id null; total quantity 0; checkout URL `/checkout`; note empty; subtotal 0.00; total 0.00; no lines |
 | `cart.discounted` | as `cart.two-lines` with discount code `SAVE10` (applicable), discount amount 10.80, total 97.20 |
+| `cart.line-discounted` | as `cart.two-lines` with discount code `SHIRT5` (applicable) that applies to the first line only, discount amount 5.00, subtotal 103.00, total 103.00. hydrogen: `discountCodes: [{ code: "SHIRT5", applicable: true }]`. Liquid: `cart_level_discount_applications` is EMPTY and the first item has `line_level_discount_allocations: [{ amount: 500, discount_application: { title: "SHIRT5", type: "discount_code" } }]` (D-120) |
 | `filters.basic` | two filters: `Availability` (list; values `In stock` count 8 name `filter.v.availability` value `1` active; `Out of stock` count 2 value `0` not active) and `Price` (price range; names `filter.v.price.gte` / `filter.v.price.lte`; min empty; max `50`); sort options `Featured` (`manual`, selected), `Price, low to high` (`price-ascending`); action `/collections/summer`; current URL `/collections/summer?filter.v.availability=1&filter.v.price.lte=50` |
 | `search.shirt` | terms `shirt`; total 2; results: `product.basic`, `product.sale` |
 
@@ -231,7 +232,7 @@ fragment RippleProductDetail on Product {
     }
   }
   selectedOrFirstAvailableVariant(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) { ...RippleVariant }
-  adjacentVariants(selectedOptions: $selectedOptions) { ...RippleVariant }
+  adjacentVariants(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) { ...RippleVariant }
   media(first: 20) { nodes { __typename id ... on MediaImage { image { ...RippleImage } } } }
   descriptionHtml
 }
@@ -275,7 +276,7 @@ Liquid equivalents (the expression each Liquid binding reads; nothing else may b
 | Search | `search.terms`, `search.performed`, `search.results`, `search.results_count`, `search.filters`, `search.sort_options`, `search.sort_by`, `search.default_sort_by` |
 | Filter | `filter.label`, `filter.type` (`list`, `boolean`, `price_range`), `filter.param_name`, `filter.presentation`, `filter.values`, `filter.active_values`, `filter.url_to_remove`, `filter.min_value`, `filter.max_value`, `filter.range_max`; value: `.label`, `.value`, `.count`, `.active`, `.param_name`, `.url_to_remove`, `.swatch` |
 | Article | `article.title`, `article.url`, `article.excerpt`, `article.published_at`, `article.image` |
-| Cart | `cart.item_count`, `cart.items`, `cart.note`, `cart.items_subtotal_price`, `cart.total_price`, `cart.cart_level_discount_applications` (`.title`, `.type`, `.total_allocated_amount`) |
+| Cart | `cart.item_count`, `cart.items`, `cart.note`, `cart.items_subtotal_price`, `cart.total_price`, `cart.cart_level_discount_applications` (`.title`, `.type`, `.total_allocated_amount`); per line item `line_level_discount_allocations` (each `.discount_application.title`, `.discount_application.type`; D-120) |
 | Cart line | `item.key`, `item.quantity`, `item.product.title`, `item.variant.title`, `item.product.has_only_default_variant`, `item.url`, `item.url_to_remove`, `item.image`, `item.final_line_price`, `item.original_line_price`, `item.properties` |
 | Recommendations | `recommendations.performed?`, `recommendations.products`, `recommendations.products_count`; `routes.product_recommendations_url` |
 | Routes | `routes.cart_url`, `routes.cart_add_url`, `routes.search_url` |
@@ -302,6 +303,7 @@ Liquid subset: the components of this document use only the component scope of D
 - **CV-14 Checker rules.** A component-specific rule is an entry of the manifest key `rules[]` with the keys `id`, `kind` (`requires-ancestor`, `forbids-ancestor`, `requires-descendant`, `forbids-descendant`, `requires-attribute`, `max-count`), `selector`, `target`, `count`, `message`, `fix`. `ripple check` reports a violated rule as RP113 with the rule id in brackets (D-102).
 - **CV-16 Remix cart forms.** Every cart `<form>` printed by a component of this document on the `remix` host (ProductForm fields, CartLine actions, the CartSummary remove form, the CartNote form, the DiscountCode form) and the checkout link print `data-rmx-document` (D-034 item 3). Fixtures do not show it; the canonicaliser removes host extra attributes (D-063).
 - **CV-15 Liquid attributes.** A Liquid binding prints `{{ attributes }}` last on the root (D-035). A root printed by `{% form %}` accepts only `id` and `class` (D-091 item 6). Schema label keys are `t:ripple.<id>.name`, `t:ripple.<id>.<part>_name` and `t:ripple.props.<prop>` (D-038).
+- **CV-17 Cart form `action` (D-118).** On the hydrogen hosts every component that prints a cart `<form>` takes the TSX-only prop `action` (type `url`, default `/api/cart`, manifest `prop.hosts: ["react", "remix"]`; there is no Liquid param, Liquid prints `routes.cart_url` / `routes.cart_add_url`). It is printed as the `action` attribute of every cart form the component prints or passes down: ProductForm (its fields form), CartLines (passes it to each CartLine through the region part `CartLinesList`), CartLine (its actions form), CartSummary (the remove-code forms, through the region part `CartSummaryTotals`), CartNote (its form), DiscountCode (its form), CartDrawer (passes it to its CartLines and CartSummary). The value MUST be the cart endpoint INCLUDING the locale path prefix, the same string as `CommerceOptions.cartEndpoint` (`05-commerce.md` 4.2 and 10.1 rule 7): the blueprints receive it as the prop `cartAction` and pass it to every one of these components. The fixtures keep `action="/api/cart"` (default locale); the form `action` is masked where the component file says so. The `html` host writes the attribute by hand.
 
 ---
 

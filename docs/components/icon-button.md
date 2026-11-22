@@ -124,6 +124,7 @@ Host-owned regions and masks: None.
 | `data-pending`, `aria-busy` | root | server | `pending` is true | `""` and `true`, or absent |
 | `data-rp-open` | `<a>` root | server | `dialog` is set and `href` is set | the dialog id, or absent |
 | `aria-describedby`, `data-slot` | `<button>` root | server | `tooltip` is set and `href` is unset | `<tooltip>-content` and `tooltip-trigger`, or absent |
+| `style` (`anchor-name: --ui-anchor-<n>`) | `<button>` root | element (UI SDK `ui-tooltip`) | `tooltip` is set and `href` is unset; written while the tooltip is open, removed when it closes | absent |
 | `aria-haspopup`, `aria-controls` | `<a>` root | runtime opener listener (`04-elements.md`) | after upgrade, on a link with `data-rp-open` whose target is a `<dialog>` inside a defined `rp-dialog` | absent |
 
 Upgrade allow-list (mutations permitted when the element upgrades): as Button: only the global entry for `a[data-rp-open]` (`aria-haspopup`, `aria-controls`); the IconButton manifest entry has an empty `upgradeAllow[]`.
@@ -194,7 +195,7 @@ The icon is `1.25em` of the root font size: 20 px. Sizes at default dials: `sm` 
 
 - HTML: None.
 - React: `export function IconButton(props: IconButtonProps)`; generated on the Button pattern; renders `<Icon name={icon} />` as its only child; imports `Icon` from `./icon`.
-- Remix: None; imports `Icon` from `./icon.tsx`.
+- Remix: as Button, including `data-rmx-preserve-attrs="style"` on the `<button>` when `tooltip` is set and `href` is unset (D-132); imports `Icon` from `./icon.tsx`.
 - Liquid: `{% block 'icon-button', icon: 'close', aria_label: close_label, command_for: 'size-guide', command: 'close' %}{% endblock %}`; the block renders `{% render 'rp-icon', name: icon %}`. Params `form_id`, `dialog`, `tooltip` as Button. `{{ attributes }}` is printed LAST in the opening tag (D-035). Schema settings: `variant`, `size` (label keys of section 0.5). Locale keys: `ripple.icon-button.name`.
 
 ```tsx

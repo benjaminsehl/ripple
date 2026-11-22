@@ -45,7 +45,7 @@ Default body (printed when the caller passes no children): the quantity part con
 | `product` | `product` | object | `RippleProduct & { selectedOrFirstAvailableVariant?: RippleVariant \| null }` / Liquid `product` drop | none | yes | no | default variant; Liquid `{% form 'product', product %}` |
 | `variant` | `variant` | object | `RippleVariant` / Liquid `variant` drop | TSX: `product.selectedOrFirstAvailableVariant`; Liquid: `product.selected_or_first_available_variant` | no | no | `value` of the variant field; availability of the default body |
 | `acceleratedCheckout` | `accelerated_checkout` | boolean | `true false` | `false` | no | no | the accelerated part (opaque platform markup, D-050) |
-| `action` | none | url | route of `createCartServerHandlers()` | `/api/cart` | no | no | `action` on the `<form>`; TSX hosts only (Liquid: `routes.cart_add_url`, printed by `{% form %}`) |
+| `action` | none | url | route of `createCartServerHandlers()`, including the locale path prefix (for example `/fr-ca/api/cart`; CV-17, D-118) | `/api/cart` | no | no | `action` on the `<form>`; TSX hosts only (Liquid: `routes.cart_add_url`, printed by `{% form %}`) |
 
 ### Content model
 
@@ -134,8 +134,9 @@ Upgrade allow-list (mutations permitted when the element upgrades): `{ "select":
 1. On `submit` of the form, when `getCommerce().usable` is true and the submitter is `null` or matches `[data-rp-part="submit"]`: `preventDefault()`; a second submit while `data-pending` is present is ignored.
 2. The root gets `data-pending=""` and `aria-busy="true"`; the error part is emptied and hidden.
 3. The form is sent through `getCommerce().submitCart(form, submitter, event)`.
-4. On success: `Added to cart` is announced; `action` is dispatched on the root; unless a listener calls `preventDefault()`, `getCommerce().openCart()` opens the CartDrawer (or navigates to the cart page when no drawer exists).
-5. On failure: the error part shows the message and loses `hidden`; nothing is announced through `announce()` (the part has `role="alert"`).
+4. On success (no error and no warning recorded since step 2): `action` is dispatched on the root; unless a listener calls `preventDefault()`, `getCommerce().openCart()` opens the CartDrawer (or navigates to the cart page when no drawer exists); then `Added to cart` is announced.
+5. On failure (a `userErrors` entry or a network error recorded since step 2; `hasUserError(state, started)`): the error part shows `errorMessage(state, "add") ?? strings.error` and loses `hidden`; nothing is announced through `announce()` (the part has `role="alert"`). Scope `"add"` includes messages Hydrogen keyed to an existing cart line (the variant was already in the cart), whether or not that line is rendered on the page (D-119).
+5a. Warnings only (the store recorded warnings and no `userErrors`; the cart DID change): the error part shows the warning text as in item 5, AND `action` is dispatched and the cart opens as in item 4; `Added to cart` is not announced (D-119).
 6. `data-pending` and `aria-busy` are removed in both cases.
 7. A submit by a control without `data-rp-part="submit"` (the accelerated checkout buttons) is NOT intercepted.
 8. The full sequence is specified in [05-commerce.md](05-commerce.md) section 7.2.
@@ -180,7 +181,7 @@ Required rules: `.rp-product-form-fields { display: flex; flex-direction: column
 
 ### Host notes
 
-- HTML: use the hydrogen dialect of the fixture; `action` MUST be the cart endpoint.
+- HTML: use the hydrogen dialect of the fixture; `action` MUST be the cart endpoint including the locale path prefix of the page (CV-17).
 - React: `ProductForm(props: { id: string; product: ProductFormProduct; variant?: RippleVariant | null; acceleratedCheckout?: boolean; action?: string; onAction?: (value: "add", detail: { merchandiseId: string; quantity: number }) => void; className?: string; children?: ReactNode })`. `suppressHydrationWarning` on the root, the form and the error part ([06-bindings.md](06-bindings.md) section 6.7). The accelerated part is `<div className="rp-product-form-accelerated" data-agent-confirm={strings?.agentConfirmAccelerated ?? "Buys this product now with an express checkout"} dangerouslySetInnerHTML={{ __html: renderShopPayButton({ variants: [{ id: variant.id, quantity: 1 }], disabled: !variant.availableForSale }) }} />` with `renderShopPayButton` from `@shopify/hydrogen` (`hydrogen/packages/hydrogen/src/core/shop-pay/shop-pay.ts`; a value import allowed by D-094, CV-9); `strings?: { added?: string; quantity?: string; agentConfirmAccelerated?: string }` is a prop (CV-2); it is not printed when there is no variant.
 - Remix: `data-rmx-key="<id>"` on the root; `data-rmx-document` on the `<form>`; `data-rmx-preserve-attrs="hidden"` on the error part; `data-rmx-preserve-attrs="data-pending aria-busy"` on the root ([06-bindings.md](06-bindings.md) section 7.7).
 - Liquid: `{% form 'product', product, id: id, class: 'rp-product-form-fields' %}`; variant field `name="id" value="{{ variant.id }}"`; the default body calls `{% render 'rp-quantity-input' %}` and `{% render 'rp-add-to-cart-button' %}`; the accelerated part is `<div class="rp-product-form-accelerated" data-agent-confirm="{{ 'ripple.product-form.agent_confirm_accelerated' | t }}">{{ form | payment_button }}</div>` (the `payment_button` filter is in the component scope of the Liquid subset, D-097). The root `rp-product-form` is printed by the binding and prints `{{ attributes }}` last (D-035); the fields part is printed by `{% form %}` and accepts only `id` and `class` (D-091 item 6). A caller-supplied body is rendered before the block runs and cannot read `form`. No schema settings. Locale keys: `ripple.product-form.added` = `Added to cart`; `ripple.product-form.quantity` = `Quantity`; `ripple.product-form.agent_confirm_accelerated` = `Buys this product now with an express checkout`.
@@ -226,6 +227,7 @@ RP104 (`id`, `product`), RP301, RP305 (dialect fields), RP110. Manifest `rules[]
 5. Tier 5: a failing add shows the message in the error part (`hidden` removed) and announces nothing.
 6. Tier 6 and 7 (mock.shop): with scripting disabled, submitting the form adds the variant and the next page shows the cart count increased by the quantity.
 7. Tier 4 (React): hydration with either script order logs no hydration error.
+8. Tier 5: [05-commerce.md](05-commerce.md) test C-36 (a line-keyed `userErrors` message is shown in the product form error part; a warnings-only answer shows the text and still opens the cart; D-119).
 
 ### Evidence and UNVERIFIED
 
