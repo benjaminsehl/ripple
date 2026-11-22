@@ -1,0 +1,24 @@
+@import 'tailwindcss';
+@import '../ripple/tokens.css' layer(base);
+@import '../ripple/ripple.css' layer(components);
+
+@source '../';
+
+/* Tailwind reads Ripple's tokens, so escape-hatch utilities stay on-theme:
+   bg-accent, text-muted, rounded-rp, font-display, and p-4 == Ripple's space-4. */
+@theme inline {
+  --color-bg: var(--rp-bg);
+  --color-fg: var(--rp-fg);
+  --color-accent: var(--rp-accent);
+  --color-accent-fg: var(--rp-accent-fg);
+  --color-highlight: var(--rp-highlight);
+  --color-muted: var(--rp-muted);
+  --color-subtle: var(--rp-subtle);
+  --color-surface: var(--rp-surface);
+  --color-border: var(--rp-border);
+  --font-display: var(--rp-font-display);
+  --font-body: var(--rp-font-body);
+  --radius-rp: var(--rp-radius);
+  --radius-rp-lg: var(--rp-radius-lg);
+  --spacing: calc(0.25rem * var(--rp-density));
+}

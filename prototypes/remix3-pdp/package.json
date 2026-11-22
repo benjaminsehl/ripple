@@ -1,0 +1,26 @@
+{
+  "name": "remix3-pdp",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "css": "tailwindcss -i app/styles/app.css -o public/app.css",
+    "dev": "npm run css && NODE_ENV=development node --watch --import remix/node-tsx server.ts",
+    "hmr": "NODE_ENV=development node hmr.ts",
+    "start": "NODE_ENV=production node --import remix/node-tsx server.ts",
+    "test": "NODE_ENV=test remix test",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=24.3.0"
+  },
+  "dependencies": {
+    "@shopify/hydrogen": "^2026.10.3",
+    "remix": "^3.3.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.5",
+    "@types/node": "latest",
+    "tailwindcss": "^4.3.5",
+    "typescript": "latest"
+  }
+}
