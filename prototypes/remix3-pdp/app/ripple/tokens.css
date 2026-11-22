@@ -1,0 +1,99 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   Ripple tokens. These 12 variables are the whole theming surface.
+   Everything else (borders, muted text, surfaces, spacing, type scale) is
+   derived from them, so a theme is a dozen lines and can't drift off-system.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+:root,
+[data-theme='linen'] {
+  --rp-bg: #f5f1ea;              /* page background */
+  --rp-fg: #1d1a16;              /* text */
+  --rp-accent: #1d1a16;          /* primary buttons, focus, selected */
+  --rp-accent-fg: #f5f1ea;       /* text on accent */
+  --rp-highlight: #a4532f;       /* sale prices, badges */
+  --rp-font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --rp-font-display: 'Fraunces', ui-serif, Georgia, serif;
+  --rp-display-weight: 400;
+  --rp-display-tracking: -0.025em;
+  --rp-display-case: none;
+  --rp-radius: 10px;             /* 0 = sharp, 999px = pill */
+  --rp-density: 1;               /* 0.85 = tight, 1.15 = airy */
+}
+
+[data-theme='mono'] {
+  --rp-bg: #ffffff;
+  --rp-fg: #0b0b0b;
+  --rp-accent: #0b0b0b;
+  --rp-accent-fg: #ffffff;
+  --rp-highlight: #ff3d00;
+  --rp-font-body: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --rp-font-display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  --rp-display-weight: 800;
+  --rp-display-tracking: -0.01em;
+  --rp-display-case: uppercase;
+  --rp-radius: 0px;
+  --rp-density: 0.85;
+}
+
+[data-theme='bloom'] {
+  --rp-bg: #fff6ef;
+  --rp-fg: #2b1740;
+  --rp-accent: #6a2bd9;
+  --rp-accent-fg: #ffffff;
+  --rp-highlight: #ff4f7b;
+  --rp-font-body: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --rp-font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --rp-display-weight: 700;
+  --rp-display-tracking: -0.035em;
+  --rp-display-case: none;
+  --rp-radius: 22px;
+  --rp-density: 1.12;
+}
+
+/* Derived tokens: never set these in a theme. */
+:root,
+[data-theme] {
+  --rp-surface: color-mix(in oklab, var(--rp-bg) 70%, white);
+  --rp-subtle: color-mix(in oklab, var(--rp-fg) 5%, var(--rp-bg));
+  --rp-border: color-mix(in oklab, var(--rp-fg) 14%, var(--rp-bg));
+  --rp-border-strong: color-mix(in oklab, var(--rp-fg) 35%, var(--rp-bg));
+  --rp-muted: color-mix(in oklab, var(--rp-fg) 62%, var(--rp-bg));
+  --rp-accent-hover: color-mix(in oklab, var(--rp-accent) 86%, var(--rp-bg));
+
+  --rp-radius-sm: calc(var(--rp-radius) * 0.6);
+  --rp-radius-lg: calc(var(--rp-radius) * 1.6);
+  --rp-radius-control: min(var(--rp-radius), 999px);
+
+  /* Space scale: --rp-space-N = N × 4px × density */
+  --rp-space-0: 0px;
+  --rp-space-1: calc(0.25rem * var(--rp-density));
+  --rp-space-2: calc(0.5rem * var(--rp-density));
+  --rp-space-3: calc(0.75rem * var(--rp-density));
+  --rp-space-4: calc(1rem * var(--rp-density));
+  --rp-space-5: calc(1.25rem * var(--rp-density));
+  --rp-space-6: calc(1.5rem * var(--rp-density));
+  --rp-space-8: calc(2rem * var(--rp-density));
+  --rp-space-10: calc(2.5rem * var(--rp-density));
+  --rp-space-12: calc(3rem * var(--rp-density));
+  --rp-space-16: calc(4rem * var(--rp-density));
+  --rp-space-20: calc(5rem * var(--rp-density));
+  --rp-space-24: calc(6rem * var(--rp-density));
+
+  /* Type scale (fluid at the top end) */
+  --rp-text-xs: 0.75rem;
+  --rp-text-sm: 0.875rem;
+  --rp-text-md: 1rem;
+  --rp-text-lg: 1.125rem;
+  --rp-text-xl: 1.375rem;
+  --rp-text-2xl: clamp(1.5rem, 1.2rem + 1vw, 1.875rem);
+  --rp-text-3xl: clamp(1.875rem, 1.4rem + 1.6vw, 2.5rem);
+  --rp-text-4xl: clamp(2.25rem, 1.5rem + 2.6vw, 3.5rem);
+  --rp-text-5xl: clamp(2.75rem, 1.6rem + 4vw, 5rem);
+
+  --rp-control-h-sm: calc(2.25rem * var(--rp-density));
+  --rp-control-h-md: calc(2.75rem * var(--rp-density));
+  --rp-control-h-lg: calc(3.25rem * var(--rp-density));
+
+  --rp-shadow-lg: 0 24px 60px -20px color-mix(in oklab, var(--rp-fg) 35%, transparent);
+  --rp-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}

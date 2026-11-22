@@ -1,0 +1,93 @@
+/*
+  A theme is only knobs. Put data-theme on <html> for the whole store, or on
+  any element to theme one region. Every derived token recomputes there.
+*/
+
+@layer ripple.tokens {
+  [data-theme="ripple"] {
+    --rp-paper: #ffffff;
+    --rp-ink: #1b1c1f;
+    --rp-brand: #1b1c1f;
+    --rp-highlight: #c8323f;
+    --rp-radius: 8px;
+    --rp-elevation: 0.6;
+    --rp-density: 1;
+    --rp-font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+    --rp-font-display: "Inter Tight", "Inter", ui-sans-serif, system-ui, sans-serif;
+    --rp-display-weight: 600;
+    --rp-display-tracking: -0.02em;
+    --rp-display-case: none;
+    --rp-scale: 1.25;
+  }
+
+  /* Quiet luxury: square, airy, high-contrast serif display. */
+  [data-theme="atelier"] {
+    --rp-paper: #ffffff;
+    --rp-ink: #141414;
+    --rp-brand: #141414;
+    --rp-highlight: #8a6a32;
+    --rp-radius: 0px;
+    --rp-elevation: 0;
+    --rp-density: 1.2;
+    --rp-font-body: "Jost", ui-sans-serif, system-ui, sans-serif;
+    --rp-font-display: "Cormorant Garamond", ui-serif, Georgia, serif;
+    --rp-display-weight: 500;
+    --rp-display-tracking: -0.01em;
+    --rp-display-case: none;
+    --rp-scale: 1.333;
+  }
+
+  /* Outdoor goods: tight, sturdy, uppercase display, small radius. */
+  [data-theme="trail"] {
+    --rp-paper: #eef0ea;
+    --rp-ink: #1c2620;
+    --rp-brand: #2d5b43;
+    --rp-highlight: #d4612a;
+    --rp-radius: 3px;
+    --rp-elevation: 0.25;
+    --rp-density: 0.92;
+    --rp-font-body: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    --rp-font-display: "Archivo", ui-sans-serif, system-ui, sans-serif;
+    --rp-display-weight: 800;
+    --rp-display-tracking: 0.005em;
+    --rp-display-case: uppercase;
+    --rp-scale: 1.2;
+  }
+
+  /* Playful direct-to-consumer: soft, round, loud. */
+  [data-theme="sorbet"] {
+    --rp-paper: #fff5ef;
+    --rp-ink: #3a1236;
+    --rp-brand: #ff5a36;
+    --rp-on-brand: #ffffff;
+    --rp-highlight: #6b3ad6;
+    --rp-radius: 18px;
+    --rp-elevation: 0.85;
+    --rp-density: 1.05;
+    --rp-font-body: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+    --rp-font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+    --rp-display-weight: 800;
+    --rp-display-tracking: -0.035em;
+    --rp-display-case: none;
+    --rp-scale: 1.25;
+  }
+
+  /* Dark audio/tech store. */
+  [data-theme="midnight"] {
+    color-scheme: dark;
+    --rp-paper: #111317;
+    --rp-ink: #e9e7e1;
+    --rp-brand: #a9c4ff;
+    --rp-highlight: #ffb45c;
+    --rp-brand-on-inverse: #111317;
+    --rp-radius: 12px;
+    --rp-elevation: 1;
+    --rp-density: 1;
+    --rp-font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+    --rp-font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+    --rp-display-weight: 600;
+    --rp-display-tracking: -0.025em;
+    --rp-display-case: none;
+    --rp-scale: 1.25;
+  }
+}

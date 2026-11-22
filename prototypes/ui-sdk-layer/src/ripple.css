@@ -1,0 +1,821 @@
+/*
+  Ripple: a visual layer for UI SDK.
+
+  UI SDK gives behavior, accessibility and a plain default look. Ripple adds:
+    1. Knobs      ~12 custom properties that describe a brand.
+    2. Tokens     everything else, derived from the knobs, and mapped onto
+                  UI SDK's own --ui-* variables so every UI SDK part follows.
+    3. Parts      refinements keyed on UI SDK's data-slot and state attributes,
+                  plus a closed set of data-variant / data-size values.
+    4. Primitives the few things a storefront needs that UI SDK doesn't ship
+                  (heading, text, price, badge, card, media), using the same
+                  data-slot convention.
+
+  Load order. Put this line first so UI SDK sits under Ripple and Tailwind
+  utilities sit over both:
+
+    @layer theme, base, ui-sdk, ripple, components, utilities;
+*/
+
+@layer ui-sdk, ripple.tokens, ripple.base, ripple.parts, ripple.primitives;
+
+/* ------------------------------------------------------------------------ */
+/* 1. Knobs. A theme sets only these. Defaults are Ripple's own look.        */
+/* ------------------------------------------------------------------------ */
+
+@layer ripple.tokens {
+  :root {
+    /* Color */
+    --rp-paper: #ffffff;           /* page background */
+    --rp-ink: #1b1c1f;             /* text and lines are mixed from this */
+    --rp-brand: #1b1c1f;           /* primary actions, focus, checked */
+    --rp-highlight: #c8323f;       /* sale prices, ratings, badges */
+    /* --rp-on-brand: optional; computed for contrast when unset */
+
+    /* Shape */
+    --rp-radius: 8px;              /* 0 is square; buttons follow it */
+    --rp-elevation: 0.6;           /* 0 is flat, 1 is lifted */
+
+    /* Space */
+    --rp-density: 1;               /* 0.85 compact, 1.2 airy */
+
+    /* Type */
+    --rp-font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+    --rp-font-display: "Inter Tight", "Inter", ui-sans-serif, system-ui, sans-serif;
+    --rp-display-weight: 600;
+    --rp-display-tracking: -0.02em;
+    --rp-display-case: none;       /* or uppercase */
+    --rp-text: 1rem;               /* body size */
+    --rp-scale: 1.25;              /* heading ratio */
+  }
+
+  /*
+    2. Derived tokens. Declared on every element that may change a knob, so a
+    section with data-theme or data-surface recomputes its own palette.
+  */
+  :root,
+  [data-theme],
+  [data-surface] {
+    --rp-on-brand-auto: oklch(from var(--rp-brand) clamp(0, (0.7 - l) * 1000, 1) 0 0);
+    --rp-on-brand-color: var(--rp-on-brand, var(--rp-on-brand-auto));
+
+    --rp-surface: color-mix(in oklab, var(--rp-ink) 4%, var(--rp-paper));
+    --rp-surface-strong: color-mix(in oklab, var(--rp-ink) 9%, var(--rp-paper));
+    --rp-ink-subtle: color-mix(in oklab, var(--rp-ink) 66%, var(--rp-paper));
+    --rp-ink-faint: color-mix(in oklab, var(--rp-ink) 46%, var(--rp-paper));
+    --rp-line: color-mix(in oklab, var(--rp-ink) 13%, var(--rp-paper));
+    --rp-line-strong: color-mix(in oklab, var(--rp-ink) 30%, var(--rp-paper));
+    --rp-brand-soft: color-mix(in oklab, var(--rp-brand) 12%, var(--rp-paper));
+    --rp-brand-hover: color-mix(in oklab, var(--rp-brand) 86%, var(--rp-paper));
+    --rp-on-highlight: oklch(from var(--rp-highlight) clamp(0, (0.7 - l) * 1000, 1) 0 0);
+    --rp-focus: color-mix(in oklab, var(--rp-brand) 40%, transparent);
+
+    --rp-critical: color-mix(in oklab, #d4282f 82%, var(--rp-ink));
+    --rp-positive: color-mix(in oklab, #1f8a4c 82%, var(--rp-ink));
+
+    --rp-unit: calc(0.25rem * var(--rp-density));
+
+    --rp-text-xs: calc(var(--rp-text) * 0.75);
+    --rp-text-sm: calc(var(--rp-text) * 0.875);
+    --rp-text-md: var(--rp-text);
+    --rp-text-lg: calc(var(--rp-text) * var(--rp-scale));
+    --rp-text-xl: calc(var(--rp-text) * pow(var(--rp-scale), 2));
+    --rp-text-2xl: calc(var(--rp-text) * pow(var(--rp-scale), 3));
+    --rp-text-3xl: calc(var(--rp-text) * pow(var(--rp-scale), 4));
+    --rp-text-4xl: calc(var(--rp-text) * pow(var(--rp-scale), 5));
+    --rp-text-5xl: calc(var(--rp-text) * pow(var(--rp-scale), 6));
+
+    --rp-radius-sm: calc(var(--rp-radius) * 0.5);
+    --rp-radius-lg: calc(var(--rp-radius) * 1.6);
+    --rp-radius-full: calc(var(--rp-radius) * 999);
+
+    --rp-shadow-sm: 0 1px 2px oklch(0 0 0 / calc(0.08 * var(--rp-elevation)));
+    --rp-shadow-md:
+      0 1px 2px oklch(0 0 0 / calc(0.06 * var(--rp-elevation))),
+      0 8px 24px -10px oklch(0 0 0 / calc(0.22 * var(--rp-elevation)));
+    --rp-shadow-lg:
+      0 2px 6px oklch(0 0 0 / calc(0.06 * var(--rp-elevation))),
+      0 24px 60px -16px oklch(0 0 0 / calc(0.32 * var(--rp-elevation)));
+
+    /* UI SDK reads these, so its 55 components follow the knobs. */
+    --ui-background: var(--rp-paper);
+    --ui-foreground: var(--rp-ink);
+    --ui-muted: var(--rp-surface);
+    --ui-muted-foreground: var(--rp-ink-subtle);
+    --ui-border: var(--rp-line);
+    --ui-input: var(--rp-line-strong);
+    --ui-primary: var(--rp-brand);
+    --ui-primary-foreground: var(--rp-on-brand-color);
+    --ui-destructive: var(--rp-critical);
+    --ui-ring: var(--rp-focus);
+    --ui-ring-border: var(--rp-brand);
+    --ui-overlay: color-mix(in oklab, var(--rp-ink) 36%, transparent);
+    --ui-shadow: var(--rp-shadow-md);
+    --ui-radius: var(--rp-radius);
+    --ui-spacing: var(--rp-unit);
+    --ui-font-size: var(--rp-text-sm);
+    --ui-line-height: 1.55;
+    --ui-font-sans: var(--rp-font-body);
+  }
+
+  /*
+    Surface palettes, computed once per theme and inherited, so a
+    data-surface section can swap to them without a cycle.
+  */
+  :root,
+  [data-theme] {
+    --rp-x-muted-paper: color-mix(in oklab, var(--rp-ink) 4%, var(--rp-paper));
+    --rp-x-inverse-paper: var(--rp-ink);
+    --rp-x-inverse-ink: var(--rp-paper);
+    --rp-x-inverse-brand: var(--rp-brand-on-inverse, var(--rp-paper));
+    --rp-x-brand-paper: var(--rp-brand);
+    --rp-x-brand-ink: var(--rp-on-brand-color);
+  }
+
+  [data-surface="muted"] {
+    --rp-paper: var(--rp-x-muted-paper);
+  }
+
+  [data-surface="inverse"] {
+    --rp-paper: var(--rp-x-inverse-paper);
+    --rp-ink: var(--rp-x-inverse-ink);
+    --rp-brand: var(--rp-x-inverse-brand);
+    --rp-on-brand: initial;
+  }
+
+  [data-surface="brand"] {
+    --rp-paper: var(--rp-x-brand-paper);
+    --rp-ink: var(--rp-x-brand-ink);
+    --rp-brand: var(--rp-x-brand-ink);
+    --rp-on-brand: initial;
+  }
+}
+
+/* ------------------------------------------------------------------------ */
+/* Base: a themed region paints itself.                                      */
+/* ------------------------------------------------------------------------ */
+
+@layer ripple.base {
+  :where(html[data-theme]) body,
+  :where([data-theme]:not(html), [data-surface]) {
+    background: var(--rp-paper);
+    color: var(--rp-ink);
+    font-family: var(--rp-font-body);
+    font-size: var(--rp-text-md);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :where([data-theme], [data-surface]) :where(img, svg) {
+    max-width: 100%;
+  }
+
+  :where([data-theme], [data-surface]) a {
+    color: inherit;
+    text-decoration-color: var(--rp-line-strong);
+    text-underline-offset: 0.2em;
+  }
+
+  :where([data-theme], [data-surface]) :focus-visible {
+    outline: 3px solid var(--rp-focus);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-theme], [data-surface]) * {
+      transition-duration: 0s !important;
+      animation-duration: 0s !important;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------------ */
+/* 3. Parts: UI SDK, tuned for storefronts.                                  */
+/* ------------------------------------------------------------------------ */
+
+/* @parts-start */
+@layer ripple.parts {
+  /* Buttons and every trigger UI SDK draws like one. */
+  :is(
+    [data-slot="button"],
+    [data-slot="toggle"],
+    [data-slot="dialog-trigger"],
+    [data-slot="dialog-close"],
+    [data-slot="drawer-trigger"],
+    [data-slot="drawer-close"],
+    [data-slot="popover-trigger"],
+    [data-slot="menu-trigger"]
+  ) {
+    --rp-h: 11;
+    height: calc(var(--rp-unit) * var(--rp-h));
+    padding-inline: calc(var(--rp-unit) * 5);
+    gap: calc(var(--rp-unit) * 2);
+    border-color: var(--rp-line-strong);
+    border-radius: var(--rp-radius);
+    font-size: var(--rp-text-sm);
+    font-weight: 600;
+    letter-spacing: 0.005em;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s, scale 0.1s;
+
+    &:active:not([data-disabled]) {
+      scale: 0.985;
+    }
+
+    &[data-size="sm"] {
+      --rp-h: 8;
+      padding-inline: calc(var(--rp-unit) * 3);
+      font-size: var(--rp-text-xs);
+    }
+
+    &[data-size="lg"] {
+      --rp-h: 13;
+      padding-inline: calc(var(--rp-unit) * 7);
+      font-size: var(--rp-text-md);
+    }
+
+    &[data-variant="solid"] {
+      border-color: var(--rp-brand);
+      background: var(--rp-brand);
+      color: var(--rp-on-brand-color);
+
+      &:hover:not([data-disabled]) {
+        border-color: var(--rp-brand-hover);
+        background: var(--rp-brand-hover);
+      }
+    }
+
+    &[data-variant="soft"] {
+      border-color: transparent;
+      background: var(--rp-brand-soft);
+      color: color-mix(in oklab, var(--rp-brand) 70%, var(--rp-ink));
+
+      &:hover:not([data-disabled]) {
+        background: color-mix(in oklab, var(--rp-brand) 20%, var(--rp-paper));
+      }
+    }
+
+    &[data-variant="ghost"] {
+      border-color: transparent;
+      background: transparent;
+
+      &:hover:not([data-disabled]) {
+        background: var(--rp-surface);
+      }
+    }
+
+    &[data-variant="link"] {
+      height: auto;
+      padding: 0;
+      border: 0;
+      background: none;
+      text-decoration: underline;
+      text-decoration-color: var(--rp-line-strong);
+      text-underline-offset: 0.25em;
+
+      &:hover:not([data-disabled]) {
+        background: none;
+        text-decoration-color: currentColor;
+      }
+    }
+
+    /* Icon-only: square at any size. */
+    &[aria-label]:has(> svg:only-child) {
+      width: calc(var(--rp-unit) * var(--rp-h));
+      padding: 0;
+    }
+
+    &[data-size="lg"] > svg {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+
+    &[data-pending] {
+      cursor: progress;
+    }
+  }
+
+  :is([data-slot="button"]):not([data-pending]) [data-show="pending"],
+  [data-slot="button"][data-pending] [data-show="idle"] {
+    display: none;
+  }
+
+  [data-slot="toggle"][data-pressed] {
+    border-color: var(--rp-ink);
+    background: var(--rp-surface);
+  }
+
+  /* Text fields. */
+  :is(
+    [data-slot="input"],
+    [data-slot="textarea"],
+    [data-slot="select-trigger"],
+    [data-slot="combobox-input"]
+  ) {
+    min-height: calc(var(--rp-unit) * 11);
+    padding-inline: calc(var(--rp-unit) * 3.5);
+    border-color: var(--rp-line-strong);
+    border-radius: var(--rp-radius);
+    background: var(--rp-paper);
+    font-size: var(--rp-text-sm);
+
+    &:focus-visible {
+      border-color: var(--rp-brand);
+      outline: 3px solid var(--rp-focus);
+      outline-offset: 0;
+    }
+
+    &::placeholder {
+      color: var(--rp-ink-faint);
+    }
+  }
+
+  [data-slot="field-label"] {
+    font-size: var(--rp-text-sm);
+    font-weight: 600;
+  }
+
+  :is([data-slot="field-description"], [data-slot="field-error"]) {
+    font-size: var(--rp-text-xs);
+  }
+
+  /* Checkbox, radio and switch labels read at body size. */
+  :is(label, [data-slot="label"]):has(
+    > :is([data-slot="checkbox"], [data-slot="radio"], [data-slot="switch"])
+  ) {
+    gap: calc(var(--rp-unit) * 2.5);
+    font-size: var(--rp-text-sm);
+  }
+
+  :is([data-slot="checkbox"], [data-slot="radio"]) {
+    width: 1.125rem;
+    height: 1.125rem;
+    border-color: var(--rp-line-strong);
+  }
+
+  /*
+    Option pickers. One radio group, three looks:
+      data-variant="chips"     size, length, capacity
+      data-variant="swatches"  color, with style="--swatch: <color>" per label
+      data-variant="cards"     purchase options, shipping speed
+  */
+  [data-slot="radio-group"]:is([data-variant="chips"], [data-variant="swatches"]) {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: calc(var(--rp-unit) * 2);
+
+    & > label {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      cursor: pointer;
+      transition: box-shadow 0.15s, border-color 0.15s, background-color 0.15s;
+
+      /* The radio still owns focus, keyboard and form value; it just fills the label. */
+      & > [data-slot="radio"] {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        border: 0;
+        border-radius: inherit;
+        background: transparent;
+        opacity: 0;
+      }
+
+      &:has(> [data-slot="radio"]:focus-visible) {
+        outline: 3px solid var(--rp-focus);
+        outline-offset: 2px;
+      }
+
+      &:has(> [data-slot="radio"][data-disabled]) {
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  [data-slot="radio-group"][data-variant="chips"] > label {
+    min-width: calc(var(--rp-unit) * 12);
+    min-height: calc(var(--rp-unit) * 10);
+    padding-inline: calc(var(--rp-unit) * 4);
+    border: 1px solid var(--rp-line-strong);
+    border-radius: var(--rp-radius);
+    background: var(--rp-paper);
+    font-size: var(--rp-text-sm);
+    font-weight: 500;
+
+    &:hover {
+      border-color: var(--rp-ink);
+    }
+
+    &:has(> [data-slot="radio"][data-checked]) {
+      border-color: var(--rp-ink);
+      box-shadow: inset 0 0 0 1px var(--rp-ink);
+      font-weight: 600;
+    }
+
+    &:has(> [data-slot="radio"][data-disabled]) {
+      border-style: dashed;
+      color: var(--rp-ink-faint);
+      text-decoration: line-through;
+    }
+  }
+
+  [data-slot="radio-group"][data-variant="swatches"] > label {
+    width: calc(var(--rp-unit) * 9);
+    height: calc(var(--rp-unit) * 9);
+    border-radius: var(--rp-swatch-radius, var(--rp-radius-full));
+    background: var(--swatch, var(--rp-surface));
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--rp-ink) 18%, transparent);
+    font-size: 0;
+
+    &:has(> [data-slot="radio"][data-checked]) {
+      box-shadow:
+        inset 0 0 0 1px color-mix(in oklab, var(--rp-ink) 18%, transparent),
+        0 0 0 2px var(--rp-paper),
+        0 0 0 4px var(--rp-ink);
+    }
+
+    /* Sold out: a diagonal strike. */
+    &:has(> [data-slot="radio"][data-disabled]) {
+      background:
+        linear-gradient(to top right, transparent calc(50% - 1px), var(--rp-paper) calc(50% - 1px), var(--rp-paper) calc(50% + 1px), transparent calc(50% + 1px)),
+        var(--swatch, var(--rp-surface));
+      opacity: 0.55;
+    }
+  }
+
+  [data-slot="radio-group"][data-variant="cards"] {
+    gap: calc(var(--rp-unit) * 2);
+
+    & > label {
+      display: flex;
+      align-items: flex-start;
+      gap: calc(var(--rp-unit) * 3);
+      padding: calc(var(--rp-unit) * 4);
+      border: 1px solid var(--rp-line-strong);
+      border-radius: var(--rp-radius);
+      cursor: pointer;
+      transition: border-color 0.15s, background-color 0.15s;
+
+      &:has(> [data-slot="radio"][data-checked]) {
+        border-color: var(--rp-brand);
+        background: var(--rp-brand-soft);
+        box-shadow: inset 0 0 0 1px var(--rp-brand);
+      }
+    }
+  }
+
+  /* Quantity stepper: one outlined box. */
+  [data-slot="number-input-group"] {
+    align-items: stretch;
+    width: fit-content;
+    border: 1px solid var(--rp-line-strong);
+    border-radius: var(--rp-radius);
+    background: var(--rp-paper);
+    overflow: hidden;
+
+    &:has(:focus-visible) {
+      border-color: var(--rp-brand);
+      outline: 3px solid var(--rp-focus);
+    }
+  }
+
+  :is([data-slot="number-input-decrement"], [data-slot="number-input-increment"]) {
+    width: calc(var(--rp-unit) * 11);
+    height: calc(var(--rp-unit) * 11);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--rp-ink-subtle);
+
+    &:hover:not([data-disabled]) {
+      background: var(--rp-surface);
+      color: var(--rp-ink);
+    }
+
+    &:focus-visible {
+      outline: 0;
+      background: var(--rp-surface);
+    }
+  }
+
+  [data-slot="number-input-control"] {
+    width: calc(var(--rp-unit) * 11);
+    height: calc(var(--rp-unit) * 11);
+    margin: 0;
+    border: 0;
+    background: transparent;
+    font-size: var(--rp-text-sm);
+    font-weight: 600;
+
+    &:focus-visible {
+      outline: 0;
+    }
+  }
+
+  [data-size="sm"] > [data-slot="number-input-group"] {
+    & :is([data-slot="number-input-decrement"], [data-slot="number-input-increment"], [data-slot="number-input-control"]) {
+      width: calc(var(--rp-unit) * 8);
+      height: calc(var(--rp-unit) * 8);
+      --ui-icon-size: 0.75rem;
+    }
+
+    & [data-slot="number-input-control"] {
+      font-size: var(--rp-text-xs);
+    }
+  }
+
+  /* Accordion: full width, display-face triggers. */
+  [data-slot="accordion"] {
+    max-width: none;
+    border-top-color: var(--rp-line);
+  }
+
+  [data-slot="accordion-item"] {
+    border-bottom-color: var(--rp-line);
+  }
+
+  [data-slot="accordion-trigger"] {
+    min-height: calc(var(--rp-unit) * 14);
+    font-size: var(--rp-text-md);
+    font-weight: 600;
+  }
+
+  [data-slot="accordion-panel"] {
+    padding-bottom: calc(var(--rp-unit) * 5);
+    color: var(--rp-ink-subtle);
+    font-size: var(--rp-text-sm);
+    line-height: 1.65;
+  }
+
+  /* Tabs: brand underline. */
+  [data-slot="tabs-list"] {
+    gap: calc(var(--rp-unit) * 5);
+    border-bottom-color: var(--rp-line);
+  }
+
+  [data-slot="tabs-tab"] {
+    height: calc(var(--rp-unit) * 11);
+    padding-inline: 0;
+    font-size: var(--rp-text-sm);
+    font-weight: 600;
+
+    &[data-selected] {
+      border-color: var(--rp-brand);
+    }
+  }
+
+  [data-slot="tabs-panel"] {
+    font-size: var(--rp-text-sm);
+
+    &:not([hidden]) {
+      padding-block-start: calc(var(--rp-unit) * 5);
+    }
+  }
+
+  /* Segmented control. */
+  [data-slot="segmented-control"] {
+    padding: 3px;
+    border-color: transparent;
+    border-radius: calc(var(--rp-radius) + 3px);
+    background: var(--rp-surface-strong);
+  }
+
+  [data-slot="segmented-control-item"] {
+    height: calc(var(--rp-unit) * 9);
+    padding-inline: calc(var(--rp-unit) * 4);
+    border-radius: var(--rp-radius);
+    font-size: var(--rp-text-sm);
+  }
+
+  [data-slot="segmented-control-indicator"] {
+    border: 0;
+    border-radius: var(--rp-radius);
+    background: var(--rp-paper);
+    box-shadow: var(--rp-shadow-sm), 0 0 0 1px var(--rp-line);
+    transition: left 0.2s, width 0.2s;
+  }
+
+  /* Rating stars take the highlight color. */
+  [data-slot="rating-item"] {
+    --ui-rating-color: var(--rp-highlight);
+    width: var(--rp-star, 1.125rem);
+    height: var(--rp-star, 1.125rem);
+  }
+
+  [data-slot="rating"][data-size="sm"] {
+    --rp-star: 0.875rem;
+  }
+
+  /* Overlays. */
+  :is([data-slot="dialog-content"], [data-slot="drawer-content"]) {
+    gap: calc(var(--rp-unit) * 5);
+    border-color: var(--rp-line);
+    box-shadow: var(--rp-shadow-lg);
+    font-size: var(--rp-text-sm);
+  }
+
+  [data-slot="drawer-content"]:is([data-side="left"], [data-side="right"]) {
+    width: min(26rem, 92vw);
+    max-width: 92vw;
+    padding: calc(var(--rp-unit) * 6);
+  }
+
+  :is([data-slot="dialog-title"], [data-slot="drawer-title"]) {
+    margin: 0;
+    font-family: var(--rp-font-display);
+    font-size: var(--rp-text-xl);
+    font-weight: var(--rp-display-weight);
+    letter-spacing: var(--rp-display-tracking);
+    text-transform: var(--rp-display-case);
+    line-height: 1.15;
+  }
+
+  :is([data-slot="dialog-description"], [data-slot="drawer-description"]) {
+    color: var(--rp-ink-subtle);
+  }
+
+  :is([data-slot="dialog-backdrop"], [data-slot="drawer-backdrop"]) {
+    backdrop-filter: blur(2px);
+  }
+
+  /* Toasts and tooltips use the inverse palette. */
+  [data-slot="toast"] {
+    border: 0;
+    border-radius: var(--rp-radius-lg);
+    background: var(--rp-ink);
+    box-shadow: var(--rp-shadow-lg);
+    color: var(--rp-paper);
+    font-size: var(--rp-text-sm);
+  }
+
+  [data-slot="toast-description"] {
+    color: color-mix(in oklab, var(--rp-paper) 72%, var(--rp-ink));
+  }
+
+  [data-slot="tooltip-content"] {
+    border: 0;
+    border-radius: var(--rp-radius-sm);
+    background: var(--rp-ink);
+    color: var(--rp-paper);
+    font-size: var(--rp-text-xs);
+  }
+}
+
+/* @parts-end */
+
+/* ------------------------------------------------------------------------ */
+/* 4. Primitives UI SDK doesn't have. Same convention: data-slot names it,   */
+/*    data-size and data-tone pick from closed lists.                        */
+/* ------------------------------------------------------------------------ */
+
+@layer ripple.primitives {
+  /* <h2 data-slot="heading" data-size="xs|sm|md|lg|xl|2xl"> */
+  [data-slot="heading"] {
+    margin: 0;
+    font-family: var(--rp-font-display);
+    font-size: var(--rp-text-2xl);
+    font-weight: var(--rp-display-weight);
+    letter-spacing: var(--rp-display-tracking);
+    text-transform: var(--rp-display-case);
+    line-height: 1.1;
+    text-wrap: balance;
+
+    &[data-size="xs"] { font-size: var(--rp-text-lg); line-height: 1.25; }
+    &[data-size="sm"] { font-size: var(--rp-text-xl); line-height: 1.2; }
+    &[data-size="lg"] { font-size: var(--rp-text-3xl); }
+    &[data-size="xl"] { font-size: var(--rp-text-4xl); line-height: 1.04; }
+    &[data-size="2xl"] { font-size: var(--rp-text-5xl); line-height: 1; }
+  }
+
+  /* <p data-slot="text" data-size="xs|sm|md|lg" data-tone="subtle|faint|critical|positive"> */
+  [data-slot="text"] {
+    margin: 0;
+    font-size: var(--rp-text-md);
+    line-height: 1.6;
+    text-wrap: pretty;
+
+    &[data-size="xs"] { font-size: var(--rp-text-xs); line-height: 1.5; }
+    &[data-size="sm"] { font-size: var(--rp-text-sm); line-height: 1.55; }
+    &[data-size="lg"] { font-size: var(--rp-text-lg); line-height: 1.5; }
+  }
+
+  /* <p data-slot="eyebrow"> small caps label above a heading */
+  [data-slot="eyebrow"] {
+    margin: 0;
+    color: var(--rp-ink-subtle);
+    font-size: var(--rp-text-xs);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  :is([data-slot="text"], [data-slot="eyebrow"], [data-slot="price"]) {
+    &[data-tone="subtle"] { color: var(--rp-ink-subtle); }
+    &[data-tone="faint"] { color: var(--rp-ink-faint); }
+    &[data-tone="critical"] { color: var(--rp-critical); }
+    &[data-tone="positive"] { color: var(--rp-positive); }
+    &[data-tone="highlight"] { color: var(--rp-highlight); }
+  }
+
+  /*
+    <p data-slot="price" data-size="sm|md|lg">$48.00 <s>$60.00</s></p>
+    A compare-at price in <s> turns the current price into a sale price.
+  */
+  [data-slot="price"] {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 0.5em;
+    margin: 0;
+    font-size: var(--rp-text-md);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+
+    & s {
+      color: var(--rp-ink-faint);
+      font-size: 0.85em;
+      font-weight: 400;
+    }
+
+    &:has(s) {
+      color: var(--rp-highlight);
+    }
+
+    &[data-size="sm"] { font-size: var(--rp-text-sm); }
+    &[data-size="lg"] { font-size: var(--rp-text-xl); }
+  }
+
+  /* <span data-slot="badge" data-tone="brand|highlight|inverse|outline|positive"> */
+  [data-slot="badge"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    width: fit-content;
+    height: calc(var(--rp-unit) * 6);
+    padding-inline: calc(var(--rp-unit) * 2.5);
+    border-radius: var(--rp-radius-sm);
+    background: var(--rp-surface-strong);
+    color: var(--rp-ink);
+    font-size: var(--rp-text-xs);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+
+    &[data-tone="brand"] { background: var(--rp-brand); color: var(--rp-on-brand-color); }
+    &[data-tone="highlight"] { background: var(--rp-highlight); color: var(--rp-on-highlight); }
+    &[data-tone="inverse"] { background: var(--rp-ink); color: var(--rp-paper); }
+    &[data-tone="outline"] { background: transparent; box-shadow: inset 0 0 0 1px var(--rp-line-strong); }
+    &[data-tone="positive"] { background: color-mix(in oklab, var(--rp-positive) 14%, var(--rp-paper)); color: var(--rp-positive); }
+  }
+
+  /* <article data-slot="card" data-variant="flush|muted"> */
+  [data-slot="card"] {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--rp-unit) * 3);
+    padding: calc(var(--rp-unit) * 5);
+    border: 1px solid var(--rp-line);
+    border-radius: var(--rp-radius-lg);
+    background: var(--rp-paper);
+    box-shadow: var(--rp-shadow-sm);
+
+    &[data-variant="flush"] {
+      padding: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    &[data-variant="muted"] {
+      border-color: transparent;
+      background: var(--rp-surface);
+      box-shadow: none;
+    }
+  }
+
+  /* <div data-slot="media" data-ratio="portrait|square|landscape|wide"> */
+  [data-slot="media"] {
+    position: relative;
+    display: block;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: var(--rp-radius-lg);
+    background: var(--rp-surface);
+
+    &[data-ratio="portrait"] { aspect-ratio: 4 / 5; }
+    &[data-ratio="landscape"] { aspect-ratio: 4 / 3; }
+    &[data-ratio="wide"] { aspect-ratio: 16 / 9; }
+
+    & > :is(img, svg, video) {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+}
