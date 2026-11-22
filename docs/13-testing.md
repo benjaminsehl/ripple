@@ -64,7 +64,7 @@ Evidence marker: code blocks marked **RUN** were executed for this document in `
 
 Permitted skips:
 
-- **T-5** Tier 7 tests, and the tier 6 flows on the hydrogen backend (11.2), skip with the reason `RIPPLE_NETWORK is not 1` when the environment variable `RIPPLE_NETWORK` is not `1` (D-063 as amended, item (d)). CI sets it (17).
+- **T-5** Tier 7 tests, the tier 6 flows on the hydrogen backend (11.2), and every other test that starts an npm example with `startExample` (the Remix morph tests of 9.2), skip with the reason `RIPPLE_NETWORK is not 1` when the environment variable `RIPPLE_NETWORK` is not `1` (D-063 as amended, item (d)). CI sets it (17). A local session exports `RIPPLE_NETWORK=1` before `pnpm ci` (D-136).
 - **T-6** Tier 8 tests skip with the reason `RIPPLE_STORE_URL is not set` until a preview store exists (D-063 item 8). Until then tiers 2 to 6 on the shim are the gate for Liquid.
 - **T-7** Remix cases of tiers 2 and 4 skip with the reason `Remix needs Node 24.3 or later (running <version>)` when the Node version is lower. The main CI job runs Node 24, so no Remix case is skipped there.
 
@@ -636,7 +636,7 @@ Rules:
 
 Evidence: the module below was bundled with esbuild 0.25.0 and loaded under Node 22.23.5 for this document; `resolveResource` was called for every name on both sides without an error. The tests `[T1] resources: ...` (6.2) are NOT RUN in this form and are the gate.
 
-A fixture references commerce data only as `{ "$resource": "<type>.<name>" }` (`02-html-contract.md` F-4, D-074 item 6). The set is exactly `image.basic`, `image.no-alt`, the resources of `11-components-commerce.md` section 0.5 and the resources of `12-components-chrome-and-blueprints.md` section 1.6. Values are those documents' values; where this table and an owning document differ, the owning document wins and this module is changed.
+A fixture references commerce data only as `{ "$resource": "<type>.<name>" }` (`02-html-contract.md` F-4, D-074 item 6). The set is exactly `image.basic`, `image.no-alt`, the resources of `11-components-commerce.md` section 0.5 and the resources of `12-components-chrome-and-blueprints.md` section 1.6, plus the resources component tasks add under RS-2 (D-140). Values are those documents' values; where this table and an owning document differ, the owning document wins and this module is changed.
 
 | Reference | What it is | Values owned by |
 |---|---|---|
@@ -1174,7 +1174,7 @@ export function resolveResource(reference: string, side: "hydrogen" | "liquid"):
 Rules:
 
 - **RS-1** The `hydrogen` side has exactly the shapes of `05-commerce.md` 11.1 for product, collection, article, line and cart resources, the prop types of `11-components-commerce.md` for `filters.basic` and `search.shirt`, and the JSON of `12-components-chrome-and-blueprints.md` 1.6 for `menu.*`, `shop.*` and `locale.multi`. The `liquid` side has the fields named in the "Liquid" column of the `05-commerce.md` 11.1 table plus the drop members the component snippets read. A component that reads another field MUST add the field to the resource here in the same change; it MUST NOT inline data in a fixture.
-- **RS-2** A new resource is added by its owning component document first (doc 11 section 0.5 or doc 12 section 1.6), then by one entry in `RESOURCES` and one row in the table above, in the same change. Resource names are kebab-case.
+- **RS-2** A new resource is added by its owning component document first (doc 11 section 0.5 or doc 12 section 1.6), then by one entry in `RESOURCES` and one row in the table above, in the same change. Resource names are kebab-case. A component task whose fixture needs data that no resource holds (a member of a resource, an array, or data in no resource) adds the resource itself, in its own commit: the `RESOURCES` entry, the row in the table above, the entry in doc 11 section 0.5 or doc 12 section 1.6, and the name in the `[T1] resources:` test list. The name is `<type>.<name>` when the value has a resource type of `05-commerce.md` 11.1 or doc 12 section 1.6, otherwise `<component id>.<fixture name>`. RS-3 replaces a Liquid global only for the types `cart`, `shop`, `locale` and `search` (D-140).
 - **RS-3** How each host receives a resource: `html`: the fixture file is written by hand from the `hydrogen` side (`02-html-contract.md` F-9). `react`, `remix`: the adapter passes `resolveResource(ref, "hydrogen")` as the prop value. `liquid`: the adapter binds `resolveResource(ref, "liquid")` to the Liquid variable `rp_<reference with "." and "-" replaced by "_">` (`product.basic` becomes `rp_product_basic`) and passes that variable as the argument. In addition, for a resource whose type is a key of `LIQUID_GLOBAL_OF_TYPE` (`cart`, `shop`, `locale`, `search`), the adapter sets the Liquid global named there (`cart`, `shop`, `localization`, `search`) to the same value for that render, because Liquid components of those types read the global. `filters.basic` on the liquid side is a collection drop stand-in (`filters`, `sort_options`, `sort_by`, `url`).
 - **RS-4** `pnpm gen --check` MUST fail when a fixture references a name that is not a key of `RESOURCES` (the check calls `resolveResource`).
 - **RS-5** Resource values are fixed. Changing a value is a change to every fixture that prints it and needs the fixtures regenerated in the same change.
@@ -1353,7 +1353,7 @@ Rules:
 - **UD-2** A record that writes the value already present (`sameValue`) is not a mutation (D-002 as amended; D-071 item 4). It is reported as information in `report.records`, is never a failure, and MUST NOT have an allow-list entry. Verified for this document: upgrading the Tabs `default` fixture of `02-html-contract.md` 11.9 with `@ui-sdk/web@0.1.0-beta.14` produces two such records (`role="none"` rewritten on each `ui-tabs-tab`) and zero value-changing records; Tabs therefore has no `upgradeAllow` entry.
 - **UD-7** `UpgradeAllowEntry` is manifest data (`upgradeAllow`, D-071). `GLOBAL_UPGRADE_ALLOW` has exactly the one entry above. The Toast entry is the one of `02-html-contract.md` 7.3. React hydration is judged against the separate list `REACT_HYDRATION_ALLOW` (`test/hydration/react-allow.ts`, content owned by `06-bindings.md`).
 - **UD-3** `childList` records always count, whatever was inserted.
-- **UD-4** `undefinedTags` non-empty is a failure of the test that called `upgradeDiff` (it is also checker rule RP604).
+- **UD-4** `undefinedTags` non-empty is a failure of the test that called `upgradeDiff` (it is also checker rule RP604). Exception: the Toast tags (`ui-toast-region` and every tag starting with `ui-toast`) are defined only when `toast()` is first called (D-083), so the generic test of 8.1, RP604 and snapshot mode ignore them (D-134 item 24).
 - **UD-5** `installUpgradeRecorder` MUST remain self-contained (it is serialised into the page). It MUST NOT reference an imported symbol or a module-level constant.
 - **UD-6** The checker's layer B (RP601) MUST call `installUpgradeRecorder` and judge with the same code; it MUST NOT have a second implementation (`07-manifest-registry-cli.md` 9.5.5).
 
@@ -3051,7 +3051,7 @@ for (const testCase of loadFixtures()) {
         rootClasses: classes,
       })
       assert.equal(formatUpgradeFailures(testCase.id, report.failures), "")
-      assert.deepEqual(report.undefinedTags, [])
+      assert.deepEqual(report.undefinedTags.filter((tag) => !tag.startsWith("ui-toast")), [])
       assert.deepEqual(opened.errors, [])
     } finally {
       await opened.close()
@@ -3207,7 +3207,7 @@ test("[T6] accordion: AT-3 a summary opens its item with scripting disabled", as
 | a controlled `value` with a cancelable `valuechange` (D-036; `rp-quantity`) | `[T5]`: a `valuechange` listener that calls `preventDefault()` keeps the previous value: after the user action the control's value, the form value and the visible text are unchanged (the veto test of `04-elements.md` is the element-level form of this test) |
 | Toast | `[T5] toast: the chunk is not requested until the first toast() call`: on a page with a toast region and `ripple.elements.js` loaded, no request whose URL contains `toast` is made before `toast()` is called; exactly one is made after the first call and none after the second (D-083) |
 | a region part (D-091) | `[T2]`: in every host the region root carries `data-rp-region="<region name>"` (asserted by the fixture; the conformance case covers it). `[T5]`: on the `html` and `remix` hosts a refresh replaces the region root exactly once (one `childList` record on the region root's parent, the new root carries the same `data-rp-region`), and elements outside the region keep their identity |
-| component rules (manifest `rules[]`, D-102 item 3) | `[T1]`: for each rule id, the manifest's failing example string checked by the checker reports exactly one `RP113` diagnostic whose message contains the rule id in square brackets (`[<rule id>]`); the component's `default` fixture reports none |
+| component rules (manifest `rules[]`, D-102 item 3) | `[T1]`: for each rule id, a failing example HTML string written in the test (manifest rules carry no example key: the string is the smallest markup that the rule's sentence describes, built from the component's `default` fixture) checked by the checker reports exactly one `RP113` diagnostic whose message contains the rule id in square brackets (`[<rule id>]`); the component's `default` fixture reports none. For a rule that needs a context outside the component (kind `requires-ancestor`, or a `custom` rule that reads the document), the test first wraps the `default` fixture in the smallest context the rule's sentence names; a spec that says its own fixtures violate a rule (MobileNav `mobile-nav-needs-opener`) is asserted as that spec states (D-134 item 23) |
 | kind `commerce` | the `C-nn` tests of `05-commerce.md` that name the component, in `test/commerce/` |
 
 ### 10.3 Automated WCAG scan: `test/a11y/axe.test.ts` (complete, NOT RUN as a file; the axe injection and call were RUN on the Tabs fixture: zero violations)
@@ -3284,8 +3284,8 @@ A test asserts an announcement by polling (at most 2 s, with `page.waitForFuncti
 |---|---|---|
 | A-02 to A-09, A-11, A-14, A-18 to A-22 (tokens, dials, schemes, props, focus, motion, RTL, hidden, display of custom elements, Tabs without JS, scroll padding, `data-rp-js` on a form) | `css/styling.test.ts` | `03-styling-and-tokens.md` 15 |
 | A-23 (the linter's own tests) | `src/gen/css-lint.test.ts` | `03-styling-and-tokens.md` 7.9, 15 |
-| E-02 to E-32 | `src/elements/<tag>.test.ts`, `src/runtime/<name>.test.ts` (the file of each test is stated in `04-elements.md` 13) | `04-elements.md` 13 |
-| C-01 to C-39 | `test/commerce/liquid.test.ts`, `test/commerce/hydrogen.test.ts` (the file of each test is stated in `05-commerce.md` 14) | `05-commerce.md` 14 |
+| E-02 to E-32 | `src/elements/<tag>.test.ts` for a row about one element, `src/runtime/<name>.test.ts` for a row about one runtime module (loader, opener, polyfill, announcer); `04-elements.md` 13 states no file, so a row about several modules is placed by the plan task that owns it (D-141) | `04-elements.md` 13 |
+| C-01 to C-39 | `test/commerce/liquid.test.ts` for a liquid-backend row, `test/commerce/hydrogen.test.ts` for a hydrogen-backend row; a row about one element alone (C-14, C-15) MAY be in `src/commerce/<tag>.test.ts`; `05-commerce.md` 14 states no file, so the plan task that owns a row names its file (D-141) | `05-commerce.md` 14 |
 
 ---
 
@@ -3744,7 +3744,6 @@ jobs:
       - run: pnpm build
       - run: pnpm examples:install
       - run: pnpm test --no-skips
-      - run: pnpm test:commerce --no-skips
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -3847,21 +3846,21 @@ jobs:
 
 | Job | Tiers | Required to merge |
 |---|---|---|
-| `verify` | 1, 2, 3, 4, 5, 6, 10 with no skip; 7 with no skip | yes |
+| `verify` | 1, 2, 3, 4, 5, 6, 10 with no skip | yes |
 | `node22` | 1 (no skip), 2 (Remix cases may skip, T-7), on the repository's minimum Node version | yes |
 | `rename` | A-10 of `01-architecture.md` | yes |
 | `package-node20` | the built CLI starts on Node 20.18 (`01-architecture.md` section 12, last UNVERIFIED item) | yes |
 | `cross-engine` | 9 | no, until 17.3 |
 
 - **CI-1** `pnpm/action-setup@v4` with no `version` input reads `packageManager` from `package.json` (`pnpm@10.28.0`).
-- **CI-2** The `verify` job is exactly `pnpm ci` plus tier 7, with Playwright installation and artifact upload. When `pnpm ci` passes locally with `RIPPLE_NETWORK=1`, `verify` passes.
+- **CI-2** The `verify` job is exactly `pnpm ci`, with Playwright installation and artifact upload. Tier 7 is not a merge gate (D-110 row 27, Q24); it runs in the nightly job `commerce` of 17.4 (D-137). When `pnpm ci` passes locally with `RIPPLE_NETWORK=1`, `verify` passes.
 - **CI-3** A job MUST NOT pass `--update`, MUST NOT set `continue-on-error` (except `cross-engine` under 17.3), and MUST NOT retry failed tests. A flaky test is a defect: fix the wait (W-3) or the code.
 - **CI-4** Pull requests from forks have no secrets; no job in `ci.yml` needs one.
 - **CI-5** When mock.shop is unreachable, `verify` fails. It MUST NOT be made to pass by unsetting `RIPPLE_NETWORK`; re-run the job.
 
 ### 17.3 When `cross-engine` becomes blocking
 
-Tier 9 is non-blocking until the SPIKE-06 report exists (D-063 as amended). `continue-on-error: true` stays on the `cross-engine` job until the file `docs/research/spikes/cross-engine-features/README.md` (the SPIKE-06 report) exists. The pull request that adds that file MUST, in the same change: apply the per-feature fallbacks the report calls for (section 21), record any raised floor in the ledger, delete the `continue-on-error: true` line, and leave `cross-engine` passing. From then on the job is required to merge.
+Tier 9 is non-blocking until the SPIKE-06 report exists (D-063 as amended). `continue-on-error: true` stays on the `cross-engine` job until the file `docs/research/spikes/cross-engine-features/README.md` (the SPIKE-06 report) exists. The spike task that adds that file only reports (D-134 item 15). Each per-feature fallback the report calls for (section 21) is applied by its own follow-up task. The pull request that makes the job blocking runs after those tasks: it deletes the `continue-on-error: true` line and leaves `cross-engine` passing. A raised browser floor changes D-032 and needs Ben (ledger Q27). From then on the job is required to merge.
 
 ### 17.4 `.github/workflows/nightly.yml` (complete, except the `evals` job that `08-agent-kit-and-evals.md` section 8.14 adds from M3 onward; CI-8)
 
@@ -3900,6 +3899,25 @@ jobs:
           include-hidden-files: true
           if-no-files-found: warn
 
+  commerce:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      RIPPLE_NETWORK: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm build
+      - run: pnpm examples:install
+      - run: pnpm test:commerce --no-skips
+        if: hashFiles('test/commerce/e2e.test.ts') != ''
+
   cross-engine:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
@@ -3923,9 +3941,10 @@ jobs:
       - run: pnpm test:${{ matrix.engine }}
 ```
 
-- **CI-6** While the secret `RIPPLE_STORE_URL` is unset, `liquid-live` runs, every `[T8]` test skips, the last output line reports the skips, and the job is green. That is the one place where a green job with skips is accepted; its report states `skipped`, never `passed` (T-3). Once the secret is set, change the job's command to `pnpm test:liquid-live --no-skips` in the same pull request that records the store in the ledger.
+- **CI-6** While the secret `RIPPLE_STORE_URL` is unset, `liquid-live` runs, every `[T8]` test skips, the last output line reports the skips, and the job is green. That is the one place where a green job with skips is accepted; its report states `skipped`, never `passed` (T-3). Once the secret is set, change the job's command to `pnpm test:liquid-live --no-skips` in the same pull request that records the store in `docs/plan/done/BEN-store.md` (D-134 item 14; the ledger is not edited).
 - **CI-7** Uploading `node_modules/.cache/ripple/live-theme/` to the preview store before the run is UNVERIFIED tooling (the Shopify CLI command for the developer preview was not checked). Default now: a person uploads it; the step is added to `liquid-live` by `14-liquid-theme.md` once SPIKE-02 has run.
 - **CI-8** The eval job (tier 11) is added to `nightly.yml` by `08-agent-kit-and-evals.md` (section 8.14: job `evals`, secret `RIPPLE_EVAL_API_KEY`); this document defines no eval job. `nightly.yml` is therefore the text of 17.4 plus that one job.
+- **CI-9** The `commerce` job runs tier 7 (section 12) every night. Its test step is skipped while `test/commerce/e2e.test.ts` does not exist. A `mock.shop has no <thing>` skip (E-4) fails this job, never a merge (D-110 row 27, D-137).
 
 ---
 
@@ -3955,7 +3974,7 @@ A component is done, and its manifest `status` may be set to `stable`, only when
 | 16 | Tier 7 (kind `commerce` only): the `E2E` rows that exercise the component pass on `html`, `react` and `remix` | `RIPPLE_NETWORK=1 pnpm test:commerce --no-skips` exit 0 |
 | 17 | Cross-engine: after 17.3 takes effect, `pnpm test:webkit --component=<id>` and `pnpm test:firefox --component=<id>` exit 0. Before that, both are run and their output is attached to the pull request | commands |
 | 18 | The whole suite still passes | `pnpm ci` exit 0 |
-| 19 | No test of the component is skipped, marked `todo`, or carries `[chromium]` without the comment required by N-2 | `[T1] test-names: every test name matches N-1 and every [chromium] tag has a reason` (18.3) |
+| 19 | No test of the component is skipped, marked `todo`, or carries `[chromium]` without the comment required by N-2 | `[T1] test-names: every test name matches N-1 and every chromium tag has a reason` (18.3) |
 | 20 | Liquid tier 8 is NOT a condition while the store does not exist (T-6). When `RIPPLE_STORE_URL` is set in CI, the component's `[T8]` conformance test MUST pass | `pnpm test:liquid-live` |
 | 21 | Every `rp-*` root is `display: block`, before and after upgrade and without scripts (D-080) | U3-6 and NJ-1: `pnpm test:component --component=<id>` |
 | 22 | Component rules exist as manifest `rules[]`, each with a failing example that reports `RP113` with the rule id in brackets (D-102 item 3) | the `[T1]` row "component rules" of 10.2 |
@@ -3976,7 +3995,7 @@ For every loaded component (status not `planned`), one test `[T1] <id>: every ac
 
 ### 18.3 `[T1] test-names` (in `test/run.test.ts`)
 
-Reads every file matching the runner's `TEST_GLOBS`. Every string literal that is the first argument of a `test(` call and contains no `${` MUST match the pattern of N-1; a template literal MUST start with `[T` followed by a tier number and `] `. No file contains `describe(`, `suite(`, `test.todo(`, `test.only(`, `{ todo:` or `{ only:`. Every line containing `[chromium]` inside a test name is preceded by a line starting with `// [chromium]: `.
+Reads every file matching the runner's `TEST_GLOBS`. Every string literal that is the first argument of a `test(` call and contains no `${` MUST match the pattern of N-1; a template literal MUST start with `[T` followed by a tier number and `] `. No file contains `describe(`, `suite(`, `test.todo(`, `test.only(`, `{ todo:` or `{ only:`. Every test name that ends with ` [chromium]` is on a line preceded by a line starting with `// [chromium]: `. The scan does not report `test/run.test.ts` itself: that file builds each forbidden token by concatenation (`"desc" + "ribe("`), so that its own source contains none of them, and its test name contains no `[chromium]` (D-134 item 2).
 
 ---
 
@@ -3989,8 +4008,8 @@ Each line is pass or fail and checkable by a command.
 3. `test/run.ts`, `src/testing/fixtures.ts`, `resources.ts`, `upgrade-diff.ts`, `liquid-shim.ts`, `serve-theme.ts`, `src/gen/size.ts`, `test/support/hosts/liquid.ts` and `tsx.ts` equal the code of this document. `test/run.ts`, `upgrade-diff.ts` and `src/gen/size.ts` were run as written; the others carry changes that are NOT RUN in this form (20, UNVERIFIED item 10).
 4. The tests named in 4.6, 6.2, 6.3, 7.5, 15.3, 18.2 and 18.3 exist with exactly those names and pass.
 5. For every case, the tests named by the templates of 7.1, 8.1, 10.3, 10.4, 11.1 and 14.3 exist (they are generated by loops over `loadFixtures()`), and the count test C-2 passes.
-6. `size-budget.json` equals 15.1; `pnpm build` fails when a budget is exceeded or a budgeted file is missing.
-7. `.github/workflows/ci.yml` equals 17.1. `.github/workflows/nightly.yml` equals 17.4 plus, from M3 onward, the `evals` job of `08-agent-kit-and-evals.md` section 8.14 (CI-8).
+6. `size-budget.json` equals 15.1; `pnpm build` fails when a budget is exceeded or a budgeted file is missing (while `BRINGUP_SUBSET` is `true`, a budgeted file that no present source produces yet is printed as `missing` and does not fail, D-135).
+7. `.github/workflows/ci.yml` equals 17.1, except that the line `continue-on-error: true` is absent once 17.3 has applied. `.github/workflows/nightly.yml` equals 17.4 plus, from M3 onward, the `evals` job of `08-agent-kit-and-evals.md` section 8.14 (CI-8).
 8. `pnpm ci` exits 0 on the main branch with `RIPPLE_NETWORK=1`, with the last runner line reporting `0 failed, 0 skipped`.
 9. Removing one attribute that an element writes at upgrade from an `upgrade-snapshot` fixture makes `pnpm test:upgrade` fail with a line in the format of U3-1 (verified on the Tabs fixture: removing `aria-selected="true"` gives `... button#t-tab-account: attributes aria-selected: null -> "true"`).
 10. `<pkg>/testing` imports in Node without `playwright` installed (A-05 of `01-architecture.md`), and `serveTheme` is among its exports.

@@ -147,6 +147,7 @@ The file has no rule for `.rp-pagination-previous` or `.rp-pagination-next`: the
 
 ### Host notes
 
+- Binding paths (D-139): `static` that the template language of `07-manifest-registry-cli.md` 2.3 cannot express (D-072 row 2): no `template`; every fixture is `generated: "hand"`; `html` is generated from the fixture files; the `react`, `remix` and `liquid` files are hand-written with their generated regions. Where a line below says a binding is "generated", this line wins.
 - HTML: None.
 - React: `export function Pagination(props: PaginationProps)`; generated. `children` not `null`, `undefined`, `false` or `""` selects the override body. `previousLabel = "Previous"`, `nextLabel = "Next"`, `ariaLabel = "Pagination"` are default parameter values.
 - Remix: None. (With Hydrogen's `<Pagination>` render prop, pass `previousPageUrl` and `nextPageUrl` as `previousUrl` and `nextUrl`, each only when `hasPreviousPage` or `hasNextPage` is true.)

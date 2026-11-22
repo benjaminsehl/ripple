@@ -6,7 +6,7 @@ Ripple is a design system and component library for Shopify storefronts with one
 
 1. `00-decisions.md` (the decision ledger) wins on any conflict with any other document, including this one, `CONVENTIONS.md` and `PLAN.md`. After the ledger, the owning document of a fact wins (ledger section 12), then the research reports.
 2. Never read a numbered document (`01` to `14`) or the ledger in full. They are 100 kB to 320 kB each. Open only the section a task names, by searching for its heading.
-3. A document MUST NOT be edited by an implementation task, with three exceptions: a spike task appends one sentence to its row in ledger section 3; any task may append an entry under `## Ledger issues` at the end of the owning document; a task adds its done file under `plan/done/`.
+3. A document MUST NOT be edited by an implementation task, with four exceptions: a spike task appends one sentence to its row in ledger section 3; any task may append an entry under `## Ledger issues` at the end of the owning document; a component task adds the test resources it needs under rule RS-2 of `13-testing.md` section 4.2 (ledger D-140); a task adds its done file under `plan/done/`. The root `../AGENTS.md` is maintained with `PLAN.md` and never edited by a task (ledger D-144).
 4. `research/` and the repository directory `theme/` (the Shopify base theme) are reference material. They are never edited and never copied as a model, except where a spec names a file to copy.
 
 ## Reading order for a new agent
@@ -22,7 +22,7 @@ Ripple is a design system and component library for Shopify storefronts with one
 | File | What it is |
 |---|---|
 | `CONVENTIONS.md` | Digest of the ledger that every task reads first; every line cites its decision |
-| `PLAN.md` | Master plan: how to pick a task, branch and pull request rules, definition of done, milestones and gates, recipes, the table of all 297 tasks, risk register |
+| `PLAN.md` | Master plan: how to pick a task, branch and pull request rules, definition of done, milestones and gates, recipes, the table of all 309 tasks, risk register |
 | `README.md` | This index |
 | `plan/M0-bootstrap.md` | Task details for M0: repository, build, generator, test harness in four hosts |
 | `plan/M1-golden-path.md` | Task details for M1: golden-path vertical slice (21 components, commerce core) and local spikes |
@@ -45,7 +45,7 @@ Sizes are approximate. "Owns" follows ledger section 12.
 
 | File | Size | Owns |
 |---|---|---|
-| `00-decisions.md` | 300 kB | The decision ledger: decisions D-001 to D-113, risks, spikes, naming, directory layout, prop vocabulary, component template, component list, open questions, non-goals, document ownership. LAW |
+| `00-decisions.md` | 350 kB | The decision ledger: decisions D-001 to D-148 (section 13.4: review decisions D-114 to D-133; section 13.5: plan review decisions D-134 to D-148), risks, spikes, naming, directory layout, prop vocabulary, component template, component list, open questions, non-goals, document ownership. LAW |
 | `01-architecture.md` | 107 kB | Hosts, backends, layers and import rules, page lifecycle, repository layout, root `package.json` and `tsconfig.json`, the published package, build pipeline, pinned versions |
 | `02-html-contract.md` | 156 kB | Contract rules, ids, prop-to-attribute mapping, responsive grammar, upgrade allow-lists, fixtures and masks, the canonicalisation algorithm and its reference code |
 | `03-styling-and-tokens.md` | 145 kB | Cascade layers, tokens, dials, schemes, `base.css`, `theme.css`, `props.css` generation, component CSS rules, the CSS linter, browser floor for CSS |

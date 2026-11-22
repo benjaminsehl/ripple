@@ -298,6 +298,7 @@ Complete file:
 
 ### Host notes
 
+- Binding paths (D-139): the React file is hand-written below the generated header region (it calls `useState`, which no emission rule of `07-manifest-registry-cli.md` 2.4 produces); `html`, `remix` and `liquid` stay generated from the template.
 - HTML: copy the contract. No script.
 - React: `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent` in `accordion.tsx`, generated. The file starts with `"use client"` (it calls a hook, `06-bindings.md` R-14) because `AccordionItem` captures its initial state with `const [initialOpen] = useState(() => defaultOpen === true);` (`06-bindings.md` R-3, R-14) and prints `<details open={initialOpen ? true : undefined} suppressHydrationWarning>` (R-6). This is the only hook in the file: no effect, no ref, no event handler, no controlled prop (D-036), no callback. A re-render therefore never closes or reopens an item the user toggled. The other three exports follow the static pattern of `06-bindings.md` 6.4.
 - Remix: generated, static pattern of `06-bindings.md` 7.4. It prints no `data-rmx-key` (the root is a `div`, not a custom element, G-11). Each `<details>` prints `data-rmx-preserve-attrs="open"` (the state row above has writer `browser`, G-14) so that a morph keeps the user's open items.

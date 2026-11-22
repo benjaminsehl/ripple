@@ -339,6 +339,7 @@ Complete file:
 
 ### Host notes
 
+- Binding paths (D-139): `ui` whose ids need two props (`<tabs>-tab-<value>`), which the template language cannot express: no `template`; fixtures are `generated: "upgrade-snapshot"` from hand-written seeds `components/tabs/fixtures/<name>.html` (doc 02 11.4); `html` is generated from the fixture files; the `react`, `remix` and `liquid` files are hand-written from the complete code of `06-bindings.md` 6.6, 7.6 and 8.6, with their generated regions. Where a line below says a binding is "generated", this line wins.
 - HTML: copy the contract. Load `ripple.js` (the lazy loader fetches the `tabs` chunk) or `ripple.elements.js`.
 - React: `Tabs`, `TabsList`, `TabsTab`, `TabsPanel` in `tabs.tsx`, hand-written. Hand-written below the generated header region (D-072). The complete code is in `06-bindings.md` 6.6, which is a copy of this contract (D-069); when the two differ, the fixtures of this section win. Controlled prop: `value`. Callback: `onValueChange(value, detail)`. When `value` is passed the binding calls `event.preventDefault()` on every `valuechange` and re-applies `value` from React state. `selected` is read once (R-3). The file starts with `"use client"`; every custom element and the tab button carry `suppressHydrationWarning`.
 - Remix: generated; code in `06-bindings.md` 7.6. Prints `data-rmx-key="<id>"` on `ui-tabs`; `data-rmx-preserve-attrs` with `DIRECTION_STATE` on `ui-tabs` and `ui-tabs-list`, `TAB_STATE` plus `DIRECTION_STATE` on each tab button, `PANEL_STATE` on each panel. No `value`, no callbacks.

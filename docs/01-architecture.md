@@ -192,7 +192,8 @@ The rule set for `src/**` is also given as data so that test A-03 can enforce it
 // A trailing " (type)" means only `import type` / `export type` is allowed.
 export const IMPORT_RULES: Record<string, string[]> = {
   "src/identity.ts": [],
-  "src/{index,responsive,image,types}.ts": ["./src/{identity,index,responsive,image,types}.ts"],
+  "src/{index,responsive,image,types}.ts": ["./src/{identity,index,responsive,image,types,types.generated}.ts"],
+  "src/types.generated.ts": ["./src/types.ts"],
   "src/runtime/**": ["./src/runtime/**", "./src/identity.ts", "@ui-sdk/core"],
   "src/elements/{index,rp-*}.ts": ["./src/elements/**", "./src/runtime/**", "./src/{identity,index,responsive,image,types}.ts", "@ui-sdk/core", "@ui-sdk/web"],
   "src/elements/ui-tabs.ts": ["./src/runtime/**", "./src/{identity,index,responsive,image,types}.ts", "@ui-sdk/core", "@ui-sdk/web", "@ui-sdk/web/tabs"],
@@ -365,7 +366,7 @@ The tree in `00-decisions.md` section 5.1 is the complete tree, and the lists be
 | `docs/` | H | The specification: `00-decisions.md` to `14-liquid-theme.md`. NOT shipped. Do not confuse with the package's `docs/` (section 6.1), which is generated. | all |
 | `docs/research/` | H | The eight research reports and `spikes/`. Read-only history. New spike reports go in `docs/research/spikes/<name>/`. | 00 |
 | `theme/` | H | The Shopify base theme. Reference only: never shipped, never edited, never imported. | 00 |
-| `src/` | H | All library and tooling TypeScript. Files directly in `src/`: `identity.ts`, `index.ts`, `responsive.ts`, `image.ts`, `types.ts`, `architecture.test.ts`. | this doc |
+| `src/` | H | All library and tooling TypeScript. Files directly in `src/`: `identity.ts`, `index.ts`, `responsive.ts`, `image.ts`, `types.ts`, `types.generated.ts` (generated, D-148), `architecture.test.ts`. | this doc |
 | `src/runtime/` | H | L3. `index.ts` (start), `loader.ts` (lazy chunks), `commands-polyfill.ts`, `opener.ts`, `announcer.ts`. `element.ts` exists only on the SPIKE-04 fallback path. | 04 |
 | `src/elements/` | H | L4. `index.ts`, `rp-dialog.ts`, `rp-carousel.ts`, `rp-quantity.ts`, `rp-navigation-menu.ts`, `ui-tabs.ts`, `ui-tooltip.ts`, `ui-toast.ts`. | 04 |
 | `src/commerce/` | H | L5. `index.ts`, `adapter.ts`, `adapter-hydrogen.ts`, `adapter-liquid.ts`, `dialect.ts`, `refresh-html.ts`, `refresh-liquid.ts`, `refresh-remix.ts`, `refresh-react.ts`, `rp-cart.ts`, `rp-product-form.ts`, `rp-live.ts`, `rp-predictive-search.ts`, `rp-recommendations.ts`. The two backend adapter files also define `rp-view-event`. | 05 |
@@ -514,7 +515,8 @@ Complete file:
     "isolatedModules": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "noEmit": true
+    "noEmit": true,
+    "types": ["node"]
   },
   "include": ["src", "test", "css/**/*.test.ts", "components/**/*.test.ts", "blueprints/**/*.test.ts"],
   "exclude": ["node_modules", "pkg", "theme", "docs", "examples", "evals", "components/**/react", "components/**/remix", "blueprints/**/react", "blueprints/**/remix"]
@@ -524,7 +526,7 @@ Complete file:
 - `verbatimModuleSyntax` makes "types only" imports in section 2.2 mechanical: a type-only import MUST be written `import type`.
 - Scaffolded TSX (`components/**/react`, `components/**/remix`, `blueprints/**/react`, `blueprints/**/remix`) is type-checked by the conformance harness inside each host's example project, not by the root config, because React and Remix need different JSX settings (`06-bindings.md`).
 - Source files import each other by relative path. The specifier MAY be written with the `.ts` extension (`import { rv } from "./responsive.ts"`) or without it (`import { rv } from "./responsive"`); `allowImportingTsExtensions` makes both type-check and esbuild resolves both. Inside one file, use one form.
-- `@types/node` types the `node:*` imports of tooling and tests. `@types/react` types `src/react/**`; `src/react/jsx.generated.ts` augments its `ButtonHTMLAttributes` with `commandfor` and `command` (D-033, D-096).
+- `@types/node` types the `node:*` imports of tooling and tests. TypeScript 6 loads no `@types/*` package unless `types` names it, so `"types": ["node"]` is required (D-134 item 1). `@types/react` types `src/react/**`; `src/react/jsx.generated.ts` augments its `ButtonHTMLAttributes` with `commandfor` and `command` (D-033, D-096).
 
 ---
 
@@ -870,8 +872,9 @@ Node matrix (D-052, D-103 item 4; the CI jobs are owned by `13-testing.md`):
 | Repository (`engines.node` of the root `package.json`) | `>=22.18` | every script of section 5.1 MUST run on Node 22.18 |
 | Main CI job | 24 | runs every default tier, including the Remix tests |
 | Remix tests (`examples/remix`, tier 4 morph tests, Remix conformance) | 24.3 or later | they SKIP, not fail, below Node 24.3 |
+| A development session (a plan task) | 24.3 or later | installed with `pnpm env use --global 24.22.3` as `AGENTS.md` "Commands" prints it; below 24.3 the session uses the fallback of D-136 |
 | Separate CI job | 22.18 | runs the tiers that need no Remix |
-| Packed-package CI job | 20.18 | installs the packed `pkg/` and starts the CLI; this is the check of the UNVERIFIED `engines.node: ">=20.18"` |
+| Packed-package CI job | 20.18 | starts the built CLI with `node pkg/bin/ripple.mjs manifest` (the job text of `13-testing.md` 17.1; D-134 item 22); this is the check of the UNVERIFIED `engines.node: ">=20.18"` |
 
 Rules:
 
@@ -945,9 +948,9 @@ Each test is pass/fail and automatable. Where each test lives: A-01 to A-04, A-1
 | Id | Tier | Test | Pass condition |
 |---|---|---|---|
 | A-01 | 1 | List top-level entries of the repository (excluding `.git`, `.gitignore`, `node_modules`). | Set equals: `package.json`, `pnpm-lock.yaml`, `tsconfig.json`, `size-budget.json`, `README.md`, `PLAN.md`, `AGENTS.md`, `CHANGELOG.md`, `LICENSE`, `.github`, `bin`, `docs`, `theme`, `src`, `css`, `icons`, `locales`, `components`, `blueprints`, `skills`, `guides`, `evals`, `examples`, `test`, `pkg` (`pkg` optional). No `pnpm-workspace.yaml`. |
-| A-02 | 1 | List entries of `src/`. | Directories equal `runtime`, `elements`, `commerce`, `react`, `remix`, `agent`, `testing`, `check`, `cli`, `gen`; files equal `identity.ts`, `index.ts`, `responsive.ts`, `image.ts`, `types.ts` plus `*.test.ts`. `src/runtime/element.ts` does not exist. |
+| A-02 | 1 | List entries of `src/`. | Directories equal `runtime`, `elements`, `commerce`, `react`, `remix`, `agent`, `testing`, `check`, `cli`, `gen`; files equal `identity.ts`, `index.ts`, `responsive.ts`, `image.ts`, `types.ts`, `types.generated.ts` (generated, step G7; D-148) plus `*.test.ts`. `src/runtime/element.ts` does not exist. |
 | A-03 | 1 | Parse every specifier of `import`, `export ... from` and `import()` in `src/**/*.ts` (not `*.test.ts`) and check it against `IMPORT_RULES` (section 2.2), with the five reading rules stated below the object. | Zero violations; every file matches a key. In particular: no file under `src/check/` imports `src/cli/`; the only specifier containing `remix` under `src/` is `remix/component` in an `import type` statement under `src/remix/`. |
-| A-04 | 1 | Search `src/**/*.ts` for the strings `@ui-sdk/react`, `@ui-sdk/core/internal`, `@ui-sdk/core/web.css`, `@remix-run/ui`, `@shopify/hydrogen/react`, `@tailwindcss/browser`, `CartProvider`, `ripple-kit` (the last one excluding `src/identity.ts`), and for `.css"` / `.css'` import specifiers. | Zero matches. |
+| A-04 | 1 | Search `src/**/*.ts`, except `src/architecture.test.ts` (it holds this search list; D-134 item 11), for the strings `@ui-sdk/react`, `@ui-sdk/core/internal`, `@ui-sdk/core/web.css`, `@remix-run/ui`, `@shopify/hydrogen/react`, `@tailwindcss/browser`, `CartProvider`, `ripple-kit` (the last one excluding `src/identity.ts`), and for `.css"` / `.css'` import specifiers. | Zero matches. |
 | A-05 | build | `node -e "await import('./pkg/dist/index.mjs'); await import('./pkg/dist/react/index.mjs'); await import('./pkg/dist/remix/index.mjs'); await import('./pkg/dist/testing/index.mjs'); await import('./pkg/dist/check/index.mjs')"` run in a directory whose `node_modules` contains `react` but NOT `@shopify/hydrogen` and NOT `playwright`. | Exit code 0. The module `pkg/dist/react/index.mjs` exports exactly the value names `useElement`, `useCart`, `useRegionHtml`; `pkg/dist/remix/index.mjs` exports no value. |
 | A-06 | build | For every key of `exports` in `pkg/package.json` without `*`: the target files exist. For every `*` key: at least one file matches, and for `./elements/*` and `./commerce/*` the matched base names equal the tag lists in section 6.4 plus `index`. List `pkg/browser/` and `pkg/registry/liquid/assets/`. | All targets exist. `pkg/browser/` contains exactly the 12 `.js` files of section 6.1 plus `ripple.css`. `pkg/registry/liquid/assets/` contains exactly the six files of section 6.1, and none of them contains an import specifier that starts with `./` or `../`. `pkg/` contains `fixture.schema.json` and `registry/liquid/settings.json`, and no path outside the tree of section 6.1. |
 | A-07 | 3 | In Chromium, load a page with `browser/ripple.js` containing one `ui-tabs` (Tabs `default` fixture), one `rp-dialog` (Dialog `default` fixture) and one empty `ui-toast-region` (Toast `default` fixture). After the tabs chunk loads, activate the second tab and open the dialog by its opener. Record the requests. Then call `(await import("/ripple/ripple.js")).toast("Saved")` and record the requests again. | Tab selection changes; dialog opens; exactly one network request each for `ripple.js` and `ripple-tabs.js`; before the `toast()` call there is no request for `ripple-tooltip.js`, `ripple-toast.js` or `ripple-shared.js`, although `ui-toast-region` is in the document; after the call there is exactly one request each for `ripple-toast.js` and `ripple-shared.js`; the text of `ripple-tabs.js` contains the import specifier `./ripple.js`; the console shows no UI SDK duplicate-tag warning; `ripple.js` exports the names `toast`, `announce`, `loadAgent`, `getCommerce`, `configureCommerce`. |

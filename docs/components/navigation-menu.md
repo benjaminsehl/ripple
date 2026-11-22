@@ -196,6 +196,7 @@ Required rules:
 
 ### Host notes
 
+- Binding paths (D-139): `native`, bindings loop over a menu: no `template`; every fixture is `generated: "hand"`; `html` is generated from the fixture files; the `react`, `remix` and `liquid` files are hand-written with their generated regions. Where a line below says a binding is "generated", this line wins.
 - HTML: copy the fixture; one `<li>` per item.
 - React: `export function NavigationMenu(props: NavigationMenuProps): JSX.Element`. No hook (the element has no event and no property). `suppressHydrationWarning` on `<rp-navigation-menu>` (D-033). Attributes on the custom element are lowercase (`class`).
 - Remix: prints `data-rmx-key={id}` on the root. No `data-rmx-preserve-attrs` (the element writes no attribute; popover open state is preserved by the Remix diff natively, `ripple/docs/research/remix-3.md`).

@@ -1,10 +1,10 @@
 # M7 Blueprints and example storefronts: task detail
 
-Status: detail file for the 29 rows of milestone M7 in `docs/PLAN.md` section 6. `docs/00-decisions.md` (the ledger) wins over every spec; a spec wins over this file. This file adds no public API. Where it fixes a choice the specs leave open, the choice is marked "Plan reading" and listed in section 0.9.
+Status: detail file for the 31 rows of milestone M7 in `docs/PLAN.md` section 6. `docs/00-decisions.md` (the ledger) wins over every spec; a spec wins over this file. This file adds no public API. Where it fixes a choice the specs leave open, the choice is marked "Plan reading" and listed in section 0.9.
 
-How to use: read `AGENTS.md`, `docs/CONVENTIONS.md`, `docs/PLAN.md` sections 1 to 3, 5.0 and 5.8, then section 0 of this file (about 33 kB), then ONLY your task's section `## <task id>`. Do not read other task sections and do not read the other `docs/plan/M*.md` files: every rule you need from them is restated in section 0.
+How to use: read `AGENTS.md`, `docs/CONVENTIONS.md`, `docs/PLAN.md` sections 1 to 3, 5.0 and 5.8, then section 0 of this file (about 38 kB; PLAN section 1 item 4 does not count it in the 60 kB budget), then ONLY your task's section `## <task id>`. Do not read other task sections and do not read the other `docs/plan/M*.md` files: every rule you need from them is restated in section 0.
 
-Contents: 0 Rules for every M7 task. Then M7-T01 to M7-T29 in table order.
+Contents: 0 Rules for every M7 task. Then M7-T01 to M7-T31 in table order (the table lists M7-T30 and M7-T31 after the gate M7-T29, which depends on both).
 
 ---
 
@@ -26,12 +26,14 @@ Contents: 0 Rules for every M7 task. Then M7-T01 to M7-T29 in table order.
 | Hosts | `html`, `react`, `remix`, `liquid`; backends `hydrogen` (the first three) and `liquid` | doc 07 4.4 |
 | Page function names | `Layout` (blueprint `layout`), and `<Name>Page` with `<Name>` the PascalCase id: `HomePage`, `CollectionPage`, `CollectionsListPage`, `ProductPage`, `SearchPage`, `CartPage`, `BlogPage`, `ArticlePage`, `PagePage`, `ContactPage`, `NotFoundPage`, `PasswordPage`, `GiftCardPage`; props type `<Name>PageProps` (layout: `LayoutProps`) | doc 12 2.3, 2.5; the specs' Structure blocks |
 | Query constants | `LAYOUT_QUERY`, `HOME_QUERY`, `COLLECTION_QUERY`, `COLLECTIONS_LIST_QUERY`, `PRODUCT_QUERY`, `SEARCH_QUERY`, `BLOG_QUERY`, `ARTICLE_QUERY`, `PAGE_QUERY`; `cart`, `not-found`, `password`, `gift-card` have no Storefront query; `contact` see PR-M7-9 | doc 12 2.5 first bullet |
-| CLI invocation | `node <repository root>/pkg/bin/ripple.mjs <command>` with the example or theme directory as the working directory; from the repository root: `(cd examples/<host> && node ../../pkg/bin/ripple.mjs <command>)` | PR-M7-1 |
-| Test names | `[T<n>] <subject>: <statement>`; blueprint tests use `<subject>` = the blueprint id (`[T2] cart: BT-3 ...`, `[T5] cart: CR-2 ...`); flat `test()` of `node:test`; `node:assert/strict`; no `describe` | doc 13 2.4 |
+| CLI invocation | `node <repository root>/pkg/bin/ripple.mjs <command>` with the example or theme directory as the working directory; from the repository root: `(cd examples/<host> && node ../../pkg/bin/ripple.mjs <command>)` | doc 14 4.1, ledger D-134 item 18 (PR-M7-1) |
+| Test names | `[T<n>] <subject>: <statement>`; blueprint tests use `<subject>` = the blueprint id (`[T2] cart: BT-3 ...`, `[T5] cart: CR-2 ...`); flat `test()` of `node:test`; `node:assert/strict`; no `describe`. A name written as `<prefix> ...` fixes the prefix, and the rest is one sentence stating the acceptance item; a full name is used exactly | doc 13 2.4, ledger D-141 (2) |
 | Blueprint test file | `blueprints/<id>/<id>.test.ts` | doc 13 3.1 last paragraph |
 | Tiers | `[T1]` no `pkg/`, no browser, no network; `[T2]` render comparison (uses `pkg/`); `[T5]` browser; `[T6]` browser with scripting disabled; `[T7]` mock.shop (`RIPPLE_NETWORK=1`) | doc 13 6.2, PR-M7-4 |
-| Network | tiers 6 (hydrogen examples) and 7 need `RIPPLE_NETWORK=1` and `https://mock.shop/api`. Without it the tests skip with reason `RIPPLE_NETWORK is not 1` and `--no-skips` fails; a session without network runs `pnpm test`, lists the skips in the pull request, and the `verify` CI job is the proof | PLAN section 3 (paragraph after the checklist), doc 13 12.1 step 2 |
-| Node below 24.3 | Remix cases skip with `Remix needs Node 24.3 or later (running <version>)`; run without `--no-skips`, confirm every skip reason, list them in the pull request | doc 13 T-7 |
+| Network | `RIPPLE_NETWORK=1` and `https://mock.shop/api` are needed by tier 7, by the tier 6 flows on the hydrogen examples, and by every test that starts an npm example with `startExample` (the Remix morph tests run since M1-T15). Export `RIPPLE_NETWORK=1` before `pnpm ci` (PLAN 5.0). Without network these tests skip with the reason `RIPPLE_NETWORK is not 1`. Tier 7 is NOT in the `verify` CI job: it runs in the nightly job `commerce` of `.github/workflows/nightly.yml` (D-137) | PLAN section 3.1, doc 13 T-5, 12.1 step 2, CI-9, ledger D-136, D-137 |
+| Node | Node 24.22.3 (ledger D-136, PLAN section 3.1). Install once per machine; repeat the two `export` lines in every new shell: `export PNPM_HOME="$HOME/.local/share/pnpm"`, `export PATH="$PNPM_HOME:$PATH"`, then `pnpm env use --global 24.22.3`; `node --version` prints `v24.22.3`. `pnpm test --no-skips` needs Node 24.3 or later, because Remix needs it (rule T-7) | PLAN section 3.1, doc 13 T-7 |
+| Skip rule for `--no-skips` lines | Every Acceptance line of this file that runs a command with `--no-skips` means: on Node 24.3 or later and with `RIPPLE_NETWORK=1`, the command passes with `--no-skips`. When the Node install fails or the session has no network, run the same command without `--no-skips`, check that every skip reason starts with `Remix needs Node 24.3 or later` or is `RIPPLE_NETWORK is not 1`, and list the skip lines in the pull request; the `verify` CI job (Node 24, `RIPPLE_NETWORK=1`) is then the proof for tiers 1 to 6 | PLAN section 3.1, ledger D-136 |
+| `cartAction` | A prop of the `layout`, `cart` and `product` page functions (default `/api/cart`). The page passes it as the TSX-only prop `action` of CartDrawer, CartLines, CartSummary, CartNote, DiscountCode and ProductForm. The samples omit it (the default applies). The example servers pass `` `${requestContext.locale.pathPrefix}/api/cart` `` (DS-3) | ledger D-118, doc 05 10.1 rule 7, doc 12 DS-3 |
 | Proof commands | `pnpm typecheck && pnpm gen --check && pnpm build && pnpm examples:install && pnpm test --no-skips` (`pnpm ci`); while working: `pnpm test:unit --files=<path prefix>` | PLAN 5.0 |
 | Blueprint definition of done | PLAN 3.3: `blueprint.json` validates; BT-1 to BT-7, BT-9 and the spec's acceptance tests pass in every host; the html file is generated; no CSS, no `style=`, no class outside `rp-` | PLAN 3.3 |
 
@@ -56,7 +58,7 @@ console.log(out, e - s + 1, "bytes")
 EOF
 ```
 
-Usage: `node node_modules/.cache/ripple/extract.mjs <doc file> '<heading prefix>' <language> <index> <output path>`. "Bytes" is what the script prints; "First line" is the first line of the output (cut at 70 characters, shown with `…`). Both were checked on 2026-11-22. When either differs, the doc changed: stop and report; do not guess another block. The extractor finds only code fences that start at column 0. The index counts blocks of that language from the heading onwards, so index 1 under one heading may be in a later subsection; the rows below were checked with exactly these arguments.
+Usage: `node node_modules/.cache/ripple/extract.mjs <doc file> '<heading prefix>' <language> <index> <output path>`. "Bytes" is the number the script prints: `e - s + 1`, the JavaScript string length of the block in UTF-16 code units, plus 1 for the trailing newline. It is NOT the output of `wc -c`: for a block with non-ASCII characters the two differ. Compare a size only with the number the extractor prints, or compare files with `cmp` against a fresh extraction. "First line" is the first line of the output (cut at 70 characters, shown with `…`). Every row was re-run with exactly these arguments on 2026-11-22, after the plan review (ledger 13.5), and matched. When either differs, the doc changed: stop and report; do not guess another block. The extractor finds only code fences that start at column 0. The index counts blocks of that language from the heading onwards, so index 1 under one heading may be in a later subsection; the rows below were checked with exactly these arguments.
 
 Every extraction of this milestone is in this table. A task names rows by their key (`X-<n>`). Write outputs under `node_modules/.cache/ripple/m7/`, then copy to the target named by the task.
 
@@ -122,16 +124,18 @@ Every extraction of this milestone is in this table. A task names rows by their 
 |---|---|---|
 | `blueprints/` | does not exist (PLAN 4.4; M6 works with zero blueprints, `buildRegistryIndex` writes `blueprints: {}`) | M7-T01 (`_sample/`), M7-T05 to M7-T19 |
 | `loadBlueprintSample(id, root = "blueprints")` | in `src/testing/fixtures.ts` since M0-T10 (doc 13 4.1 text), NOT RUN; its gate is `[T1] fixtures: blueprint samples resolve` | M7-T01 makes the gate run against real files |
-| `const BRINGUP = true // PLAN 4.4: set false and delete in M7-T29` | in `src/testing/fixtures.test.ts` and `src/testing/resources.test.ts` (M0-T10): guards "every key of `RESOURCES` is referenced" and the `layout` sample assertion | M7-T28 (PR-M7-3) |
+| `const BRINGUP = true // PLAN 4.4: set false and delete in M7-T28` | in `src/testing/fixtures.test.ts` and `src/testing/resources.test.ts` (M0-T10): guards "every key of `RESOURCES` is referenced" and the `layout` sample assertion | M7-T28 (ledger D-135) |
 | `src/gen/index.ts` marker | `// PLAN 4.4: G9 added by M6-T01, G10 added by M7-T02` (text fixed by M5) | M7-T02 removes the G10 half |
-| `examples/{html,react,remix}/` | M0-T31 skeletons: `package.json` (`private`, `type: module`, scripts `build` = `node -e ""` and `start` = `node server.mjs`, dependency `ripple-kit: file:../../pkg`, `@shopify/hydrogen 2026.10.3`, react `react`/`react-dom` 19.3.1, remix `remix` 3.3.0), `server.mjs` (`GET /` 200, else 404; remix: `/__rp/morph/a` and `/b` under `RIPPLE_TEST_ROUTES=1`, rendering since M1-T01), committed lockfiles, `examples/.gitignore` | M7-T04 (components), M7-T20 to M7-T22 (apps) |
+| `examples/{html,react,remix}/` | M0-T31 skeletons: `package.json` (`private`, `type: module`, scripts `build` = `node -e ""` and `start` = `node server.mjs`, dependency `ripple-kit: file:../../pkg`, `@shopify/hydrogen 2026.10.3`, react `react`/`react-dom` 19.3.1, remix `remix` 3.3.0), `server.mjs` (`GET /` 200, else 404; remix: `/__rp/morph/a` and `/b` under `RIPPLE_TEST_ROUTES=1`, rendering since M1-T01), committed lockfiles, `examples/.gitignore` | M7-T04 (components), M7-T20 and M7-T31 (react), M7-T21 (remix), M7-T22 (html) |
 | `examples/react/.ripple-conformance/`, `examples/remix/.ripple-conformance/` | conformance work directories, git-ignored (doc 13 X-1) | unchanged |
 | `examples/liquid/` | does not exist | M7-T04 (steps 1 to 3 of doc 14 4.1), M7-T23 (steps 4 to 6) |
 | `test/support/examples.ts` | `startExample(host)` (doc 13 12.1 steps 1 to 6); `liquid` returns `serveTheme({ themeRoot: "examples/liquid" })` | unchanged |
 | `test/support/golden-theme.ts` | `buildGoldenTheme(): string` (M1-T39, PLAN P-3) used by three theme-server tests in `test/liquid/shim.test.ts` | M7-T27 deletes it |
 | `test/support/hosts/liquid.ts` | `LIQUID_WORK_DIR`, `buildLiquidWorkDir()` (doc 13 7.x) | unchanged; M7-T03 reuses it |
 | `src/testing/liquid-shim.ts`, `src/testing/serve-theme.ts` | `createShim(themeRoot, options).renderPage(template, scope)`; `serveTheme(options)` with `DEFAULT_THEME_ROUTES`, catalogue ST-3 (`/products/linen-shirt` serves `product.options`) | unchanged |
-| `test/commerce/liquid.test.ts` | C-01 to C-08, C-18, C-29 | M7-T27 adds C-30 |
+| `test/commerce/liquid.test.ts` | the liquid-backend rows of doc 05 section 14 written by M1 and M4 (C-01 to C-08, C-29, C-36, C-38; C-05 cases 2 to 4 by M4-T25) | M7-T27 adds C-30. C-18 is not a separate test: it is the Liquid NJ-F rows of M7-T25 (doc 13 NJ-6, ledger D-145) |
+| `test/commerce/hydrogen.test.ts` | the hydrogen-backend rows of doc 05 section 14 written by M1 and M4 (C-33, C-34, C-37, C-39 by M4-T25) | M7-T30 adds C-35 |
+| `.github/workflows/nightly.yml` | doc 13 17.4, with the job `commerce` (`RIPPLE_NETWORK=1`, `pnpm test:commerce --no-skips`, skipped while `test/commerce/e2e.test.ts` does not exist; D-137) | unchanged; M7-T26 creates the file the job runs |
 | CLI | every command of D-057 (M6 gate); `pkg/bin/ripple.mjs` is the built CLI; `bin/ripple.mjs` imports `../dist/cli/index.mjs`, which exists only inside `pkg/` | unchanged |
 | Comments `// AT-<n>: generic (test/nojs/blueprints.test.ts NJ-F<k>, added by M7-T25)` and `// AT-<n>: generic (test/commerce/e2e.test.ts, added by M7-T26)` | in component test files (M1, M4, M5) | M7-T25 and M7-T26 make every such reference true (step "references") |
 
@@ -146,7 +150,9 @@ Separate sessions must agree on these. Each is PLAN-CHOSEN and internal (none is
 | `test/support/blueprints.ts` | new file | the blueprint test helper of 0.7 | M7-T03 |
 | `installBlueprint`, `renderBlueprint`, `blueprintSharedTests`, `RenderedPage` | `test/support/blueprints.ts` | 0.7 | M7-T03 |
 | `.ripple-blueprints/` | `examples/<host>/.ripple-blueprints/` (npm hosts) and `node_modules/.cache/ripple/test/blueprints/liquid/` | temporary install copies of 0.7; the npm ones are git-ignored by a line in `examples/<host>/.gitignore` | M7-T03 |
-| Example source layout | 0.8 | `src/server.tsx`, `src/client.tsx`, `src/data.ts`, `src/routes.ts`, `build.mjs`, `server.mjs` | M7-T20 to M7-T22 |
+| Example source layout | 0.8 | `src/server.tsx`, `src/client.tsx`, `src/data.ts`, `src/routes.ts`, `build.mjs`, `server.mjs` | react: M7-T20 (`src/data.ts`), M7-T31 (the rest); remix: M7-T21; html: M7-T22 |
+| `loadLayout`, `loadPage` | `examples/<host>/src/data.ts` | `loadLayout(ctx: LoadContext): Promise<Record<string, unknown>>` returns the `layout` props except `children`, `cartAction` and `cartPage`; `loadPage(id: string, ctx: LoadContext): Promise<{ status: 200 \| 404; props: Record<string, unknown> }>` returns the props of the page function of blueprint `id`; `LoadContext` is `{ storefrontClient: ReturnType<typeof createStorefrontClient>; requestContext: ReturnType<typeof createShopifyRequestContext>; url: URL; params: Record<string, string> }` (`params` holds the `:name` segments of the blueprint's `route` cell in doc 12 2.1: `handle`, `blog`, `article`) | M7-T20 |
+| `i18nDefinition`, `routeTemplates`, `storefrontClientType`, `storefrontClientConfig` | `examples/<host>/src/data.ts` | the four app values that doc 05 10.1 names (exported, so that `src/server.tsx` and `src/routes.ts` import them); `i18nDefinition` as PR-M7-15 | M7-T20 |
 | `test/liquid/theme.test.ts` | new file | the theme acceptance tests A-1 to A-19, A-24, A-25 (doc 14 14: "Tests live in `test/liquid/`"; doc 13 3.1 lists no such file) | M7-T24 |
 | `test/conformance/blueprints.test.ts` | new file | `[T1]`/`[T2]` cross-blueprint checks: every `blueprint.json` validates and lists the components and regions of its spec | M7-T03 (created empty with one test), each blueprint task appends nothing (the test iterates the directory) |
 
@@ -177,7 +183,7 @@ doc 12 2.8 defines BT-1 to BT-9 but no harness; doc 13 owns none for blueprints.
   - `password` on `react` and `remix`: the page is rendered without `Layout` (0.6); `renderBlueprint` checks `id === "password"`.
   - `html`: the text of `<pages>/<id>.html` from the install directory.
   - `liquid`: `createShim(dir).renderPage(<template>, scope)` where `<template>` is the blueprint's template file name without `templates/` and `.liquid` (`index`, `collection`, `list-collections`, `product`, `search`, `cart`, `blog`, `article`, `page`, `page.contact`, `404`, `password`, `gift_card`) and `scope` = `{ ...loadBlueprintSample("layout").liquid, ...loadBlueprintSample(id).liquid }`. For `layout` render `templates/page.liquid` from the page sample only when that blueprint exists; otherwise render a template written by the helper containing `{{ '' }}` (UNVERIFIED that the shim accepts a template outside the theme's file set; fallback: write it into `templates/rp-empty.liquid` of the install copy).
-- `blueprintSharedTests(id, options?: { masks?: string[]; skip?: Array<"BT-4" | "BT-5"> })` registers, in the calling file:
+- `blueprintSharedTests(id, options?: { masks?: string[]; skip?: Array<"BT-4" | "BT-5">; hosts?: Host[] })` registers, in the calling file (`hosts` defaults to all four; a host not listed gets no test at all, so nothing is skipped; only M7-T05 passes it):
   - `[T2] <id>: BT-1 tsx type-checks against the installed bindings` (react and remix install copies: `tsc --noEmit -p <generated tsconfig>` with `paths` `{ "__PKG__": ["<abs>/src/index.ts"] }`, `jsx` per host; exit 0) and `[T2] <id>: BT-1 liquid passes Theme Check and renders` (`themeCheckRun` of `@shopify/theme-check-node` with the Ripple configuration of doc 06 section 8 on the liquid install copy: zero offenses in the blueprint's files; `renderBlueprint("liquid", id)` resolves). Tier 2, not 1: both need `pkg/` (PR-M7-4).
   - `[T2] <id>: BT-2 every host passes ripple check` (for each host: `check` of `<pkg>/check` on the rendered document, layers S and H, zero errors) and the fixture-contract lint (PR-M7-5).
   - `[T2] <id>: BT-3 main children are equal in every host` (canonicalise with `src/testing/canonicalize.ts` and the masks of the embedded components; compare the children of `<main>` of react, remix and html; liquid with `options.masks` added).
@@ -196,8 +202,8 @@ doc 13 12.1 fixes the contract (scripts, routes, mock.shop through `@shopify/hyd
 | `ripple.json` | written by `ripple init` (M7-T04) |
 | `server.mjs` | the `start` script (kept from M0-T31): imports the built `dist/server.mjs` and listens on `127.0.0.1:${PORT}` |
 | `build.mjs` | the `build` script: esbuild bundles `src/server.tsx` to `dist/server.mjs` (node) and, react and remix only, `src/client.tsx` to `public/client.js` (browser); devDependency `esbuild` at the repository's exact version (`0.28.2`, root `package.json`) |
-| `src/data.ts` | Storefront client and loaders: one function per route that runs the blueprint's `<X>_QUERY` with `$country`/`$language` and maps the result to the page props; mock.shop through `@shopify/hydrogen` (doc 05 10.1). Framework-neutral; M7-T21 and M7-T22 copy it unchanged |
-| `src/routes.ts` | route table: the routes of doc 12 2.1 column `route`, plus `/api/cart` (doc 05 10.3), `/api/locale` (doc 12 2.6 locale route), `/api/newsletter` (doc 12 2.7), `/api/contact` (spec `contact`, `lib/contact-route.ts`); an unknown handle renders `not-found` with status 404 (doc 12 2.5 fourth bullet) |
+| `src/data.ts` | M7-T20. The four app values of doc 05 10.1 (`i18nDefinition`, `routeTemplates`, `storefrontClientType`, `storefrontClientConfig`) and the loaders `loadLayout`, `loadPage` (0.5), which run the blueprint's `<X>_QUERY` with `$country`/`$language` and map the result to the page props; mock.shop through `@shopify/hydrogen` (doc 05 10.1). Framework-neutral; M7-T21 and M7-T22 copy it unchanged |
+| `src/routes.ts` | M7-T31. Route table: the routes of doc 12 2.1 column `route`, plus `/api/cart` (doc 05 10.3), `/api/locale` (doc 12 2.6 locale route), `/api/newsletter` (doc 12 2.7), `/api/contact` (spec `contact`, `lib/contact-route.ts`); an unknown handle renders `not-found` with status 404 (doc 12 2.5 fourth bullet). Every route also matches under the prefix `/fr-ca` (PR-M7-15) |
 | `src/server.tsx` | request handler: route, load, render `renderDocument` (doc 12 2.6, DS-1 to DS-8), serve `public/` at `/` (so `public/ripple/*` is `/ripple/*`) |
 | `src/client.tsx` | react: `configureCommerce` then `hydrateRoot(document.body, ...)` (DS-5 or its fallback); remix: the Remix client entry (DS-6) |
 | `.gitignore` | `dist/`, `public/client.js`, `.ripple-blueprints/` (and `.ripple-conformance/`, already there) |
@@ -206,35 +212,29 @@ doc 13 12.1 fixes the contract (scripts, routes, mock.shop through `@shopify/hyd
 
 ### 0.9 Plan readings made by this file
 
-Each is the smallest choice that keeps the gates green where two specs conflict or all are silent. The task that first applies one adds one line under `## Ledger issues` of the named owning doc (text: `<PR id>: <topic> (docs/plan/M7-blueprints-examples.md 0.9)`) and mentions it in the pull request.
+Each is the smallest choice that keeps the gates green where two specs conflict or all are silent. PR-M7-1 to PR-M7-14 are ratified by ledger D-146 (PR-M7-1 as D-134 item 18; PR-M7-3 as D-135): a task that applies one cites it in the pull request and adds no ledger-issue line. PR-M7-15 was added after the plan review: the task that first applies it (M7-T20) adds one line under `## Ledger issues` of the owning doc (text: `PR-M7-15: <topic> (docs/plan/M7-blueprints-examples.md 0.9)`) and mentions it in the pull request.
 
 | # | Topic | The specs | Reading | Owning doc | Applied by |
 |---|---|---|---|---|---|
-| PR-M7-1 | CLI path in the theme build | doc 14 4.1: "run `node bin/ripple.mjs` with `examples/liquid` as the working directory". No `bin/` exists there, and the repository's `bin/ripple.mjs` imports `../dist/cli/index.mjs`, which exists only in `pkg/` | Run `node ../../pkg/bin/ripple.mjs` from `examples/liquid` (0.2) | doc 14 | M7-T04 |
+| PR-M7-1 | CLI path in the theme build | doc 14 4.1 now prints it (D-134 item 18): steps 2 to 4 and 6 run `node ../../pkg/bin/ripple.mjs` with `examples/liquid` as the working directory; the repository's `bin/ripple.mjs` imports `../dist/cli/index.mjs`, which exists only in `pkg/` | Ratified as D-134 item 18: run `node ../../pkg/bin/ripple.mjs` from `examples/liquid` (0.2) | doc 14 | M7-T04 |
 | PR-M7-2 | `DocumentParts` of G10 | doc 07 G10 calls `renderDocument`; nothing fixes title, head, lang, commerce | 0.6 | doc 07 | M7-T02 |
-| PR-M7-3 | Who flips `BRINGUP` | M0: "set false and delete in M7-T29"; PLAN 3.5: a gate task changes no source | M7-T28 deletes both constants and their guards | PLAN | M7-T28 |
+| PR-M7-3 | Who flips `BRINGUP` | PLAN 3.5: a gate task changes no source | Ratified as D-135: M7-T28 deletes both test-side constants and their guards | PLAN | M7-T28 |
 | PR-M7-4 | Blueprint test harness and BT-1 tier | doc 12 2.8: BT-1 "(tier 1)", but it type-checks against installed bindings (needs `pkg/` and the examples); no harness | 0.7; BT-1 is `[T2]` | doc 12 | M7-T03 |
 | PR-M7-5 | "contract lint of `02-html-contract.md` section 14" in BT-2 | doc 02 section 14 is the evidence section; the fixture lint is doc 02 11.8 | BT-2 runs the lint of 11.8 that applies to documents (UNVERIFIED which rules apply to a whole page; when 11.8 is per-fixture only, BT-2 runs `ripple check` only and the done file says so) | doc 12 | M7-T03 |
-| PR-M7-6 | Example source tree, `ripple init` paths | doc 13 12.1 contract only | 0.8 | doc 13 | M7-T04, M7-T20 |
+| PR-M7-6 | Example source tree, `ripple init` paths | doc 13 12.1 contract only | 0.8 | doc 13 | M7-T04, M7-T20, M7-T31 |
 | PR-M7-7 | html example rendering | doc 12 2.3: the html host's page files are generated documents with the sample data; doc 13 12.1: the html example serves mock.shop data | `examples/html` serves the installed `pages/*.html` unchanged for every route except `/api/*` (the CLI output, which uses the sample data); its `/api/cart` uses the hydrogen cart handler. Tier 7 on html then tests the sample-data page with a live cart (UNVERIFIED that E2E-2 finds a variant id that mock.shop accepts: the sample ids are fixture ids; when E2E-2 fails for this reason, the fallback is the react render path with host `html`, which M7-T22 chooses and reports) | doc 13 | M7-T22 |
 | PR-M7-8 | Fragments in query constants | the specs print each fragment once (`RippleProductCard`, `RippleCollectionCard` in `home`; `RippleVariantFields` in `product`; `RippleMenuItemFields` in `layout`) and say the tsx files are complete except the constant | Each `<X>_QUERY` is the blueprint's graphql block followed, after one blank line, by every fragment block it spreads that the block itself does not define, copied from the spec that defines it | doc 12 | first blueprint task that needs it |
 | PR-M7-9 | Query of `contact` | doc 12 2.5: "`<BLUEPRINT>_QUERY`"; spec `contact` loads the page with handle `contact` through the `page` query | `contact.tsx` exports no query constant; `src/data.ts` runs `PAGE_QUERY` with `handle: "contact"`. When `contact.tsx` (X-46) references a constant, follow the file | spec `contact` | M7-T16 |
-| PR-M7-10 | Client navigation tests (CL-7, PR-7, LT-9 where they say "client navigation" on react/remix) | the React file has no router (2.3); BP-11 | Run them against the example app in tier 7 (`test/commerce/e2e.test.ts` style, `startExample`), name them `[T7] <id>: <ACC-ID> ...` in the blueprint test file; without network they skip | doc 12 | M7-T08, M7-T10 |
-| PR-M7-11 | Route-code tests (CL-5 = CO-R1 to CO-R3, NF-1 hydrogen 404) | they test route code, which lives in the examples (M7-T20) | Written by the blueprint task against the route code it can call: CL-5 against the filter/sort URL helpers named in spec `collection`; NF-1 as `[T7] not-found: NF-1 ...` with `startExample("react")` | spec `collection`, spec `not-found` | M7-T08, M7-T17 |
-| PR-M7-12 | Password layout reads `ripple.blueprints.layout.skip` | BP-6 / doc 07 generation check: every key a file reads is in its owner's locale file | Leave the key in the `layout` table; `password` depends on `layout` being installed first (order of 0.2). Record the ledger issue; no code change | doc 12 | M7-T18 |
+| PR-M7-10 | Client navigation tests (CL-7, PR-7, LT-9 where they say "client navigation" on react/remix) | the React file has no router (2.3); BP-11 | Run them against the example app in tier 7 (`test/commerce/e2e.test.ts` style, `startExample`), name them `[T7] <id>: <ACC-ID> ...` in the blueprint test file; without network they skip. The blueprint task writes them but cannot run them (tier 7 is not in `pnpm test`, and the app exists only after M7-T31); they first run in the M7 gate (M7-T29) | doc 12 | M7-T08, M7-T10 |
+| PR-M7-11 | Route-code tests (CL-5 = CO-R1 to CO-R3, NF-1 hydrogen 404) | they test route code, which lives in the examples (M7-T31) | Written by the blueprint task against the route code it can call: CL-5 against the filter/sort URL helpers named in spec `collection`; NF-1 as `[T7] not-found: NF-1 ...` with `startExample("react")`, which first runs in the M7 gate (as PR-M7-10) | spec `collection`, spec `not-found` | M7-T08, M7-T17 |
+| PR-M7-12 | Password layout reads `ripple.blueprints.layout.skip` | BP-6 / doc 07 generation check: every key a file reads is in its owner's locale file | Leave the key in the `layout` table; `password` depends on `layout` being installed first (order of 0.2). No code change | doc 12 | M7-T18 |
 | PR-M7-13 | Locale patch entry for blueprints without keys | doc 12 2.1 example `product` lists a `locale` entry; spec `product` has no locale keys; M6 keeps a `locale` entry only when the owner has a generated locale file | `blueprint.json` of a blueprint with no key table (`product`, `page`) has no `locale` entry | doc 12 | M7-T10 |
 | PR-M7-14 | `title` and `summary` of `blueprint.json` | doc 12 2.1 gives them only for `product` (`Product page`; one sentence) | `title`: the id in words, capitalised, plus ` page` (`Home page`, `Collections list page`, `Not found page`, `Gift card page`; `layout`: `Layout`); `summary`: the first sentence of the spec's `### Purpose` | doc 12 | M7-T05 |
+| PR-M7-15 | Locales of the npm examples | doc 05 C-35 requests `/fr-ca/cart` and `/fr-ca/products/<handle>` on a hydrogen host and expects `/fr-ca/api/cart`; doc 13 12.1 names no locale for the examples | `i18nDefinition` in `src/data.ts` (react, remix) has the default locale (path prefix `""`) and one more locale with path prefix `/fr-ca` (language `FR`, country `CA`); take the option names from the Hydrogen skill `hydrogen-markets`, not from memory. `src/routes.ts` matches every route also under `/fr-ca`. `examples/html` serves the static CLI pages (PR-M7-7) and has no `/fr-ca` routes, so C-35 runs on react and remix only | doc 13 (12.1) | M7-T20, M7-T31, M7-T30 |
 
-### 0.10 Order constraints the task table does not show
+### 0.10 Order of tasks
 
-| Task | Also needs | Why |
-|---|---|---|
-| M7-T03 | none to start; its first real use is M7-T05 | the helper's own tests are pure |
-| M7-T06 | M7-T01 | `layout.json` sample |
-| M7-T07 to M7-T19 | M7-T01, M7-T03 (through M7-T06) | 0.7 installs `layout` first and reads the samples |
-| M7-T21, M7-T22 | M7-T20 | they copy `src/data.ts` and the route table (recommendation: add the dependency to the table) |
-| M7-T25 | M7-T24 is not needed | separate files |
-| M7-T27 | M7-T23 | `examples/liquid` |
+The "Depends on" column of the task table (PLAN section 6) is the only source of order (PLAN section 1 item 2). Every order constraint that an earlier version of this section listed is now in the table: M7-T31 depends on M7-T20, and M7-T21, M7-T22, M7-T25, M7-T26 and M7-T30 depend on M7-T31; M7-T07 to M7-T19 reach M7-T01 and M7-T03 through M7-T06. No section of this file asks you to wait for a task that is not in its "Depends on" line.
 
 ### 0.11 Shared files that several M7 tasks edit
 
@@ -242,10 +242,11 @@ Edit only what your task names. On a `git rebase origin/main` conflict keep both
 
 | File | Rule |
 |---|---|
-| `locales/en.default.json` | each blueprint task adds only its own `ripple.blueprints.<id>` object; keys sorted as the spec's key table |
+| `locales/en.default.json` | each blueprint task adds only its own `ripple.blueprints.<id>` object; keys sorted as the spec's key table (tasks of group C may edit it at the same time, ledger D-147) |
 | `blueprints/_sample/<id>.json` | M7-T01 creates every file; a blueprint task edits only its own file and `layout.json` only in M7-T05/M7-T06 |
 | `test/support/blueprints.ts` | M7-T03 creates; a blueprint task MUST NOT change it; a defect is fixed in a separate commit `M7-T03 fix: <defect>` when under 20 lines |
-| `examples/<host>/` | M7-T04 installs; M7-T20 to M7-T23 add the apps; no blueprint task writes there except through 0.7 temporary copies |
+| `examples/<host>/` | M7-T04 installs; M7-T20, M7-T31, M7-T21, M7-T22, M7-T23 add the apps; no blueprint task writes there except through 0.7 temporary copies |
+| `test/commerce/hydrogen.test.ts` | M7-T30 adds only its C-35 tests; never change a test of M1 or M4 |
 | `src/gen/index.ts` | M7-T02 only |
 | `components/*/` manifests | M7-T28 only (`status`) |
 
@@ -280,9 +281,9 @@ Create: `blueprints/_sample/layout.json` and `blueprints/_sample/<id>.json` for 
    | `home.json` | `hero`, `featured`, `collections` |
    | `collection.json` | `collection`, `products`, `count`, `filters`, `chips`, `pathname`, `sortOptions`, `sort`, `sortBy`, `params`, `pageInfo`, `viewEvent` |
    | `collections-list.json` | `collections`, `pageInfo` |
-   | `product.json` | `product`, `variant`, `search`, `recommended`, `viewEvent` |
+   | `product.json` | `product`, `variant`, `search`, `recommended`, `viewEvent` (not `cartAction`, 0.2) |
    | `search.json` | `terms`, `results`, `count`, `pageInfo`, `viewEvent` |
-   | `cart.json` | `cart`, `viewEvent` |
+   | `cart.json` | `cart`, `viewEvent` (not `cartAction`, 0.2) |
    | `blog.json` | `blog`, `articles`, `pageInfo` |
    | `article.json` | `article`, `blog` |
    | `page.json` | `page` |
@@ -397,7 +398,7 @@ Any blueprint. BT-8 (tier 8, M10). Each spec's own acceptance tests (blueprint t
 
 ---
 
-## M7-T04 Install components with the CLI: `ripple init` and `ripple add --all` in `examples/{html,react,remix}`; for `examples/liquid` the first steps of doc 14 §4.1
+## M7-T04 Install components with the CLI: `ripple init` and `ripple add --all` in `examples/{html,react,remix}`; for `examples/liquid` the first steps of doc 14 §4.1 (the hand-made files, `ripple init --host liquid`, `ripple add --all`)
 
 - **Goal:** Produce the component installs of the four examples with the CLI only, so that every later example and blueprint task builds on CLI output.
 - **Depends on:** M5-T15, M6-T35.
@@ -427,7 +428,7 @@ Create: `examples/liquid/` (the seven hand-made files, then CLI output), `exampl
 
    Each command exits 0. Keep the printed plans; paste them into the done file.
 3. Liquid, step 1 of doc 14 4.1 (the seven hand-made files): extract X-12 to `examples/liquid/AGENTS.md`, X-13 to `examples/liquid/DESIGN.md`; `config/styles.css` = the first eight lines of X-14 (`head -n 8`); `config/settings_schema.json` = a JSON array holding only the `theme_info` object of X-15 (`node -e` that parses X-15, keeps the element whose `name` is `theme_info`, writes `JSON.stringify([obj], null, 2) + "\n"`); `config/settings_data.json` = `{"current": {}}` plus newline; `locales/en.default.json` and `locales/en.default.schema.json` = `{}` plus newline. `find examples/liquid -type f | wc -l` prints `7`.
-4. Liquid, steps 2 and 3 (PR-M7-1):
+4. Liquid, steps 2 and 3 (doc 14 4.1, D-134 item 18):
 
    ```bash
    (cd examples/liquid && node ../../pkg/bin/ripple.mjs init --host liquid)
@@ -444,7 +445,7 @@ Create: `examples/liquid/` (the seven hand-made files, then CLI output), `exampl
 
 ### Out of scope
 
-Blueprints (`add --blueprint`: M7-T20 to M7-T23). `pnpm theme:css`, `ripple check` in the theme (M7-T23). The applications, routes and data (M7-T20 to M7-T22). Editing any CLI output by hand.
+Blueprints (`add --blueprint`: M7-T20 to M7-T23). `pnpm theme:css`, `ripple check` in the theme (M7-T23). The applications, routes and data (M7-T20, M7-T31, M7-T21, M7-T22). Editing any CLI output by hand.
 
 ### If blocked
 
@@ -456,13 +457,13 @@ Blueprints (`add --blueprint`: M7-T20 to M7-T23). `pnpm theme:css`, `ripple chec
 
 ## M7-T05 Blueprint `layout`, TSX hosts: `layout.tsx` (react, remix), `types.ts`, `lib/document.ts`, `lib/menu.ts`, `lib/locale-route.ts`, `lib/newsletter-route.ts`
 
-- **Goal:** Add the React and Remix files of the `layout` blueprint, its `blueprint.json` with the TSX file records, its locale keys and its complete sample, and pass the TSX halves of BT-1 to BT-7, BT-9 and LT-1 to LT-13.
+- **Goal:** Add the React and Remix files of the `layout` blueprint, its `blueprint.json` with the TSX file records, its locale keys and its complete sample, and pass the TSX halves of BT-1 to BT-7, BT-9 and LT-1 to LT-13. The blueprint `layout` is split on purpose: this task is the TSX half; the Liquid files and the generated `layout.html` are the other half, task M7-T06.
 - **Depends on:** M7-T03, M7-T04.
 - **Kind:** `blueprint`. Size M. Group -.
 
 ### Read first
 
-Spec `layout` (`docs/blueprints/layout.md`, 22 kB) complete except the Liquid block and the Liquid notes (the tsx block is extracted, not read). doc 12: `### 2.1 ` (3 kB), `### 2.2 ` (4 kB), `### 2.3 ` (3 kB), `### 2.4 ` (1 kB), `### 2.6 ` the prose rules DS-1 to DS-8 and "Fallback for DS-5" prose (3 kB; the code is extracted), `### 2.7 ` prose rules NR-1 to NR-3 (1 kB). This file 0.3 rows X-1, X-4 to X-10, 0.7, PR-M7-8.
+Spec `layout` (`docs/blueprints/layout.md`, 24 kB) complete except the Liquid block and the Liquid notes (the tsx block is extracted, not read). doc 12: `### 2.1 ` (3 kB), `### 2.2 ` (4 kB), `### 2.3 ` (3 kB), `### 2.4 ` (1 kB), `### 2.6 ` the prose rules DS-1 to DS-8 and "Fallback for DS-5" prose (3 kB; the code is extracted), `### 2.7 ` prose rules NR-1 to NR-3 (1 kB). This file 0.3 rows X-1, X-4 to X-10, 0.7, PR-M7-8.
 
 ### Files
 
@@ -476,17 +477,17 @@ Create: `blueprints/layout/blueprint.json`; `blueprints/layout/react/layout.tsx`
 4. Remix files: apply R-1 to R-6 of doc 12 2.3, in order, to `layout.tsx`; nothing else changes. The five `.ts` files are copied unchanged (they hold no JSX) unless one imports `react`; then apply R-1.
 5. Locale keys (the spec's key table): add `ripple.blueprints.layout` with `skip`, `announcement` (`""`), `search`, `close`, `meta_tagged`, `meta_page`, `footer_menu`, `policies`, `copyright` (`© {{ year }} {{ name }}`) and the spec's English values. Run `pnpm gen`.
 6. Sample `layout.json`: fill `menu`, `footerMenu` (non-empty, so A-14 and NJ-F2 have links), `policies`, `shop`, `locale` (`countries`, `languages`: at least two entries each so the LocaleSelector form renders; UNVERIFIED that the spec requires two), `path` `"/"`, `year` `2026`, and the `$liquid` globals the Liquid layout reads (`shop`, `linklists`, `localization`, `routes` from `SHIM_GLOBALS` defaults where the shim already provides them; add only what is missing).
-7. `layout.test.ts`: `blueprintSharedTests("layout")`, plus one test per acceptance item LT-1 to LT-13 of the spec named `[T<tier>] layout: LT-<n> <statement>` with the tier the item states; LT-11 is a reference to another test: write `// LT-11: <the test it names>` instead. In this task the Liquid and html cases of the shared tests skip with the reason `layout liquid and html files are M7-T06` (remove the skip in M7-T06). LT-9 when it needs client navigation: PR-M7-10.
-8. `pnpm build`, then `pnpm test --files=blueprints/layout` (all tiers of that file).
+7. `layout.test.ts`: `blueprintSharedTests("layout", { hosts: ["react", "remix"] })` (0.7: the Liquid and html cases are not registered in this task, so nothing is skipped; M7-T06 removes the `hosts` option), plus one test per acceptance item LT-1 to LT-13 of the spec named `[T<tier>] layout: LT-<n> <statement>` with the tier the item states, for the react and remix hosts only; LT-11 is a reference to another test: write `// LT-11: <the test it names>` instead. An LT item that only the Liquid or html host can show is written by M7-T06: write `// LT-<n>: covered by M7-T06 (blueprints/layout/layout.test.ts: [T<tier>] layout: LT-<n> ...)` (ledger D-141 (3)). LT-9 when it needs client navigation: PR-M7-10.
+8. `pnpm build`, then `pnpm test --files=blueprints/layout --no-skips` (all tiers of that file; skip rule of 0.2).
 9. Proof: PLAN 5.0.
 
 ### Acceptance
 
-`pnpm gen --check` exits 0. `pnpm test --files=blueprints/layout` shows passing lines for BT-1, BT-2, BT-3 (react and remix compared), BT-4, BT-5, BT-7, BT-9 and each LT id, and the only skips are the M7-T06 reason and T-7. `grep -rn 'className\|style=' blueprints/layout/remix/ | grep -v 'class="rp-'` prints nothing.
+`pnpm gen --check` exits 0. `pnpm test --files=blueprints/layout --no-skips` passes (skip rule of 0.2) and shows passing lines for BT-1, BT-2, BT-3 (react and remix compared), BT-4, BT-5, BT-7, BT-9 and each LT id written in step 7. `grep -c 'hosts: \["react", "remix"\]' blueprints/layout/layout.test.ts` prints `1`. `grep -rn 'className\|style=' blueprints/layout/remix/ | grep -v 'class="rp-'` prints nothing.
 
 ### Out of scope
 
-`layout/theme.liquid`, the two snippets, `layout.html` (M7-T06). Routes that call `lib/locale-route.ts` and `lib/newsletter-route.ts` (M7-T20 to M7-T22). Any component change.
+`layout/theme.liquid`, the two snippets, `layout.html` (M7-T06). Routes that call `lib/locale-route.ts` and `lib/newsletter-route.ts` (M7-T31, M7-T21, M7-T22). Any component change.
 
 ### If blocked
 
@@ -497,7 +498,7 @@ Create: `blueprints/layout/blueprint.json`; `blueprints/layout/react/layout.tsx`
 
 ## M7-T06 Blueprint `layout`, Liquid and html: `layout/theme.liquid`, `snippets/import-map.liquid`, `snippets/meta-tags.liquid`, generated `layout.html`
 
-- **Goal:** Add the Liquid files and the generated html file of the `layout` blueprint and pass BT-1 to BT-7, BT-9 and LT-1 to LT-13 in every host.
+- **Goal:** Add the Liquid files and the generated html file of the `layout` blueprint and pass BT-1 to BT-7, BT-9 and LT-1 to LT-13 in every host. The blueprint `layout` is split on purpose: this task is the Liquid and html half; the TSX files, `blueprint.json`, the locale keys and the sample are the other half, task M7-T05.
 - **Depends on:** M7-T02, M7-T05.
 - **Kind:** `blueprint`. Size M. Group -.
 
@@ -507,7 +508,7 @@ Spec `layout`: the Liquid notes after the Liquid block (`### Structure` from the
 
 ### Files
 
-Create: `blueprints/layout/liquid/layout/theme.liquid`, `blueprints/layout/liquid/snippets/import-map.liquid`, `blueprints/layout/liquid/snippets/meta-tags.liquid`, `blueprints/layout/html/layout.html` (by `pnpm gen` only). Change: `blueprints/layout/blueprint.json` (`files.html`, `files.liquid`), `blueprints/layout/layout.test.ts` (remove the M7-T06 skips), `src/gen/blueprint-html.test.ts` (one test). Must not change: `theme/**`, the TSX files of M7-T05 (except a defect the new tests show, in a separate commit).
+Create: `blueprints/layout/liquid/layout/theme.liquid`, `blueprints/layout/liquid/snippets/import-map.liquid`, `blueprints/layout/liquid/snippets/meta-tags.liquid`, `blueprints/layout/html/layout.html` (by `pnpm gen` only). Change: `blueprints/layout/blueprint.json` (`files.html`, `files.liquid`), `blueprints/layout/layout.test.ts` (remove the `hosts` option of M7-T05), `src/gen/blueprint-html.test.ts` (one test). Must not change: `theme/**`, the TSX files of M7-T05 (except a defect the new tests show, in a separate commit).
 
 ### Steps
 
@@ -522,13 +523,13 @@ Create: `blueprints/layout/liquid/layout/theme.liquid`, `blueprints/layout/liqui
 4. `blueprint.json`: `files.liquid` = `template` (`layout/theme.liquid`), `import-map` (`snippets/import-map.liquid`), `meta-tags` (`snippets/meta-tags.liquid`), each `type: blueprint`, `mode: owned`, `generated: false`, plus the `locale` entry of the X-10 shape with source `liquid/locales/blueprint.layout.json`; `files.html` = `template`, source `blueprints/layout/html/layout.html`, target `@pages/layout.html`, `generated: true`.
 5. `pnpm gen` writes `blueprints/layout/html/layout.html` (G10 with an empty page, 0.6). Never edit it.
 6. Add `[T1] gen: G10 output equals the committed layout.html` to `src/gen/blueprint-html.test.ts` (`await generateBlueprintHtml("layout")` equals the file text).
-7. Remove the M7-T06 skips from `layout.test.ts`; write the Liquid halves of LT items the spec assigns to Liquid (for LT-12: the byte comparison with `theme/snippets/meta-tags.liquid` after the two replacements).
-8. `pnpm build && pnpm test --files=blueprints/layout`.
+7. In `layout.test.ts` change `blueprintSharedTests("layout", { hosts: ["react", "remix"] })` to `blueprintSharedTests("layout")`; write the Liquid and html halves of the LT items (every `// LT-<n>: covered by M7-T06 ...` line of M7-T05 becomes that test; for LT-12: the byte comparison with `theme/snippets/meta-tags.liquid` after the two replacements).
+8. `pnpm build && pnpm test --files=blueprints/layout --no-skips` (skip rule of 0.2).
 9. Proof: PLAN 5.0.
 
 ### Acceptance
 
-`pnpm gen --check` exits 0; after `echo x >> blueprints/layout/html/layout.html` it exits 1 (then `git checkout` the file). `pnpm test --files=blueprints/layout --no-skips` passes (Remix skips only per T-7). `pnpm test:unit --files=src/gen/blueprint-html` reports 3 passed. `git diff --stat origin/main -- theme/` is empty.
+`pnpm gen --check` exits 0; after `echo x >> blueprints/layout/html/layout.html` it exits 1 (then `git checkout` the file). On Node 24.3 or later `pnpm test --files=blueprints/layout --no-skips` passes; below 24.3 run it without `--no-skips` and list the T-7 skips in the pull request (0.2). `grep -c 'hosts:' blueprints/layout/layout.test.ts` prints `0`. `grep -c 'covered by M7-T06' blueprints/layout/layout.test.ts` prints `0`. `pnpm test:unit --files=src/gen/blueprint-html` reports 3 passed. `git diff --stat origin/main -- theme/` is empty.
 
 ### Out of scope
 
@@ -549,7 +550,7 @@ Rendering the layout in `examples/liquid` (M7-T23). `rp-head`, `rp-tokens`, `rp-
 
 ### Read first
 
-Spec `home` (`docs/blueprints/home.md`, 7 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (3 kB), `### 2.2 ` (4 kB), `### 2.3 ` (3 kB), `### 2.4 ` (1 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-20, X-21, X-22, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/home.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
+Spec `home` (`docs/blueprints/home.md`, 7 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (5.5 kB), `### 2.2 ` (4.5 kB), `### 2.3 ` (5 kB), `### 2.4 ` (9 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-20, X-21, X-22, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/home.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
 
 ### Files
 
@@ -571,11 +572,11 @@ Specifics: X-22 defines the fragments `RippleProductCard` and `RippleCollectionC
 
 ### Acceptance
 
-`pnpm gen --check` exits 0. `test -f blueprints/home/html/home.html`. `pnpm test --files=blueprints/home --no-skips` passes (Remix skips only per T-7; tier 6/7 skips only per the network rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 and each of HO-1, HO-2. `grep -rn 'style=' blueprints/home/react blueprints/home/remix blueprints/home/liquid` prints nothing.
+`pnpm gen --check` exits 0. `test -f blueprints/home/html/home.html`. `pnpm test --files=blueprints/home --no-skips` passes (on Node below 24.3 or without network: the skip rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 and each of HO-1, HO-2. `grep -rn 'style=' blueprints/home/react blueprints/home/remix blueprints/home/liquid` prints nothing.
 
 ### Out of scope
 
-Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
+Route code and data loading in the examples (M7-T20, M7-T31, M7-T21, M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
 
 ### If blocked
 
@@ -593,7 +594,7 @@ Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M
 
 ### Read first
 
-Spec `collection` (`docs/blueprints/collection.md`, 17 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (3 kB), `### 2.2 ` (4 kB), `### 2.3 ` (3 kB), `### 2.4 ` (1 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-23, X-24, X-25, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/collection.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
+Spec `collection` (`docs/blueprints/collection.md`, 17 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (5.5 kB), `### 2.2 ` (4.5 kB), `### 2.3 ` (5 kB), `### 2.4 ` (9 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-23, X-24, X-25, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/collection.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
 
 ### Files
 
@@ -615,11 +616,11 @@ Specifics: CL-5 tests the route-code rules CO-R1 to CO-R3 and CL-7 is a client n
 
 ### Acceptance
 
-`pnpm gen --check` exits 0. `test -f blueprints/collection/html/collection.html`. `pnpm test --files=blueprints/collection --no-skips` passes (Remix skips only per T-7; tier 6/7 skips only per the network rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 and each of CL-1 to CL-7. `grep -rn 'style=' blueprints/collection/react blueprints/collection/remix blueprints/collection/liquid` prints nothing.
+`pnpm gen --check` exits 0. `test -f blueprints/collection/html/collection.html`. `pnpm test --files=blueprints/collection --no-skips` passes (on Node below 24.3 or without network: the skip rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 and each of CL-1 to CL-7. `grep -rn 'style=' blueprints/collection/react blueprints/collection/remix blueprints/collection/liquid` prints nothing.
 
 ### Out of scope
 
-Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
+Route code and data loading in the examples (M7-T20, M7-T31, M7-T21, M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
 
 ### If blocked
 
@@ -637,7 +638,7 @@ Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M
 
 ### Read first
 
-Spec `collections-list` (`docs/blueprints/collections-list.md`, 5 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (3 kB), `### 2.2 ` (4 kB), `### 2.3 ` (3 kB), `### 2.4 ` (1 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-26, X-27, X-28, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/collections-list.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
+Spec `collections-list` (`docs/blueprints/collections-list.md`, 5 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (5.5 kB), `### 2.2 ` (4.5 kB), `### 2.3 ` (5 kB), `### 2.4 ` (9 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-26, X-27, X-28, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/collections-list.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
 
 ### Files
 
@@ -659,11 +660,11 @@ Specifics: none beyond the recipe.
 
 ### Acceptance
 
-`pnpm gen --check` exits 0. `test -f blueprints/collections-list/html/collections-list.html`. `pnpm test --files=blueprints/collections-list --no-skips` passes (Remix skips only per T-7; tier 6/7 skips only per the network rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 and each of CS-1. `grep -rn 'style=' blueprints/collections-list/react blueprints/collections-list/remix blueprints/collections-list/liquid` prints nothing.
+`pnpm gen --check` exits 0. `test -f blueprints/collections-list/html/collections-list.html`. `pnpm test --files=blueprints/collections-list --no-skips` passes (on Node below 24.3 or without network: the skip rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 and each of CS-1. `grep -rn 'style=' blueprints/collections-list/react blueprints/collections-list/remix blueprints/collections-list/liquid` prints nothing.
 
 ### Out of scope
 
-Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
+Route code and data loading in the examples (M7-T20, M7-T31, M7-T21, M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
 
 ### If blocked
 
@@ -681,7 +682,7 @@ Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M
 
 ### Read first
 
-Spec `product` (`docs/blueprints/product.md`, 13 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (3 kB), `### 2.2 ` (4 kB), `### 2.3 ` (3 kB), `### 2.4 ` (1 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-29, X-30, X-31, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/product.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
+Spec `product` (`docs/blueprints/product.md`, 14 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (5.5 kB), `### 2.2 ` (4.5 kB), `### 2.3 ` (5 kB), `### 2.4 ` (9 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-29, X-30, X-31, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/product.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
 
 ### Files
 
@@ -703,11 +704,11 @@ Specifics: `blueprint.json` is X-10 itself, minus the `locale` entry (PR-M7-13).
 
 ### Acceptance
 
-`pnpm gen --check` exits 0. `test -f blueprints/product/html/product.html`. `pnpm test --files=blueprints/product --no-skips` passes (Remix skips only per T-7; tier 6/7 skips only per the network rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 and each of PR-1 to PR-7. `grep -rn 'style=' blueprints/product/react blueprints/product/remix blueprints/product/liquid` prints nothing.
+`pnpm gen --check` exits 0. `test -f blueprints/product/html/product.html`. `pnpm test --files=blueprints/product --no-skips` passes (on Node below 24.3 or without network: the skip rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 and each of PR-1 to PR-7. `grep -rn 'style=' blueprints/product/react blueprints/product/remix blueprints/product/liquid` prints nothing.
 
 ### Out of scope
 
-Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
+Route code and data loading in the examples (M7-T20, M7-T31, M7-T21, M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
 
 ### If blocked
 
@@ -725,7 +726,7 @@ Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M
 
 ### Read first
 
-Spec `search` (`docs/blueprints/search.md`, 10 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (3 kB), `### 2.2 ` (4 kB), `### 2.3 ` (3 kB), `### 2.4 ` (1 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-32, X-33, X-34, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/search.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
+Spec `search` (`docs/blueprints/search.md`, 10 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (5.5 kB), `### 2.2 ` (4.5 kB), `### 2.3 ` (5 kB), `### 2.4 ` (9 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-32, X-33, X-34, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/search.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
 
 ### Files
 
@@ -747,11 +748,11 @@ Specifics: Section `#### Fallback (SPIKE-02, search view event)` is NOT applied 
 
 ### Acceptance
 
-`pnpm gen --check` exits 0. `test -f blueprints/search/html/search.html`. `pnpm test --files=blueprints/search --no-skips` passes (Remix skips only per T-7; tier 6/7 skips only per the network rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 and each of SE-1 to SE-4. `grep -rn 'style=' blueprints/search/react blueprints/search/remix blueprints/search/liquid` prints nothing.
+`pnpm gen --check` exits 0. `test -f blueprints/search/html/search.html`. `pnpm test --files=blueprints/search --no-skips` passes (on Node below 24.3 or without network: the skip rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 and each of SE-1 to SE-4. `grep -rn 'style=' blueprints/search/react blueprints/search/remix blueprints/search/liquid` prints nothing.
 
 ### Out of scope
 
-Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
+Route code and data loading in the examples (M7-T20, M7-T31, M7-T21, M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
 
 ### If blocked
 
@@ -769,7 +770,7 @@ Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M
 
 ### Read first
 
-Spec `cart` (`docs/blueprints/cart.md`, 9 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (3 kB), `### 2.2 ` (4 kB), `### 2.3 ` (3 kB), `### 2.4 ` (1 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-35, X-36, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/cart.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
+Spec `cart` (`docs/blueprints/cart.md`, 9 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (5.5 kB), `### 2.2 ` (4.5 kB), `### 2.3 ` (5 kB), `### 2.4 ` (9 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-35, X-36, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/cart.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
 
 ### Files
 
@@ -791,11 +792,11 @@ Specifics: No Storefront query: the cart comes from the cart handler (doc 05 10.
 
 ### Acceptance
 
-`pnpm gen --check` exits 0. `test -f blueprints/cart/html/cart.html`. `pnpm test --files=blueprints/cart --no-skips` passes (Remix skips only per T-7; tier 6/7 skips only per the network rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 and each of CR-1 to CR-6. `grep -rn 'style=' blueprints/cart/react blueprints/cart/remix blueprints/cart/liquid` prints nothing.
+`pnpm gen --check` exits 0. `test -f blueprints/cart/html/cart.html`. `pnpm test --files=blueprints/cart --no-skips` passes (on Node below 24.3 or without network: the skip rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 and each of CR-1 to CR-6. `grep -rn 'style=' blueprints/cart/react blueprints/cart/remix blueprints/cart/liquid` prints nothing.
 
 ### Out of scope
 
-Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
+Route code and data loading in the examples (M7-T20, M7-T31, M7-T21, M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
 
 ### If blocked
 
@@ -813,7 +814,7 @@ Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M
 
 ### Read first
 
-Spec `blog` (`docs/blueprints/blog.md`, 5 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (3 kB), `### 2.2 ` (4 kB), `### 2.3 ` (3 kB), `### 2.4 ` (1 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-37, X-38, X-39, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/blog.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
+Spec `blog` (`docs/blueprints/blog.md`, 5 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (5.5 kB), `### 2.2 ` (4.5 kB), `### 2.3 ` (5 kB), `### 2.4 ` (9 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-37, X-38, X-39, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/blog.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
 
 ### Files
 
@@ -835,11 +836,11 @@ Specifics: none beyond the recipe.
 
 ### Acceptance
 
-`pnpm gen --check` exits 0. `test -f blueprints/blog/html/blog.html`. `pnpm test --files=blueprints/blog --no-skips` passes (Remix skips only per T-7; tier 6/7 skips only per the network rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 and each of BL-1. `grep -rn 'style=' blueprints/blog/react blueprints/blog/remix blueprints/blog/liquid` prints nothing.
+`pnpm gen --check` exits 0. `test -f blueprints/blog/html/blog.html`. `pnpm test --files=blueprints/blog --no-skips` passes (on Node below 24.3 or without network: the skip rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 and each of BL-1. `grep -rn 'style=' blueprints/blog/react blueprints/blog/remix blueprints/blog/liquid` prints nothing.
 
 ### Out of scope
 
-Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
+Route code and data loading in the examples (M7-T20, M7-T31, M7-T21, M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
 
 ### If blocked
 
@@ -857,7 +858,7 @@ Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M
 
 ### Read first
 
-Spec `article` (`docs/blueprints/article.md`, 6 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (3 kB), `### 2.2 ` (4 kB), `### 2.3 ` (3 kB), `### 2.4 ` (1 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-40, X-41, X-42, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/article.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
+Spec `article` (`docs/blueprints/article.md`, 6 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (5.5 kB), `### 2.2 ` (4.5 kB), `### 2.3 ` (5 kB), `### 2.4 ` (9 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-40, X-41, X-42, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/article.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
 
 ### Files
 
@@ -879,11 +880,11 @@ Specifics: none beyond the recipe.
 
 ### Acceptance
 
-`pnpm gen --check` exits 0. `test -f blueprints/article/html/article.html`. `pnpm test --files=blueprints/article --no-skips` passes (Remix skips only per T-7; tier 6/7 skips only per the network rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 and each of AR-1, AR-2. `grep -rn 'style=' blueprints/article/react blueprints/article/remix blueprints/article/liquid` prints nothing.
+`pnpm gen --check` exits 0. `test -f blueprints/article/html/article.html`. `pnpm test --files=blueprints/article --no-skips` passes (on Node below 24.3 or without network: the skip rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 and each of AR-1, AR-2. `grep -rn 'style=' blueprints/article/react blueprints/article/remix blueprints/article/liquid` prints nothing.
 
 ### Out of scope
 
-Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
+Route code and data loading in the examples (M7-T20, M7-T31, M7-T21, M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
 
 ### If blocked
 
@@ -901,7 +902,7 @@ Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M
 
 ### Read first
 
-Spec `page` (`docs/blueprints/page.md`, 2 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (3 kB), `### 2.2 ` (4 kB), `### 2.3 ` (3 kB), `### 2.4 ` (1 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-43, X-44, X-45, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/page.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
+Spec `page` (`docs/blueprints/page.md`, 2 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (5.5 kB), `### 2.2 ` (4.5 kB), `### 2.3 ` (5 kB), `### 2.4 ` (9 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-43, X-44, X-45, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/page.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
 
 ### Files
 
@@ -923,11 +924,11 @@ Specifics: none beyond the recipe.
 
 ### Acceptance
 
-`pnpm gen --check` exits 0. `test -f blueprints/page/html/page.html`. `pnpm test --files=blueprints/page --no-skips` passes (Remix skips only per T-7; tier 6/7 skips only per the network rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 and each of PG-1. `grep -rn 'style=' blueprints/page/react blueprints/page/remix blueprints/page/liquid` prints nothing.
+`pnpm gen --check` exits 0. `test -f blueprints/page/html/page.html`. `pnpm test --files=blueprints/page --no-skips` passes (on Node below 24.3 or without network: the skip rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 and each of PG-1. `grep -rn 'style=' blueprints/page/react blueprints/page/remix blueprints/page/liquid` prints nothing.
 
 ### Out of scope
 
-Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
+Route code and data loading in the examples (M7-T20, M7-T31, M7-T21, M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
 
 ### If blocked
 
@@ -945,7 +946,7 @@ Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M
 
 ### Read first
 
-Spec `contact` (`docs/blueprints/contact.md`, 11 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (3 kB), `### 2.2 ` (4 kB), `### 2.3 ` (3 kB), `### 2.4 ` (1 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-46, X-47, X-48, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/contact.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
+Spec `contact` (`docs/blueprints/contact.md`, 11 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (5.5 kB), `### 2.2 ` (4.5 kB), `### 2.3 ` (5 kB), `### 2.4 ` (9 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-46, X-47, X-48, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/contact.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
 
 ### Files
 
@@ -967,11 +968,11 @@ Specifics: Extra file `react/lib/contact-route.ts` and `remix/lib/contact-route.
 
 ### Acceptance
 
-`pnpm gen --check` exits 0. `test -f blueprints/contact/html/contact.html`. `pnpm test --files=blueprints/contact --no-skips` passes (Remix skips only per T-7; tier 6/7 skips only per the network rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 and each of CT-1 to CT-4. `grep -rn 'style=' blueprints/contact/react blueprints/contact/remix blueprints/contact/liquid` prints nothing.
+`pnpm gen --check` exits 0. `test -f blueprints/contact/html/contact.html`. `pnpm test --files=blueprints/contact --no-skips` passes (on Node below 24.3 or without network: the skip rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 and each of CT-1 to CT-4. `grep -rn 'style=' blueprints/contact/react blueprints/contact/remix blueprints/contact/liquid` prints nothing.
 
 ### Out of scope
 
-Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
+Route code and data loading in the examples (M7-T20, M7-T31, M7-T21, M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
 
 ### If blocked
 
@@ -989,7 +990,7 @@ Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M
 
 ### Read first
 
-Spec `not-found` (`docs/blueprints/not-found.md`, 3 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (3 kB), `### 2.2 ` (4 kB), `### 2.3 ` (3 kB), `### 2.4 ` (1 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-49, X-50, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/not-found.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
+Spec `not-found` (`docs/blueprints/not-found.md`, 3 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (5.5 kB), `### 2.2 ` (4.5 kB), `### 2.3 ` (5 kB), `### 2.4 ` (9 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-49, X-50, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/not-found.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
 
 ### Files
 
@@ -1011,11 +1012,11 @@ Specifics: No query. NF-1 (hydrogen 404 for an unknown handle) tests route code:
 
 ### Acceptance
 
-`pnpm gen --check` exits 0. `test -f blueprints/not-found/html/not-found.html`. `pnpm test --files=blueprints/not-found --no-skips` passes (Remix skips only per T-7; tier 6/7 skips only per the network rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 and each of NF-1. `grep -rn 'style=' blueprints/not-found/react blueprints/not-found/remix blueprints/not-found/liquid` prints nothing.
+`pnpm gen --check` exits 0. `test -f blueprints/not-found/html/not-found.html`. `pnpm test --files=blueprints/not-found --no-skips` passes (on Node below 24.3 or without network: the skip rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 and each of NF-1. `grep -rn 'style=' blueprints/not-found/react blueprints/not-found/remix blueprints/not-found/liquid` prints nothing.
 
 ### Out of scope
 
-Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
+Route code and data loading in the examples (M7-T20, M7-T31, M7-T21, M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
 
 ### If blocked
 
@@ -1033,7 +1034,7 @@ Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M
 
 ### Read first
 
-Spec `password` (`docs/blueprints/password.md`, 8 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (3 kB), `### 2.2 ` (4 kB), `### 2.3 ` (3 kB), `### 2.4 ` (1 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-51, X-53, X-52, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/password.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
+Spec `password` (`docs/blueprints/password.md`, 8 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (5.5 kB), `### 2.2 ` (4.5 kB), `### 2.3 ` (5 kB), `### 2.4 ` (9 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-51, X-53, X-52, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/password.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
 
 ### Files
 
@@ -1055,11 +1056,11 @@ Specifics: `PasswordPage` renders its own SkipLink and `<main>` and is NOT wrapp
 
 ### Acceptance
 
-`pnpm gen --check` exits 0. `test -f blueprints/password/html/password.html`. `pnpm test --files=blueprints/password --no-skips` passes (Remix skips only per T-7; tier 6/7 skips only per the network rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 (BT-4 and BT-5 excluded by the spec) and each of PW-1 to PW-3. `grep -rn 'style=' blueprints/password/react blueprints/password/remix blueprints/password/liquid` prints nothing.
+`pnpm gen --check` exits 0. `test -f blueprints/password/html/password.html`. `pnpm test --files=blueprints/password --no-skips` passes (on Node below 24.3 or without network: the skip rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 (BT-4 and BT-5 excluded by the spec) and each of PW-1 to PW-3. `grep -rn 'style=' blueprints/password/react blueprints/password/remix blueprints/password/liquid` prints nothing.
 
 ### Out of scope
 
-Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
+Route code and data loading in the examples (M7-T20, M7-T31, M7-T21, M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
 
 ### If blocked
 
@@ -1077,7 +1078,7 @@ Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M
 
 ### Read first
 
-Spec `gift-card` (`docs/blueprints/gift-card.md`, 7 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (3 kB), `### 2.2 ` (4 kB), `### 2.3 ` (3 kB), `### 2.4 ` (1 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-54, X-55, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/gift-card.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
+Spec `gift-card` (`docs/blueprints/gift-card.md`, 7 kB) complete; the code blocks are extracted, so skip their bodies. doc 12: `### 2.1 ` (5.5 kB), `### 2.2 ` (4.5 kB), `### 2.3 ` (5 kB), `### 2.4 ` (9 kB), `### 2.8 ` (2.5 kB). doc 14 `## 3. ` only when a Liquid test fails. This file 0.2, 0.3 rows X-54, X-55, 0.6, 0.7, the readings named below. Repository: `blueprints/layout/blueprint.json` (shape), `blueprints/_sample/gift-card.json`, `blueprints/layout/layout.test.ts` (how the helper is called).
 
 ### Files
 
@@ -1099,11 +1100,11 @@ Specifics: none beyond the recipe.
 
 ### Acceptance
 
-`pnpm gen --check` exits 0. `test -f blueprints/gift-card/html/gift-card.html`. `pnpm test --files=blueprints/gift-card --no-skips` passes (Remix skips only per T-7; tier 6/7 skips only per the network rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 and each of GC-1, GC-2. `grep -rn 'style=' blueprints/gift-card/react blueprints/gift-card/remix blueprints/gift-card/liquid` prints nothing.
+`pnpm gen --check` exits 0. `test -f blueprints/gift-card/html/gift-card.html`. `pnpm test --files=blueprints/gift-card --no-skips` passes (on Node below 24.3 or without network: the skip rule of 0.2); the output has a passing line for each of BT-1, BT-2, BT-3, BT-4, BT-5, BT-6, BT-7, BT-9 and each of GC-1, GC-2. `grep -rn 'style=' blueprints/gift-card/react blueprints/gift-card/remix blueprints/gift-card/liquid` prints nothing.
 
 ### Out of scope
 
-Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
+Route code and data loading in the examples (M7-T20, M7-T31, M7-T21, M7-T22), except what PR-M7-10 and PR-M7-11 assign here. Installing into `examples/` (M7-T20 to M7-T23). BT-8 (M10). Changing a component to make the blueprint pass (draft pull request instead). Spike fallbacks.
 
 ### If blocked
 
@@ -1113,61 +1114,89 @@ Route code and data loading in the examples (M7-T20 to M7-T22), except what PR-M
 
 ---
 
-## M7-T20 Example `examples/react`: server, routes, data loading from mock.shop, `/api/cart`, `ripple add --blueprint` for the 14 blueprints
+## M7-T20 Example `examples/react`, part 1: `ripple add --blueprint` for the 14 blueprints and `src/data.ts` (Storefront client, data loading from mock.shop)
 
-- **Goal:** Turn `examples/react` into a running storefront: the 14 blueprints installed by the CLI, data from mock.shop through `@shopify/hydrogen`, the cart, locale and newsletter handlers, satisfying doc 13 12.1 items 1 to 4.
+- **Goal:** Install the 14 blueprints into `examples/react` with the CLI and write `src/data.ts`: the four app values of doc 05 10.1 and the loaders that turn mock.shop data into page props. Part 2 (M7-T31) adds the routes, the server, the client entry, the build and the smoke run; this task does not start the app.
 - **Depends on:** M7-T07 to M7-T19.
-- **Kind:** `example`. Size M (large; see "If blocked"). Group D.
+- **Kind:** `example`. Size M. Group D.
 
 ### Read first
 
-doc 13: `### 12.1 ` (1.5 kB). doc 12: `### 2.5 ` (4 kB), `### 2.6 ` prose DS-1 to DS-8 and "Fallback for DS-5" prose (3 kB), `### 2.7 ` prose (1 kB). doc 05: `### 10.1 ` (4 kB), `### 10.3 ` (1 kB). Ledger D-041, D-087, D-091 item 5, D-118. Hydrogen skill on the Storefront client and i18n: `examples/react/node_modules/@shopify/hydrogen/skills/` (list the directory; read only the skill that covers creating a Storefront client and `defineShopifyI18n`, about 6 kB). This file 0.2, 0.8, PR-M7-6. Repository: `examples/react/ripple.json`, `examples/react/src/pages/` after step 2 (export lists only).
+doc 13: `### 12.1 ` (2.7 kB). doc 12: `### 2.5 ` (2.5 kB), `### 2.1 ` the table only (the `route` column; 2 kB), `### 1.2 ` (menu mapping; 2 kB). doc 05: `### 10.1 ` the code block and rules 1, 2 and 7 (3 kB). Ledger D-118. The Hydrogen skills `hydrogen-storefront-client` and `hydrogen-markets`: list `examples/react/node_modules/@shopify/hydrogen/skills/` and read only those two `SKILL.md` files (about 6 kB); when that directory is absent, use `../hydrogen/packages/hydrogen/skills/` (the path doc 05 10.1 cites) and say so in the pull request. This file 0.2, 0.5 (rows `loadLayout`, `i18nDefinition`), 0.8, PR-M7-6, PR-M7-15. Repository: `examples/react/ripple.json`; after step 2, the export lines of `examples/react/src/pages/*.tsx` and `src/pages/lib/menu.ts` (`grep -n '^export' examples/react/src/pages/*.tsx examples/react/src/pages/lib/*.ts`).
 
 ### Files
 
-Create: `examples/react/build.mjs`, `examples/react/src/server.tsx`, `examples/react/src/client.tsx`, `examples/react/src/data.ts`, `examples/react/src/routes.ts`, the CLI output of step 2. Change: `examples/react/package.json` (scripts `build` = `node build.mjs`; devDependency `esbuild` 0.28.2), `examples/react/server.mjs`, `examples/react/.gitignore`, `examples/react/pnpm-lock.yaml`. Must not change: any file the CLI wrote (`src/components/ripple/**`, `src/pages/**`, `public/ripple/**`).
+Create: `examples/react/src/data.ts`, the CLI output of step 2 (`src/pages/**` and what the CLI adds under `src/components/ripple/**` and `public/ripple/**`). Change: `examples/react/package.json` and `examples/react/pnpm-lock.yaml` only through the CLI's patches and `pnpm examples:install`. Must not change: any file the CLI wrote, `examples/react/server.mjs`, the `scripts` of `examples/react/package.json` (M7-T31).
 
 ### Steps
 
-1. Branch `task/M7-T20-example-react`. `pnpm build`.
+1. Branch `task/M7-T20-example-react-data`. `pnpm build`.
 2. Install the blueprints, in the order of 0.2:
 
    ```bash
    for id in layout home collection collections-list product search cart blog article page contact not-found password gift-card; do (cd examples/react && node ../../pkg/bin/ripple.mjs add --blueprint $id) || break; done
    ```
 
-3. `src/data.ts`: create the Storefront client the Hydrogen skill shows for a tokenless public store, with store domain `mock.shop` (UNVERIFIED: the exact option names; take them from the skill, not from memory); one loader per route that runs the installed page file's `<X>_QUERY` with `$country`/`$language` from the request locale (doc 12 2.5 second bullet) and maps the result to `<Name>PageProps`, computing `url` fields from the route templates (2.5 third bullet); a `null` root field returns `{ status: 404 }` and the not-found props. Loaders for the layout props (`LAYOUT_QUERY`, menu mapping with `lib/menu.ts`).
-4. `src/routes.ts`: the table of 0.8 with `RegExp` patterns for the `route` column of doc 12 2.1; `/api/cart` uses the hydrogen cart handler of doc 05 10.1/10.3; `/api/locale` calls `handleLocalePost` of `src/pages/lib/locale-route.ts`; `/api/newsletter` the function of `lib/newsletter-route.ts`; `/api/contact` the function of `lib/contact-route.ts`. Test-only route for E2E-10 (A-09 of doc 01): `/__rp/commerce-identity` exists only when `RIPPLE_TEST_ROUTES=1` and renders a page whose client entry stores the two objects on `window` (PLAN-CHOSEN path).
-5. `src/server.tsx`: `renderDocument` with DS-1 to DS-8 (react: `scripts` = `["/client.js"]`, `commerce.host` `"react"`, `cartEndpoint` and `cartUrl` per DS-3, `cartAction` passed to `layout`, `cart`, `product`); the layout's `cartPage` is `true` on `/cart` (doc 13 12.1 item 4). `src/client.tsx`: imports `<pkg>/elements` and `<pkg>/commerce`, calls `configureCommerce` from the config element, then hydrates per DS-5 (or its fallback when DS-5 fails, as the spec says).
-6. `build.mjs` and `server.mjs` per 0.8.
-7. Smoke: run `pnpm --dir examples/react build && PORT=4999 pnpm --dir examples/react start &`; then `curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:4999/` prints `200`; `/cart` contains no `id="cart-drawer"`; a random handle under `/products/` answers `404`.
+   Every command exits 0. Paste the printed plans into the done file.
+3. `src/data.ts`, the four app values of doc 05 10.1, exported with exactly these names: `storefrontClientType` and `storefrontClientConfig` (the tokenless public store `mock.shop`, as the skill `hydrogen-storefront-client` shows it; take the option names from the skill, not from memory), `i18nDefinition` (the `defineShopifyI18n` value of PR-M7-15: the default locale and the locale with path prefix `/fr-ca`), `routeTemplates` (the routes of the `route` column of doc 12 2.1, in the form the skill `hydrogen-markets` or `hydrogen-request-handlers` gives).
+4. `src/data.ts`, the loaders of 0.5. `loadPage(id, ctx)` runs the installed page file's `<X>_QUERY` (import it from `./pages/<id>.tsx`; `contact` uses `PAGE_QUERY` with `handle: "contact"`, PR-M7-9) through `ctx.storefrontClient` with `$country` and `$language` from `ctx.requestContext.locale` (doc 12 2.5 second bullet), maps the result to `<Name>PageProps` and computes the `url` fields from the route templates (2.5 third bullet). A `null` root field returns `{ status: 404, props: <the not-found props> }`. `cart`, `not-found`, `password` and `gift-card` have no query (0.2): return their props without a request. `loadLayout(ctx)` runs `LAYOUT_QUERY` and maps the menus with the functions of `./pages/lib/menu.ts`, with `pathPrefix` from `ctx.requestContext.locale`. Neither loader sets `cartAction` or `cartPage`; the server does (M7-T31).
+5. Bundle check (no network needed):
+
+   ```bash
+   pnpm exec esbuild examples/react/src/data.ts --bundle --platform=node --format=esm --jsx=automatic --packages=external --outfile=examples/react/node_modules/.cache/ripple-smoke/data.mjs
+   ```
+
+6. Data smoke (needs `RIPPLE_NETWORK=1` and network). Write `examples/react/node_modules/.cache/ripple-smoke/entry.ts` (not committed; `node_modules/` is ignored):
+
+   ```ts
+   import { createShopifyRequestContext, createStorefrontClient } from "@shopify/hydrogen";
+   import { i18nDefinition, storefrontClientType, storefrontClientConfig, loadLayout, loadPage } from "../../../src/data.ts";
+   const request = new Request("http://127.0.0.1/");
+   const requestContext = createShopifyRequestContext({ request, i18n: i18nDefinition });
+   const storefrontClient = createStorefrontClient({ type: storefrontClientType, requestContext, config: storefrontClientConfig });
+   const ctx = { storefrontClient, requestContext, url: new URL(request.url), params: {} };
+   const layout = await loadLayout(ctx);
+   const home = await loadPage("home", ctx);
+   const missing = await loadPage("product", { ...ctx, params: { handle: "rp-no-such-product" } });
+   console.log(JSON.stringify({ layoutKeys: Object.keys(layout).length > 0, home: home.status, missing: missing.status }));
+   ```
+
+   Then run:
+
+   ```bash
+   pnpm exec esbuild examples/react/node_modules/.cache/ripple-smoke/entry.ts --bundle --platform=node --format=esm --jsx=automatic --packages=external --outfile=examples/react/node_modules/.cache/ripple-smoke/entry.mjs && node examples/react/node_modules/.cache/ripple-smoke/entry.mjs
+   ```
+
+   It prints `{"layoutKeys":true,"home":200,"missing":404}`.
+7. Add the ledger-issue line of PR-M7-15 under `## Ledger issues` of `docs/13-testing.md`.
 8. Proof: PLAN 5.0.
 
 ### Acceptance
 
-The commands of step 7. `grep -c 'cart-drawer' <(curl -s http://127.0.0.1:4999/)` is at least `1`. A second run of the loop of step 2 prints only `unchanged` lines. `pnpm test --files=test/support/examples` passes.
+The command of step 5 exits 0. `grep -c '^export const \(i18nDefinition\|routeTemplates\|storefrontClientType\|storefrontClientConfig\)\b' examples/react/src/data.ts` prints `4`. `grep -c '^export async function \(loadLayout\|loadPage\)\b' examples/react/src/data.ts` prints `2`. `ls examples/react/src/pages/*.tsx | wc -l` prints `14`. A second run of the loop of step 2 prints only `unchanged` lines. With network: step 6 prints `{"layoutKeys":true,"home":200,"missing":404}`. `grep -c 'PR-M7-15' docs/13-testing.md` prints `1`.
 
 ### Out of scope
 
-Remix and html examples (M7-T21, M7-T22). The tests NJ-F and E2E (M7-T25, M7-T26). Editing installed files. SPIKE-11 options.
+`src/routes.ts`, `src/server.tsx`, `src/client.tsx`, `build.mjs`, `server.mjs`, the smoke run of the app (M7-T31). Remix and html examples (M7-T21, M7-T22). The tests NJ-F and E2E (M7-T25, M7-T26). Editing installed files. SPIKE-11 options.
 
 ### If blocked
 
-- No network: BLOCKED-ON-ENV for steps 3 and 7; commit the code; the `verify` CI job is the proof.
-- mock.shop lacks a resource (doc 12 2.5 UNVERIFIED list): the loader returns the empty-list props (every blueprint renders with empty lists); record the gap.
-- The task does not fit in one session: split along step 3 (data) and steps 4 to 6 (routes and server), each its own draft pull request; tell the coordinator the table row is too large.
+- No network: step 6 cannot run; BLOCKED-ON-ENV for step 6 only (PLAN 4.3): open the pull request as a draft with steps 1 to 5 done, and say so.
+- esbuild cannot resolve an import of an installed page file: do not edit the installed file; record the import and draft pull request naming the CLI install (M6) as the defect.
+- mock.shop lacks a resource (doc 12 2.5 UNVERIFIED list): the loader returns the empty-list props (every blueprint renders with empty lists); record the gap in the done file.
+- `hydrogen-markets` names no way to give a locale a path prefix: write `i18nDefinition` with the default locale only, record it in the done file and in the PR-M7-15 ledger line, and tell the coordinator that C-35 (M7-T30) cannot pass.
 
 ---
 
 ## M7-T21 Example `examples/remix`: the same, plus the morph test routes
 
 - **Goal:** Turn `examples/remix` into the same storefront on Remix 3, keeping the morph test routes of doc 13 9.2 and the rule that regions are plain elements.
-- **Depends on:** M7-T07 to M7-T19 (and M7-T20, 0.10).
-- **Kind:** `example`. Size M. Group D.
+- **Depends on:** M7-T07 to M7-T19, M7-T31.
+- **Kind:** `example`. Size M. Group G.
 
 ### Read first
 
-doc 13: `### 12.1 ` items 6 and 7 (0.5 kB), `### 9.2 ` (2 kB). doc 05: `### 10.2 ` (1 kB). doc 12: `### 2.6 ` DS-2, DS-6 (1 kB), `### 2.3 ` R-5, R-6 (0.5 kB). This file 0.8. Repository: `examples/react/src/{data,routes,server}.ts*` (from M7-T20), `examples/remix/server.mjs` (the morph routes of M1-T01).
+doc 13: `### 12.1 ` items 6 and 7 (0.5 kB), `### 9.2 ` (2 kB). doc 05: `### 10.2 ` (1 kB). doc 12: `### 2.6 ` DS-2, DS-6 (1 kB), `### 2.3 ` R-5, R-6 (0.5 kB). This file 0.8. Repository: `examples/react/src/{data,routes,server}.ts*` (from M7-T20 and M7-T31), `examples/remix/server.mjs` (the morph routes of M1-T01).
 
 ### Files
 
@@ -1176,10 +1205,10 @@ Create: `examples/remix/build.mjs`, `examples/remix/src/server.tsx`, `examples/r
 ### Steps
 
 1. Branch `task/M7-T21-example-remix`. `pnpm build`. Install the 14 blueprints with the loop of M7-T20 step 2 in `examples/remix`.
-2. `src/data.ts` = the react file unchanged; `src/routes.ts` = the react table with imports from `app/pages/`.
-3. `src/server.tsx`: `body` = `await renderToString(<Layout ...>)` from `remix/component/server` (DS-6); `scripts` = `["/ripple/ripple.js", "/client.js"]` (DS-2); no `reloadFrames`, no `navigate` (12.1 item 7). When DS-6's UNVERIFIED point fails, apply the spec's stated alternative (shell as a Remix component, order of DS-6).
+2. `src/data.ts` = the react file unchanged (with imports from `../app/pages/`); `src/routes.ts` = the react table with imports from `../app/pages/`, including the `/fr-ca` routes (PR-M7-15).
+3. `src/server.tsx` (the react server of M7-T31 with these changes; `cartAction`, `cartEndpoint` and `cartUrl` as there): `body` = `await renderToString(<Layout ...>)` from `remix/component/server` (DS-6); `scripts` = `["/ripple/ripple.js", "/client.js"]` (DS-2); no `reloadFrames`, no `navigate` (12.1 item 7). When DS-6's UNVERIFIED point fails, apply the spec's stated alternative (shell as a Remix component, order of DS-6).
 4. The morph routes `/__rp/morph/a` and `/b` behave as before, only under `RIPPLE_TEST_ROUTES=1`.
-5. Smoke as M7-T20 step 7 on port 4998; also `curl -s -o /dev/null -w '%{http_code}' 'http://127.0.0.1:4998/__rp/morph/a?c=button'` prints `404` without `RIPPLE_TEST_ROUTES=1` and `200` with it.
+5. Smoke as M7-T31 step 6 on port 4998 (start `(cd examples/remix && PORT=4998 exec node server.mjs) & APP=$!`); also `curl -s -o /dev/null -w '%{http_code}' 'http://127.0.0.1:4998/__rp/morph/a?c=button'` prints `404` without `RIPPLE_TEST_ROUTES=1` and `200` with it.
 6. Proof: PLAN 5.0 (Node 24.3 or later; otherwise T-7).
 
 ### Acceptance
@@ -1193,19 +1222,18 @@ SPIKE-11. NJ-F and E2E tests. Changes to `test/hydration/remix.test.ts`.
 ### If blocked
 
 - Node below 24.3 in the session: write the code, run no smoke, list the T-7 skips; the `verify` CI job is the proof.
-- M7-T20 not merged: wait (0.10).
 
 ---
 
 ## M7-T22 Example `examples/html`: the same on the `html` host
 
 - **Goal:** Turn `examples/html` into a storefront that serves the installed html pages and the hydrogen cart handlers, so that the html host is covered by NJ-F and E2E tests.
-- **Depends on:** M7-T07 to M7-T19 (and M7-T20, 0.10).
-- **Kind:** `example`. Size M. Group D.
+- **Depends on:** M7-T07 to M7-T19, M7-T31.
+- **Kind:** `example`. Size M. Group G.
 
 ### Read first
 
-doc 13 `### 12.1 ` (1.5 kB). doc 12 `### 2.3 ` H-1, H-2 (0.5 kB), `### 2.5 ` (4 kB). doc 04 `### 5.1 ` (`html` host; 2 kB). doc 05 `### 10.1 ` (4 kB). This file 0.8, PR-M7-7. Repository: `examples/react/src/{data,routes}.ts` (M7-T20).
+doc 13 `### 12.1 ` (2.7 kB). doc 12 `### 2.3 ` H-1, H-2 (0.5 kB), `### 2.5 ` (4 kB). doc 04 `### 5.1 ` (`html` host; 2 kB). doc 05 `### 10.1 ` (4 kB). This file 0.8, PR-M7-7. Repository: `examples/react/src/{data,routes}.ts` (M7-T20, M7-T31).
 
 ### Files
 
@@ -1215,8 +1243,8 @@ Create: `examples/html/build.mjs`, `examples/html/src/server.ts`, `examples/html
 
 1. Branch `task/M7-T22-example-html`. `pnpm build`. Install the 14 blueprints with the loop of M7-T20 step 2 in `examples/html`.
 2. Routes (PR-M7-7): each route of doc 12 2.1 answers the installed `pages/<id>.html` unchanged; `/` is `pages/home.html`; an unknown path answers `pages/not-found.html` with 404; `public/` is served at `/`. `/api/cart` is the hydrogen cart handler of doc 05 10.1 (mock.shop); `/api/locale`, `/api/newsletter`, `/api/contact` answer `303` to the `Referer` (no TSX route code exists on html; UNVERIFIED that NJ-F15/NJ-F16 accept this: they assert status below 500 and a request carrying the value).
-3. Smoke as M7-T20 step 7 on port 4997.
-4. Run E2E-2 by hand once (`RIPPLE_NETWORK=1 pnpm test:commerce --files=test/commerce/e2e --grep='html: E2E-2'` once M7-T26 exists, otherwise a manual add to cart in a browser). When mock.shop rejects the fixture variant id of the sample page, apply the fallback of PR-M7-7 (render the installed react page files with host `html` through the react server code) and report it.
+3. Smoke as M7-T31 step 6 on port 4997 (start `(cd examples/html && PORT=4997 exec node server.mjs) & APP=$!`), without the `/fr-ca` line: the html example has no `/fr-ca` routes (PR-M7-15).
+4. Add to cart once by hand with Playwright Chromium (M7-T26 does not exist yet): open `http://127.0.0.1:4997/products/<handle>` (handle from the query of doc 13 12.1), click `[data-rp-part="submit"]` inside `rp-product-form`, and check that `dialog#cart-drawer` is open with one `[data-rp-line]` (the assertion of E2E-2). When mock.shop rejects the fixture variant id of the sample page, apply the fallback of PR-M7-7 (render the installed react page files with host `html` through the react server code) and report it.
 5. Proof: PLAN 5.0.
 
 ### Acceptance
@@ -1233,7 +1261,7 @@ Rendering TSX on the html host except as the PR-M7-7 fallback. NJ-F, E2E tests.
 
 ---
 
-## M7-T23 Example `examples/liquid`: finish the Ripple theme by the remaining steps of doc 14 §4.1; theme `AGENTS.md` and `DESIGN.md`
+## M7-T23 Example `examples/liquid`: finish the Ripple theme by the remaining steps of doc 14 §4.1 (`ripple add --blueprint` for the 14 blueprints in order, `pnpm theme:css`, `ripple check`); check the theme `AGENTS.md` and `DESIGN.md` that M7-T04 created
 
 - **Goal:** Finish the Ripple theme with steps 4 to 6 of doc 14 4.1, so that `examples/liquid` is the committed, reproducible theme that `ripple check` accepts.
 - **Depends on:** M7-T07 to M7-T19.
@@ -1241,7 +1269,7 @@ Rendering TSX on the html host except as the PR-M7-7 fallback. NJ-F, E2E tests.
 
 ### Read first
 
-doc 14: `## 2. ` (rules T-1 to T-25; 6 kB), `## 4. ` (the tree; 4 kB), `### 4.1 ` (2 kB), `## 6. ` (settings; 5 kB), `## 11. ` (locales; 3 kB). This file 0.2, PR-M7-1.
+doc 14: `## 2. ` (rules T-1 to T-25; 6 kB), `## 4. ` (the tree; 4 kB), `### 4.1 ` (2 kB), `## 6. ` (settings; 5 kB), `## 11. ` (locales; 3 kB). This file 0.2, 0.3 rows X-12, X-13, PR-M7-1.
 
 ### Files
 
@@ -1260,13 +1288,13 @@ Create: the CLI output of step 2, `examples/liquid/assets/styles.min.css`. Chang
    The `init` prints only `unchanged` and `patch-skipped` lines and writes nothing (4.1 step 4 last sentence). Paste the plans into the done file (they are the "real plan output" A-2 records).
 3. Step 5: `pnpm theme:css`.
 4. Step 6: `(cd examples/liquid && node ../../pkg/bin/ripple.mjs check)` exits 0.
-5. `AGENTS.md` and `DESIGN.md` were created in M7-T04 (step 1 of 4.1); `core/patch:agents` keeps the generated region current. Check that `examples/liquid/AGENTS.md` starts with the text of X-12 and `DESIGN.md` equals X-13. Nothing else is done for them (the table row names them, PLAN table error reported).
+5. `AGENTS.md` and `DESIGN.md` were created in M7-T04 (step 1 of 4.1); `core/patch:agents` keeps the generated region current. Check that `examples/liquid/AGENTS.md` starts with the text of X-12 and `DESIGN.md` equals X-13. Nothing else is done for them (the table row says "check").
 6. Compare with the tree of doc 14 section 4: every T and R path exists; none of the forbidden paths exists (`test ! -e examples/liquid/sections`; `ls examples/liquid/templates/*.json` finds nothing).
 7. Proof: PLAN 5.0.
 
 ### Acceptance
 
-Step 2's `init` output; step 4 exits 0; `ls examples/liquid/templates | wc -l` prints `13` and `ls examples/liquid/layout` prints `password.liquid` and `theme.liquid`; `git status --porcelain examples/liquid` is empty after re-running steps 2 to 4.
+The `init` of step 2 prints only `unchanged` and `patch-skipped` lines; step 4 exits 0; `cmp examples/liquid/DESIGN.md node_modules/.cache/ripple/m7/DESIGN.md` reports no difference (extract X-13 first, 0.3); `ls examples/liquid/templates | wc -l` prints `13` and `ls examples/liquid/layout` prints `password.liquid` and `theme.liquid`; `git status --porcelain examples/liquid` is empty after re-running steps 2 to 4.
 
 ### Out of scope
 
@@ -1319,8 +1347,8 @@ A-20 to A-23 (tier 8, M10). Fixing the theme (owners per M7-T23 "If blocked").
 
 ## M7-T25 No-JS flows `test/nojs/blueprints.test.ts`: NJ-F1 to NJ-F16 on the four examples
 
-- **Goal:** Write the whole-page flows of doc 13 11.2 for the four examples with scripting disabled and make them pass.
-- **Depends on:** M7-T20, M7-T21, M7-T22, M7-T23.
+- **Goal:** Write the whole-page flows of doc 13 11.2 for the four examples with scripting disabled and make them pass. Its Liquid NJ-F rows are also test C-18 of doc 05 (doc 13 NJ-6, ledger D-145).
+- **Depends on:** M7-T20, M7-T21, M7-T22, M7-T23, M7-T31.
 - **Kind:** `harness`. Size M. Group E.
 
 ### Read first
@@ -1335,14 +1363,15 @@ Create: `test/nojs/blueprints.test.ts`. Must not change: the examples (a failing
 
 1. Branch `task/M7-T25-nojs-flows`.
 2. For each host in `["html", "react", "remix", "liquid"]` and each row NJ-F1 to NJ-F16 (rows say when a host is excluded: NJ-F8 hydrogen only), one test `[T6] <host>: NJ-F<n> <statement>`; `startExample(host)` once per host (shared across its tests, `stop()` in `after`); `openPage(url, { scripts: "disabled" })`; selectors only those of the table (NJ-5). Product and collection handles: the discovery query of 12.1 (hydrogen) or the ST-3 catalogue (liquid).
-3. NJ-F11 needs a collection with more than one page: on liquid pass `pageSize` (serveTheme option) small enough; on hydrogen, when the discovered collection has one page only, the test skips with `mock.shop collection has one page` (UNVERIFIED that mock.shop has a collection with more than 24 products). NJ-F16 runs only when the example offers more than one locale (the row says so); otherwise it skips with `one locale` (report: under `--no-skips` this fails, see problems).
+3. NJ-F11 needs a collection with more than one page: on liquid pass `pageSize` (serveTheme option) small enough; on hydrogen, when the discovered collection has one page only, the test skips with `mock.shop collection has one page` (UNVERIFIED that mock.shop has a collection with more than 24 products). NJ-F16 runs only when the example offers more than one locale (the row says so); otherwise it skips with `one locale`. Under `--no-skips` either skip fails the run, and the M7 gate needs NJ-F11 and NJ-F16 to pass: when one skips, list it in the done file, add a line under `## Ledger issues` of `docs/13-testing.md` (`M7-T25: NJ-F<n> skips on <host>: <reason>`), and open the pull request as a draft.
+3a. C-18 (doc 05 section 14) is the Liquid NJ-F rows (doc 13 NJ-6, ledger D-145): write no separate C-18 test; write the comment `// C-18: the liquid NJ-F tests of this file (doc 13 NJ-6)` at the top of the file and name those tests in the done file.
 4. References: every comment `// AT-<n>: generic (test/nojs/blueprints.test.ts NJ-F<k>, added by M7-T25)` found in step "Read first" names an NJ-F id that now has a test; list them in the done file.
 5. `RIPPLE_NETWORK=1 pnpm test:nojs --files=test/nojs/blueprints --no-skips`.
 6. Proof: PLAN 5.0.
 
 ### Acceptance
 
-Step 5 exits 0 with 16 flows times the hosts each row names (63 tests when NJ-F8 is hydrogen only). Without network: the liquid tests pass and every hydrogen test skips with `RIPPLE_NETWORK is not 1`.
+Step 5 exits 0 with 16 flows times the hosts each row names (63 tests when NJ-F8 is hydrogen only). `grep -c '// C-18: ' test/nojs/blueprints.test.ts` prints `1`. Without network: the liquid tests pass and every hydrogen test skips with `RIPPLE_NETWORK is not 1`.
 
 ### Out of scope
 
@@ -1351,19 +1380,19 @@ Component-level `[T6]` tests (component tasks). C-17/C-18 duplicates (NJ-6). Fix
 ### If blocked
 
 - No network: BLOCKED-ON-ENV for the hydrogen hosts (0.2 network rule).
-- A flow fails on one host because of example code: draft pull request naming the example task (M7-T20 to M7-T23).
+- A flow fails on one host because of example code: draft pull request naming the example task (M7-T20, M7-T31, M7-T21, M7-T22 or M7-T23).
 
 ---
 
-## M7-T26 Tier 7 `test/commerce/e2e.test.ts`: E2E-1 to E2E-11 against mock.shop
+## M7-T26 Tier 7 `test/commerce/e2e.test.ts`: E2E-1 to E2E-10 and the E2E-11 probes of rule E-4 against mock.shop. BLOCKED-ON-ENV without network access to mock.shop
 
-- **Goal:** Write the tier 7 tests of doc 13 12.2 and make them pass against mock.shop on the three npm examples.
-- **Depends on:** M7-T20, M7-T21, M7-T22.
+- **Goal:** Write the tier 7 tests of doc 13 12.2 (E2E-1 to E2E-10 and the E2E-11 probes of rule E-4) and make them pass against mock.shop on the three npm examples. Tier 7 is not in the `verify` CI job; it runs in the nightly job `commerce` (ledger D-137).
+- **Depends on:** M7-T20, M7-T21, M7-T22, M7-T31.
 - **Kind:** `harness`. Size M. Group E. **BLOCKED-ON-ENV without network access to mock.shop.**
 
 ### Read first
 
-doc 13: `### 12.2 ` (whole, 3 kB; E-1 to E-4), `### 12.1 ` (1.5 kB), `### 10.5 ` (announcements; 1 kB). doc 01: row A-09 (search `| A-09 `). This file 0.2. Repository: `grep -rn 'test/commerce/e2e.test.ts' components/ src/ test/` (references), `examples/react/src/routes.ts` (the A-09 route of M7-T20 step 4).
+doc 13: `### 12.2 ` (whole, 3 kB; E-1 to E-4), `### 12.1 ` (1.5 kB), `### 10.5 ` (announcements; 1 kB). doc 01: row A-09 (search `| A-09 `). This file 0.2. Repository: `grep -rn 'test/commerce/e2e.test.ts' components/ src/ test/` (references), `examples/react/src/routes.ts` (the A-09 route of M7-T31 step 2). Ledger D-137.
 
 ### Files
 
@@ -1373,14 +1402,14 @@ Create: `test/commerce/e2e.test.ts`. Must not change: the examples.
 
 1. Branch `task/M7-T26-e2e`.
 2. Tests `[T7] <host>: E2E-<n> <statement>` for `html`, `react`, `remix`, E2E-1 to E2E-9 each host, E2E-10 react only (`/__rp/commerce-identity`). Each ends with `assert.deepEqual(errors, [])`; one browser context per test (E-2); the runner sets concurrency 1 (E-3).
-3. E2E-11 (E-4): before the first test one query for `menu(handle: "main-menu")`, `blogs(first: 1)`, `pages(first: 1)`, `localization { availableCountries { isoCode } }`, `collection(handle: "frontpage")`; one test per host and thing `[T7] <host>: E2E-11 mock.shop has <thing>`; skip `mock.shop has no <thing>` when empty (under `--no-skips` this fails by design, E-4).
+3. E2E-11 (E-4): before the first test one query for `menu(handle: "main-menu")`, `blogs(first: 1)`, `pages(first: 1)`, `localization { availableCountries { isoCode } }`, `collection(handle: "frontpage")`; one test per host and thing `[T7] <host>: E2E-11 mock.shop has <thing>`; skip `mock.shop has no <thing>` when empty. Such a skip is how tier 7 reports a gap (E-4): it fails the nightly `commerce` job (CI-9), never a merge; the task and the M7 gate accept it when it is listed (D-137, step 5).
 4. References: every `// AT-<n>: generic (test/commerce/e2e.test.ts, added by M7-T26)` names an assertion one of these tests makes; list each with the E2E id in the done file; an item no E2E row covers is listed as "not covered" (no new test: the scope is the doc's table).
-5. `RIPPLE_NETWORK=1 pnpm test:commerce --no-skips`.
+5. `RIPPLE_NETWORK=1 pnpm test:commerce --files=test/commerce/e2e` (without `--no-skips`, D-137). For every skipped line with the reason `mock.shop has no <thing>`: list it in the done file and add a line under `## Ledger issues` of `docs/13-testing.md` (`M7-T26: E2E-11 mock.shop has no <thing> (E-4)`).
 6. Proof: PLAN 5.0.
 
 ### Acceptance
 
-Step 5 exits 0. The output has 9 times 3 plus 1 plus 15 (E2E-11) passing lines.
+The command of step 5 reports `0 failed`, and passed plus skipped is 43 (E2E-1 to E2E-9 on three hosts, E2E-10 on react, 15 E2E-11 probes). Every skipped line is an E2E-11 test with a reason that starts `mock.shop has no `, and each one is in the done file and under `## Ledger issues` of `docs/13-testing.md`.
 
 ### Out of scope
 
@@ -1388,8 +1417,8 @@ The Liquid backend (tiers 5 and 8). Changing mock.shop expectations (a ledger ch
 
 ### If blocked
 
-- No network: BLOCKED-ON-ENV (PLAN section 4 environment limits); draft pull request with the file; the `verify` job is the proof.
-- E2E-11 skips for one thing: the gate's `--no-skips` cannot pass; record it and hand it to the coordinator (it needs a ledger change, E-4).
+- No network: BLOCKED-ON-ENV (PLAN 4.3): draft pull request with the file, no done file; pick another task. The `verify` job is not a proof for tier 7 (D-137).
+- An E2E-1 to E2E-10 test fails: it is a defect of the example (M7-T31, M7-T21, M7-T22) or of a component; draft pull request naming it. Never turn a failure into a skip.
 
 ---
 
@@ -1422,7 +1451,7 @@ Step 5 passes. `test ! -e test/support/golden-theme.ts`. `grep -c buildGoldenThe
 
 ### Out of scope
 
-`[T8] liquid: one page view per load` (M10). C-33 to C-39 (no owning row). Changes to the emulation.
+`[T8] liquid: one page view per load` (M10). C-33, C-34, C-36 to C-39 (M4-T25) and C-35 (M7-T30). Changes to the emulation.
 
 ### If blocked
 
@@ -1430,7 +1459,7 @@ Step 5 passes. `test ! -e test/support/golden-theme.ts`. `grep -c buildGoldenThe
 
 ---
 
-## M7-T28 Set every `commerce` component to `status: "stable"` after tier 7 passes (checklist line 16)
+## M7-T28 Set every `commerce` component to `status: "stable"` after tier 7 passes (checklist line 16); delete the test-side `BRINGUP` constants and their guards (D-135)
 
 - **Goal:** Promote every component of kind `commerce` from `beta` to `stable` once tier 7 has passed, and end the bring-up guard `BRINGUP` of the fixture tests.
 - **Depends on:** M7-T26.
@@ -1438,7 +1467,7 @@ Step 5 passes. `test ! -e test/support/golden-theme.ts`. `grep -c buildGoldenThe
 
 ### Read first
 
-doc 13 `### 18.1 ` (the checklist, line 16; 2 kB). PLAN section 3 row 16 and section 8 note P-8. This file PR-M7-3. Repository: `grep -l '"kind": "commerce"' components/*/*.json`, the `BRINGUP` lines of `src/testing/fixtures.test.ts` and `src/testing/resources.test.ts`.
+doc 13 `### 18.1 ` (the checklist, line 16; 2 kB). PLAN section 3.2 row 16, section 4.4 (last bullet) and section 8 note P-8. Ledger D-135, D-137. Repository: `grep -l '"kind": "commerce"' components/*/*.json`, the `BRINGUP` lines of `src/testing/fixtures.test.ts` and `src/testing/resources.test.ts`.
 
 ### Files
 
@@ -1446,9 +1475,9 @@ Change: each `components/<id>/<id>.json` of kind `commerce` (the `status` value 
 
 ### Steps
 
-1. Branch `task/M7-T28-commerce-stable`. Check that the M7-T26 done file shows `RIPPLE_NETWORK=1 pnpm test:commerce --no-skips` exit 0 (or the `verify` job of its merge commit is green); otherwise stop.
+1. Branch `task/M7-T28-commerce-stable`. Check that `docs/plan/done/M7-T26.md` shows `RIPPLE_NETWORK=1 pnpm test:commerce --files=test/commerce/e2e` with `0 failed` and only E2E-11 probe skips (D-137); otherwise stop.
 2. For each manifest of kind `commerce`: `"status": "beta"` becomes `"status": "stable"`.
-3. PR-M7-3: delete `const BRINGUP = true // PLAN 4.4: set false and delete in M7-T29` from both test files and make the guarded assertions unconditional. Add the ledger-issue line of PR-M7-3 to `docs/PLAN.md` section 8 (the owning doc is PLAN).
+3. Ledger D-135: delete `const BRINGUP = true // PLAN 4.4: set false and delete in M7-T28` from both test files and make the guarded assertions unconditional. Find the lines with `grep -n 'BRINGUP' src/testing/fixtures.test.ts src/testing/resources.test.ts`.
 4. `pnpm gen`, then PLAN 5.0.
 
 ### Acceptance
@@ -1468,12 +1497,12 @@ Any other status change. Tier 7 itself.
 ## M7-T29 M7 gate
 
 - **Goal:** Prove the M7 gate of PLAN 4.2 and record the result; change no source.
-- **Depends on:** M7-T01 to M7-T28.
-- **Kind:** `gate`. Size S.
+- **Depends on:** M7-T01 to M7-T28, M7-T30, M7-T31, M4-T25, M5-T16.
+- **Kind:** `gate`. Size S. Group -.
 
 ### Read first
 
-PLAN `### 3.5 ` and the M7 row of `### 4.2 `. The done files of M7-T01 to M7-T28.
+PLAN `### 3.5 ` and the M7 row of `### 4.2 `. Ledger D-137. The done files of M7-T01 to M7-T31.
 
 ### Files
 
@@ -1485,7 +1514,9 @@ Create: `docs/plan/done/M7-T29.md`. Nothing else.
 2. Run each gate command and record its output summary:
    - `pnpm test --files=blueprints --no-skips`: every `BT-1` to `BT-7`, `BT-9` line passes for the 14 blueprints in every host (password without BT-4, BT-5).
    - The examples were produced by the CLI: for each npm host, `(cd examples/<host> && node ../../pkg/bin/ripple.mjs status --json)` lists the 14 blueprints and no modified file; for liquid, the A-2 test passes.
-   - `RIPPLE_NETWORK=1 pnpm test:commerce --no-skips` exits 0.
+   - `ls docs/plan/done/ | grep -c '^\(M7-T\(0[1-9]\|1[0-9]\|2[0-8]\|3[01]\)\|M4-T25\|M5-T16\)\.md$'` prints `32` (every M7 task except this gate, plus M4-T25 and M5-T16).
+   - `RIPPLE_NETWORK=1 pnpm test:commerce` (without `--no-skips`, D-137) reports `0 failed`; every skipped line is an E2E-11 probe with a reason that starts `mock.shop has no `; list each in the done file and check that `docs/13-testing.md` has its line under `## Ledger issues` (M7-T26 step 5).
+   - `RIPPLE_NETWORK=1 pnpm test:behavior --files=test/commerce/hydrogen --grep='C-35 ' --no-skips` reports 2 passed (M7-T30).
    - `RIPPLE_NETWORK=1 pnpm test:nojs --no-skips` exits 0 and shows NJ-F1 to NJ-F16.
    - `pnpm test --files=test/liquid/theme --no-skips` passes A-1 to A-19 (except the withdrawn A-11), A-24, A-25.
    - `grep -l '"kind": "commerce"' components/*/*.json | xargs grep -L '"status": "stable"'` prints nothing.
@@ -1501,5 +1532,96 @@ Fixing anything (PLAN 3.5: a failing command names the failing task and the gate
 
 ### If blocked
 
-- No network: the gate cannot pass in the session; record BLOCKED-ON-ENV and the commands that did pass; the `verify` CI job of `main` is the proof.
-- E2E-11 or NJ-F16 skips make `--no-skips` fail: name M7-T26 or M7-T25 and stop (see their "If blocked").
+- No network: the gate cannot pass in the session; record BLOCKED-ON-ENV and the commands that did pass in a draft pull request, no done file. Tier 7 and C-35 need a session with network (the `verify` job does not run tier 7, D-137).
+- An E2E-11 probe skip is not a failure (D-137). An NJ-F11 or NJ-F16 skip makes `pnpm test:nojs --no-skips` fail: name M7-T25 and stop (see its "If blocked").
+
+---
+
+## M7-T30 Commerce test C-35: the locale path prefix on the hydrogen hosts (D-118)
+
+- **Goal:** Write test C-35 of doc 05 section 14 against the react and remix examples, proving the locale path prefix of ledger D-118 on the config element, on every cart form and on the store's first cart read.
+- **Depends on:** M7-T21, M7-T31.
+- **Kind:** `harness`. Size S. Group -.
+
+### Read first
+
+doc 05: in `## 14. ` the row C-35 only (search `| C-35 `; 0.6 kB), `### 4.2 ` the `cartEndpoint` row only (search `` | `cartEndpoint` | ``; 0.8 kB), `### 4.4 ` (the config element; 2.4 kB), `### 10.1 ` rules 4 and 7 (1.5 kB). doc 13: `### 12.1 ` (2.7 kB), rule T-5 (search `**T-5**`; 0.4 kB), `### 5.1 ` the export list only (`openPage`, `settled`; 1 kB). Ledger D-118, D-141. This file 0.2, PR-M7-7, PR-M7-15. Repository: `test/commerce/hydrogen.test.ts` (its imports and the first test, as the model), `test/support/examples.ts` (`startExample`), `examples/react/src/routes.ts` (the `/fr-ca` routes of M7-T31).
+
+### Files
+
+Change: `test/commerce/hydrogen.test.ts` (add the two C-35 tests only). Must not change: `examples/**`, `test/support/**`, any other test.
+
+### Steps
+
+1. Branch `task/M7-T30-c35`.
+2. Add two tests to `test/commerce/hydrogen.test.ts` (file placement by ledger D-141 (1): C-35 is a hydrogen-backend row), named `[T5] commerce-hydrogen: C-35 react ...` and `[T5] commerce-hydrogen: C-35 remix ...` (the rest of each name is one sentence stating the row, D-141 (2)). `html` is not tested: `examples/html` serves the static CLI pages and has no `/fr-ca` routes (PR-M7-7, PR-M7-15); write the comment `// C-35 html: not run (PR-M7-15)` above the two tests.
+3. Each test: `const app = await startExample(host)` inside `try`; when it throws (`RIPPLE_NETWORK is not 1`, or the T-7 reason on remix), call `t.skip(<the error message>)` and return (rule T-5). Discover one product handle with the query of 12.1 (last paragraph).
+4. For each path of `/fr-ca/cart` and `/fr-ca/products/<handle>`: open `app.url + path` with `openPage` (scripts on) and record every request whose path ends with `/api/cart`. Assert: (a) the config element (4.4) has `"cartEndpoint":"/fr-ca/api/cart"`; (b) every `form[method="post"]` inside an `rp-cart` or an `rp-product-form` root has `action="/fr-ca/api/cart"`, and there is at least one such form; (c) when the config element has no `initialCart` (not seeded, 10.1 rule 4), the first recorded request is `GET /fr-ca/api/cart`.
+5. The same for `/cart` and `/products/<handle>` (no prefix): (a), (b), (c) with `/api/cart`.
+6. Run `RIPPLE_NETWORK=1 pnpm test:behavior --files=test/commerce/hydrogen --grep='C-35 ' --no-skips` (skip rule of 0.2).
+7. Proof: PLAN 5.0.
+
+### Acceptance
+
+On Node 24.3 or later with network, the command of step 6 reports 2 passed, 0 failed, 0 skipped. Below Node 24.3 (run without `--no-skips`): the react test passes and the remix test skips with a reason starting `Remix needs Node 24.3 or later`. `grep -c 'C-35 html: not run (PR-M7-15)' test/commerce/hydrogen.test.ts` prints `1`.
+
+### Out of scope
+
+The html host and the Liquid backend (PR-M7-15). Changing example code (a failure there is a defect of M7-T31 or M7-T21). Other rows of doc 05 section 14 (C-33, C-34, C-36 to C-39 are M4-T25).
+
+### If blocked
+
+- No network: both tests skip with `RIPPLE_NETWORK is not 1`; BLOCKED-ON-ENV (PLAN 4.3): draft pull request with the tests.
+- `/fr-ca/...` answers 404, or (a) or (b) fails: the example's `i18nDefinition` or `cartAction` is wrong; draft pull request naming M7-T31 (react) or M7-T21 (remix) with the failing assertion.
+
+---
+
+## M7-T31 Example `examples/react`, part 2: `src/routes.ts` (with `/api/cart`), `src/server.tsx`, `build.mjs`, `server.mjs`, smoke run
+
+- **Goal:** Turn `examples/react` into a running storefront on top of part 1 (M7-T20): the route table with the Hydrogen cart handlers and the locale, newsletter and contact handlers, the server render through `renderDocument`, the client entry and the build, satisfying doc 13 12.1 items 1 to 4.
+- **Depends on:** M7-T20.
+- **Kind:** `example`. Size M. Group -.
+
+### Read first
+
+doc 13: `### 12.1 ` (2.7 kB). doc 12: `### 2.1 ` the table only (the `route` column; 2 kB), `### 2.5 ` the fourth bullet (unknown handle; 0.3 kB), `### 2.6 ` the prose rules DS-1 to DS-8 and the "Fallback for DS-5" prose (4 kB; the code is in the installed `src/pages/lib/document.ts`), `### 2.7 ` the prose rules NR-1 to NR-3 (1 kB). doc 05: `### 10.1 ` (6 kB), `### 10.3 ` (2 kB). doc 01: the row A-09 (search `| A-09 `; for the test route). Ledger D-041, D-087, D-091 item 5, D-118. This file 0.2, 0.5, 0.8, PR-M7-6, PR-M7-15. Repository: `examples/react/src/data.ts` (M7-T20), the export lines of `examples/react/src/pages/lib/*.ts` and of `examples/react/src/pages/contact.tsx`, `examples/react/server.mjs` (M0-T31 skeleton).
+
+### Files
+
+Create: `examples/react/build.mjs`, `examples/react/src/server.tsx`, `examples/react/src/client.tsx`, `examples/react/src/routes.ts`. Change: `examples/react/package.json` (script `build` = `node build.mjs`; devDependency `esbuild` 0.28.2), `examples/react/server.mjs`, `examples/react/.gitignore`, `examples/react/pnpm-lock.yaml`. Must not change: any file the CLI wrote (`src/components/ripple/**`, `src/pages/**`, `public/ripple/**`); `examples/react/src/data.ts` (a defect found here is fixed in a separate commit `M7-T20 fix: <defect>` of at most 20 lines, listed under "Deviations").
+
+### Steps
+
+1. Branch `task/M7-T31-example-react-server`. `pnpm build`.
+2. `src/routes.ts`: the table of 0.8 with `RegExp` patterns for the `route` column of doc 12 2.1, each also matched under the prefix `/fr-ca` (PR-M7-15); the `:name` segments become `params` (0.5). `/api/cart` is the Hydrogen cart handler: `handleShopifyRoutes` with `handlers: [cartHandlers]` exactly as the code block of doc 05 10.1, with `i18nDefinition`, `routeTemplates`, `storefrontClientType`, `storefrontClientConfig` imported from `./data.ts`. `/api/locale` calls `handleLocalePost` of `./pages/lib/locale-route.ts`; `/api/newsletter` the function of `./pages/lib/newsletter-route.ts`; `/api/contact` the function of `./pages/lib/contact-route.ts`. Test-only route for E2E-10 (A-09 of doc 01): `/__rp/commerce-identity` exists only when `RIPPLE_TEST_ROUTES=1` and renders a page whose client entry stores the two objects on `window` (PLAN-CHOSEN path).
+3. `src/server.tsx`: per request, the `handle` function of doc 05 10.1 (request context, Storefront client, `handleShopifyRoutes` first), then the route of step 2: `loadLayout` and `loadPage` (0.5), then `renderDocument` with DS-1 to DS-8: `scripts` = `["/client.js"]`, `commerce.host` `"react"`, `const cartAction = `${requestContext.locale.pathPrefix}/api/cart``, `commerce.cartEndpoint` = `cartAction`, `commerce.cartUrl` = `` `${requestContext.locale.pathPrefix}/cart` `` (DS-3); pass `cartAction` to the `layout`, `cart` and `product` page functions (0.2, D-118); the layout's `cartPage` is `true` on `/cart` and `/fr-ca/cart` (doc 13 12.1 item 4); a 404 from `loadPage` renders `NotFoundPage` with status 404; after a 404 only, `handleShopifyRedirects` (doc 05 10.1 step 3). Serve `public/` at `/` (so `public/ripple/*` is `/ripple/*`).
+4. `src/client.tsx`: imports `<pkg>/elements` and `<pkg>/commerce`, calls `configureCommerce` from the config element, then hydrates per DS-5 (or its fallback when DS-5 fails, as the spec says).
+5. `build.mjs` and `server.mjs` per 0.8; `.gitignore` gains `dist/` and `public/client.js`. `pnpm examples:install`; commit the lockfile.
+6. Smoke (needs `RIPPLE_NETWORK=1` and network):
+
+   ```bash
+   pnpm --dir examples/react build
+   (cd examples/react && PORT=4999 exec node server.mjs) & APP=$!; sleep 5
+   curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:4999/                       # prints 200
+   curl -s http://127.0.0.1:4999/ | grep -c 'id="cart-drawer"'                          # prints a number of at least 1
+   curl -s http://127.0.0.1:4999/cart | grep -c 'id="cart-drawer"'                      # prints 0
+   curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:4999/products/rp-no-such-product   # prints 404
+   curl -s http://127.0.0.1:4999/fr-ca/cart | grep -c 'action="/fr-ca/api/cart"'        # prints a number of at least 1
+   kill $APP
+   ```
+
+7. Proof: PLAN 5.0.
+
+### Acceptance
+
+`pnpm --dir examples/react build` exits 0 and writes `examples/react/dist/server.mjs` and `examples/react/public/client.js`. With network: every line of step 6 prints the value in its comment. `git status --porcelain examples/react/src/pages examples/react/src/components` is empty.
+
+### Out of scope
+
+`src/data.ts` (M7-T20). Remix and html examples (M7-T21, M7-T22). The tests NJ-F, E2E and C-35 (M7-T25, M7-T26, M7-T30). Editing installed files. SPIKE-11 options.
+
+### If blocked
+
+- No network: the build and the bundle can run, step 6 cannot; BLOCKED-ON-ENV (PLAN 4.3): draft pull request with steps 1 to 5 done.
+- DS-5 hydration fails in the browser: apply the spec's "Fallback for DS-5" (the installed `lib/locale-route.ts` is already that form) and report it.
+- `handleShopifyRoutes` does not serve `/fr-ca/api/cart`: record the observed status in the done file and in the PR-M7-15 ledger line; C-35 (M7-T30) will fail and names this task.

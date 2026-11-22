@@ -667,6 +667,7 @@ Format of each entry: Decision / Rationale / Evidence / Rejected.
 - Evidence: `ripple/docs/research/agent-kit-and-distribution.md` 4.1 to 4.3.
 - Rejected: deriving the manifest from source by parsing.
 - Amended: Key additions are in section 4.8 and D-100: top-level `elements`; component `upgradeAllow`, `deprecated`; `files.<host>[].key`; the shapes of `state[]`, `parts[]`, `rules[]`, `agent`. Parts live inside their component entry; `partOf` is only for a full component nested in another.
+- Amended (plan review, 13.5): bring-up mode (D-135): while `BRINGUP_SUBSET` is `true` the generator checks apply the MB-20 subset relaxation and MB-1 ignores entries that name an absent component; plan task M5-T14 makes them strict.
 
 #### D-059 Checker
 
@@ -713,6 +714,7 @@ Format of each entry: Decision / Rationale / Evidence / Rejected.
 - Evidence: `ripple/docs/research/liquid-blocks-partials.md` (test tiers; shim `ripple/docs/research/spikes/liquid/shim.mjs`, canonicaliser `canon.mjs`; mock.shop cannot back Liquid); `ripple/docs/research/react-and-custom-elements.md` (conformance normalisation); `ripple/docs/research/hydrogen-core.md` S19.
 - Rejected: screenshot comparison as the conformance mechanism (used only in evals).
 - Amended: (a) "Whitespace collapsed" in tier 2 means: adjacent text nodes are merged, runs of whitespace collapse to one space and are trimmed, empty text nodes are dropped, and `pre`, `textarea`, `script`, `style` are kept verbatim. Inter-element whitespace is therefore NOT compared and no contract may depend on it (D-075). (b) Doc 02 owns the canonicalisation algorithm and its reference code; doc 13 owns the harnesses. (c) "Visual regression" is computed-style JSON snapshots; screenshots are unread artifacts. (d) The runner is `node:test` driven by `test/run.ts`. Default tiers: 1, 2, 3, 4, 5, 6, 10. Tier 6 on the hydrogen backend and tier 7 need the network and run only with `RIPPLE_NETWORK=1`. Cross-engine tests carry the `[chromium]` tag when Chromium-only and the job is non-blocking until SPIKE-06 reports. (e) Acceptance tests are identified `AT-<n>` per component with a coverage check. The no-JS layout comparison excludes `data-rp-js="fallback"` controls and exempts Tabs. Details: D-104.
+- Amended (plan review, 13.5): tier 7 runs in the nightly job `commerce`, not in `verify` (D-137). The remix morph tests that start `examples/remix` are covered by rule T-5 like tier 7 (D-136).
 
 #### D-064 Size budgets
 
@@ -721,6 +723,7 @@ Format of each entry: Decision / Rationale / Evidence / Rejected.
 - Rejected: no budgets.
 - Amended: The budget sentence was corrected in place: the agent chunk is 14 kB, not 13 kB (measured 12.98 kB with terser, 15 bytes of margin; 13.9 kB with esbuild's minifier; doc 04 L-15); a 10 kB budget exists for the `shared` chunk (measured 9.2 kB); every chunk budget applies to both sets; the Liquid `ripple.js` has the `ripple.js` budget; the unit and the measuring method are fixed (docs 03 and 13); the per-component CSS cap of 6,000 bytes is new (doc 03). Measured today (doc 04): `ripple.elements.js` 22.3 kB, tabs 6.6, tooltip 11.5, toast 10.3; the commerce layer alone 22.5 kB (doc 05); the size of the real `ripple.js` is UNVERIFIED until both are built together.
 - Amended (review, 13.4): Tokens plus base: 2.5 kB (2,500 bytes), raised from 2.2 kB by D-125 (the nearest-owner selectors measure about 2,375 bytes; estimate from an esbuild-minified build, to be confirmed with the lightningcss options of doc 03).
+- Amended (plan review, 13.5): during bring-up a budgeted file that no present source produces is printed `missing` and does not fail (D-135).
 
 #### D-065 Agent surface
 
@@ -742,6 +745,7 @@ Format of each entry: Decision / Rationale / Evidence / Rejected.
 - Evidence: `ripple/docs/research/agent-kit-and-distribution.md` (milestone implication: checker, manifest schema, generator in foundations).
 - Rejected: Liquid last (Ben's update makes Liquid a first-class host).
 - Amended: SPIKE-08 and the new SPIKE-11 need no store and belong to M0. The reconciliation worklists (`worklist/<doc>.md`) are applied to docs 01 to 14 before M1 starts.
+- Amended (plan review, 13.5): the project's milestone numbers are those of `docs/PLAN.md` section 4.1; D-138 maps the order above onto them.
 
 #### D-068 Icons
 
@@ -772,7 +776,7 @@ A spike never blocks spec writing or implementation: writers specify the DEFAULT
 | Id | Name | Question | DEFAULT path (specified and built first) | FALLBACK path | Needs | Owner doc |
 |---|---|---|---|---|---|---|
 | SPIKE-01 | `liquid-standard-actions-runtime` | Does Hydrogen's default cart handler work against the real Standard Actions runtime on a preview store (add, set, remove, note, discount, `getCart`, `openCart`)? Does the platform publish the Standard Events page view on a theme by itself (the base theme dispatches it in `ripple/theme/assets/page-view-event.js`)? | D-041: Hydrogen cart store with no `configureCartEndpoint`. The Liquid adapter dispatches the page view (D-089). | The Liquid adapter implements `cart` as a thin object with the same `getState` / `subscribe` / `handleFormSubmit` surface that calls `Shopify.actions.updateCart` / `getCart` directly. Needs Ben's sign-off (weakens decision 4). Elements do not change. Page view: when the platform publishes it, the adapter's dispatch is removed. | Preview store | 05 |
-| SPIKE-02 | `liquid-preview-store-rendering` | Does the platform wrap block or partial output in an element? Do `partials.fetch` / `apply` behave as the local shim assumes? Is `as` a legal block argument? Is a bare schema setting accepted? What is the `type` value of a discount-code `discount_application`? (Doc 14 lists the full set, V-1 to V-20.) | No wrapper; contracts identical to other hosts; region root carries `data-rp-region`; param `as`. | The canonicaliser unwraps the platform wrapper; `base.css` gives the wrapper `display: contents`; region lookup uses the wrapper. Param `as` becomes `tag` (D-038). | Preview store | 14 |
+| SPIKE-02 | `liquid-preview-store-rendering` | Does the platform wrap block or partial output in an element? Do `partials.fetch` / `apply` behave as the local shim assumes? Is `as` a legal block argument? Is a bare schema setting accepted? What is the `type` value of a discount-code `discount_application`? (Doc 14 lists the full set, V-1 to V-21.) | No wrapper; contracts identical to other hosts; region root carries `data-rp-region`; param `as`. | The canonicaliser unwraps the platform wrapper; `base.css` gives the wrapper `display: contents`; region lookup uses the wrapper. Param `as` becomes `tag` (D-038). | Preview store | 14 |
 | SPIKE-03 | `canvas-theme-reference` | Does the Canvas / Sidekick compiler accept the layer statement and an `@theme reference` block in `config/styles.css`? | D-055: marker region with `@theme reference`. | Omit the region. Utilities name Ripple tokens with arbitrary values (`bg-(--color-primary)`); documented in the `ripple-liquid` skill. | Preview store with Canvas | 03, 14 |
 | SPIKE-04 | `rp-root-only-primitive` | Does `definePrimitive` + `createParts` with only a `root` part behave correctly at runtime (upgrade, destroy and recreate, agent bridge)? | D-019 item 1. | A base class `RippleElement extends HTMLElement` in `src/runtime/element.ts` with the same public surface (events, `api` methods, attribute reflection) and manual bridge registration. | Local | 04 |
 | SPIKE-05 | `invoker-commands-hosts` | Do React 19 and Remix 3 print `commandfor` / `command` / `popovertarget` unchanged on `<button>` and `popover=""` on a `<div>`, and does the polyfill work in WebKit and Gecko? | D-008: attributes printed by the binding; polyfill in `ripple.js`. D-010: `popover=""`. | Bindings also print `data-rp-open="<id>"` / `data-rp-close="<id>"` on the same buttons and the runtime's opener listener handles them (`data-rp-close` is listed in section 4.4 for this path only). Popover prints `popover="auto"` in all four hosts. | Local | 04, 06 |
@@ -941,6 +945,7 @@ ripple/
     index.ts                         # rv, cx, imageUrl, imageSrcSet, types, manifest loader (no side effects)
     responsive.ts  image.ts
     types.ts                         # Responsive, resource types (D-094), Manifest, ComputedLock
+    types.generated.ts               # generated by step G7, committed (D-148)
     architecture.test.ts             # import rules of doc 01
     runtime/
       index.ts  loader.ts  commands-polyfill.ts  opener.ts  announcer.ts
@@ -965,12 +970,13 @@ ripple/
     check/
       index.ts  engine.ts  report.ts  liquid-calls.ts  flows.ts
       rules/<RULE>.ts                # one file per rule id
+      rules/index.ts                 # the array of all implemented rules (D-148)
     cli/
       index.ts  detect-host.ts  trailer.ts  merge3.ts  plan.ts  diff.ts  composite.ts  config.ts  base.ts
       commands/<command>.ts          # init add diff upgrade remove status check docs manifest skills
     gen/
       index.ts  build.ts  browser-bundles.ts
-      html.ts  liquid.ts  react.ts  remix.ts  types.ts
+      html.ts  liquid.ts  react.ts  remix.ts  types.ts  bindings-lint.ts
       props-css.ts  theme-css.ts  display-css.ts  tokens-source.ts  css-lint.ts  size.ts
       docs.ts  registry.ts  agents-md.ts
       elements.json                  # source of the manifest key `elements`
@@ -983,6 +989,7 @@ ripple/
     <name>.svg
   locales/
     en.default.json                  # source of every ripple.* string
+    core.json  blueprint.<id>.json   # generated locale patches, committed (doc 07 G5; D-148)
   components/
     <id>/
       <id>.json                      # manifest entry: the source of truth
@@ -995,7 +1002,9 @@ ripple/
       remix/<id>.tsx  remix/<id>.data.ts
       liquid/blocks/<id>.liquid  liquid/blocks/<id>-<part>.liquid
       liquid/snippets/rp-<id>.liquid  liquid/snippets/rp-<id>-<part>.liquid
+      liquid/locales/<id>.json       # generated locale patch, committed (doc 07 G5; D-148)
   blueprints/
+    _sample/<id>.json                # sample data of each blueprint (doc 12, doc 13; D-148)
     <id>/
       blueprint.json  <id>.test.ts
       html/  react/  remix/  liquid/
@@ -1567,6 +1576,12 @@ Only items that evidence cannot settle. Work proceeds on the default; none of th
 | Q24 | Tier 7 runs against mock.shop, whose data for menus, blogs, pages, localization and the `frontpage` collection is unverified. When mock.shop lacks one of them the test is skipped, and a skip fails the nightly run under `--no-skips`. Should that also block merges? | No: tier 7 is nightly only and never a merge gate; the nightly failure is the report (D-110 row 27). | 13 |
 | Q25 | The review fix D-125 (nearest-owner script-state selectors, needed so that a nested undefined or defined element does not show or hide another element's controls) grows tokens plus base CSS from 2,174 to an estimated 2,375 bytes. The budget was raised from 2,200 to 2,500 bytes. Accept the 2,500 byte budget, or keep 2,200 and accept the nesting defect? | Budget is 2,500 (D-125, amends D-064); any further change that exceeds it must amend D-064 in the same commit (D-110 row 28). | 03 |
 | Q26 | On the hydrogen backend, `initializeShopifyScripts` now always runs (it sets up `Shopify.routes` and the WebMCP tools), so `analytics: false` no longer stops Hydrogen's page-view events; it stops only cart events and `rp-view-event`. The `password` blueprint passes `analytics: false`. Should `analytics: false` also suppress page views (which needs a Hydrogen option that does not exist today)? | No: page views follow the platform's consent handling; `analytics: false` covers cart events and view events only (D-130). | 05, 12 |
+| Q27 | If the SPIKE-06 report shows a feature that WebKit or Gecko at the floor of Q13 lacks and that has no per-feature fallback, may the browser floor (D-032) be raised? | No: keep the floor and apply the per-feature fallbacks of doc 13 section 21; a feature without one is recorded as a known gap in the report, and plan task M9-T06 proceeds (D-134 item 15). | 03, 13 |
+| Q28 | The eval judge is calibrated against at least 30 human-rated screenshots (`evals/rubric/golden/ratings.json`, doc 08 section 8.9). Who provides the ratings? | Ben provides them; until `docs/plan/done/BEN-ratings.md` exists, eval gate E3 (M8-T42) waits and the M8 gate records it as BLOCKED-ON-BEN. | 08 |
+| Q29 | The copyright line of the root `LICENSE` (placeholder licence MIT, Q18). | `Copyright (c) 2026 Ripple contributors`. | 01 |
+| Q30 | SPIKE-01 steps 1a and 8 need modified copies of the Ripple theme uploaded to the preview store as extra themes, and the live tier needs a page with handle `rp-fixtures`, discount codes `SAVE10` and `SHIRT5`, and a statement whether Canvas is on. Can you do these uploads and settings when the store exists? | Yes; the values are recorded in `docs/plan/done/BEN-store.md`; until then the steps are recorded as not run (M10). | 05, 13, 14 |
+| Q31 | Publishing: no publish command is specified. Who publishes, and how? | Ben publishes by hand after plan task M9-T08 (`npm publish` from `pkg/` under the final name of Q6); the hand-off note `docs/plan/done/M9-handoff.md` lists the steps. | 07 |
+| Q32 | The plan now makes the breadth milestones (doc 09, 10 and 12 components) wait for the M1 golden-path gate (M1-T46). Do you want breadth work to start in parallel before that gate? | No: breadth waits for M1-T46, so that harness defects found by the slice are fixed once. | PLAN |
 
 ---
 
@@ -1673,6 +1688,7 @@ Evidence rule used throughout: a result that was RUN beats a source reading; a s
   - The manifest `files.<host>[].generated` flag records the choice per file. Each component document states it in "Host notes".
   - The source lint `bindings-lint` of doc 06 runs on generated and hand-written files alike.
 - Evidence: doc 06 (spike `ripple/docs/research/spikes/bindings/`, 100 ok); doc 11 item 1.
+- Amended (plan review, 13.5): row 2 also applies to kinds `native` and `ui` whose markup the template language cannot express; the components on that path are listed in D-139, and Accordion's React file is hand-written below the generated header.
 
 #### D-073 Prop-to-attribute mapping, final rules
 
@@ -1697,6 +1713,7 @@ Evidence rule used throughout: a result that was RUN beats a source reading; a s
   7. Backend-scoped fixtures: where the form dialect forces different tags per backend, a state has two fixtures: `<name>` with `hosts: ["html", "react", "remix"]` and `liquid-<name>` with `hosts: ["liquid"]`. Used by CartLines, CartLine, CartSummary, CartNote, CheckoutButton, CartDrawer and DiscountCode. No other component may scope a fixture by host to hide a difference. One further exception (D-110 row 13): Select has `sort` (`hosts: ["html", "remix", "liquid"]`) and `sort-react` (`hosts: ["react"]`), because React needs `defaultValue` where the others print `selected` (D-086).
   8. Fixture lint check `pe-2` of doc 02 is skipped on the root element of Button and IconButton fixtures.
   9. The `html` host reference file: D-040 as amended.
+- Amended (plan review, 13.5): item 6: a component task MAY add the resource its fixture needs, named and recorded as D-140 states.
 
 #### D-075 Canonicalisation
 
@@ -2025,6 +2042,7 @@ Doc 11 is normative. Points that other documents must follow, and points doc 11 
   4. Node: repository `>=22.18`; the main CI job runs Node 24; Remix tests skip below 24.3; a separate job runs Node 22.18; a job installs the packed package on Node 20.18.
   5. Doc 01 test A-01 (closed root file list) includes `.github/` and `CHANGELOG.md`.
   6. `pkg/` additionally contains `fixture.schema.json` and `registry/liquid/settings.json`.
+- Amended (plan review, 13.5): item 4: a development session uses Node 24.22.3 installed with `pnpm env use --global 24.22.3`, with the fallback of D-136 below Node 24.3.
 
 #### D-104 Testing: settled points
 
@@ -2459,6 +2477,7 @@ These decisions were made by the closing pass, after the per-document worklists 
 - Rejected: leaving any of these to the implementer.
 - Evidence: the appliers' reports; the documents named in the Owner column.
 - Amended (review, 13.4): Row 28: the budget is 2,500 bytes (D-125).
+- Amended (plan review, 13.5): row 27: `verify` no longer runs tier 7 (D-137), so the rule holds for every merge; the M7 gate accepts E2E-11 probe skips as D-137 states.
 
 #### D-111 Rule kind `custom`
 
@@ -2645,3 +2664,161 @@ Decisions made while fixing the findings of the three feasibility reviews (comme
 | 12 | Product blueprint | No-JS text: VariantPicker is links; layout `dropdown` is a GET form with a select. |
 
 - Owner: the documents named in each row.
+
+### 13.5 Plan review decisions
+
+Decisions made while fixing the findings of the plan review (three dry runs of `docs/PLAN.md` and `docs/plan/M*.md` by a weaker model, and the problem reports of the detail-file authors). Each amends the decisions named in it; amended decisions carry an "Amended (plan review, 13.5)" line. Where a detail file had adopted a "Plan reading" (`PR-...`), D-146 ratifies or overturns it.
+
+#### D-134 Small corrections from the plan review
+
+| # | Area | Correction |
+|---|---|---|
+| 1 | `tsconfig.json` | `compilerOptions` gains `"types": ["node"]` after `"noEmit": true`. TypeScript 6 loads no `@types/*` package unless `types` names it; without it `pnpm typecheck` fails on `process` (run: 29 errors; with the line, 0). Doc 01 section 5.2. |
+| 2 | Test `[T1] test-names` | The test is named `[T1] test-names: every test name matches N-1 and every chromium tag has a reason` (no `[chromium]` inside the name). The scan does not report `test/run.test.ts` itself, which builds each forbidden token by concatenation (`"desc" + "ribe("`); the comment rule applies to names that end with ` [chromium]`. Doc 13 sections 18.1 line 19 and 18.3. |
+| 3 | Structure rules (RP113) | `subjects` is `[R]` when R itself matches `rule.selector`, followed by the matching descendants, so that a root-matching selector (`button.rp-button[commandfor]`, `rp-dialog`, `rp-dialog.rp-drawer`) fires. Doc 07 section 9.5.3. |
+| 4 | MB-5 | A non-responsive `enum` prop MAY have no `default` (optional; prints no attribute when unset or invalid, doc 02 M-6): Heading `size` and `weight`, `rpField`, EmptyState `icon`. Every `default` is in `values`. Doc 07 section 1.6. |
+| 5 | Rule selectors | `rules[].selector` and `rules[].target` accept `:scope > <selector>` (the children of the root that match). MB-17 and 9.5.3. Used by `icon-button-single-icon`, `select-children`, `video-children`. |
+| 6 | Worked manifest entries | Doc 07 section 1.7 already states that the owning component document wins over 1.7.1 to 1.7.3. A component task builds its manifest from `docs/components/<id>.md` and uses 1.7 only for the shape of the keys; it does not copy 1.7.1 unchanged. |
+| 7 | `docs/CONVENTIONS.md` | Re-synchronised with the ledger: the `data-rp-js` script-state rules live in `@layer rp.props` without `!important` (D-021 (b), (d), D-125); Drawer root and panel classes (D-008 item 1); `data-rp-open` and `data-rp-refresh` rows as L4.4; the prop list of L6 is a reserved set and the component spec's Props table is authoritative; D-114 to D-133 facts added. |
+| 8 | Doc 06 section 12 item 4 | Fixture names corrected to those of the specs: `button/dialog-opener`, `button/with-icon`, `stack/row-list`. |
+| 9 | CartDrawer | Only `two-lines` has a `liquid-` variant; `start`, `children`, `class`, `invalid-enum-falls-back` are hydrogen-host fixtures. `cart-drawer-status` gains its fix text; `cart-drawer-one` is kind `custom` (document order check) with message and fix. `components/cart-drawer.md`. |
+| 10 | Dialog, Drawer React files | The file exports the six components and their props types (`OpenChangeDetail`, `<Component>Props`) as doc 06 section 6.6 prints them. Recipe N "exports components only" allows these type exports. |
+| 11 | Test A-04 | The search excludes `src/architecture.test.ts` (it holds the search strings). Doc 01 section 11. |
+| 12 | CartLines AT-6 | The Liquid form is `#<id>-form` (`#cart-form` in fixture `liquid-default`). |
+| 13 | Swatch fixture `image` | References the new resource `image.shirt-front` (the first image of `product.basic`), added by the Swatch task under RS-2. |
+| 14 | Store record | Doc 13 CI-6: the store is recorded in `docs/plan/done/BEN-store.md`, not in the ledger. |
+| 15 | SPIKE-06 | The spike task only reports (PLAN 3.4). Each fallback the report calls for is a follow-up task (PLAN 7.2); the task that makes `cross-engine` blocking (M9-T06) runs after them. Doc 13 section 17.3. |
+| 16 | Wrapper constant | `LIQUID_WRAPPERS: string[]` in `src/testing/liquid-shim.ts` (doc 13 section 21); doc 02 section 15 now uses that name. |
+| 17 | Fixtures page | One `<div data-rp-case="<fixture id>">` per case (doc 13 section 13); doc 14 A-23 now uses that form. |
+| 18 | Theme build CLI path | From `examples/liquid` the CLI is `node ../../pkg/bin/ripple.mjs` (doc 14 section 4.1). |
+| 19 | SPIKE-09 fallback | The fallback also rewrites A-9 (three objects) and A-13 (section 9.1 without the removed row), and adds `featured-collection` to the `components` array of `blueprints/product/blueprint.json`. Doc 14 section 15 fallback; `blueprints/product.md`. |
+| 20 | Doc 08 section 7.7 | A failing case asserts the observed outcome; there is no expected-failure mark. |
+| 21 | Doc 07 section 11.4 rule 2 | Static files use `npx <pkg>` with no version (D-110 row 1). |
+| 22 | Doc 01 section 9 | The `package-node20` job starts the built CLI (`node pkg/bin/ripple.mjs manifest`), as doc 13 section 17.1 prints it. |
+| 23 | Doc 13 section 10.2 | The failing example of a component rule is an HTML string written in the test (manifests have no example key). The `default` fixture is wrapped in the context a `requires-ancestor` or document-reading `custom` rule needs before "reports none" is asserted. |
+| 24 | Toast tags | `ui-toast-*` tags are defined only on the first `toast()` call (D-083); the generic tier 3 test, RP604 and snapshot mode ignore them. Doc 13 UD-4 and the code of section 8.1. |
+| 25 | Doc 08 | The 8.4 synopsis lists `--bar`, `--calibrate`, `--reference`, `--parallel <n>`; K-20 to K-28 live in `src/gen/skills.test.ts` (the runner never collects `skills/`, which ships in the package). |
+| 26 | C-29 | Page views are counted as the `["pageView", init]` entries of `window.__log` (ST-6), never by event type. Doc 05 section 14. |
+| 27 | RP303 (b) | An empty element with class `rp-announcer` or `role="status"` is a correct live region and is not reported. Doc 07 section 9.6. |
+| 28 | Element entry point | An element task adds the one line `import "./<tag>"` to `src/elements/index.ts` (non-commerce elements) and removes the element's bring-up stub, as PLAN recipe 5.5 step 3 says. |
+| 29 | Schema name keys | `ripple.<id>.name` and `ripple.<id>.<part>_name` are generated by G5 into the `schema` half of `components/<id>/liquid/locales/<id>.json` (doc 07 sections 3.3 and 4.1 rule 2). They are never added to `locales/en.default.json` by hand; that file holds the strings a binding prints (doc 09 section 0.5 table). Doc 09 section 0.5 now says so. |
+
+- Owner: the documents named in each row.
+
+#### D-135 Bring-up mode
+
+- Decision: until plan task M5-T14, `src/gen/index.ts` exports `export const BRINGUP_SUBSET = true; // PLAN 4.4: remove in M5-T14`. While it is `true`: `pnpm gen --check` and build step 2 apply the MB-20 `--subset` relaxation without the flag; MB-1 ignores entries that name a ledger component not present yet; a budgeted file that no present source produces is printed `missing` and does not fail. A build sub-step whose module does not exist yet prints `build: skipped <step> (PLAN 4.4)` and the task that adds the module removes the line. The root `package.json` `scripts` never change. Every relaxation in code carries a comment with the string `PLAN 4.4` and the id of the task that removes it. M5-T14 deletes `BRINGUP_SUBSET`; M7-T28 deletes the two test-side `BRINGUP` constants (resources referenced, layout sample); M9-T05 restores A-01 and A-02 set equality and fails while `PLAN 4.4` occurs under `src/`.
+- Evidence: MB-20 requires all 84 components and forbids `--subset` in `pnpm build`, which cannot hold while components are added one task at a time.
+- Rejected: changing the `scripts` for bring-up (they are byte-equal to doc 13 section 2.3).
+- Owner: doc 07 section 1.6 (MB-20); PLAN section 4.4. Amends D-058 (generator checks), D-064 (budgets during bring-up).
+
+#### D-136 Node version in a development session
+
+- Decision: a task session uses Node 24.22.3, installed once per machine with `export PNPM_HOME="$HOME/.local/share/pnpm"`, `export PATH="$PNPM_HOME:$PATH"`, `pnpm env use --global 24.22.3`; `node --version` then prints `v24.22.3` (run on the build machine, 2026-11-22). The two `export` lines are repeated at the start of every new shell. When that install fails, the session runs each `--no-skips` command without `--no-skips`, requires every skip reason to start with `Remix needs Node 24.3 or later` (rule T-7), lists the skips in the pull request, and the `verify` CI job (Node 24) is the proof. From the first `native` component (plan task M1-T15) on, a session exports `RIPPLE_NETWORK=1` before `pnpm ci`, because the Remix morph tests start `examples/remix` (doc 13 T-5).
+- Evidence: the build machine has only Node 22.23.5; `remix@3.3.0` declares `engines.node: ">=24.3.0"`; `startExample` throws `RIPPLE_NETWORK is not 1` for npm hosts.
+- Owner: `AGENTS.md` "Commands"; PLAN section 3.1; doc 01 section 9 (Node matrix); doc 13 T-5. Amends D-103 item 4.
+
+#### D-137 Tier 7 runs nightly, not in `verify`
+
+- Decision: the `verify` job of `ci.yml` is exactly `pnpm ci` (no `pnpm test:commerce` step). Tier 7 runs in the new nightly job `commerce` (`RIPPLE_NETWORK=1`, Node 24, `pnpm test:commerce --no-skips`, skipped while `test/commerce/e2e.test.ts` does not exist). The M0 gate and every merge therefore need no tier 7 file and no mock.shop data. The M7 gate runs `RIPPLE_NETWORK=1 pnpm test:commerce` and passes with 0 failed when every skip is an E2E-11 probe skip with the reason `mock.shop has no <thing>`; each such skip is listed in the gate's done file and entered under `## Ledger issues` of doc 13 (rule E-4: the resolution is a ledger change).
+- Evidence: `test/run.ts` exits 2 when no test matches, so `pnpm test:commerce --no-skips` failed `verify` on every pull request before M7; D-110 row 27 and Q24 already say tier 7 is never a merge gate.
+- Owner: doc 13 sections 17.1, 17.2 (CI-2, CI-9), 17.4. Amends D-063, D-110 row 27.
+
+#### D-138 Milestone numbering
+
+- Decision: the plan's milestones M0 to M10 (`docs/PLAN.md` section 4.1) are the milestone numbers of the project. The D-067 order maps to them as follows: D-067 M0 (local spikes) is plan M1 and M3 (SPIKE-06 completion); D-067 M1 (foundations) is plan M0, M2 and M6 (checker); D-067 M2 is plan M3; D-067 M3 is plan M4 and M8 (eval harness); D-067 M4 is plan M5 and M7 (blueprints); D-067 M5 is plan M7 (theme, local tiers) and M10 (live tiers); D-067 M6 is plan M8. The "Milestone" field of a component spec and the milestone words in doc 13 section 1 and doc 07 section 9.7 are D-067 numbers; read them through this table. The eval baseline that D-061 places "by the end of the commerce milestone" is gate E1 (M8-T39), run as soon as the blueprints and the CLI exist (PLAN note P-4).
+- Evidence: PLAN section 4.1 and note P-1; a weaker model read "M1" in a spec as plan M1.
+- Owner: PLAN section 4.1. Amends D-067.
+
+#### D-139 Binding paths a template cannot express
+
+- Decision: a component whose markup the contract template language (doc 07 section 2.3) cannot express has no `template`, `generated: "hand"` fixtures (or hand-written seeds for `upgrade-snapshot` fixtures), an `html` file generated from the fixture files, and hand-written `react`, `remix` and `liquid` files with their generated regions (D-072 row 2, now also for kinds `native` and `ui`). This holds for: `image`, `rich-text`, `field`, `pagination`, `swatch`, `logo`, `account-link`, `link-list`, `hero`, `footer`, `newsletter-form`, `locale-selector`, `featured-collection`, `header` (static), `navigation-menu`, `mobile-nav` (native), `tabs` (ui; files from doc 06 sections 6.6, 7.6, 8.6). `accordion` keeps generated `html`, `remix`, `liquid` and has a hand-written React file below the generated header (it calls `useState`). Each spec's Host notes start with a "Binding paths (D-139)" line that wins over a later "generated".
+- Evidence: object members (`image`, `shop`), loops (menus, lists), ids from two props (`<tabs>-tab-<value>`), raw HTML and caller children have no construct in doc 07 section 2.3; the plan authors of M1 to M5 each found the same limit.
+- Rejected: extending the template language (new constructs in a generator nobody has run yet).
+- Owner: the component specs; PLAN recipes. Amends D-072.
+
+#### D-140 Test resources added by component tasks
+
+- Decision: a fixture that needs data no resource holds gets a new resource in the component task's own commit: the `RESOURCES` entry, the row of doc 13 section 4.2, the entry of doc 11 section 0.5 or doc 12 section 1.6, and the name in the `[T1] resources:` test list. The name is `<type>.<name>` when the value has a resource type (product, variant, collection, article, line, cart, image, media, menu, shop, locale, filters, search), otherwise `<component id>.<fixture name>`. RS-3 replaces a Liquid global only for the types `cart`, `shop`, `locale`, `search`. This is the one place where a task edits a numbered doc beyond `## Ledger issues`. The names the M4 and M5 detail files list (PR-M4-1, PR-M5-3) are adopted.
+- Owner: doc 13 RS-2. Amends D-074 item 6.
+
+#### D-141 Test files and test names the specs leave open
+
+- Decision: (1) An `E-nn` row lives in `src/elements/<tag>.test.ts` or `src/runtime/<name>.test.ts` of the one module it tests; a `C-nn` row in `test/commerce/liquid.test.ts` or `test/commerce/hydrogen.test.ts` by backend (C-14, C-15 MAY be in `src/commerce/<tag>.test.ts`). A row about several modules is placed by the plan task that owns it. (2) When a plan detail writes a test name as a prefix followed by `...` (for example `` `[T5] dialog: AT-4 ...` ``), the test name MUST start with that prefix and the rest is one sentence stating the acceptance item; when the detail writes a full name, it is used exactly. (3) An acceptance item that a later task proves is written in the component test file as the line `// AT-<n>: covered by <task id> (<file>: <test name or id>)`; doc 13 BH-2's `// AT-<n>: generic` stays for the generic matrix.
+- Owner: doc 13 sections 10.2 and 10.6; PLAN section 3.1 item 7.
+
+#### D-142 Checker rules that read project files
+
+- Decision: `RuleContext` has a field `cwd: string`, the project root, set by the engine from `CheckOptions.cwd`. Rules that read project files (RP112 Liquid case, RP117 cases (b) and (c), RP307, RP309 layer S, RP402, RP403, RP405, RP406, RP503, RP505) resolve paths against it and read `ripple.json` for configured paths. Plan task M0-T42 adds the field with the checker core.
+- Owner: doc 07 section 9.3. Ratifies PR-M6-9 and replaces PR-9 of M2 and the "partial" readings of M4.
+
+#### D-143 Component rules the specs give without kind, message or fix
+
+- Decision: the message and fix texts that the plan detail files print for component rules whose spec gives none (M2: the nine `custom` rules; M5: the fifteen chrome rules) are adopted as written. A rule that holds "once per document" (`header-once`, `footer-once`, `mobile-nav-once`, `hero-once`, `cart-drawer-one`) is kind `custom`; its function walks from R to the document and returns `[R]` when an element with the same root class comes before R. Every component rule reports RP113 at severity error; `hero-once` ("warning" in its spec) is an error too. Detection of a "source layer" rule (`featured-collection-carousel-needs-id`) is done on HTML.
+- Owner: the component specs; doc 07 section 9.5.3. Ratifies PR-M2-2, PR-M5-5, PR-M5-6, PR-M5-7.
+
+#### D-144 Root `AGENTS.md` is a maintained document
+
+- Decision: the root `AGENTS.md` (onboarding for task sessions) is committed with the plan and is never created or overwritten by a plan task. M0-T01 does not list it. It is changed only together with `docs/PLAN.md`. The `AGENTS.md` section that `ripple init` writes into a PROJECT (doc 08 section 3) is a different file in a different repository.
+- Owner: `AGENTS.md`; PLAN section 6 row M0-T01.
+
+#### D-145 Owners of tests that had none
+
+| Tests | Owning plan task |
+|---|---|
+| doc 03 section 15 A-02 to A-09, A-11, A-14, A-18 to A-22 and CSS-NEAR (section 4.3) in `css/styling.test.ts` | M5-T16 |
+| doc 03 linter construct L-16 | M0-T24 |
+| doc 04 E-31, E-32 (D-131) in `src/elements/rp-dialog.test.ts` | M1-T16 |
+| doc 04 E-01, E-02, E-04, E-10, E-17, E-18, E-19, E-29 | M3-T10 |
+| doc 04 E-20, E-21, E-22, E-28 (need `pkg/registry/liquid/`) | M3-T13 |
+| doc 04 E-23, E-24, E-25, E-30 | M3-T14 |
+| doc 04 E-15 and the NavigationMenu clauses of E-01, E-18, E-19 | M5-T10 (E-15), M5-T11 (clauses) |
+| doc 01 A-07, A-08, A-13 first run (`test/upgrade/bundles.test.ts` needs Tabs and Toast fixtures) | M3-T07 |
+| doc 05 C-05 cases 2 to 4, C-33, C-34, C-36, C-37, C-38, C-39 | M4-T25 |
+| doc 05 C-35 (locale prefix on the examples) | M7-T30 |
+| doc 05 C-18 (doc 13 NJ-6: it is the Liquid NJ-F rows) | M7-T25 |
+| doc 05 C-28 and doc 13 section 9.1 `[T4] react: useRegionHtml ...` | M4-T22 |
+| doc 05 C-26 in its stub-callback form | M1-T45 |
+| doc 14 V-21 | M10-T02 |
+| `components/navigation-menu.md` AT-10 to AT-12 | M5-T11 |
+| doc 08 K-35 (needs the T08 start state) | M8-T32 |
+
+- Owner: PLAN section 6.
+
+#### D-146 Plan readings ratified and overturned
+
+| Readings | Disposition |
+|---|---|
+| M0 section 0.5 PLAN-CHOSEN names (`validateSchema`, `loadSources`, `assembleManifest`, `checkManifest`, `GenContext`, `StepResult`, `runGen`, `generate*Files`, `lintBinding`, `lintFixtures`) and the same tables of M3 (`snapshotFixture`), M6, M7, M9, M10 | Ratified. They are internal names, not public API; a spec that names the same thing differently wins. |
+| M0: hand-written `validateSchema` (no JSON Schema package); doc 06 Button files compared against a reduced entry (copy rule D-069); runner entry guard; `test/support/server.ts` built from the doc 13 routes table | Ratified. |
+| M1 PR-1, PR-10 (comment forms for later proofs) | Ratified in the form of D-141 (3). |
+| M1 PR-2 to PR-9; PR-11 | Ratified; PR-11 is replaced by D-145 (C-33 to C-39 now have owners). |
+| M2 PR-1 (fixture families are hand-written `fixtures[]` records), PR-3, PR-4, PR-7, PR-8 | Ratified. |
+| M2 PR-5, M3 PR-M3-4, M4 PR-M4-2, M5 PR-M5-1, PR-M5-2 | Ratified as D-139. |
+| M2 PR-6, PR-10 | Replaced by D-134 items 4 and 5 (no `src/gen/` change in M2). |
+| M2 PR-2, M5 PR-M5-5 to PR-M5-7 | Ratified as D-143. |
+| M2 PR-9 | Replaced by D-142. |
+| M3 PR-M3-1 to PR-M3-3, PR-M3-5, PR-M3-7 to PR-M3-10 | Ratified (PR-M3-3 and PR-M3-5 as D-134 item 24). |
+| M3 PR-M3-6 (an emission rule for `useState` in `src/gen/react.ts`) | Overturned by D-139: Accordion's React file is hand-written below the generated header. |
+| M4 PR-M4-1, M5 PR-M5-3 | Ratified as D-140. |
+| M4 PR-M4-3 to PR-M4-9 | Ratified (PR-M4-6 as D-134 item 26). PR-M4-10 is replaced by D-145. |
+| M5 PR-M5-4, PR-M5-8 to PR-M5-16 | Ratified. |
+| M6 PR-M6-1 to PR-M6-13 | Ratified (PR-M6-9 as D-142). The layer B driver is in `src/check/flows.ts` and the Theme Check sub-step in `src/check/engine.ts` (D-148). |
+| M7 PR-M7-1 to PR-M7-14 | Ratified (PR-M7-1 as D-134 item 18; PR-M7-3: M7-T28 deletes the test-side `BRINGUP` constants, D-135). |
+| M8 PR-M8-1 to PR-M8-24 | Ratified (PR-M8-1 and PR-M8-18 as D-134 item 25). |
+| M9 PR-M9-1 to PR-M9-9 | Ratified (PR-M9-7 as D-134 item 21; PR-M9-8 as D-148). |
+| M10 PR-M10-1 to PR-M10-8 | Ratified (PR-M10-5 as D-134 item 17, PR-M10-6 as item 16). |
+| Same-group tasks that add lines to a shared registration file | Ratified as a plan rule (PLAN section 6, "Grp"). |
+| Spike verdicts | SPIKE-08 (an addition, not a fallback) reports `ADDITION possible` or `DEFAULT stays`. A spike task that cannot run part of its procedure for lack of WebKit or Gecko builds writes its done file with a `BLOCKED-ON-ENV:` status line (PLAN section 4.3). |
+
+- Owner: PLAN and the detail files.
+
+#### D-147 Shared registration files
+
+- Decision: tasks of the same plan group MAY edit the same registration file when each adds only its own lines or fills only its own named slot: `src/gen/index.ts` (one slot per generator task), `src/commerce/index.ts`, `src/elements/index.ts`, `src/check/rules/index.ts` (ascending id order), `src/check/rules/RP113.ts` (`CUSTOM_RULES`, one function per rule), `src/cli/index.ts` (one command-table line), `src/testing/resources.ts` (RS-2), `locales/en.default.json`. On a rebase conflict in such a file the session keeps both sides' lines and re-runs the proof.
+- Owner: PLAN section 6.
+
+#### D-148 Repository tree additions
+
+- Decision: ledger section 5.1 gains the files the specs name but the tree omitted: `src/types.generated.ts` (generated by G7, committed, exported from `src/index.ts` only for names `src/types.ts` does not declare; listed in A-02; its `IMPORT_RULES` key is `"src/types.generated.ts": ["./src/types.ts"]`, and `src/index.ts` may import it); `src/gen/bindings-lint.ts` (doc 06 section 1.2); `src/check/rules/index.ts` (doc 01 section 4); `components/<id>/liquid/locales/<id>.json`, `locales/core.json`, `locales/blueprint.<id>.json` (generated locale patches, doc 07 G5); `blueprints/_sample/<id>.json` (doc 12, doc 13). No file `src/check/types.ts`, `src/check/theme-check.ts` or `src/check/browser.ts` exists: checker types are in `src/check/index.ts`, the Theme Check sub-step is in `src/check/engine.ts`, the layer B driver is in `src/check/flows.ts`.
+- Owner: ledger section 5.1; doc 01 section 4 and A-02.

@@ -280,7 +280,7 @@ RP104 (`id`, `cart`), RP114 (`<id>-form`), RP301, RP305 (dialect of every form),
 3. Tier 5: [05-commerce.md](05-commerce.md) tests C-03 (Liquid quantity, remove link, Enter), C-04 (line error part), C-06 (failed partial fetch reloads), C-10 (hydrogen quantity and remove; focus after refresh).
 4. Tier 5 (React): setting a quantity to 0 removes the `<li>` without a network refresh of the document; no hydration warning is logged ([05-commerce.md](05-commerce.md) test C-23).
 5. Tier 6: hydrogen dev server: with scripting disabled, changing the quantity and pressing Update yields a 303 and the new quantity in the re-rendered page. Liquid shim: the form posts `updates[]` in line order and `update`.
-6. Tier 5: on Liquid the first submit button of `#cart-form` is `name="update"`, and the number of `[name="updates[]"]` controls equals the number of `[data-rp-line]` elements.
+6. Tier 5: on Liquid the first submit button of the form `#<id>-form` (`#cart-form` in fixture `liquid-default`) is `name="update"`, and the number of `[name="updates[]"]` controls equals the number of `[data-rp-line]` elements.
 
 ### Evidence and UNVERIFIED
 

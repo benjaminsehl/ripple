@@ -2,7 +2,7 @@
 
 Status: detail file for the 9 rows of milestone M10 in `docs/PLAN.md` section 6. `docs/00-decisions.md` (the ledger) wins over every spec; a spec wins over this file. This file adds no public API. Where it fixes a choice the specs leave open, the choice is marked "Plan reading" and listed in section 0.6.
 
-How to use: read `AGENTS.md`, `docs/CONVENTIONS.md`, `docs/PLAN.md` sections 1 to 3, 3.4 (spike tasks), 3.5 (gate tasks), 5.0 and 7.2, then section 0 of this file (about 10 kB), then ONLY your task's section `## <task id>`. Do not read other task sections and do not read the other `docs/plan/M*.md` files: every rule you need from them is restated in section 0.
+How to use: read `AGENTS.md`, `docs/CONVENTIONS.md`, `docs/PLAN.md` sections 1 to 3, 3.4 (spike tasks), 3.5 (gate tasks), 5.0 and 7.2, then section 0 of this file (about 11 kB), then ONLY your task's section `## <task id>`. Do not read other task sections and do not read the other `docs/plan/M*.md` files: every rule you need from them is restated in section 0.
 
 Contents: 0 Rules for every M10 task. Then M10-T01 to M10-T09 in table order.
 
@@ -27,7 +27,7 @@ Contents: 0 Rules for every M10 task. Then M10-T01 to M10-T09 in table order.
 | Other environment variables | none may change test behaviour | doc 13 `### 2.7 ` last line |
 | What a session needs locally | the same two variables exported in the shell; network access to the store | Plan reading PR-M10-1 |
 
-`docs/plan/done/BEN-store.md` (written by Ben or by the session he asks; Plan reading PR-M10-2) is expected to state: the store domain; the preview theme id; whether the storefront has a password (never the password itself); whether Canvas / Sidekick is enabled; the handle of an existing store page used for the fixtures page (default handle `rp-fixtures`, section 0.4); one discount code that applies to the whole cart and one that applies to one product only, when Ben created them; how the live theme was uploaded. A task that needs one of these facts and does not find it opens a draft pull request that names the missing fact (PLAN 1 item 7).
+`docs/plan/done/BEN-store.md` (written by Ben or by the session he asks; Plan reading PR-M10-2; ledger Q30 and doc 13 CI-6) is expected to state: the store domain; the preview theme id; whether the storefront has a password (never the password itself); whether Canvas / Sidekick is enabled; the handle of the store page used for the fixtures page (ledger Q30 default `rp-fixtures`, section 0.4); the discount codes, ledger Q30 defaults `SAVE10` (applies to the whole cart) and `SHIRT5` (applies to one product only); how the live theme was uploaded; and, for M10-T03, whether Ben uploaded the modified theme copies of SPIKE-01 steps 1a and 8 as extra themes, with their theme ids. Until a fact is recorded, the steps that need it are recorded as `not run` (ledger Q30). A task whose own Acceptance needs a missing fact opens a draft pull request that names it (PLAN 1 item 7).
 
 ### 0.3 Uploading the live theme
 
@@ -67,7 +67,7 @@ Each is PLAN-CHOSEN and internal (test code only, never a package export). When 
 
 ### 0.6 Plan readings made by this file
 
-The task that first applies one adds one line under `## Ledger issues` of the named owning doc (text: `<PR id>: <topic> (docs/plan/M10-liquid-live.md 0.6)`) and mentions it in the pull request.
+Ledger D-146 ratifies all eight (PR-M10-5 as D-134 item 17, PR-M10-6 as D-134 item 16). They are the rules to follow. No task adds a `## Ledger issues` line for them.
 
 | # | Topic | The specs | Reading | Owning doc | Applied by |
 |---|---|---|---|---|---|
@@ -75,14 +75,14 @@ The task that first applies one adds one line under `## Ledger issues` of the na
 | PR-M10-2 | Content of `docs/plan/done/BEN-store.md` | PLAN 4.3 names the file, not its content | section 0.2 list | PLAN | M10-T02 |
 | PR-M10-3 | How `build-live-theme.ts` is run | doc 13 section 13 names the file, no script; doc 13 2.3 fixes `scripts` | the esbuild command of 0.3; the file is not in doc 13 `### 3.1 ` tree (add nothing there) | doc 13 | M10-T01 |
 | PR-M10-4 | Store data versus fixture data | doc 13 section 13 binds `rp_product_basic` to `collections.all.products.first`, but the reference HTML holds the values of `src/testing/resources.ts` ("Linen Shirt", 48.00 USD, variant id 11), which no store product has | `[T8] <fixture id>: live Liquid output equals the reference HTML` is created only for `liveFixtureCases()` (no resource). Cases of `liveProbeCases()` are printed and covered by the wrapper test and by the A-23 test against the shim rendering of the same template with the store-free probes masked out | doc 13 | M10-T01 |
-| PR-M10-5 | Fixtures page markup | doc 13 section 13: `<div data-rp-case="<fixture id>">`; doc 14 A-23: `<section data-rp-fixture="<component>/<fixture>">` | doc 13 owns harnesses (D-063 amendment (b)): `div[data-rp-case]` | doc 14 | M10-T01 |
-| PR-M10-6 | Name of the wrapper constant | doc 13 `## 21. ` item 4: `LIQUID_WRAPPERS: string[]`; doc 02 `## 15. ` item 2: `LIQUID_WRAPPER_SELECTORS` | `LIQUID_WRAPPERS` in `src/testing/liquid-shim.ts` (doc 13 owns the shim, D-063 amendment (b)) | doc 02 | M10-T06 |
+| PR-M10-5 | Fixtures page markup | doc 13 section 13 and doc 14 A-23 both use `<div data-rp-case="<fixture id>">` (D-134 item 17) | `div[data-rp-case]` (now the spec) | doc 14 | M10-T01 |
+| PR-M10-6 | Name of the wrapper constant | doc 13 `## 21. ` and doc 02 `## 15. ` both use `LIQUID_WRAPPERS: string[]` (D-134 item 16) | `LIQUID_WRAPPERS` in `src/testing/liquid-shim.ts` (now the spec) | doc 02 | M10-T06 |
 | PR-M10-7 | Test names that cover a list | doc 13 section 13 names `[T8] liquid: NJ-F1 to NJ-F16 on the live store` and `[T8] liquid: E2E-2 to E2E-8 on the live store` as one test each | one `test()` each with exactly that name; inside, every flow runs in its own `openStorePage()` and the test fails with one line per failing flow id. NJ-F8 is hydrogen-only (doc 13 `### 11.2 `) and is not run | doc 13 | M10-T01 |
 | PR-M10-8 | Page-view hook before the SPIKE-01 report | doc 13 section 13: "the hook the SPIKE-01 report names (UNVERIFIED until that report exists)" | default hook: a listener for `shopify:page:view` on `document` installed with `page.addInitScript` (the same event doc 05 `### SPIKE-01 ` step 8 records). M10-T03 confirms or replaces it | doc 13 | M10-T01 |
 
 ### 0.7 Definition of done reminder
 
-Every task ends with PLAN section 5.0 (commit, push, pull request in the five-heading form, done file `docs/plan/done/<task id>.md`). Spike tasks follow PLAN 3.4, gate tasks PLAN 3.5. "Acceptance" lists what is specific; PLAN section 3.1 always applies. `pnpm ci` never selects tier 8 (`pnpm test` runs tiers 1 to 6 and 10), so tier 8 skips never break `pnpm ci`. A task that cannot finish opens a draft pull request and writes no done file (PLAN 1 item 7).
+Every task ends with PLAN section 5.0 (commit, push, pull request in the five-heading form, done file `docs/plan/done/<task id>.md`). Node version and network for `pnpm ci`: `docs/PLAN.md` section 3.1 (ledger D-136: Node 24.22.3 installed with `pnpm env use --global 24.22.3`; export `RIPPLE_NETWORK=1` before `pnpm ci`). Spike tasks follow PLAN 3.4, gate tasks PLAN 3.5. "Acceptance" lists what is specific; PLAN section 3.1 always applies. `pnpm ci` never selects tier 8 (`pnpm test` runs tiers 1 to 6 and 10), so tier 8 skips never break `pnpm ci`. A task that cannot finish opens a draft pull request and writes no done file (PLAN 1 item 7).
 
 ---
 
@@ -145,10 +145,10 @@ Running against a store (M10-T02, M10-T03, M10-T08). A-20 to A-23 (M10-T07). Upl
 
 ---
 
-## M10-T02 SPIKE-02 `liquid-preview-store-rendering`: checks V-1 to V-20, report
+## M10-T02 SPIKE-02 `liquid-preview-store-rendering`: checks V-1 to V-21, report. BLOCKED-ON-BEN (store)
 
 - **Goal:** Answer every question of doc 14 `## 15. ` on the preview store with a recorded HTTP response or browser trace, write the report, and record the verdict in ledger §3.
-- **Depends on:** M7-T23. Also needs M10-T01 (its generator and tests are the procedure; table error reported). **BLOCKED-ON-BEN (store).**
+- **Depends on:** M7-T23, M10-T01 (its generator and tests are the procedure). **BLOCKED-ON-BEN (store).**
 - **Kind:** `spike`. Size M. Group B.
 
 ### Read first
@@ -163,7 +163,7 @@ Create: `docs/research/spikes/liquid-preview-store-rendering/README.md` and the 
 
 1. Branch `task/M10-T02-spike-02`. Check 0.2 "Present when". `pnpm build`; generate the live theme (0.3); have it uploaded (0.3).
 2. Run tier 8 once and keep the output: `RIPPLE_STORE_URL=... RIPPLE_STORE_PASSWORD=... pnpm test:liquid-live 2>&1 | tee docs/research/spikes/liquid-preview-store-rendering/tier8-run.txt`. Failures are data for this report, not defects to fix here.
-3. For each question V-1 to V-21 of doc 14 `## 15. ` (the task title says V-1 to V-20; V-21 was added later and is answered too), record: the question id, the procedure (URL, script or browser step), the observation, and "Default holds" or "Differs: <what>". Sources per question:
+3. For each question V-1 to V-21 of doc 14 `## 15. ` (V-21 is owned by this task, ledger D-145), record: the question id, the procedure (URL, script or browser step), the observation, and "Default holds" or "Differs: <what>". Sources per question:
    - V-1 and V-6: the fixtures page (`[data-rp-case]` parents) and a product page's regions; plus the HTML returned by one `partials.fetch` call made from the console (`await (await import("@shopify/partial-rendering")).partials.fetch(["rp-cart-lines"])` as a module script in the page with `page.evaluate`; the exact import shape is itself V-4/V-5). When a wrapper exists, record its exact selector (tag, class, attributes); M10-T06 needs it.
    - V-2: the theme upload accepted the block schemas (bare settings); `probe/bare-setting`; and a `select` value outside the options (set it through the theme editor or `config/settings_data.json` of a copy; record what the block sees).
    - V-3, V-14, V-16: product page render and the theme editor (Ben may need to do the editor check; record who did).
@@ -171,7 +171,7 @@ Create: `docs/research/spikes/liquid-preview-store-rendering/README.md` and the 
    - V-7: the rendered `<script type="importmap">` parses with `JSON.parse`.
    - V-8: the HTML `{% form 'product' %}` prints (hidden inputs) and the page after a failed no-JS add (quantity above stock).
    - V-11: count `shopify:page:view` with `"analytics": false` is SPIKE-01 step 8 (M10-T03); here record only the count with the default config.
-   - V-12: cart page with the two discount codes of BEN-store.md applied; the CartSummary code list; `probe/discounts` output.
+   - V-12: cart page with the two discount codes of BEN-store.md applied (ledger Q30 defaults `SAVE10`, `SHIRT5`); the CartSummary code list; `probe/discounts` output.
    - V-13: a collection page with a boolean filter and a price filter; record `filter.values` and the subunit values.
    - V-15, V-19: upload result; `probe/font-system`.
    - V-17: `probe/as`.
@@ -198,10 +198,10 @@ Applying any fallback or correction (M10-T06). Editing doc 14 section 15 rows. S
 
 ---
 
-## M10-T03 SPIKE-01 `liquid-standard-actions-runtime`: checklist C-21, report
+## M10-T03 SPIKE-01 `liquid-standard-actions-runtime`: checklist C-21, report. BLOCKED-ON-BEN (store)
 
 - **Goal:** Run the SPIKE-01 procedure (C-21, steps 1 to 9) on the preview store, write the report, and record the verdict for the cart path and the page-view path separately.
-- **Depends on:** M7-T23. Also needs M10-T01 (table error reported). **BLOCKED-ON-BEN (store).**
+- **Depends on:** M7-T23, M10-T01. **BLOCKED-ON-BEN (store).**
 - **Kind:** `spike`. Size M. Group B.
 
 ### Read first
@@ -216,7 +216,7 @@ Create: `docs/research/spikes/liquid-standard-actions-runtime/README.md`, its ev
 
 1. Branch `task/M10-T03-spike-01`. Check 0.2. `pnpm build`; generate and upload the live theme (0.3).
 2. Run `RIPPLE_STORE_URL=... pnpm test:liquid-live --grep="C-21|page view"` and keep the output in `tier8-c21.txt`.
-3. Steps 1 to 7a of doc 05 `### SPIKE-01 ` exactly as written, recording calls to `Shopify.actions.updateCart` / `getCart` (wrap them with `page.addInitScript` after `DOMContentLoaded`) and network requests. Step 1a: in a copy of the live theme, add the `console.log` to the inline script of `snippets/rp-head.liquid` and the competing `configure` script at the position of `{{ content_for_header }}` in `layout/theme.liquid`; upload the copy as a second theme (Ben's action) and run step 1 there. Store the two changed files under `theme-patches/step-1a/`.
+3. Steps 1 to 7a of doc 05 `### SPIKE-01 ` exactly as written, recording calls to `Shopify.actions.updateCart` / `getCart` (wrap them with `page.addInitScript` after `DOMContentLoaded`) and network requests. Step 1a: in a copy of the live theme, add the `console.log` to the inline script of `snippets/rp-head.liquid` and the competing `configure` script at the position of `{{ content_for_header }}` in `layout/theme.liquid`; upload the copy as a second theme (Ben's action, ledger Q30; its theme id is in BEN-store.md) and run step 1 there. Store the two changed files under `theme-patches/step-1a/`.
 4. Step 8: a copy with `"analytics": false` in the config element printed by `snippets/rp-head.liquid` (store the changed file under `theme-patches/step-8/`); count `shopify:page:view` on `document` with a listener installed by an inline script at the top of `<head>` (also in that copy). Zero events: the default (adapter dispatches the page view) stays. One event: page-view fallback required. Record also whether `shopify:page:view` is the event the test of PR-M10-8 should listen to; if the platform uses another observable hook, record it exactly.
 5. Step 9: one product view for the product page's `rp-view-event` (Shopify analytics debugger or the dispatched event).
 6. README (PLAN 3.4 item 1) with two verdicts:
@@ -243,10 +243,10 @@ Implementing `createActionsCartStore` or removing `dispatchPageView` (M10-T06). 
 
 ---
 
-## M10-T04 SPIKE-03 `canvas-theme-reference`: report
+## M10-T04 SPIKE-03 `canvas-theme-reference`: report. BLOCKED-ON-BEN (store with Canvas)
 
 - **Goal:** Find out whether the Canvas / Sidekick compiler accepts the `config/styles.css` of the Ripple theme (the layer statements and the `ripple:start theme` marker region with `@theme reference`), write the report, and record the verdict.
-- **Depends on:** M7-T23. **BLOCKED-ON-BEN (store with Canvas).**
+- **Depends on:** M7-T23, M10-T01. **BLOCKED-ON-BEN (store with Canvas).**
 - **Kind:** `spike`. Size S. Group B.
 
 ### Read first
@@ -260,7 +260,7 @@ Create: `docs/research/spikes/canvas-theme-reference/README.md`, the compiled `s
 ### Steps
 
 1. Branch `task/M10-T04-spike-03`. Check 0.2 (Canvas enabled per BEN-store.md).
-2. The spec gives no procedure beyond the question (spec silence, reported). Procedure used (Plan reading; record it in the README):
+2. The spec gives no procedure beyond the question. Procedure used (a plan reading ratified by ledger D-146; record it in the README):
    1. Upload `examples/liquid` unchanged (0.3).
    2. Trigger the platform compile of `config/styles.css`: Ben (or the session with Sidekick access) asks Sidekick or the theme editor to make one change that causes Canvas to regenerate `assets/styles.min.css` (UNVERIFIED how; record what was done).
    3. Download the regenerated `assets/styles.min.css` (theme editor "Edit code", or `shopify theme pull --only assets/styles.min.css`, UNVERIFIED) into `compiled-styles.min.css`.
@@ -288,10 +288,10 @@ The store has no Canvas or the compile cannot be triggered: the verdict is `not 
 
 ---
 
-## M10-T05 SPIKE-09 `liquid-recommendations-region`: report
+## M10-T05 SPIKE-09 `liquid-recommendations-region`: report. BLOCKED-ON-BEN (store)
 
 - **Goal:** Find out whether a partial fetched from `routes.product_recommendations_url` populates `recommendations`, write the report, and record the verdict.
-- **Depends on:** M7-T23. **BLOCKED-ON-BEN (store).**
+- **Depends on:** M7-T23, M10-T01. **BLOCKED-ON-BEN (store).**
 - **Kind:** `spike`. Size S. Group B.
 
 ### Read first
@@ -326,13 +326,13 @@ No product on the store returns recommendations: Ben adds related products (Sear
 
 ---
 
-## M10-T06 Apply spike outcomes: for each store spike with verdict FALLBACK, implement the `Fallback (SPIKE-nn)` section of its owning doc
+## M10-T06 Apply spike outcomes: for each store spike with verdict FALLBACK, implement the `Fallback (SPIKE-nn)` section of its owning doc. BLOCKED-ON-BEN (store)
 
 - **Goal:** For every store spike whose report says `FALLBACK required`, make exactly the changes of the named fallback sections, so that the default code matches the real platform.
 - **Depends on:** M10-T02, M10-T03, M10-T04, M10-T05. **BLOCKED-ON-BEN (store);** the SPIKE-01 cart fallback additionally needs Ben's written sign-off (ledger Q10).
 - **Kind:** `infra`. Size M. Group -.
 
-When all four reports say `DEFAULT holds`, this task changes no source: write the done file with "no fallback required" and the four verdicts, and stop. When more than one spike needs a fallback, this task applies ONE spike's fallback (lowest spike number first) and adds one follow-up row per remaining spike at the end of the M10 table (`M10-T10`, `M10-T11`, ...; kind `infra`, size M, detail "apply the section `Fallback (SPIKE-nn)` of <owning doc> as M10-T06 describes"), and adds each new id to the "Depends on" of M10-T08 (PLAN 7.2). This keeps the task size M (table issue reported).
+When all four reports say `DEFAULT holds`, this task changes no source: write the done file with "no fallback required" and the four verdicts, and stop. When more than one spike needs a fallback, this task applies ONE spike's fallback (lowest spike number first) and adds one follow-up row per remaining spike at the end of the M10 table (`M10-T10`, `M10-T11`, ...; kind `infra`, size M, detail "apply the section `Fallback (SPIKE-nn)` of <owning doc> as M10-T06 describes"), and adds each new id to the "Depends on" cell of M10-T08 in `docs/PLAN.md` section 6 (PLAN 7.2 states this rule). This keeps the task size M.
 
 ### Read first
 
@@ -346,8 +346,8 @@ The four reports and their done files (verdict lines only). Then only the parts 
 | SPIKE-02 import map (V-7) | doc 14 `### Fallback (SPIKE-02)` item 3; doc 07 `### Fallback (SPIKE-02)` items 1 and 2 | `src/cli/commands/init.ts` (`core/patch:import-map` inserts the six literal lines); the core file list (doc 07: `snippets/rp-import-map-entries.liquid` is no longer a core file); `examples/liquid` regenerated by the CLI (never by hand) |
 | SPIKE-02 param `as` (V-17) | doc 14 `### Fallback (SPIKE-02)` item 4 and row V-17; doc 07 `### Fallback (SPIKE-02)` item 4 and row MB-2 of `### 1.6 `; doc 08 line "Fallback (SPIKE-02): when `as` is not a legal block argument" in the `ripple-liquid` skill outline | `components/{container,grid,inline,stack,text}/<id>.json` (prop `as` gets `liquid.name: "tag"`; these five specs have an `as` row; confirm with `grep -l '"name": "as"' components/*/*.json`); `src/gen` MB-2 accepts the one pair; `pnpm gen`; blueprint Liquid files with `as:` become `tag:`; `skills/ripple-liquid/SKILL.md` |
 | SPIKE-02 other rows | the row's "If the answer differs" cell in doc 14 `## 15. ` | only what the cell names; a cell that says "Report to doc NN" adds a `## Ledger issues` entry to that doc and changes no code |
-| SPIKE-03 | doc 03 `#### Fallback (SPIKE-03)`; doc 14 `### Fallback (SPIKE-03)`; doc 07 `### Fallback (SPIKE-03)`; doc 08 line "Fallback (SPIKE-03)" in the `ripple-liquid` skill outline | `src/cli/commands/init.ts` (`THEME_REFERENCE_PATCH = false`; upgrade removes an existing `theme` region and reports `patch`); the computed lock omits `core/patch:theme-reference`; `examples/liquid/config/styles.css` regenerated by `ripple upgrade` (doc 14 says the fallback file also drops the two `@layer` lines: that edit is in the theme-owned part of the file and is made by running the CLI first, then by hand only for those two lines, recorded as a deviation); `skills/ripple-liquid/SKILL.md` last sentence of `## CSS` |
-| SPIKE-09 | `docs/components/product-recommendations.md` `### Fallback (SPIKE-09)`; `docs/blueprints/product.md` `### Fallback (SPIKE-09)`; doc 14 `### Fallback (SPIKE-09)` items 1 to 3 | `blueprints/product/liquid/templates/product.liquid` (the replacement block of doc 14 item 1, copied byte for byte); the source of `registry/liquid/settings.json` (written by M6-T05; find it with `grep -rln "rp_palette" src/gen`), gaining the third settings object of doc 14 item 2; `locales/en.default.json` schema keys `ripple.settings.product`, `ripple.settings.related_collection`; `components/product-recommendations/product-recommendations.json`: fixture `lazy` gets `"hosts": ["html", "react", "remix"]`; `blueprints/product/product.test.ts` (BT-5 skips `rp-product-recommendations` on Liquid); `examples/liquid` regenerated by `ripple upgrade` |
+| SPIKE-03 | doc 03 `#### Fallback (SPIKE-03)`; doc 14 `### Fallback (SPIKE-03)`; doc 07 `### Fallback (SPIKE-03)`; doc 08 line "Fallback (SPIKE-03)" in the `ripple-liquid` skill outline | `src/cli/commands/init.ts` (`THEME_REFERENCE_PATCH = false`; upgrade removes an existing `theme` region and reports `patch`); the computed lock omits `core/patch:theme-reference`; `examples/liquid/config/styles.css`: both fallbacks apply and do not conflict. Doc 07's fallback covers what the CLI writes: `ripple upgrade` removes the `theme` marker region. Doc 14's fallback covers the theme-owned part of the file of doc 14 `### 5.2 `: delete its two `@layer` lines by hand (doc 14 `### Fallback (SPIKE-03)` item 1 is the instruction). `skills/ripple-liquid/SKILL.md` last sentence of its `## CSS` section |
+| SPIKE-09 | `docs/components/product-recommendations.md` `### Fallback (SPIKE-09)`; `docs/blueprints/product.md` `### Fallback (SPIKE-09)`; doc 14 `### Fallback (SPIKE-09)` items 1 to 4 (ledger D-134 item 19) | `blueprints/product/liquid/templates/product.liquid` (the replacement block of doc 14 item 1, copied byte for byte); `blueprints/product/blueprint.json`: add `"featured-collection"` to the `components` array (`docs/blueprints/product.md` fallback); `examples/liquid/config/settings_schema.json`: the third object of doc 14 item 2, after the second object (`registry/liquid/settings.json` itself does not change: A-9 still requires the second object to equal it); the schema locale source `src/gen/liquid-core/settings.locale.json` (written by M6-T05; it becomes the `schema` part of `registry/liquid/locales/core.json`) gains `"product": "Product page"` and `"related_collection": "Related products collection"` under `settings` (merged as `ripple.settings.product`, `ripple.settings.related_collection`; never into `locales/en.default.json`); `components/product-recommendations/product-recommendations.json`: fixture `lazy` gets `"hosts": ["html", "react", "remix"]`; `blueprints/product/product.test.ts` (BT-5 skips `rp-product-recommendations` on Liquid); doc 14 sections 9.1, 9.2, 10.3 (item 3) and the tests of A-9 and A-13 in `test/liquid/theme.test.ts` (item 4); `examples/liquid` regenerated by `ripple upgrade` |
 
 ### Files
 
@@ -357,7 +357,7 @@ Exactly the "Files that change" cells of the spikes being applied, plus generate
 
 1. Branch `task/M10-T06-apply-<spike>` (for example `task/M10-T06-apply-spike-02`). `pnpm install --frozen-lockfile && pnpm build`.
 2. For SPIKE-01 cart: confirm the sign-off exists (a comment by Ben in the M10-T03 pull request or a line in `docs/plan/done/BEN-store.md`). Without it: draft pull request, stop.
-3. Apply the fallback text literally. Where a fallback section prints code, copy it unchanged (D-113). Where it says "record the selector in this section" (doc 14 `### Fallback (SPIKE-02)` item 1), add the selector from the SPIKE-02 report to that item: this is the one spec edit this task makes besides `## Ledger issues` entries.
+3. Apply the fallback text literally. Where a fallback section prints code, copy it unchanged (D-113). Where it says "record the selector in this section" (doc 14 `### Fallback (SPIKE-02)` item 1), add the selector from the SPIKE-02 report to that item. Where a fallback item tells the owning doc to drop or change its own rows (doc 14 `### Fallback (SPIKE-09)` items 3 and 4), make exactly that edit. These are the only spec edits this task makes besides `## Ledger issues` entries.
 4. Regenerate: `pnpm gen`; for theme changes run the CLI in `examples/liquid` (`node ../../pkg/bin/ripple.mjs upgrade` after `pnpm build`) and `pnpm theme:css`; never hand-edit a CLI-written file except the SPIKE-03 two-line case above.
 5. Update the tests the fallback names (C-29 for the page view; BT-5 for SPIKE-09; the `[T8]` wrapper test still runs and now passes after unwrapping). Do not weaken any other test.
 6. Run `pnpm ci`, then with the store variables `pnpm test:liquid-live` and paste its last line into the done file.
@@ -365,23 +365,23 @@ Exactly the "Files that change" cells of the spikes being applied, plus generate
 
 ### Acceptance
 
-`pnpm ci` exits 0. For each applied spike: SPIKE-01 page view: `grep -c "dispatchPageView" src/commerce/adapter-liquid.ts` prints `0` and C-29 passes; SPIKE-01 cart: `grep -c "createActionsCartStore" src/commerce/adapter-liquid.ts` is at least `1`, `grep -c "updateCart.configure" src/commerce/adapter-liquid.ts` is at least `1`, and C-01 to C-08 pass (`pnpm test:behavior --files=test/commerce/liquid`); SPIKE-02 wrapper: `grep -c "LIQUID_WRAPPERS" src/testing/liquid-shim.ts` is at least `1` and `[T8] liquid: SPIKE-02 no platform wrapper around blocks and partials` passes after unwrapping; SPIKE-02 `as`: `grep -rl "as: '" examples/liquid/templates` finds nothing; SPIKE-03: `grep -c "ripple:start theme" examples/liquid/config/styles.css` prints `0`; SPIKE-09: `grep -c "product-recommendations" examples/liquid/templates/product.liquid` prints `0` and `grep -c "rp_related_collection" examples/liquid/config/settings_schema.json` prints `1`. With the store: `pnpm test:liquid-live` reports 0 failed for the tests the applied spike affects.
+`pnpm ci` exits 0. For each applied spike: SPIKE-01 page view: `grep -c "dispatchPageView" src/commerce/adapter-liquid.ts` prints `0` and C-29 passes; SPIKE-01 cart: `grep -c "createActionsCartStore" src/commerce/adapter-liquid.ts` is at least `1`, `grep -c "updateCart.configure" src/commerce/adapter-liquid.ts` is at least `1`, and C-01 to C-08 pass (`pnpm test:behavior --files=test/commerce/liquid`); SPIKE-02 wrapper: `grep -c "LIQUID_WRAPPERS" src/testing/liquid-shim.ts` is at least `1` and `[T8] liquid: SPIKE-02 no platform wrapper around blocks and partials` passes after unwrapping; SPIKE-02 `as`: `grep -rl "as: '" examples/liquid/templates` finds nothing; SPIKE-03: `grep -c "ripple:start theme" examples/liquid/config/styles.css` prints `0`; SPIKE-09: `grep -c "product-recommendations" examples/liquid/templates/product.liquid` prints `0`, `grep -c "rp_related_collection" examples/liquid/config/settings_schema.json` prints `1`, `node -e "if(!require('./blueprints/product/blueprint.json').components.includes('featured-collection'))process.exit(1)"` exits 0, and `node -e "if(require('./examples/liquid/config/settings_schema.json').length!==3)process.exit(1)"` exits 0 (A-9 after the fallback). With the store: `pnpm test:liquid-live` reports 0 failed for the tests the applied spike affects.
 
 ### Out of scope
 
-Any change not printed by a fallback section. Rewording specs beyond the recorded selector and `## Ledger issues` entries. Ledger edits. Fallbacks of local spikes (SPIKE-04 to SPIKE-11).
+Any change not printed by a fallback section. Rewording specs beyond the edits of step 3 and `## Ledger issues` entries. Ledger edits. Fallbacks of local spikes (SPIKE-04 to SPIKE-11).
 
 ### If blocked
 
-- A fallback section conflicts with another doc (for example doc 14 acceptance A-9 "exactly two objects" in `config/settings_schema.json` versus the SPIKE-09 third object; or A-13's partial set versus the removed `rp-product-recommendations`): apply the fallback, update the acceptance test to the fallback text only where the fallback section itself names the change, otherwise draft pull request naming the conflicting criterion for Ben.
+- A fallback section conflicts with another doc in a way the fallback section does not resolve itself (A-9 and A-13 are resolved by doc 14 `### Fallback (SPIKE-09)` item 4): apply nothing for that item; draft pull request naming the conflicting criterion for Ben.
 - D-122 failed on the store (M10-T03 report): the needed change is a ledger change; draft pull request, stop.
 
 ---
 
-## M10-T07 Ripple theme store acceptance A-20 to A-23
+## M10-T07 Ripple theme store acceptance A-20 to A-23. BLOCKED-ON-BEN (store)
 
 - **Goal:** Add the four live-store acceptance criteria of doc 14 `## 14. ` to tier 8 and make them pass on the preview store.
-- **Depends on:** M10-T02. Also needs M10-T01 (it appends to `test/liquid/live.test.ts`; table error reported). **BLOCKED-ON-BEN (store).**
+- **Depends on:** M10-T02, M10-T01 (it appends to `test/liquid/live.test.ts`). **BLOCKED-ON-BEN (store).**
 - **Kind:** `harness`. Size S. Group C.
 
 ### Read first
@@ -418,10 +418,10 @@ Fixing theme or component defects the tests expose (each is a defect of its owne
 
 ---
 
-## M10-T08 M10 gate: tier 8 green on the store; nightly job `liquid-live` enabled
+## M10-T08 M10 gate: tier 8 green on the store; nightly job `liquid-live` enabled. BLOCKED-ON-BEN (store)
 
 - **Goal:** Prove the M10 gate of PLAN 4.2 and switch the nightly `liquid-live` job to `--no-skips`.
-- **Depends on:** M10-T01 to M10-T07 (and every follow-up row M10-T06 added). **BLOCKED-ON-BEN (store).**
+- **Depends on:** M10-T01 to M10-T07, and every follow-up row M10-T10 onward that M10-T06 added to this row's "Depends on" cell (PLAN 7.2). **BLOCKED-ON-BEN (store).**
 - **Kind:** `gate`. Size S. Group -.
 
 ### Read first
@@ -437,13 +437,13 @@ Change: `.github/workflows/nightly.yml` (one line). Create: `docs/plan/done/M10-
 1. Branch `task/M10-T08-gate`.
 2. Check: `ls docs/research/spikes/{liquid-preview-store-rendering,liquid-standard-actions-runtime,canvas-theme-reference,liquid-recommendations-region}/README.md` lists four files; each done file of the spikes names its verdict; every spike with `FALLBACK required` has a done M10-T06 (or follow-up) task. Otherwise the gate fails: name the missing task and stop.
 3. Regenerate and upload the live theme (0.3) from the current `main`, then `RIPPLE_STORE_URL=... RIPPLE_STORE_PASSWORD=... pnpm test:liquid-live --no-skips`. It MUST exit 0 with `0 failed, 0 skipped`.
-4. In `.github/workflows/nightly.yml`, job `liquid-live`, change `- run: pnpm test:liquid-live` to `- run: pnpm test:liquid-live --no-skips` (CI-6). Do not add an upload step: CI-7 says the upload step is added by doc 14 once SPIKE-02 has run, and doc 14 specifies none (spec silence, reported); the person uploads before the nightly run.
-5. CI-6 says the same pull request "records the store in the ledger": the plan forbids ledger edits outside spike rows (PLAN 1); record the store instead in the done file and add a `## Ledger issues` line to doc 13 naming CI-6 versus PLAN 1 for Ben (table issue reported).
+4. In `.github/workflows/nightly.yml`, job `liquid-live`, change `- run: pnpm test:liquid-live` to `- run: pnpm test:liquid-live --no-skips` (CI-6). Do not add an upload step: CI-7 says the upload step is added by doc 14 once SPIKE-02 has run, and doc 14 specifies none; the person uploads before the nightly run.
+5. CI-6: the same pull request records the store in `docs/plan/done/BEN-store.md` (ledger D-134 item 14; the ledger is not edited). The file exists already (PLAN 4.3, "Present when"); when it lacks the store domain or the preview theme id, add those two lines in this pull request. Never write the storefront password.
 6. Done file (PLAN 3.5): the output summary of step 3, the list of M10 tasks with their pull requests, and the four verdicts.
 
 ### Acceptance
 
-The command of step 3 exits 0 and its last line is `test: tiers 8 engine chromium: <n> passed, 0 failed, 0 skipped`; `grep -c "pnpm test:liquid-live --no-skips" .github/workflows/nightly.yml` prints `1`; the four reports exist.
+The command of step 3 exits 0 and its last line is `test: tiers 8 engine chromium: <n> passed, 0 failed, 0 skipped`; `grep -c "pnpm test:liquid-live --no-skips" .github/workflows/nightly.yml` prints `1`; the `ls` of step 2 lists the four reports; `grep -c "myshopify.com" docs/plan/done/BEN-store.md` prints at least `1`.
 
 ### Out of scope
 
@@ -455,10 +455,10 @@ The store is reachable but a `[T8]` conformance test fails for a component: the 
 
 ---
 
-## M10-T09 Eval gate E5: live tier, bar B-8
+## M10-T09 Eval gate E5: live tier, bar B-8. BLOCKED-ON-BEN (store, model ids, human ratings through M8-T42)
 
 - **Goal:** Run eval tasks T11 and T12 on the preview store (live tier) and record whether bar condition B-8 passes (each passes 4 of 5 runs).
-- **Depends on:** M8-T42, M10-T08. **BLOCKED-ON-BEN (store, model ids):** also needs `evals/rubric/bar.json` with non-null `weakModel` and `judgeModel` (PLAN 4.3) and model access (`RIPPLE_EVAL_API_KEY`).
+- **Depends on:** M8-T42, M10-T08. **BLOCKED-ON-BEN (store, model ids, human ratings through M8-T42):** also needs `evals/rubric/bar.json` with non-null `weakModel` and `judgeModel` (PLAN 4.3), model access (`RIPPLE_EVAL_API_KEY`), and the 30 human ratings that M8-T42 needs (ledger Q28, `docs/plan/done/BEN-ratings.md`).
 - **Kind:** `gate`. Size S. Group -.
 
 ### Read first
@@ -471,8 +471,8 @@ Create: `docs/plan/done/M10-T09.md` and the run directory `evals/runs/<run id>/`
 
 ### Steps
 
-1. Branch `task/M10-T09-eval-e5`. Check: `node -e "const b=require('./evals/rubric/bar.json'); if(b.weakModel===null||b.judgeModel===null) process.exit(1)"` exits 0; `RIPPLE_EVAL_API_KEY`, `RIPPLE_STORE_URL` are set.
-2. The specs do not say how the eval harness selects the live tier or how an agent's finished workspace reaches the store (spec silence, reported): doc 08 8.3 says only "the same checks against the store's preview URL", and M8-T29 says the bar runs the live tier "only when a preview store is configured". Default path: use exactly the mechanism M8-T29's done file records for "a preview store is configured". If M8-T29 recorded none, the gate cannot run: draft pull request naming the missing mechanism (it needs a doc 08 change for Ben: the live-tier switch, and the upload of each run's workspace theme to the store, which doc 13 CI-7 marks UNVERIFIED), and stop.
+1. Branch `task/M10-T09-eval-e5`. Check: `node -e "const b=require('./evals/rubric/bar.json'); if(b.weakModel===null||b.judgeModel===null) process.exit(1)"` exits 0; `test -f docs/plan/done/M8-T42.md`; `RIPPLE_EVAL_API_KEY`, `RIPPLE_STORE_URL` are set.
+2. The specs do not say how the eval harness selects the live tier or how an agent's finished workspace reaches the store: doc 08 8.3 says only "the same checks against the store's preview URL", and M8-T29 says the bar runs the live tier "only when a preview store is configured". Default path: use exactly the mechanism M8-T29's done file records for "a preview store is configured". If M8-T29 recorded none, the gate cannot run: draft pull request naming the missing mechanism (it needs a doc 08 change for Ben: the live-tier switch, and the upload of each run's workspace theme to the store, which doc 13 CI-7 marks UNVERIFIED), and stop.
 3. With the mechanism present: `pnpm eval -- --bar --out evals/runs/bar-live` (the `--bar` run evaluates B-1 to B-8 in one invocation, doc 08 8.12). Read `evals/runs/bar-live/report.md`.
 4. B-8 passes when T11 and T12 each pass at least 4 of 5 runs on the preview store. Record B-1 to B-8 as the report prints them.
 5. Done file (PLAN 3.5): B-8 `passed` or `failed`, the per-run results of T11 and T12, the run id. When B-8 fails, the Liquid host MUST NOT be described as ready (doc 08 B-8); name the failing checks.

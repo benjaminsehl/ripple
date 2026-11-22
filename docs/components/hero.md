@@ -134,6 +134,7 @@ Required rules: root `position: relative; display: grid; min-block-size: var(--r
 
 ### Host notes
 
+- Binding paths (D-139): `static` that the template language of `07-manifest-registry-cli.md` 2.3 cannot express (D-072 row 2): no `template`; every fixture is `generated: "hand"`; `html` is generated from the fixture files; the `react`, `remix` and `liquid` files are hand-written with their generated regions. Where a line below says a binding is "generated", this line wins.
 - HTML: None.
 - React: `export function Hero(props: HeroProps): JSX.Element`. Generated from the contract template, with the `srcset` computed by `imageSrcSet` from `<pkg>` (if the template language cannot express the `srcset` value, the binding is hand-written and MUST pass the fixtures).
 - Remix: None.

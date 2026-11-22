@@ -151,6 +151,7 @@ In the horizontal orientation the control is placed in column 1 and the label in
 
 ### Host notes
 
+- Binding paths (D-139): `static` that the template language of `07-manifest-registry-cli.md` 2.3 cannot express (D-072 row 2): no `template`; every fixture is `generated: "hand"`; `html` is generated from the fixture files; the `react`, `remix` and `liquid` files are hand-written with their generated regions. Where a line below says a binding is "generated", this line wins.
 - HTML: None.
 - React: `export function Field(props: FieldProps)`, `FieldLabel`, `FieldControl`, `FieldDescription`, `FieldError` in `field.tsx`; generated; no hooks and no React context (`02-html-contract.md` S-7). `FieldLabel` renders the Label contract with `htmlFor={field}` and the extra class; `FieldError` renders the FormMessage contract with `tone="destructive"`, the derived id and the extra class.
 - Remix: None.

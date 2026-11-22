@@ -846,7 +846,7 @@ For each skill: the exact `description`, then the sections in order with the con
 
 ### 4.6 Acceptance (skills)
 
-| Id | Test (`skills/skills.test.ts`, run by the root test script) | Pass condition |
+| Id | Test (`src/gen/skills.test.ts`, run by the root test script; the runner never collects `skills/` and `skills/` ships in the package, D-134 item 25) | Pass condition |
 |---|---|---|
 | K-20 | List `skills/`. | Exactly the 14 directory names of 4.2; each contains exactly `SKILL.md` and `ripple.json`. |
 | K-21 | Parse each `SKILL.md`. | Frontmatter keys are exactly `name`, `description`; `name` equals the directory; `description` is byte-equal to 4.5 and contains ` Use when` or ` Use for` or ` Use after`; at most 300 lines; headings follow S-6 in order. |
@@ -1221,7 +1221,7 @@ Addition when the spike passes (this is an addition, not a fallback: the default
 3. On an `rp-cart` root with no checkout control the method throws per A-3.
 4. Add the row to the 7.2 tables, to `05-commerce.md` and to `11-components-commerce.md`; keep the test as a permanent regression test; write the result to `docs/research/spikes/agent-bridge-confirm/README.md`; update the ledger line for SPIKE-08 and non-goal 19 of ledger section 11.
 
-When any of (a), (b), (c) fails, nothing changes: the test-only variant stays in the test file, case (a) is marked as an expected failure with the observed message, and the result is written to the same README.
+When any of (a), (b), (c) fails, nothing changes: the test-only variant stays in the test file, case (a) asserts the observed outcome and carries the observed message in its test name (no expected-failure mark exists under the runner rules of `13-testing.md` section 2, D-134 item 20), and the result is written to the same README.
 
 Rule A-7: `"checkout"` MUST NOT appear in a published `agent.actions` (primitive or manifest) unless test (a) passes in CI. An unconfirmed method that spends money is the one failure this section exists to prevent.
 
@@ -1319,7 +1319,7 @@ interface EvalTask {
 
 ### 8.4 Running
 
-Command: `pnpm eval -- --tasks <ids|core|all> --hosts <list|all> --adapter <claude-code|pi|opencode> --model <id> --arm <ripple|control|no-skills|pi-package> --runs <n> [--judge] [--out evals/runs/<run id>]`. Defaults: `--tasks core --hosts all --adapter pi --arm ripple --runs 1`. `<run id>` defaults to a UTC timestamp `YYYYMMDD-HHMMSS`.
+Command: `pnpm eval -- --tasks <ids|core|all> --hosts <list|all> --adapter <claude-code|pi|opencode> --model <id> --arm <ripple|control|no-skills|pi-package> --runs <n> [--judge] [--bar] [--calibrate] [--reference] [--parallel <n>] [--out evals/runs/<run id>]` (the four flags of 8.9, 8.12 and 8.15 are part of the synopsis, D-134 item 25). Defaults: `--tasks core --hosts all --adapter pi --arm ripple --runs 1`. `<run id>` defaults to a UTC timestamp `YYYYMMDD-HHMMSS`.
 
 For each (task, host, arm, run index), `run.ts` performs these steps in order:
 

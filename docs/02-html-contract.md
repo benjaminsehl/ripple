@@ -1680,7 +1680,7 @@ UNVERIFIED:
 Applies only if the preview store shows that the platform wraps `{% block %}` or `{% partial %}` output in an element.
 
 1. Contracts do not change. The wrapper is a host extra of the `liquid` host.
-2. The Liquid conformance harness passes `unwrap: ["<wrapper selector>"]` to `canonicalize` for host output only (the reference HTML has no wrapper). The selector is recorded once, in `src/testing/liquid-shim.ts`, as the constant `LIQUID_WRAPPER_SELECTORS`. Example for a wrapper of the classic form: `["div.shopify-block"]`.
+2. The Liquid conformance harness passes `unwrap: ["<wrapper selector>"]` to `canonicalize` for host output only (the reference HTML has no wrapper). The selector is recorded once, in `src/testing/liquid-shim.ts`, as the constant `LIQUID_WRAPPERS: string[]` (the name of `13-testing.md` section 21, D-134 item 16). Example for a wrapper of the classic form: `["div.shopify-block"]`.
 3. If the wrapper carries attributes that vary per instance, nothing more is needed: an unwrapped element's attributes are discarded.
 4. `base.css` gives the wrapper `display: contents` and region lookup uses the wrapper (`03-styling-and-tokens.md`, `05-commerce.md`, `14-liquid-theme.md`).
 5. Acceptance: row 12 of 12.6.

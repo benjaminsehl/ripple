@@ -1,10 +1,10 @@
 # M5 Chrome components: task detail
 
-Status: detail file for the 15 rows of milestone M5 in `docs/PLAN.md` section 6. `docs/00-decisions.md` (the ledger) wins over every spec; a spec wins over this file. This file adds no API. Where it fixes a process choice the specs leave open, the choice is marked "Plan reading" and is listed in section 0.9.
+Status: detail file for the 16 rows of milestone M5 in `docs/PLAN.md` section 6. `docs/00-decisions.md` (the ledger) wins over every spec; a spec wins over this file. This file adds no API. Where it fixed a process choice the specs left open, the choice was marked "Plan reading"; ledger section 13.5 (D-134 to D-148) has since ratified every reading of this file (D-146), and section 0.9 names the decision for each. The task table of `docs/PLAN.md` section 6 is the only source of task order: a "Depends on" line below repeats it.
 
 How to use: read `AGENTS.md`, `docs/CONVENTIONS.md`, `docs/PLAN.md` sections 1 to 3 and the recipe of your task's kind (PLAN section 5), then section 0 of this file, then ONLY your task's section `## <task id>`. Do not read other task sections. Do not read `docs/plan/M1-golden-path.md`, `docs/plan/M2-foundations.md` or `docs/plan/M3-interactive.md`: every rule you need from them is restated in section 0.
 
-Contents: 0 Rules for every M5 task. Then M5-T01 to M5-T15 in table order.
+Contents: 0 Rules for every M5 task. Then M5-T01 to M5-T16 in table order.
 
 ---
 
@@ -23,10 +23,12 @@ Contents: 0 Rules for every M5 task. Then M5-T01 to M5-T15 in table order.
 | Manifest `since` | `"0.1.0"` | `docs/07-manifest-registry-cli.md` section 1.7 |
 | Manifest `status` | `"stable"` (all M5 components are kind `static` or `native`) | PLAN 3.2 |
 | Render hosts | `html`, `react`, `remix`, `liquid` (Liquid is the shim of `src/testing/liquid-shim.ts`) | CONVENTIONS 1 |
-| Bring-up mode | `BRINGUP_SUBSET` is `true` until M5-T14 | PLAN 4.4 |
-| Test name | `[T<tier>] <subject>: <ID> <statement>`; flat `test()` from `node:test`; no `describe` | `docs/13-testing.md` section 2.4 |
+| Bring-up mode | `BRINGUP_SUBSET` is `true` until M5-T14. While it is `true`, `pnpm gen --check` accepts a subset of the 84 ids and build check MB-1 ignores an entry that names a ledger component that is not present yet (for example an `embeddedBy` id of the Header before M5-T13) | PLAN 4.4; ledger D-135 |
+| Node | Node 24.22.3. The install step, the two `export` lines for every new shell, and the fallback when the install fails are in `docs/PLAN.md` section 3.1 (ledger D-136). Every `--no-skips` command of this file follows that rule | PLAN 3.1 |
+| Network | Every M5 task comes after M1-T15: export `RIPPLE_NETWORK=1` before `pnpm ci` (the Remix morph tests start `examples/remix` with `startExample` and skip otherwise, `docs/13-testing.md` rule T-5). Without network access, run without `--no-skips`, list the skips (reason `RIPPLE_NETWORK is not 1`) in the pull request; the `verify` CI job is the proof | PLAN 3.1; ledger D-136 |
+| Test name | `[T<tier>] <subject>: <ID> <statement>`; flat `test()` from `node:test`; no `describe`. When this file writes a name as a prefix followed by `...`, the name starts with exactly that prefix and the rest is one sentence stating the acceptance item; a name written in full is used exactly | `docs/13-testing.md` section 2.4; ledger D-141 (2) |
 | Test style | `openPage()` per test, closed in `finally`; no fixed delay except a duration a spec states; last assertion `assert.deepEqual(opened.errors, [])` | `docs/13-testing.md` section 2.5 |
-| `[chromium]` tag | allowed only for a Chromium-only API or a computed-style snapshot, with the comment line `// [chromium]: <reason>` above the test. A feature above the browser floor is feature-detected inside the test and the test returns early with a passing assertion; that is not a skip | `docs/13-testing.md` N-2; D-081 |
+| `[chromium]` tag | written at the END of the name (` [chromium]` after the statement, rule N-1); allowed only for a Chromium-only API, a computed-style snapshot or React client-render equality, with the comment line `// [chromium]: <reason>` above the test. A feature above the browser floor is feature-detected inside the test and the test returns early with a passing assertion; that is not a skip | `docs/13-testing.md` N-2; D-081 |
 | Shim globals (Liquid host) | `routes.root_url` `/`, `routes.search_url` `/search`, `routes.account_login_url` `/account/login`; `customer` nil; `linklists['main-menu']` = `menu.main`; `linklists.footer` = `menu.footer`; `shop.policies` empty; `shop.brand.logo` nil | `src/testing/liquid-shim.ts` |
 
 The M5 components are `logo`, `account-link`, `link-list`, `announcement-bar`, `hero`, `footer`, `newsletter-form`, `locale-selector`, `featured-collection`, `navigation-menu`, `mobile-nav`, `header`.
@@ -35,24 +37,24 @@ The M5 components are `logo`, `account-link`, `link-list`, `announcement-bar`, `
 
 A component task says "Recipe: S" (or N, C, R). Do every step of that recipe in `docs/PLAN.md` section 5, in order. The task section lists only what is specific.
 
-- **M5-R4 Manifest.** Copy every value from the spec: field table, Props, Anatomy, Content model, State and attributes, upgrade allow-list (`upgradeAllow`), Behaviour without JavaScript (`noJs.*`), Accessibility (`a11y.*`), Agent surface (`agent.*`), Checker rules (`rules[]`, see 0.5), fixtures, masks. Use only the manifest key names of ledger section "4.8" (search ``Component: `name` `` in `docs/00-decisions.md`; 3 kB). For the JSON SHAPE of each key copy the same key of an existing entry in the repository: `components/button/button.json` (`liquid.snippet`, `liquid.embeddedBy`, enum props, Liquid settings), `components/dialog/dialog.json` (`state[]`, `events[]`, `upgradeAllow[]`, `rules[]`, `noJs`), `components/price/price.json` (a hand-written component: no `template`, `generated: false`, `{ "$resource": ... }` fixture props, masks). When the spec gives no value for a REQUIRED manifest key, stop guessing: record it under `## Ledger issues` of doc 12, mention it in the pull request, take the smallest value that keeps `pnpm gen --check` green.
-- **M5-R5 The hand-written path** (ledger D-072 row 2; `docs/07-manifest-registry-cli.md` section 2.1: "A component that needs more is hand-written"). A task that says "Path: hand-written" does this:
+- **M5-R4 Manifest.** Copy every value from the spec: field table, Props, Anatomy, Content model, State and attributes, upgrade allow-list (`upgradeAllow`), Behaviour without JavaScript (`noJs.*`), Accessibility (`a11y.*`), Agent surface (`agent.*`), Checker rules (`rules[]`, see 0.5), fixtures, masks. Use only the manifest key names of ledger section `### 4.8 Manifest key names` (search that heading in `docs/00-decisions.md`; 3 kB). For the JSON SHAPE of each key copy the same key of an existing entry in the repository: `components/button/button.json` (`liquid.snippet`, `liquid.embeddedBy`, enum props, Liquid settings), `components/dialog/dialog.json` (`state[]`, `events[]`, `upgradeAllow[]`, `rules[]`, `noJs`), `components/price/price.json` (a hand-written component: no `template`, `generated: false`, `{ "$resource": ... }` fixture props, masks). When the spec gives no value for a REQUIRED manifest key, do not guess: record it under `## Ledger issues` of doc 12, mention it in the pull request, take the smallest value that keeps `pnpm gen --check` green.
+- **M5-R5 The hand-written path** (ledger D-139, amending D-072; `docs/07-manifest-registry-cli.md` section 2.1). Every M5 component except AnnouncementBar takes it; its spec's Host notes start with the line "Binding paths (D-139)", which wins over a later "generated" in the spec. A task that says "Path: hand-written" does this:
   1. The manifest has NO `template` key (root and parts); every fixture has `"generated": "hand"`; every entry of `files.react`, `files.remix`, `files.liquid` has `"generated": false`.
-  2. Write each `components/<id>/fixtures/<name>.html` by hand. Where the spec prints a fenced block for the fixture, copy it. Where the spec describes the fixture as a difference from another ("equal to `default`", "root class is ..."), copy that other fixture and apply exactly the stated difference. A fixture whose reference HTML is "the empty string" is an empty file after the marker line the other fixture files of the repository start with.
+  2. Write each `components/<id>/fixtures/<name>.html` by hand. Where the spec prints a fenced block for the fixture, copy it. Where the spec describes the fixture as a difference from another ("equal to `default`", "root class is ..."), copy that other fixture and apply exactly the stated difference. A fixture whose reference HTML is "the empty string" is an empty file (zero bytes, or one newline). Fixture files carry no marker line and no HTML comment.
   3. Run `pnpm gen` (it writes `html/<id>.html` from the fixture files, and the generated regions of the binding files: the TSX header, the Liquid `{% doc %}` and `{% schema %}` regions, the enum guards). Then write the bindings BELOW the generated regions: PLAN recipe C (section 5.6) steps 2 to 5 without the commerce keys. Where the spec prints complete Liquid or CSS, copy it unchanged.
   4. TSX rules: rest props spread FIRST on the root; helpers `rv()` and `cx()` only; an embedded component is rendered by importing the sibling binding (`../../<embedded id>/react/<embedded id>` in React, the `.tsx` file in Remix; copy the import form of `components/price/react/price.tsx` or of any merged binding that embeds Icon), never by copying its markup; no hook unless the task section names one, so no `"use client"`. Liquid: `{{ attributes }}` LAST in the root's opening tag; embedded components through `{% render 'rp-<id>' %}`; only the Liquid subset of D-097.
   5. Say in the pull request, under "Deviations and ledger issues", that the component is hand-written and why (the sentence the task section gives).
   6. Extra reading on this path: `docs/07-manifest-registry-cli.md` `### 3.3 Generated regions inside hand-written files` (4 kB); `docs/06-bindings.md` `## 3. Generated versus hand-written` (3 kB); repository files `components/price/react/price.tsx`, `components/price/remix/price.tsx`, `components/price/liquid/snippets/rp-price.liquid` (the code pattern).
-- **M5-R6 Locale keys.** Add to `locales/en.default.json`, under the top-level key `ripple`, only the keys the task section lists (they are the keys of the spec's Host notes). Keep the file's key order. Never add `ripple.props.*` keys (the generator writes them). List every key a binding reads in `dependencies.locale`. TSX hosts do not read locale files: the English text is the default of the `strings` prop key (doc 12 section 1.4).
+- **M5-R6 Locale keys.** Add to `locales/en.default.json`, under the top-level key `ripple`, only the keys the task section lists (they are the keys of the spec's Host notes). Keep the file's key order. Never add `ripple.props.*` keys, and never add the schema name keys `ripple.<id>.name` or `ripple.<id>.<part>_name`: `pnpm gen` (step G5) writes those into `components/<id>/liquid/locales/<id>.json`, which the task commits (ledger D-134 item 29). List every key a binding reads in `dependencies.locale`. TSX hosts do not read locale files: the English text is the default of the `strings` prop key (doc 12 section 1.4).
 - **M5-R7 Embedding** (build check MB-1: `dependencies.embeds` and `liquid.embeddedBy` are inverses). When the task section says "embeddedBy: add `<this id>` to `<x>`": open `components/<x>/<x>.json`, add this component's id to `liquid.embeddedBy` (create the key and the `liquid.snippet` entry in the shape of `components/button/button.json` when absent), add `<x>` to this component's `dependencies.embeds` and `dependencies.components`, run `pnpm gen`, commit the regenerated Liquid files of `<x>`. Change nothing else in `<x>`.
-- **M5-R8 Fixture resources** (`docs/02-html-contract.md` F-4: an `object` prop in a fixture is `{ "$resource": "<type>.<name>" }`, never inline data; `docs/13-testing.md` RS-2 to RS-5). Use an existing resource where the task section names one. Where the task section says "new resource", add it in ONE commit of its own, first in the task:
+- **M5-R8 Fixture resources** (`docs/02-html-contract.md` F-4: an `object` prop in a fixture is `{ "$resource": "<type>.<name>" }`, never inline data; `docs/13-testing.md` RS-2 to RS-5; ledger D-140). Use an existing resource where the task section names one. Where the task section says "new resource", add it in ONE commit of its own, first in the task. The names this file gives are adopted (D-140); a resource this file does not name is `<type>.<name>` when the value has a resource type (`image`, `menu`, `shop`, `locale`, `collection`, `product`, ...), otherwise `<component id>.<fixture name>`:
   1. one entry in `RESOURCES` of `src/testing/resources.ts` with the two sides (`hydrogen`, `liquid`) the task section gives, built with the helpers that file already has (`img`, `menu`, `item`, `productResource`, `liquidCollection`);
   2. one row in the resource table of `docs/13-testing.md` section 4.2 (search `**RS-2**`; the table is directly above the rules);
   3. the value under `### 1.6 Fixture resources` of doc 12, in the form the other entries there have;
-  4. one line under `## Ledger issues` of doc 12: `<resource name>: name and value supplied by docs/plan/M5-chrome.md (the spec gives the data inline in a fixture description).`
-  A prop that only TSX hosts have carries `hosts: ["html", "react", "remix"]` in the manifest; the Liquid adapter then skips it (`docs/13-testing.md` FX-4). A resource of type `cart`, `shop`, `locale` or `search` ALSO replaces the Liquid global `cart`, `shop`, `localization`, `search` for that render (RS-3).
+  4. the name in the name list of the test `[T1] resources: the set is the documented set` of `src/testing/resources.test.ts`. Append the `RESOURCES` entry as the last entry and the table row of item 2 as the last row, so that test (same keys, same order) still passes. No `## Ledger issues` line is needed (D-140).
+  A prop that only TSX hosts have carries `hosts: ["html", "react", "remix"]` in the manifest; the Liquid adapter then skips it (`docs/13-testing.md` FX-4). A resource of type `cart`, `shop`, `locale` or `search` ALSO replaces the Liquid global `cart`, `shop`, `localization`, `search` for that render (RS-3; D-140 limits the replacement to these four types). Whether that replacement also happens when the prop that carries the resource is skipped on Liquid (`hosts` without `liquid`, FX-4) is UNVERIFIED; the task sections that depend on it (M5-T06 fixture `policies`, M5-T08) say what to do when it does not.
 - **M5-R9 Masks** (`docs/02-html-contract.md` F-19). A mask rule with `op` `attr`, `srcset`, `text` or `children` that matches no element in a fixture's reference HTML fails the build. Put such a rule only on the fixtures in which it matches. Rules with `op` `drop-attr` or `remove` go on every fixture the spec's mask list applies to. A fixture that contains another component's subtree copies that component's mask rules (from `components/<embedded id>/<embedded id>.json`) with the same selectors.
-- **M5-R10 The `scheme` prop** (AnnouncementBar, Hero, Footer, Header; Plan reading PR-M5-4). Declare `type: "enum"`, `values: ["light", "dark"]`, no `default`, not `required`, Liquid `surface: "param"` (not a schema setting: build check MB-3 rejects a select setting without a default). An unset or unknown value prints no `data-scheme` attribute. If `pnpm gen --check` reports MB-5 for the prop, look for the line `MB-5 accepts an optional enum without default` in `git log --oneline`; when it is absent, stop and open a draft pull request (the change belongs to M2, rule M2-R13a).
+- **M5-R10 The `scheme` prop** (AnnouncementBar, Hero, Footer, Header; PR-M5-4, ratified). Declare `type: "enum"`, `values: ["light", "dark"]`, no `default`, not `required`, Liquid `surface: "param"` (not a schema setting: build check MB-3 rejects a select setting without a default). Rule MB-5 allows an optional non-responsive enum without a default (ledger D-134 item 4). An unset or unknown value prints no `data-scheme` attribute. If `pnpm gen --check` still reports MB-5 for the prop, that is a defect of the generator check (`src/gen/`); stop and open a draft pull request quoting the message.
 - **M5-R11 F-11** (`docs/02-html-contract.md`: every prop has a non-default value in at least one fixture). The specs' fixture lists do not satisfy it for some props (the task section names them). Do NOT add a fixture the spec does not list. If `pnpm gen --check` reports F-11 for a prop the task section names: set the prop on the fixture the task section names with the value it gives (the reference HTML of that fixture then changes as the task section states). If it reports F-11 for any other prop: stop, draft pull request.
 - **M5-R12 Generated output that differs from the spec.** A generated file that differs from HTML or code a spec prints is a defect of the manifest first: fix the manifest. An M5 component task MUST NOT change `src/gen/**` or `test/**`. It changes `src/testing/**` only as M5-R8 and its own task section say, and `src/check/rules/RP113.ts` only as 0.5 says. If the generator is wrong: stop, open a draft pull request naming the generator file and the smallest failing manifest. Never edit generated output by hand.
 - **M5-R13 Proof commands for a component**, in this order, all exit 0:
@@ -68,15 +70,17 @@ A component task says "Recipe: S" (or N, C, R). Do every step of that recipe in 
 
 ### 0.4 Tests in `components/<id>/<id>.test.ts`
 
-- **M5-R14 Acceptance coverage** (`docs/13-testing.md` section 18.2). The file MUST contain, for every numbered item `n` of the spec's "Acceptance tests", either a test whose name contains `AT-<n> ` or one comment line. The task section says which. Comment forms, exact:
+- **M5-R14 Acceptance coverage** (`docs/13-testing.md` section 18.2; ledger D-141 (3)). The file MUST contain, for every numbered item `n` of the spec's "Acceptance tests", either a test whose name contains `AT-<n> ` or one comment line. The task section says which. `// AT-<n>: generic` is used only for the generic matrix and the generator check; an item that another task's test proves uses `// AT-<n>: covered by <task id> (<file>: <test name or id>)`. Comment forms, exact:
 
   | Case | Line |
   |---|---|
   | generic tier 2, 3, 4 or 6 matrix | `// AT-<n>: generic (<files>)` with the files that apply out of `test/conformance/conformance.test.ts`, `test/upgrade/upgrade.test.ts`, `test/hydration/react.test.ts`, `test/hydration/remix.test.ts`, `test/nojs/render.test.ts` |
   | the generator check | `// AT-<n>: generic (pnpm gen --check)` |
   | tier 9 | `// AT-<n>: generic (pnpm test:webkit and pnpm test:firefox re-run AT-<a>, AT-<b>)`; the named tests MUST NOT carry `[chromium]` |
-  | needs an example application or a blueprint with scripting disabled | `// AT-<n>: generic (test/nojs/blueprints.test.ts NJ-F<k>, added by M7-T25)` with the NJ-F number the task section gives |
-  | tier 8 (Liquid live store) | `// AT-<n>: generic (test/liquid/live.test.ts, added by M10-T01)` (Plan reading PR-M5-9) |
+  | needs an example application or a blueprint with scripting disabled | `// AT-<n>: covered by M7-T25 (test/nojs/blueprints.test.ts: NJ-F<k>)` with the NJ-F number the task section gives |
+  | tier 8 (Liquid live store) | `// AT-<n>: covered by M10-T01 (test/liquid/live.test.ts)` (PR-M5-9, ratified as D-141 (3)) |
+
+  An item with two halves (a component half and a blueprint half) has the real test for the component half and, on the line above it, the comment `// AT-<n> (blueprint): covered by M7-T25 (test/nojs/blueprints.test.ts: NJ-F<k>)`.
 
   Every other item is a real test, never skipped, never `todo`.
 - **M5-R15 Rule tests.** For every manifest `rules[]` entry one test `[T1] <id>: rule <rule id> reports RP113`: run the checker (`src/check/index.ts`, layer H; copy the call from `components/dialog/dialog.test.ts`) on a failing HTML string and assert exactly one diagnostic `RP113` whose message contains `[<rule id>]`. Plus one test `[T1] <id>: default fixture reports no RP113`. The failing string is the `default` fixture with the smallest change that breaks the rule (the task section gives it).
@@ -88,22 +92,23 @@ A component task says "Recipe: S" (or N, C, R). Do every step of that recipe in 
 
 ### 0.5 Component rules (`rules[]`) and `CUSTOM_RULES`
 
-- **M5-R21** Every structure rule of the chrome specs is stated only as a sentence. Such a rule is kind `custom` (ledger D-111; `docs/07-manifest-registry-cli.md` section 9.5.3): the manifest entry has only `id`, `kind: "custom"`, `message`, `fix`; its detection is a function `(root: Element) => Element[]` (the violating elements; an empty array passes) stored under the rule id in `CUSTOM_RULES` of `src/check/rules/RP113.ts`. The component task writes the function: when the key already exists (as a stub that throws), replace its body; otherwise add the key. Implement exactly the detection sentence the task section prints. Use only the element API the other functions in that file use. A rule "at most one per document" returns `[root]` when `root` is not the first element in `root.ownerDocument` that matches the selector, otherwise `[]` (Plan reading PR-M5-5: kind `max-count` counts per root and cannot express it).
-- **M5-R22** The specs give no `message` and `fix` text. The task sections print the texts to use. For each rule add one line under `## Ledger issues` of doc 12: `<rule id>: kind custom; message and fix text supplied by docs/plan/M5-chrome.md (spec gives only the detection sentence).`
-- **M5-R23** `src/check/rules/RP113.ts` is edited by ten M5 tasks. On a rebase conflict keep both sides' keys.
+- **M5-R21** Every structure rule of the chrome specs is stated only as a sentence. Such a rule is kind `custom` (ledger D-111, D-143; `docs/07-manifest-registry-cli.md` section 9.5.3): the manifest entry has only `id`, `kind: "custom"`, `message`, `fix`; its detection is a function `(root: Element) => Element[]` (the violating elements; an empty array passes) stored under the rule id in `CUSTOM_RULES` of `src/check/rules/RP113.ts`. The component task writes the function: when the key already exists (as a stub that throws), replace its body; otherwise add the key. Implement exactly the detection sentence the task section prints. Use only the element API the other functions in that file use. A rule "at most one per document" (`header-once`, `footer-once`, `mobile-nav-once`, `hero-once`) walks from `root` to its document and returns `[root]` when an element with the same root class comes before `root` in document order, otherwise `[]` (ledger D-143; kind `max-count` counts per root and cannot express it). Every component rule reports RP113 at severity error, `hero-once` included (D-143).
+- **M5-R22** The specs give no `message` and `fix` text. The task sections print the texts to use; ledger D-143 adopts them as written. No `## Ledger issues` line is needed for them.
+- **M5-R23** `src/check/rules/RP113.ts` is edited by ten M5 tasks; each adds only its own keys of `CUSTOM_RULES` (ledger D-147). On a rebase conflict keep both sides' keys.
 
 ### 0.6 Shared files that several M5 tasks edit
 
-Edit only the lines your task names. When `git rebase origin/main` conflicts in one of them, keep both sides' lines, run `pnpm gen`, re-run the proof commands.
+Edit only the lines your task names. Tasks of the same group MAY edit the same registration file at the same time when each adds only its own lines (ledger D-147). When `git rebase origin/main` conflicts in one of them, keep both sides' lines, run `pnpm gen`, re-run the proof commands.
 
 | File | Rule |
 |---|---|
 | `locales/en.default.json` | M5-R6 |
 | `src/check/rules/RP113.ts` | M5-R21, M5-R23 |
-| `src/testing/resources.ts`, `docs/13-testing.md` (resource table), doc 12 (`### 1.6 `, `## Ledger issues`) | M5-R8; tasks M5-T01, M5-T05, M5-T06, M5-T08, M5-T09, M5-T12 |
+| `src/testing/resources.ts`, `src/testing/resources.test.ts` (name list), `docs/13-testing.md` (resource table), doc 12 (`### 1.6 `) | M5-R8; tasks M5-T01, M5-T05, M5-T06, M5-T08, M5-T09; M5-T12 changes only the helper `links` |
 | `components/<embedded id>/<embedded id>.json` and its generated Liquid files | M5-R7 |
 | `src/elements/index.ts` | only M5-T10 (one import line; text fixed by `docs/04-elements.md` section 4.1) |
 | `src/runtime/index.test.ts` | only M5-T11 (page P item 10) |
+| `css/styling.test.ts` | only M5-T16 (creates it) |
 | `src/gen/index.ts`, `src/gen/build.ts`, `src/gen/size.ts`, `src/gen/size.test.ts` | only M5-T14 |
 | generated files | never edited by hand; run `pnpm gen` |
 
@@ -120,26 +125,28 @@ A bring-up line in a source file carries the comment `// PLAN 4.4: <what replace
 
 Every task ends with PLAN section 5.0 (commit, push, pull request in the five-heading form, done file `docs/plan/done/<task id>.md`). "Acceptance" in a task section lists what is specific; PLAN section 3.1 (and 3.2 for components) always applies. Do not edit `theme/` or `docs/research/`.
 
-### 0.9 Plan readings made by this file
+### 0.9 Plan readings and the decisions that ratified them
 
-| # | Topic | Reading |
+Ledger D-146 ratified every reading of this file. Where a reading is now a decision, cite the decision.
+
+| # | Topic | Now |
 |---|---|---|
-| PR-M5-1 | PLAN's table says "S or C" for the static chrome components; the specs of Logo and AccountLink say "generated from the contract template" | The template language has no `object` prop in scope, no loop, no host-dependent default and no host-only attribute (`docs/07-manifest-registry-cli.md` section 2.3). Only AnnouncementBar is generated (recipe S). Every other M5 component takes the hand-written path M5-R5 |
-| PR-M5-2 | PLAN says "N+R" for NavigationMenu and MobileNav | Recipe N for the manifest keys and tests (`state[]`, `upgradeAllow`, tier 3, tier 4); the bindings are hand-written (loops over a menu) |
-| PR-M5-3 | Fixture data the specs give inline, which F-4 forbids | New resources added by the component task (M5-R8): `image.logo`, `image.hero`, `menu.policies`, `shop.policies`, `locale.multi-countries`, `locale.multi-languages`, `locale.one-language-countries`, `locale.one-language-languages`, `locale.single-countries`, `locale.single-languages`, `collection.featured`, `collection.featured-empty`, `products.one` |
-| PR-M5-4 | `scheme`: the specs list it as an enum with "project scheme names" and no default | M5-R10 |
-| PR-M5-5 | Kind, message, fix and "per document" detection of the chrome structure rules | M5-R21, M5-R22 and the texts in the task sections |
-| PR-M5-6 | `hero-once` is "warning, not error"; the manifest rule schema has no severity key | Reported as RP113 like every other rule; the Ledger-issues line of M5-R22 for `hero-once` ends with `; spec says warning, no severity key exists.` |
-| PR-M5-7 | `featured-collection-carousel-needs-id` is "source layer"; `CUSTOM_RULES` works on HTML | HTML detection in M5-T09 |
-| PR-M5-8 | NewsletterForm fixtures `success` and `error` cannot be rendered on Liquid by the conformance adapter (it cannot set `form_state`) | Those two fixtures carry `hosts: ["html", "react", "remix"]`; M5-T07 adds two `[T2]` tests that render the block through the shim with `form_state.customer` set |
-| PR-M5-9 | Comment form for tier 8 acceptance items (no precedent) | The last row of the table in M5-R14 |
-| PR-M5-10 | Acceptance items that need hydrogen routes of doc 12 sections 2.6 and 2.7 (M7) | The test plays the server with `page.route` (M5-T07 AT-3, AT-4; M5-T08 AT-3); the blueprint is covered by the NJ-F comment the task gives |
-| PR-M5-11 | Owner of row E-15 and of the NavigationMenu clauses of E-01, E-18, E-19 (`docs/04-elements.md` section 13) | E-15: M5-T10. Page P item 10 and the clauses: M5-T11 |
-| PR-M5-12 | NavigationMenu AT-10 needs two triggers; fixture `default` has one | The test page duplicates the first item of fixture `default` with the id `main-nav-item-2` (M5-T11) |
-| PR-M5-13 | AccountLink AT-3 needs a Remix page; the morph test routes exist only for kinds `native`, `ui`, `commerce` | M5-T02 asserts the attribute on the Remix render; the navigation half is recorded as `FOLLOW-UP NEEDED` |
-| PR-M5-14 | `mobile-nav-needs-opener` is violated by MobileNav's own fixtures (they contain no opener) | M5-T12: the default-fixture rule test asserts exactly this one diagnostic and that adding the opener removes it |
-| PR-M5-15 | A component with a snippet file whose embedder does not exist yet (Logo, AccountLink, LinkList, NavigationMenu) | The component declares `liquid.snippet` itself with an empty `liquid.embeddedBy`; the embedder task fills the list (M5-R7) |
-| PR-M5-16 | What M5-T14 removes | Only markers that name M5-T14; build skips owned by other tasks stay |
+| PR-M5-1 | Static chrome components whose markup the template language cannot express | Ratified as D-139: only AnnouncementBar is generated (recipe S); every other M5 component takes the hand-written path M5-R5 (PLAN kind C, C+R or N+C+R) |
+| PR-M5-2 | NavigationMenu and MobileNav | Ratified as D-139: recipe N for the manifest keys and tests (`state[]`, `upgradeAllow`, tier 3, tier 4); the React, Remix and Liquid bindings are hand-written (PLAN kind N+C+R) |
+| PR-M5-3 | Fixture data the specs give inline, which F-4 forbids | Ratified as D-140. The resources (M5-R8): `image.logo`, `image.hero`, `menu.policies`, `shop.policies`, `locale.multi-countries`, `locale.multi-languages`, `locale.one-language-countries`, `locale.one-language-languages`, `locale.single-countries`, `locale.single-languages`, `collection.featured`, `collection.featured-empty`, `products.one` |
+| PR-M5-4 | `scheme`: an enum with "project scheme names" and no default | Ratified; MB-5 allows it (D-134 item 4). M5-R10; the Header snippet guard of M5-T13 |
+| PR-M5-5 | Kind, message, fix and "per document" detection of the chrome structure rules | Ratified as D-143: M5-R21, M5-R22 and the texts in the task sections |
+| PR-M5-6 | `hero-once` is "warning" in its spec; the manifest rule schema has no severity key | Ratified as D-143: reported as RP113 at severity error |
+| PR-M5-7 | `featured-collection-carousel-needs-id` is "source layer" | Ratified as D-143: detection on HTML in M5-T09 |
+| PR-M5-8 | NewsletterForm fixtures `success` and `error` cannot be rendered on Liquid by the conformance adapter | Ratified: those two fixtures carry `hosts: ["html", "react", "remix"]`; M5-T07 adds two `[T2]` tests that render the block through the shim with `form_state.customer` set |
+| PR-M5-9 | Comment form for tier 8 acceptance items | Ratified as D-141 (3): the last row of the table in M5-R14 |
+| PR-M5-10 | Acceptance items that need hydrogen routes of doc 12 sections 2.6 and 2.7 (M7) | Ratified: the test plays the server with `page.route` (M5-T07 AT-3, AT-4; M5-T08 AT-3); the blueprint half is the `covered by M7-T25` comment |
+| PR-M5-11 | Owner of row E-15 and of the NavigationMenu clauses of E-01, E-18, E-19 | Ratified as D-145: E-15 is M5-T10; page P item 10 and the clauses are M5-T11, which depends on M3-T10 |
+| PR-M5-12 | NavigationMenu AT-10 needs two triggers; fixture `default` has one | Ratified: the test page duplicates the first item of fixture `default` with the id `main-nav-item-2` (M5-T11) |
+| PR-M5-13 | AccountLink AT-3 needs a Remix page; the morph test routes exist only for kinds `native`, `ui`, `commerce` | Ratified: M5-T02 asserts the attribute on the Remix render; the navigation half is recorded as `FOLLOW-UP NEEDED` |
+| PR-M5-14 | `mobile-nav-needs-opener` is violated by MobileNav's own fixtures | Ratified: M5-T12's default-fixture rule test asserts exactly this one diagnostic and that adding the opener removes it (D-134 item 23: the `default` fixture is wrapped in the context a document-reading rule needs) |
+| PR-M5-15 | A component with a snippet file whose embedder does not exist yet (Logo, AccountLink, LinkList, NavigationMenu) | Ratified: the component declares `liquid.snippet` itself with an empty `liquid.embeddedBy`; the embedder task fills the list (M5-R7) |
+| PR-M5-16 | What M5-T14 removes | Ratified: only markers that name M5-T14; build skips owned by other tasks stay |
 
 ---
 
@@ -147,7 +154,7 @@ Every task ends with PLAN section 5.0 (commit, push, pull request in the five-he
 
 - **Goal:** Ship Logo (a home link that shows the shop name as text or as an image) in all four hosts.
 - **Depends on:** M1-T07, M2-T32.
-- **Kind / recipe:** `static`, Liquid tier `block`. Path: hand-written (M5-R5, PR-M5-1). Reason sentence: `the image prop is an object and the href default differs by host`.
+- **Kind / recipe:** `static/block; C` (PLAN table); `static`, Liquid tier `block`. Path: hand-written (M5-R5, ledger D-139). Reason sentence: `the image prop is an object and the href default differs by host`.
 
 ### Read first
 
@@ -160,7 +167,7 @@ Every task ends with PLAN section 5.0 (commit, push, pull request in the five-he
 
 ### Files
 
-Create by hand: `components/logo/logo.json`, `logo.css`, `logo.test.ts`, `react/logo.tsx`, `remix/logo.tsx`, `liquid/blocks/logo.liquid`, `liquid/snippets/rp-logo.liquid`, `fixtures/default.html`, `image.html`, `invalid-enum-falls-back.html`, `class.html`. Generated (commit): `html/logo.html`, `liquid/locales/logo.json`, generated regions, visual snapshots. Change: `locales/en.default.json`, `src/testing/resources.ts`, `docs/13-testing.md`, doc 12 (M5-R8).
+Create by hand: `components/logo/logo.json`, `logo.css`, `logo.test.ts`, `react/logo.tsx`, `remix/logo.tsx`, `liquid/blocks/logo.liquid`, `liquid/snippets/rp-logo.liquid`, `fixtures/default.html`, `image.html`, `invalid-enum-falls-back.html`, `class.html`. Generated (commit): `html/logo.html`, `liquid/locales/logo.json`, generated regions, visual snapshots. Change (M5-R8, new resource `image.logo`): `src/testing/resources.ts`, `src/testing/resources.test.ts` (name list), the resource table of `docs/13-testing.md`, doc 12 `### 1.6 `. No change to `locales/en.default.json` (Logo has no locale key of its own).
 
 ### Steps
 
@@ -174,7 +181,7 @@ Create by hand: `components/logo/logo.json`, `logo.css`, `logo.test.ts`, `react/
 
 ### Names and values
 
-- Locale key: `ripple.logo.name`.
+- Locale keys: none of its own (the schema name key is generated, M5-R6).
 - F-11 (M5-R11): none expected (`href`, `image`, `size` are set in fixture `image`).
 - Trap: on Liquid the fixture `default` has no `image` prop; the shim's `shop.brand.logo` is nil, so no image is printed. Do not pass `shop.logo` in `default`.
 - Rules: none (`rules: []`).
@@ -183,7 +190,7 @@ Create by hand: `components/logo/logo.json`, `logo.css`, `logo.test.ts`, `react/
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (`test/conformance/conformance.test.ts`) |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)` |
 | AT-2 | `[T5] logo: AT-2 ...` on `fixturePageUrl("logo/image")`, image request per M5-R18 (W 400, H 100): image height 40, width 160 |
 | AT-3 | `[T5] logo: AT-3 ...`: M5-R20 with role `link`, name `Mock Shop`, on fixture `image` |
 | rules | `[T1] logo: default fixture reports no RP113` |
@@ -206,7 +213,7 @@ Header. A `width` prop. Reading `shop` in TSX (the caller passes `image`).
 
 - **Goal:** Ship AccountLink (a link to the account page with an icon and a label) in all four hosts.
 - **Depends on:** M1-T03, M2-T32.
-- **Kind / recipe:** `static`, Liquid tier `block`. Path: hand-written (M5-R5, PR-M5-1). Reason sentence: `the href default differs by host and Remix prints data-rmx-document`.
+- **Kind / recipe:** `static/block; C` (PLAN table); `static`, Liquid tier `block`. Path: hand-written (M5-R5, ledger D-139). Reason sentence: `the href default differs by host and Remix prints data-rmx-document`.
 
 ### Read first
 
@@ -231,14 +238,14 @@ Create by hand: `components/account-link/account-link.json`, `account-link.css`,
 
 ### Names and values
 
-- Locale keys: `ripple.account-link.name`, `ripple.account-link.label` ("Account").
+- Locale keys (M5-R6; the schema name key is generated): `ripple.account-link.label` ("Account").
 - F-11: none expected.
 
 ### Tests (`components/account-link/account-link.test.ts`)
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (conformance) |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)` |
 | AT-2 | `[T5] account-link: AT-2 ...` on fixture `icon-only`: link box 44 by 44, `.rp-account-link-label` box 1 by 1, M5-R20 role `link` name `Account` |
 | AT-3 | `[T4] account-link: AT-3 the Remix link carries data-rmx-document` (PR-M5-13): render fixture `default` with the Remix render function that `test/conformance/conformance.test.ts` uses for the host `remix`; assert the output string contains `data-rmx-document` on the `a.rp-account-link` tag |
 | rules | `[T1] account-link: default fixture reports no RP113` |
@@ -261,7 +268,7 @@ Tier 2 fails on Remix because of `data-rmx-document`: do not add a mask and do n
 
 - **Goal:** Ship LinkList (a labelled `nav` that lists the top-level links of a menu) in all four hosts.
 - **Depends on:** M2-T32.
-- **Kind / recipe:** `static`, Liquid tier `resource`; recipe C steps for the bindings plus R. Path: hand-written (M5-R5). Reason sentence: `the body is a loop over an object prop`.
+- **Kind / recipe:** `static/resource; C+R` (PLAN table); `static`, Liquid tier `resource`; recipe C steps for the bindings plus R. Path: hand-written (M5-R5). Reason sentence: `the body is a loop over an object prop`.
 
 ### Read first
 
@@ -275,7 +282,7 @@ Tier 2 fails on Remix because of `data-rmx-document`: do not add a mask and do n
 
 ### Files
 
-Create by hand: `components/link-list/link-list.json`, `link-list.css`, `link-list.test.ts`, `react/link-list.tsx`, `remix/link-list.tsx`, `liquid/blocks/link-list.liquid`, `liquid/snippets/rp-link-list.liquid`, and six fixture files `default`, `current`, `skips-items-without-url`, `invalid-enum-falls-back`, `escaping`, `class`. Generated (commit): `html/link-list.html`, `liquid/locales/link-list.json`, generated regions, visual snapshots. Change: `locales/en.default.json`, `src/check/rules/RP113.ts`, doc 12 `## Ledger issues`.
+Create by hand: `components/link-list/link-list.json`, `link-list.css`, `link-list.test.ts`, `react/link-list.tsx`, `remix/link-list.tsx`, `liquid/blocks/link-list.liquid`, `liquid/snippets/rp-link-list.liquid`, and six fixture files `default`, `current`, `skips-items-without-url`, `invalid-enum-falls-back`, `escaping`, `class`. Generated (commit): `html/link-list.html`, `liquid/locales/link-list.json`, generated regions, visual snapshots. Change: `locales/en.default.json`, `src/check/rules/RP113.ts`.
 
 ### Steps
 
@@ -287,7 +294,7 @@ Create by hand: `components/link-list/link-list.json`, `link-list.css`, `link-li
 
 ### Names and values
 
-- Locale keys: `ripple.link-list.name`, `ripple.link-list.label` ("Links").
+- Locale keys (M5-R6; the schema name key is generated): `ripple.link-list.label` ("Links").
 - Rule `link-list-not-in-nav`. Detection: `.rp-link-list` MUST NOT have a `nav` ancestor; the function returns `[root]` when `root.parentElement?.closest("nav")` is not null. Message `A LinkList is inside a nav element.` Fix `Move the LinkList out of the nav element; LinkList prints its own nav.` Failing string: the `default` fixture wrapped in `<nav aria-label="x">…</nav>`.
 - F-11 (M5-R11): `links` has no fixture. If reported: stop (a Liquid-only array of `{title, url}` has no resource; needs Ben).
 - Trap: on Liquid a link without URL has `url` `#` (rule MN-1 of doc 12); the spec's snippet skips it. Do not change the snippet.
@@ -296,8 +303,8 @@ Create by hand: `components/link-list/link-list.json`, `link-list.css`, `link-li
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (conformance) |
-| AT-2 | comment, generic (`test/upgrade/upgrade.test.ts`) |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)` |
+| AT-2 | `// AT-2: generic (test/upgrade/upgrade.test.ts)` |
 | AT-3 | `[T5] link-list: AT-3 ...`, viewport 1280 by 800: fixture `current` (horizontal): the two links have equal `top`; fixture `default` (vertical): equal `left` |
 | AT-4 | `[T5] link-list: AT-4 ...` on fixtures `default` and `current`: every `a.rp-link-list-link` box at least 24 by 24 |
 | rules | one M5-R15 test plus the default-fixture test |
@@ -320,7 +327,7 @@ Nested lists (LinkList prints top-level items only). Footer. `shop.policies` han
 
 - **Goal:** Ship AnnouncementBar (a labelled region with one line of text) in all four hosts, generated from the contract template.
 - **Depends on:** M2-T32.
-- **Kind / recipe:** `static`, Liquid tier `block`; recipe S. All bindings generated.
+- **Kind / recipe:** `static/block; S` (PLAN table); `static`, Liquid tier `block`; recipe S. All bindings generated.
 
 ### Read first
 
@@ -332,7 +339,7 @@ Nested lists (LinkList prints top-level items only). Footer. `shop.policies` han
 
 ### Files
 
-Create: `components/announcement-bar/announcement-bar.json`, `announcement-bar.css`, `announcement-bar.test.ts`. Generated (commit): `fixtures/*.html` (4), `html/announcement-bar.html`, `react/announcement-bar.tsx`, `remix/announcement-bar.tsx`, `liquid/blocks/announcement-bar.liquid`, `liquid/locales/announcement-bar.json`, visual snapshots. Change: `locales/en.default.json`, `src/check/rules/RP113.ts`, doc 12 `## Ledger issues`.
+Create: `components/announcement-bar/announcement-bar.json`, `announcement-bar.css`, `announcement-bar.test.ts`. Generated (commit): `fixtures/*.html` (4), `html/announcement-bar.html`, `react/announcement-bar.tsx`, `remix/announcement-bar.tsx`, `liquid/blocks/announcement-bar.liquid`, `liquid/locales/announcement-bar.json`, visual snapshots. Change: `locales/en.default.json`, `src/check/rules/RP113.ts`; doc 12 `## Ledger issues` only in the "If blocked" case.
 
 ### Steps
 
@@ -344,15 +351,15 @@ Create: `components/announcement-bar/announcement-bar.json`, `announcement-bar.c
 
 ### Names and values
 
-- Locale keys: `ripple.announcement-bar.name`, `ripple.announcement-bar.label` ("Announcement").
+- Locale keys (M5-R6; the schema name key is generated): `ripple.announcement-bar.label` ("Announcement").
 - Rule `announcement-bar-not-empty`. Detection: `.rp-announcement-bar-inner` MUST have non-whitespace text; the function returns the `.rp-announcement-bar-inner` elements inside `root` whose `textContent` is empty after trimming. Message `An AnnouncementBar has no text.` Fix `Pass the text as the children of AnnouncementBar, or do not render it.` Failing string: the `default` fixture with the text removed.
 
 ### Tests (`components/announcement-bar/announcement-bar.test.ts`)
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (conformance) |
-| AT-2 | comment, generator-check form of M5-R14 |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)` |
+| AT-2 | `// AT-2: generic (pnpm gen --check)` |
 | AT-3 | `[T5] announcement-bar: AT-3 ...`: viewports 375 by 667 and 1280 by 800; root width equals `document.documentElement.clientWidth`; computed `text-align` of `.rp-announcement-bar-inner` is `center` |
 | rules | one M5-R15 test plus the default-fixture test |
 
@@ -374,7 +381,7 @@ MB-5 on `scheme`: M5-R10. MB-3 or another check rejects an enum prop with `surfa
 
 - **Goal:** Ship Hero (a page-top section with optional background image and a content column) in all four hosts.
 - **Depends on:** M2-T32.
-- **Kind / recipe:** `static`, Liquid tier `block`. Path: hand-written (M5-R5, PR-M5-1). Reason sentence: `the image prop is an object and its src and srcset are derived values`.
+- **Kind / recipe:** `static/block; C` (PLAN table); `static`, Liquid tier `block`. Path: hand-written (M5-R5, ledger D-139). Reason sentence: `the image prop is an object and its src and srcset are derived values`.
 
 ### Read first
 
@@ -386,7 +393,7 @@ MB-5 on `scheme`: M5-R10. MB-3 or another check rejects an enum prop with `surfa
 
 ### Files
 
-Create by hand: `components/hero/hero.json`, `hero.css`, `hero.test.ts`, `react/hero.tsx`, `remix/hero.tsx`, `liquid/blocks/hero.liquid`, and five fixture files `default`, `image`, `invalid-enum-falls-back`, `escaping`, `class`. Generated (commit): `html/hero.html`, `liquid/locales/hero.json`, generated regions, visual snapshots. Change: `locales/en.default.json`, `src/check/rules/RP113.ts`, `src/testing/resources.ts`, `docs/13-testing.md`, doc 12.
+Create by hand: `components/hero/hero.json`, `hero.css`, `hero.test.ts`, `react/hero.tsx`, `remix/hero.tsx`, `liquid/blocks/hero.liquid`, and five fixture files `default`, `image`, `invalid-enum-falls-back`, `escaping`, `class`. Generated (commit): `html/hero.html`, `liquid/locales/hero.json`, generated regions, visual snapshots. Change: `src/check/rules/RP113.ts`; for the new resource `image.hero` (M5-R8): `src/testing/resources.ts`, `src/testing/resources.test.ts` (name list), the resource table of `docs/13-testing.md`, doc 12 `### 1.6 `. No change to `locales/en.default.json` (Hero has no locale key of its own).
 
 ### Steps
 
@@ -399,7 +406,7 @@ Create by hand: `components/hero/hero.json`, `hero.css`, `hero.test.ts`, `react/
 
 ### Names and values
 
-- Locale key: `ripple.hero.name`.
+- Locale keys: none of its own (the schema name key is generated, M5-R6).
 - Rule `hero-once` (PR-M5-6). Detection: more than one `.rp-hero` with an image in a document; the function returns `[root]` when `root` contains `.rp-hero-image` and `root` is not the first `.rp-hero` in `root.ownerDocument` that contains `.rp-hero-image`. Message `A document has more than one Hero with an image.` Fix `Keep the image on the first Hero only; two images with fetchpriority="high" compete.` Failing string: the `image` fixture twice.
 - F-11: none expected.
 
@@ -407,11 +414,11 @@ Create by hand: `components/hero/hero.json`, `hero.css`, `hero.test.ts`, `react/
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (conformance) |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)` |
 | AT-2 | `[T5] hero: AT-2 ...`: M5-R16 page with fixture `default` in which `data-size="md"` is replaced by `data-size="full"`; viewports 375 by 667 and 1280 by 800; root height within 1 px of `window.innerHeight` |
 | AT-3 | `[T5] hero: AT-3 ...` on fixture `image` (M5-R18, W 2400, H 1200): left and right offsets of the first child of `.rp-hero-content` inside the root differ by at most 1 px |
 | AT-4 | `[T5] hero: AT-4 ...` on fixture `image` (M5-R18): the four box values of `img` equal the root's within 0.5 px |
-| AT-5 | comment, generic (`test/upgrade/upgrade.test.ts`) |
+| AT-5 | `// AT-5: generic (test/upgrade/upgrade.test.ts)` |
 | rules | one M5-R15 test plus the default-fixture test |
 
 ### Acceptance
@@ -432,7 +439,7 @@ The Liquid shim has no `image_url` filter form the block needs: draft pull reque
 
 - **Goal:** Ship Footer (the page `footer` landmark with a default body of menu, copyright line and policy links) in all four hosts.
 - **Depends on:** M2-T32, M5-T03.
-- **Kind / recipe:** `static`, Liquid tier `resource`; recipe C steps plus R. Path: hand-written (M5-R5). Reason sentence: `the default body embeds LinkList with object props`.
+- **Kind / recipe:** `static/resource; C+R` (PLAN table); `static`, Liquid tier `resource`; recipe C steps plus R. Path: hand-written (M5-R5). Reason sentence: `the default body embeds LinkList with object props`.
 
 ### Read first
 
@@ -446,7 +453,7 @@ The Liquid shim has no `image_url` filter form the block needs: draft pull reque
 
 ### Files
 
-Create by hand: `components/footer/footer.json`, `footer.css`, `footer.test.ts`, `react/footer.tsx`, `remix/footer.tsx`, `liquid/blocks/footer.liquid`, `liquid/snippets/rp-footer.liquid`, and five fixture files `default`, `default-body`, `policies`, `scheme`, `class`. Generated (commit): `html/footer.html`, `liquid/locales/footer.json`, generated regions, visual snapshots. Change: `locales/en.default.json`, `src/check/rules/RP113.ts`, `src/testing/resources.ts`, `docs/13-testing.md`, doc 12, `components/link-list/link-list.json` and its regenerated Liquid files.
+Create by hand: `components/footer/footer.json`, `footer.css`, `footer.test.ts`, `react/footer.tsx`, `remix/footer.tsx`, `liquid/blocks/footer.liquid`, `liquid/snippets/rp-footer.liquid`, and five fixture files `default`, `default-body`, `policies`, `scheme`, `class`. Generated (commit): `html/footer.html`, `liquid/locales/footer.json`, generated regions, visual snapshots. Change: `locales/en.default.json`, `src/check/rules/RP113.ts`, `src/testing/resources.ts`, `src/testing/resources.test.ts` (name list), `docs/13-testing.md` (resource table), doc 12 `### 1.6 `, `components/link-list/link-list.json` and its regenerated Liquid files.
 
 ### Steps
 
@@ -461,7 +468,7 @@ Create by hand: `components/footer/footer.json`, `footer.css`, `footer.test.ts`,
 
 ### Names and values
 
-- Locale keys: `ripple.footer.name`, `ripple.footer.menu` ("Footer"), `ripple.footer.policies` ("Policies"), `ripple.footer.copyright` ("© {{ year }} {{ name }}").
+- Locale keys (M5-R6; the schema name key is generated): `ripple.footer.menu` ("Footer"), `ripple.footer.policies` ("Policies"), `ripple.footer.copyright` ("© {{ year }} {{ name }}").
 - Rules (2). `footer-once`: at most one `.rp-footer` per document (M5-R21 last sentence). Message `A document has more than one Footer.` Fix `Render Footer once, in the layout.` Failing string: the `default` fixture twice. `footer-outside-main`: `.rp-footer` MUST NOT have a `main` ancestor; returns `[root]` when `root.closest("main")` is not null. Message `A Footer is inside the main element.` Fix `Move the Footer after the main element.` Failing string: `<main>` + the `default` fixture + `</main>`.
 - F-11 (M5-R11): `linkList`, `strings`. If reported for `linkList`: set `linkList: "site-links"` on fixture `policies` (its menu `nav` then has `id="site-links"`). If reported for `strings`: stop.
 - UNVERIFIED: that the Liquid adapter binds the global `shop` from a `shop.*` resource whose prop is not passed to Liquid (RS-3 with FX-4). See "If blocked".
@@ -470,9 +477,9 @@ Create by hand: `components/footer/footer.json`, `footer.css`, `footer.test.ts`,
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (conformance) |
-| AT-2 | comment, generic (`test/upgrade/upgrade.test.ts`) |
-| AT-3 | comment, NJ-F form with `NJ-F14` |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)` |
+| AT-2 | `// AT-2: generic (test/upgrade/upgrade.test.ts)` |
+| AT-3 | `// AT-3: covered by M7-T25 (test/nojs/blueprints.test.ts: NJ-F14)` |
 | AT-4 | `[T5] footer: AT-4 ...`: M5-R16 page, viewport 1280 by 800; `<main>` holds `components/container/fixtures/default.html` (a Container with `width="page"`: check its `data-width`; when the default is another width, replace the attribute value by `page`); the `default` fixture of Footer directly in `<body>` after `<main>`; left and right of `.rp-footer-inner` equal those of the Container within 0.5 px |
 | rules | two M5-R15 tests plus the default-fixture test |
 
@@ -494,7 +501,7 @@ Fixture `policies` fails on Liquid because `shop.policies` is not bound as the g
 
 - **Goal:** Ship NewsletterForm (an email field, a submit button and a status message that work as a plain form post) in all four hosts.
 - **Depends on:** M1-T01, M1-T06, M2-T11, M2-T32.
-- **Kind / recipe:** `static`, Liquid tier `resource`; recipe C steps plus R. Path: hand-written (M5-R5). Reason sentence: `the message depends on status and the Liquid body is a form tag`.
+- **Kind / recipe:** `static/resource; C+R` (PLAN table); `static`, Liquid tier `resource`; recipe C steps plus R. Path: hand-written (M5-R5). Reason sentence: `the message depends on status and the Liquid body is a form tag`.
 
 ### Read first
 
@@ -508,7 +515,7 @@ Fixture `policies` fails on Liquid because `shop.policies` is not bound as the g
 
 ### Files
 
-Create by hand: `components/newsletter-form/newsletter-form.json`, `newsletter-form.css`, `newsletter-form.test.ts`, `react/newsletter-form.tsx`, `remix/newsletter-form.tsx`, `liquid/blocks/newsletter-form.liquid`, and four fixture files `default`, `success`, `error`, `class`. Generated (commit): `html/newsletter-form.html`, `liquid/locales/newsletter-form.json`, generated regions, visual snapshots. Change: `locales/en.default.json`, `src/check/rules/RP113.ts`, doc 12 `## Ledger issues`, `components/button/button.json` and `components/input/input.json` with their regenerated Liquid files.
+Create by hand: `components/newsletter-form/newsletter-form.json`, `newsletter-form.css`, `newsletter-form.test.ts`, `react/newsletter-form.tsx`, `remix/newsletter-form.tsx`, `liquid/blocks/newsletter-form.liquid`, and four fixture files `default`, `success`, `error`, `class`. Generated (commit): `html/newsletter-form.html`, `liquid/locales/newsletter-form.json`, generated regions, visual snapshots. Change: `locales/en.default.json`, `src/check/rules/RP113.ts`, `components/button/button.json` and `components/input/input.json` with their regenerated Liquid files.
 
 ### Steps
 
@@ -520,7 +527,7 @@ Create by hand: `components/newsletter-form/newsletter-form.json`, `newsletter-f
 
 ### Names and values
 
-- Locale keys: `ripple.newsletter-form.name`, `.email` ("Email address"), `.submit` ("Subscribe"), `.success` ("Thanks for subscribing."), `.error` ("Enter a valid email address.").
+- Locale keys (M5-R6; the schema name key is generated), under `ripple.newsletter-form`: `.email` ("Email address"), `.submit` ("Subscribe"), `.success` ("Thanks for subscribing."), `.error` ("Enter a valid email address.").
 - Rule `newsletter-form-not-in-form`. Detection: `.rp-newsletter-form` MUST NOT have a `form` ancestor; returns `[root]` when `root.parentElement?.closest("form")` is not null. Message `A NewsletterForm is inside another form.` Fix `Move the NewsletterForm out of the form; forms cannot be nested.` Failing string: `<form>` + the `default` fixture + `</form>` parsed as the checker parses it; when the HTML parser drops the nested form and no diagnostic comes out, build the failing tree with the DOM API the tests of `src/check/rules/RP113.test.ts` use.
 - F-11 (M5-R11): `strings`. If reported: stop.
 - Shim form state (doc 12 X-5): the scope variable `form_state.customer` with the keys `posted`, `errors`, `email`.
@@ -529,12 +536,12 @@ Create by hand: `components/newsletter-form/newsletter-form.json`, `newsletter-f
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (conformance), plus two real tests (PR-M5-8): `[T2] newsletter-form: AT-1 liquid prints the success markup when the form was posted` and `[T2] newsletter-form: AT-1 liquid prints the error markup when the form has errors`: render `liquid/blocks/newsletter-form.liquid` through the shim (the render call `test/conformance/` uses for the host `liquid`) with `form_state: { customer: { posted: true, errors: null, email: "" } }` and `{ customer: { posted: false, errors: ["email"], email: "not-an-email" } }`; apply the fixture masks; compare with `fixtures/success.html` and `fixtures/error.html` (canonical equality, the comparison function the conformance test uses) |
-| AT-2 | comment, generic (`test/upgrade/upgrade.test.ts`) |
-| AT-3 | `[T6] newsletter-form: AT-3 ...` (PR-M5-10), `openPage({ scripts: "disabled" })`, M5-R16 page with fixture `default`; extra routes: `POST /api/newsletter` answers `303` with `location: /?subscribed=1#newsletter`; `GET /?subscribed=1` answers the page with fixture `success`. Type `shopper@example.com`, press the button; assert the selector of the spec and that the URL ends with `#newsletter`. Second line: comment, NJ-F form with `NJ-F15`, written as `// AT-3 (blueprint): generic (...)` |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)`, plus two real tests (PR-M5-8): `[T2] newsletter-form: AT-1 liquid prints the success markup when the form was posted` and `[T2] newsletter-form: AT-1 liquid prints the error markup when the form has errors`: render `liquid/blocks/newsletter-form.liquid` through the shim (the render call `test/conformance/` uses for the host `liquid`) with `form_state: { customer: { posted: true, errors: null, email: "" } }` and `{ customer: { posted: false, errors: ["email"], email: "not-an-email" } }`; apply the fixture masks; compare with `fixtures/success.html` and `fixtures/error.html` (canonical equality, the comparison function the conformance test uses) |
+| AT-2 | `// AT-2: generic (test/upgrade/upgrade.test.ts)` |
+| AT-3 | `[T6] newsletter-form: AT-3 ...` (PR-M5-10), `openPage({ scripts: "disabled" })`, M5-R16 page with fixture `default`; extra routes: `POST /api/newsletter` answers `303` with `location: /?subscribed=1#newsletter`; `GET /?subscribed=1` answers the page with fixture `success`. Type `shopper@example.com`, press the button; assert the selector of the spec and that the URL ends with `#newsletter`. Line above the test: `// AT-3 (blueprint): covered by M7-T25 (test/nojs/blueprints.test.ts: NJ-F15)` |
 | AT-4 | `[T6] newsletter-form: AT-4 ...`: same page; `POST /api/newsletter` answers `200` with the page holding fixture `error`; assert `aria-invalid="true"` and that the id in `aria-describedby` resolves |
 | AT-5 | `[T6] newsletter-form: AT-5 ...`: count requests to `/api/newsletter` after pressing the button with an empty field; expect `0` |
-| AT-6 | comment, tier 8 form |
+| AT-6 | `// AT-6: covered by M10-T01 (test/liquid/live.test.ts)` |
 | rules | one M5-R15 test plus the default-fixture test |
 
 ### Acceptance
@@ -555,7 +562,7 @@ The route `/api/newsletter` of the examples (doc 12 section 2.7, M7). Client-sid
 
 - **Goal:** Ship LocaleSelector (a popover with one submit button per country and per language, posting a plain form) in all four hosts.
 - **Depends on:** M1-T01, M1-T03, M2-T32, M3-T01.
-- **Kind / recipe:** `static`, Liquid tier `resource`; recipe C steps plus R. Path: hand-written (M5-R5). Reason sentence: `the body is two loops over object props and the Liquid body is a form tag`.
+- **Kind / recipe:** `static/resource; C+R` (PLAN table); `static`, Liquid tier `resource`; recipe C steps plus R. Path: hand-written (M5-R5). Reason sentence: `the body is two loops over object props and the Liquid body is a form tag`.
 
 ### Read first
 
@@ -570,7 +577,7 @@ The route `/api/newsletter` of the examples (doc 12 section 2.7, M7). Client-sid
 
 ### Files
 
-Create by hand: `components/locale-selector/locale-selector.json`, `locale-selector.css`, `locale-selector.test.ts`, `react/locale-selector.tsx`, `remix/locale-selector.tsx`, `liquid/blocks/locale-selector.liquid`, and five fixture files `default`, `countries-only`, `single-locale`, `invalid-enum-falls-back`, `class`. Generated (commit): `html/locale-selector.html`, `liquid/locales/locale-selector.json`, generated regions, visual snapshots. Change: `locales/en.default.json`, `src/check/rules/RP113.ts`, `src/testing/resources.ts`, `docs/13-testing.md`, doc 12, `components/button/button.json` and `components/icon/icon.json` with their regenerated Liquid files.
+Create by hand: `components/locale-selector/locale-selector.json`, `locale-selector.css`, `locale-selector.test.ts`, `react/locale-selector.tsx`, `remix/locale-selector.tsx`, `liquid/blocks/locale-selector.liquid`, and five fixture files `default`, `countries-only`, `single-locale`, `invalid-enum-falls-back`, `class`. Generated (commit): `html/locale-selector.html`, `liquid/locales/locale-selector.json`, generated regions, visual snapshots. Change: `locales/en.default.json`, `src/check/rules/RP113.ts`, `src/testing/resources.ts`, `src/testing/resources.test.ts` (name list), `docs/13-testing.md` (resource table), doc 12 `### 1.6 `, `components/button/button.json` and `components/icon/icon.json` with their regenerated Liquid files.
 
 ### Steps
 
@@ -593,7 +600,7 @@ Create by hand: `components/locale-selector/locale-selector.json`, `locale-selec
 
 ### Names and values
 
-- Locale keys: `ripple.locale-selector.name`, `.country` ("Country/region"), `.language` ("Language").
+- Locale keys (M5-R6; the schema name key is generated), under `ripple.locale-selector`: `.country` ("Country/region"), `.language` ("Language").
 - Rule `locale-selector-not-in-form`. Detection: `.rp-locale-selector` MUST NOT have a `form` ancestor; returns `[root]` when `root.parentElement?.closest("form")` is not null. Message `A LocaleSelector is inside a form.` Fix `Move the LocaleSelector out of the form; it prints its own form.` Failing tree: as M5-T07 (nested forms: build with the DOM API when the parser drops the inner form).
 - F-11 (M5-R11): `action`, `align`, `strings`. `align` is set in `countries-only`. If reported for `action`: set `action: "/locale"` on fixture `class` (the reference HTML does not change under the `action` mask; check that the `html` fixture file prints `action="/locale"`). If reported for `strings`: stop.
 - Field values: hydrogen backend `country_code` = `CA`, `locale_code` = `FR`; Liquid `locale_code` = `fr` (masked).
@@ -602,10 +609,10 @@ Create by hand: `components/locale-selector/locale-selector.json`, `locale-selec
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (conformance) |
-| AT-2 | comment, generic (`test/upgrade/upgrade.test.ts`) |
-| AT-3 | `[T6] locale-selector: AT-3 ...` (PR-M5-10), `scripts: "disabled"`, M5-R16 page with fixture `default`; extra routes: `POST /api/locale` answers `303` with `location: /en-us`; `GET /en-us` answers `200` with a page holding `<p>ok</p>`. First statement: when `!("popover" in HTMLElement.prototype)`, assert the option is visible in flow and continue. Open the panel, press `United States (USD $)`; assert the captured POST body contains `country_code=US` and `return_to=`, and the final URL path is `/en-us`. Second line: `// AT-3 (blueprint): generic (...)` in the NJ-F form with `NJ-F16` |
-| AT-4 | comment, tier 8 form |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)` |
+| AT-2 | `// AT-2: generic (test/upgrade/upgrade.test.ts)` |
+| AT-3 | `[T6] locale-selector: AT-3 ...` (PR-M5-10), `scripts: "disabled"`, M5-R16 page with fixture `default`; extra routes: `POST /api/locale` answers `303` with `location: /en-us`; `GET /en-us` answers `200` with a page holding `<p>ok</p>`. First statement: when `!("popover" in HTMLElement.prototype)`, assert the option is visible in flow and continue. Open the panel, press `United States (USD $)`; assert the captured POST body contains `country_code=US` and `return_to=`, and the final URL path is `/en-us`. Line above the test: `// AT-3 (blueprint): covered by M7-T25 (test/nojs/blueprints.test.ts: NJ-F16)` |
+| AT-4 | `// AT-4: covered by M10-T01 (test/liquid/live.test.ts)` |
 | AT-5 | `[T5] locale-selector: AT-5 ...` on fixture `default`: M5-R20 role `button`, name `Canada (CAD $) / English`; the current options have `aria-current="true"` |
 | AT-6 | `[T5] locale-selector: AT-6 ...`: open the panel; every `.rp-locale-selector-option` box at least 24 px high |
 | rules | one M5-R15 test plus the default-fixture test |
@@ -628,7 +635,7 @@ SPIKE-05: section 0.7. `pnpm gen --check` rejects two fixture props that resolve
 
 - **Goal:** Ship FeaturedCollection (a titled section that shows a collection's products in a Grid or a Carousel, with a "View all" link) in all four hosts.
 - **Depends on:** M1-T05, M2-T03, M2-T32, M3-T09, M4-T03.
-- **Kind / recipe:** `static`, Liquid tier `resource`; recipe C steps plus R. Path: hand-written (M5-R5). Reason sentence: `the default body is a loop over products that embeds ProductCard, Grid and Carousel`.
+- **Kind / recipe:** `static/resource; C+R` (PLAN table); `static`, Liquid tier `resource`; recipe C steps plus R. Path: hand-written (M5-R5). Reason sentence: `the default body is a loop over products that embeds ProductCard, Grid and Carousel`.
 
 ### Read first
 
@@ -642,7 +649,7 @@ SPIKE-05: section 0.7. `pnpm gen --check` rejects two fixture props that resolve
 
 ### Files
 
-Create by hand: `components/featured-collection/featured-collection.json`, `featured-collection.css`, `featured-collection.test.ts`, `react/featured-collection.tsx`, `remix/featured-collection.tsx`, `liquid/blocks/featured-collection.liquid`, and seven fixture files `default`, `default-body`, `carousel`, `empty`, `invalid-enum-falls-back`, `responsive`, `class`. Generated (commit): `html/featured-collection.html`, `liquid/locales/featured-collection.json`, generated regions, visual snapshots. Change: `locales/en.default.json`, `src/check/rules/RP113.ts`, `src/testing/resources.ts`, `docs/13-testing.md`, doc 12, `components/product-card/product-card.json` and `components/carousel/carousel.json` with their regenerated Liquid files.
+Create by hand: `components/featured-collection/featured-collection.json`, `featured-collection.css`, `featured-collection.test.ts`, `react/featured-collection.tsx`, `remix/featured-collection.tsx`, `liquid/blocks/featured-collection.liquid`, and seven fixture files `default`, `default-body`, `carousel`, `empty`, `invalid-enum-falls-back`, `responsive`, `class`. Generated (commit): `html/featured-collection.html`, `liquid/locales/featured-collection.json`, generated regions, visual snapshots. Change: `locales/en.default.json`, `src/check/rules/RP113.ts`, `src/testing/resources.ts`, `src/testing/resources.test.ts` (name list), `docs/13-testing.md` (resource table), doc 12 `### 1.6 `, `components/product-card/product-card.json` and `components/carousel/carousel.json` with their regenerated Liquid files.
 
 ### Steps
 
@@ -658,7 +665,7 @@ Create by hand: `components/featured-collection/featured-collection.json`, `feat
 
 ### Names and values
 
-- Locale keys: `ripple.featured-collection.name`, `ripple.featured-collection.view_all` ("View all").
+- Locale keys (M5-R6; the schema name key is generated): `ripple.featured-collection.view_all` ("View all").
 - Rule `featured-collection-carousel-needs-id` (PR-M5-7). Detection in HTML: a root with `data-layout="carousel"` that contains no `.rp-carousel` element with a non-empty `id`; returns `[root]`. Message `A FeaturedCollection with the carousel layout has no carousel id.` Fix `Pass the carousel prop (an id that is unique in the document).` Failing string: fixture `carousel` with ` id="featured"` removed from the Carousel root.
 - F-11 (M5-R11): `limit`, `strings`. If reported for `limit`: set `limit: 1` on fixture `default-body` (reference HTML unchanged: one product). If reported for `strings`: stop.
 - Trap, AT-2: the generic tier 3 test applies only THIS component's `upgradeAllow` to fixture `carousel`, which contains `rp-carousel`. When `pnpm test:upgrade --grep="featured-collection/"` fails on mutations inside `rp-carousel`: copy the entries of `components/carousel/carousel.json` `upgradeAllow` into this manifest's `upgradeAllow` with the same selectors, and say so in the pull request.
@@ -667,8 +674,8 @@ Create by hand: `components/featured-collection/featured-collection.json`, `feat
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (conformance) |
-| AT-2 | comment, generic (`test/upgrade/upgrade.test.ts`) |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)` |
+| AT-2 | `// AT-2: generic (test/upgrade/upgrade.test.ts)` |
 | AT-3 | `[T5] featured-collection: AT-3 ...`: M5-R16 page from fixture `default` with the string `<p>Item</p>` replaced by four copies of itself; viewports 375 by 667 and 1280 by 800; count the distinct `left` values of the four paragraphs: 2, then 4 |
 | AT-4 | `[T6] featured-collection: AT-4 ...`, `scripts: "disabled"`, viewport 375 by 667: M5-R16 page from fixture `carousel` with the one `li.rp-carousel-item` repeated six times (M5-R18 for the product images); the viewport part has `scrollWidth > clientWidth`; both control buttons have computed `visibility: hidden` |
 | AT-5 | `[T6] featured-collection: AT-5 ...`, `scripts: "disabled"`, fixture `default-body` in an M5-R16 page; route `GET /collections/featured` answers `200`; click `.rp-featured-collection-link`; the URL path is `/collections/featured` |
@@ -688,10 +695,10 @@ Fetching products (the caller passes them). A "quick add" on the card. Any prop 
 
 ---
 
-## M5-T10 Element `rp-navigation-menu`
+## M5-T10 Element `rp-navigation-menu` (`src/elements/rp-navigation-menu.ts` and test, including E-15)
 
 - **Goal:** Add the custom element `rp-navigation-menu` (hover intent and arrow keys for popover submenus) and its test.
-- **Depends on:** M1-T43.
+- **Depends on:** M1-T43, M1-T46.
 - **Kind / recipe:** `element`; recipe E (PLAN 5.5).
 
 ### Read first
@@ -707,7 +714,7 @@ Fetching products (the caller passes them). A "quick add" on the card. Any prop 
 
 ### Files
 
-Create: `src/elements/rp-navigation-menu.ts`, `src/elements/rp-navigation-menu.test.ts`. Change: `src/elements/index.ts` (one import line). Change only when the entry is absent: `src/gen/elements.json` (the `rp-navigation-menu` entry, in the shape of the `rp-carousel` entry: display `block`, api `["close"]`).
+Create: `src/elements/rp-navigation-menu.ts`, `src/elements/rp-navigation-menu.test.ts`. Change: `src/elements/index.ts` (one import line). Do not change `src/gen/elements.json`: its `rp-navigation-menu` entry exists since M0-T06.
 
 ### Steps
 
@@ -752,8 +759,9 @@ SPIKE-07: section 0.7. `pnpm test:size` fails for `ripple.elements.js`: do not r
 ## M5-T11 NavigationMenu (`navigation-menu`)
 
 - **Goal:** Ship NavigationMenu (the desktop main navigation with popover submenus, upgraded by `rp-navigation-menu`) in all four hosts.
-- **Depends on:** M1-T03, M2-T32, M5-T10.
-- **Kind / recipe:** `native`, Liquid tier `resource`; recipe N for manifest keys and tests, R; bindings hand-written (M5-R5, PR-M5-2). Reason sentence: `the body is a nested loop over a menu and panel ids are derived from the position`.
+- **Depends on:** M1-T03, M2-T32, M5-T10, M3-T10.
+- **Tests owned (D-145):** the acceptance tests of `docs/components/navigation-menu.md` (table below; PLAN 4.2 row M5 names AT-10 to AT-12), and the NavigationMenu clauses of E-01, E-18 and E-19 in `src/runtime/index.test.ts` (M3-T10 writes those tests without the clauses).
+- **Kind / recipe:** `native/resource; N+C+R` (PLAN table); `native`, Liquid tier `resource`; recipe N for manifest keys and tests, R; bindings hand-written (M5-R5, ledger D-139). Reason sentence: `the body is a nested loop over a menu and panel ids are derived from the position`.
 
 ### Read first
 
@@ -769,7 +777,7 @@ SPIKE-07: section 0.7. `pnpm test:size` fails for `ripple.elements.js`: do not r
 
 ### Files
 
-Create by hand: `components/navigation-menu/navigation-menu.json`, `navigation-menu.css`, `navigation-menu.test.ts`, `react/navigation-menu.tsx`, `remix/navigation-menu.tsx`, `liquid/blocks/navigation-menu.liquid`, `liquid/snippets/rp-navigation-menu.liquid`, and five fixture files `default`, `deep`, `empty`, `escaping`, `class`. Generated (commit): `html/navigation-menu.html`, `liquid/locales/navigation-menu.json`, generated regions, visual snapshots. Change: `locales/en.default.json`, `src/check/rules/RP113.ts`, doc 12 `## Ledger issues`, `components/icon/icon.json` and its regenerated Liquid files, `src/runtime/index.test.ts`.
+Create by hand: `components/navigation-menu/navigation-menu.json`, `navigation-menu.css`, `navigation-menu.test.ts`, `react/navigation-menu.tsx`, `remix/navigation-menu.tsx`, `liquid/blocks/navigation-menu.liquid`, `liquid/snippets/rp-navigation-menu.liquid`, and five fixture files `default`, `deep`, `empty`, `escaping`, `class`. Generated (commit): `html/navigation-menu.html`, `liquid/locales/navigation-menu.json`, generated regions, visual snapshots. Change: `locales/en.default.json`, `src/check/rules/RP113.ts`, `components/icon/icon.json` and its regenerated Liquid files, `src/runtime/index.test.ts`.
 
 ### Steps
 
@@ -784,7 +792,7 @@ Create by hand: `components/navigation-menu/navigation-menu.json`, `navigation-m
 
 ### Names and values
 
-- Locale keys: `ripple.navigation-menu.name`, `ripple.navigation-menu.label` ("Main"), `ripple.navigation-menu.submenu` ("{{ title }} submenu").
+- Locale keys (M5-R6; the schema name key is generated): `ripple.navigation-menu.label` ("Main"), `ripple.navigation-menu.submenu` ("{{ title }} submenu").
 - Rules (3), detection sentences of the spec:
   - `navigation-menu-item-in-list`: returns every `[data-rp-part="item"]` inside `root` whose parent is not a `.rp-navigation-menu-list`. Message `A NavigationMenu item is not a child of the list.` Fix `Put every item directly inside the element with the class rp-navigation-menu-list.` Failing string: fixture `default` with one item wrapped in a `<div>`.
   - `navigation-menu-content-in-item`: returns every `.rp-navigation-menu-content` inside `root` without an ancestor `.rp-navigation-menu-item`. Message `A NavigationMenu panel is outside an item.` Fix `Put the panel inside the item whose trigger opens it.` Failing string: fixture `default` with the panel moved to directly before `</rp-navigation-menu>`. (That string also breaks the third rule; the test of THIS rule filters the diagnostics by `[navigation-menu-content-in-item]` and expects one.)
@@ -797,17 +805,17 @@ Every `[T5]` test starts with: when `!("popover" in HTMLElement.prototype)`, ass
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (conformance) |
-| AT-2 | comment, generic (`test/upgrade/upgrade.test.ts`) |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)` |
+| AT-2 | `// AT-2: generic (test/upgrade/upgrade.test.ts)` |
 | AT-3 | `[T5] navigation-menu: AT-3 ...` on fixture `default`; durations 200 ms and 400 ms (M5-R19). No `[chromium]` |
 | AT-4 | `[T5] navigation-menu: AT-4 ...`: fixture `default`; the RTL half on `fixturePageUrl("navigation-menu/default", { dir: "rtl" })`. No `[chromium]` |
 | AT-5 | `[T5] navigation-menu: AT-5 ...`. No `[chromium]` |
 | AT-6 | `[T6] navigation-menu: AT-6 ...`, `scripts: "disabled"`, M5-R16 page with fixture `default`; route `GET /collections/all` answers `200`; the trigger half only when `"popover" in HTMLElement.prototype`. No `[chromium]` |
 | AT-7 | `[T4] navigation-menu: AT-7 ...` on `/__rp/morph/a?c=navigation-menu` and `/__rp/morph/b?c=navigation-menu` (`startExample("remix")`, `docs/13-testing.md` 9.2): open the panel by a click on the trigger, follow the link to the other route, assert `#main-nav-item-1` still matches `:popover-open` and no console error |
 | AT-8 | `[T5] navigation-menu: AT-8 ...` on fixtures `default` and `deep`: every `.rp-navigation-menu-trigger` and `.rp-navigation-menu-link` box at least 24 by 24 |
-| AT-9 | comment, tier 9 form naming AT-3, AT-4, AT-5, AT-6 |
-| AT-10 | `[T5] [chromium] navigation-menu: AT-10 ...` with `// [chromium]: anchor positioning of the panel is asserted in Chromium only (spec AT-10)`. Page (PR-M5-12): fixture `default` in which the first `<li class="rp-navigation-menu-item" …>…</li>` is inserted a second time directly after itself, the copy having `main-nav-item-1` replaced by `main-nav-item-2` and `aria-current="page"` removed. Three sub-cases (click, hover 200 ms, ArrowDown) on the SECOND trigger; close the panel between them |
-| AT-11 | `[T5] [chromium] navigation-menu: AT-11 ...` with `// [chromium]: emulates a browser without the popover API (spec AT-11)`. `page.addInitScript` registers a `MutationObserver` on `document` that removes the `popover` attribute from every added `.rp-navigation-menu-content`; the route handler serves `/ripple.css` with the two `@supports` blocks of rule 5 removed (find each block by its prelude after stripping whitespace from both the file and the prelude; remove through the matching closing brace by counting braces; assert in the test that exactly two blocks were removed). Fixture `default` |
+| AT-9 | `// AT-9: generic (pnpm test:webkit and pnpm test:firefox re-run AT-3, AT-4, AT-5, AT-6)` |
+| AT-10 | `[T5] navigation-menu: AT-10 ... [chromium]` with `// [chromium]: anchor positioning of the panel is asserted in Chromium only (spec AT-10)`. Page (PR-M5-12): fixture `default` in which the first `<li class="rp-navigation-menu-item" …>…</li>` is inserted a second time directly after itself, the copy having `main-nav-item-1` replaced by `main-nav-item-2` and `aria-current="page"` removed. Three sub-cases (click, hover 200 ms, ArrowDown) on the SECOND trigger; close the panel between them |
+| AT-11 | `[T5] navigation-menu: AT-11 ... [chromium]` with `// [chromium]: emulates a browser without the popover API (spec AT-11)`. `page.addInitScript` registers a `MutationObserver` on `document` that removes the `popover` attribute from every added `.rp-navigation-menu-content`; the route handler serves `/ripple.css` with the two `@supports` blocks of rule 5 removed (find each block by its prelude after stripping whitespace from both the file and the prelude; remove through the matching closing brace by counting braces; assert in the test that exactly two blocks were removed). Fixture `default` |
 | AT-12 | `[T5] navigation-menu: AT-12 ...` |
 | rules | three M5-R15 tests plus the default-fixture test |
 | generic | the generic `[T4] navigation-menu: remix morph keeps state, instance and listeners` of `test/hydration/remix.test.ts` MUST pass (it registers itself for kind `native`) |
@@ -822,15 +830,15 @@ M5-R13. `pnpm test:hydration --grep="navigation-menu" --no-skips` passes. `grep 
 
 ### If blocked
 
-SPIKE-07, SPIKE-05: section 0.7. `src/runtime/index.test.ts` does not exist (M3-T10 not merged; the PLAN table gives no such dependency): skip step 7, write `FOLLOW-UP NEEDED: page P item 10 and the NavigationMenu clauses of E-01, E-18, E-19` in the done file. The morph routes do not render `navigation-menu`: defect of the `RIPPLE_TEST_ROUTES` contract in `examples/remix` (`docs/13-testing.md` 12.1 item 6); draft pull request. AT-10 fails by more than 1 px: do not change the tolerance; the three D-114 branches are the fix; draft pull request with the three measured values.
+SPIKE-07, SPIKE-05: section 0.7. `src/runtime/index.test.ts` has no page P or no `E-01`, `E-18` or `E-19` test: M3-T10 is not done; stop (it is a dependency). The morph routes do not render `navigation-menu`: defect of the `RIPPLE_TEST_ROUTES` contract in `examples/remix` (`docs/13-testing.md` 12.1 item 6); draft pull request. AT-10 fails by more than 1 px: do not change the tolerance; the three D-114 branches are the fix; draft pull request with the three measured values.
 
 ---
 
 ## M5-T12 MobileNav (`mobile-nav`)
 
 - **Goal:** Ship MobileNav (the navigation Drawer: a modal `dialog` with the menu as links and `details` groups) in all four hosts.
-- **Depends on:** M1-T03, M1-T04, M1-T18, M2-T32.
-- **Kind / recipe:** `native`, Liquid tier `resource`; recipe N for manifest keys and tests, R; bindings hand-written (M5-R5, PR-M5-2). Reason sentence: `the body is a nested loop over a menu`.
+- **Depends on:** M1-T03, M1-T04, M1-T18, M2-T32, M1-T19.
+- **Kind / recipe:** `native/resource; N+C+R` (PLAN table); `native`, Liquid tier `resource`; recipe N for manifest keys and tests, R; bindings hand-written (M5-R5, ledger D-139). Reason sentence: `the body is a nested loop over a menu`.
 
 ### Read first
 
@@ -845,7 +853,7 @@ SPIKE-07, SPIKE-05: section 0.7. `src/runtime/index.test.ts` does not exist (M3-
 
 ### Files
 
-Create by hand: `components/mobile-nav/mobile-nav.json`, `mobile-nav.css`, `mobile-nav.test.ts`, `react/mobile-nav.tsx`, `remix/mobile-nav.tsx`, `liquid/blocks/mobile-nav.liquid`, and five fixture files `default`, `deep`, `empty`, `invalid-enum-falls-back`, `class`. Generated (commit): `html/mobile-nav.html`, `liquid/locales/mobile-nav.json`, generated regions, visual snapshots. Change: `locales/en.default.json`, `src/check/rules/RP113.ts`, doc 12 `## Ledger issues`, `src/testing/resources.ts` (one helper, step 2), `components/icon/icon.json` and `components/icon-button/icon-button.json` with their regenerated Liquid files.
+Create by hand: `components/mobile-nav/mobile-nav.json`, `mobile-nav.css`, `mobile-nav.test.ts`, `react/mobile-nav.tsx`, `remix/mobile-nav.tsx`, `liquid/blocks/mobile-nav.liquid`, and five fixture files `default`, `deep`, `empty`, `invalid-enum-falls-back`, `class`. Generated (commit): `html/mobile-nav.html`, `liquid/locales/mobile-nav.json`, generated regions, visual snapshots. Change: `locales/en.default.json`, `src/check/rules/RP113.ts`, `docs/13-testing.md` `## Ledger issues` (one line, step 2), `src/testing/resources.ts` (one helper, step 2), `components/icon/icon.json` and `components/icon-button/icon-button.json` with their regenerated Liquid files.
 
 ### Steps
 
@@ -858,7 +866,7 @@ Create by hand: `components/mobile-nav/mobile-nav.json`, `mobile-nav.css`, `mobi
 
 ### Names and values
 
-- Locale keys: `ripple.mobile-nav.name`, `ripple.mobile-nav.title` ("Menu"), `ripple.mobile-nav.close` ("Close").
+- Locale keys (M5-R6; the schema name key is generated): `ripple.mobile-nav.title` ("Menu"), `ripple.mobile-nav.close` ("Close").
 - Opener used by tests (not part of any fixture; a plain native element, M5-R17): `<a href="#footer-menu" data-rp-open="mobile-nav">Menu</a>`. Fragment target: `<p id="footer-menu">Footer menu</p>`.
 - Rules (2):
   - `mobile-nav-once`: at most one `.rp-mobile-nav` per document (M5-R21 last sentence). Message `A document has more than one MobileNav.` Fix `Render MobileNav once, in the layout.` Failing string: the opener, then fixture `default`, then fixture `default` with every `mobile-nav` id replaced by `mobile-nav-2`.
@@ -872,14 +880,14 @@ Page for AT-3 to AT-7 and AT-9: M5-R16 with `<main>` holding the opener, fixture
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (conformance) |
-| AT-2 | comment, generic (`test/upgrade/upgrade.test.ts`) |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)` |
+| AT-2 | `// AT-2: generic (test/upgrade/upgrade.test.ts)` |
 | AT-3 | `[T5] mobile-nav: AT-3 ...`. No `[chromium]` |
 | AT-4 | `[T5] mobile-nav: AT-4 ...` (listener on the root; `detail.value`) |
 | AT-5 | `[T5] mobile-nav: AT-5 ...`: the page with `<html dir="ltr">`, then with `<html dir="rtl">` |
-| AT-6 | `[T6] mobile-nav: AT-6 ...`, `scripts: "disabled"`: `location.hash` is `#footer-menu`; `dialog#mobile-nav` has no `open`; the fragment target's box intersects the viewport. Second line: `// AT-6 (blueprint): generic (...)` in the NJ-F form with `NJ-F14` |
+| AT-6 | `[T6] mobile-nav: AT-6 ...`, `scripts: "disabled"`: `location.hash` is `#footer-menu`; `dialog#mobile-nav` has no `open`; the fragment target's box intersects the viewport. Line above the test: `// AT-6 (blueprint): covered by M7-T25 (test/nojs/blueprints.test.ts: NJ-F14)` |
 | AT-7 | `[T6] mobile-nav: AT-7 ...`, `scripts: "blocked"` (filter the aborted-request messages as `test/nojs/render.test.ts` does) |
-| AT-8 | React half: comment, generic (`test/hydration/react.test.ts`). Remix half: `[T4] mobile-nav: AT-8 ...` on `/__rp/morph/a?c=mobile-nav` and `/__rp/morph/b?c=mobile-nav`: open with `dialog.showModal()` in `page.evaluate`, activate the link to the other route with `element.click()` in `page.evaluate`, assert `dialog#mobile-nav` has no `open` attribute. When `components/drawer/drawer.test.ts` has a `[T4]` morph test, copy its mechanics |
+| AT-8 | React half: the line `// AT-8 (React): generic (test/hydration/react.test.ts)` above the Remix test. Remix half: `[T4] mobile-nav: AT-8 ...` on `/__rp/morph/a?c=mobile-nav` and `/__rp/morph/b?c=mobile-nav`: open with `dialog.showModal()` in `page.evaluate`, activate the link to the other route with `element.click()` in `page.evaluate`, assert `dialog#mobile-nav` has no `open` attribute. When `components/drawer/drawer.test.ts` has a `[T4]` morph test, copy its mechanics |
 | AT-9 | `[T5] mobile-nav: AT-9 ...`: open the drawer; every `.rp-mobile-nav-link` and `.rp-mobile-nav-trigger` box at least 44 px high |
 | rules | `[T1] mobile-nav: rule mobile-nav-once reports RP113` (filter by `[mobile-nav-once]`), `[T1] mobile-nav: rule mobile-nav-needs-opener reports RP113`, and the PR-M5-14 test |
 
@@ -901,7 +909,7 @@ SPIKE-05 fallback verdict: the closer additionally carries `data-rp-close="<id>"
 
 - **Goal:** Ship Header (the page `header` landmark whose default body composes the menu opener, Logo, NavigationMenu, search link, AccountLink and CartLink) in all four hosts.
 - **Depends on:** M1-T03, M1-T04, M1-T34, M2-T32, M5-T01, M5-T02, M5-T11.
-- **Kind / recipe:** `static`, Liquid tier `resource`; recipe C steps plus R. Path: hand-written (M5-R5; the spec says so). Reason sentence: `the default body embeds components of kinds native and commerce`.
+- **Kind / recipe:** `static/resource; C+R` (PLAN table); `static`, Liquid tier `resource`; recipe C steps plus R. Path: hand-written (M5-R5; the spec says so). Reason sentence: `the default body embeds components of kinds native and commerce`.
 
 ### Read first
 
@@ -929,7 +937,7 @@ Create by hand: `components/header/header.json`, `header.css`, `header.test.ts`,
 
 ### Names and values
 
-- Locale keys: `ripple.header.name`, `ripple.header.menu`, `ripple.header.search` (English texts: the spec's Host notes). The account label is AccountLink's key.
+- Locale keys (M5-R6; the schema name key is generated): `ripple.header.menu`, `ripple.header.search` (English texts: the spec's Host notes). The account label is AccountLink's key.
 - Rules (2). `header-once`: at most one `.rp-header` per document (M5-R21 last sentence; the spec's "`count` max 1" is per document, which `max-count` cannot express). Message `A document has more than one Header.` Fix `Render Header once, in the layout.` Failing string: fixture `default` twice. `header-outside-main`: `.rp-header` MUST NOT have a `main` ancestor; returns `[root]` when `root.closest("main")` is not null. Message `A Header is inside the main element.` Fix `Move the Header before the main element.` Failing string: `<main>` + fixture `default` + `</main>`.
 - F-11 (M5-R11): `navigationMenu`, `linkList`, `searchUrl`, `accountUrl`, `cartUrl`, `cart`, `strings`. If reported for the first five: set on fixture `default-body-plain` `linkList: "site-links"`, `searchUrl: "/find"`, `accountUrl: "/me"`, `cartUrl: "/basket"` and on fixture `default-body` `navigationMenu: "primary-nav"`, and change the reference HTML of those two fixtures accordingly (ids `primary-nav`, `primary-nav-item-1`; the four `href` values). If reported for `cart` or `strings`: stop.
 - Trap: `default-body` contains `rp-navigation-menu` and `rp-cart` markup although `dependencies.elements` is empty (spec, Kind note). Tier 3 on that fixture sees the embedded components' upgrades; if it fails, apply the same rule as M5-T09 (copy the embedded components' `upgradeAllow` entries; say so in the pull request).
@@ -940,17 +948,17 @@ Pages are M5-R16 pages with the Header fixture directly in `<body>` before `<mai
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (conformance) |
-| AT-2 | comment, generic (`test/upgrade/upgrade.test.ts`) |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)` |
+| AT-2 | `// AT-2: generic (test/upgrade/upgrade.test.ts)` |
 | AT-3 | `[T5] header: AT-3 ...` on fixture `default-body`: at 375 by 667 the menu opener (`a[data-rp-open="mobile-nav"]`) is visible and `.rp-header-center` has `display: none`; at 1280 by 800 the opener has `display: none` and the centre is visible |
 | AT-4 | `[T5] header: AT-4 ...`: fixture `sticky-scheme`; `<main>` holds `<div style="height:4000px"></div>`; after `window.scrollTo(0, 2000)` the header's `top` is `0` |
-| AT-5 | `[T6] header: AT-5 ...`, `scripts: "disabled"`, viewport 375 by 667: fixture `default-body`; `<main>` holds `<p id="footer-menu">Footer menu</p>`; routes `GET /search` and `GET /cart` answer `200`. Three navigations, each from a fresh load. Second line: `// AT-5 (blueprint): generic (...)` in the NJ-F form with `NJ-F14` |
+| AT-5 | `[T6] header: AT-5 ...`, `scripts: "disabled"`, viewport 375 by 667: fixture `default-body`; `<main>` holds `<p id="footer-menu">Footer menu</p>`; routes `GET /search` and `GET /cart` answer `200`. Three navigations, each from a fresh load. Line above the test: `// AT-5 (blueprint): covered by M7-T25 (test/nojs/blueprints.test.ts: NJ-F14)` |
 | AT-6 | `[T5] header: AT-6 ...`, viewport 1280 by 800: fixture `default`; `<main>` holds the Container fixture as in M5-T06 AT-4 (`components/container/fixtures/default.html`, width `page`); left and right of `.rp-header-inner` equal the Container's within 0.5 px |
 | rules | two M5-R15 tests plus the default-fixture test |
 
 ### Acceptance
 
-M5-R13. `ls components/header/fixtures | wc -l` prints `6`. `diff components/header/fixtures/default.html components/header/fixtures/unknown-scheme.html` prints at most the marker line. `grep -c 'data-rp-open' components/header/fixtures/default-body.html` prints `3`; the same command on `default-body-plain.html` prints `0`. `for x in icon-button logo navigation-menu account-link cart-link; do grep -c '"header"' components/$x/$x.json; done` prints five lines, each at least `1`.
+M5-R13. `ls components/header/fixtures | wc -l` prints `6`. `cmp components/header/fixtures/default.html components/header/fixtures/unknown-scheme.html` exits 0. `grep -c 'data-rp-open' components/header/fixtures/default-body.html` prints `3`; the same command on `default-body-plain.html` prints `0`. `for x in icon-button logo navigation-menu account-link cart-link; do grep -c '"header"' components/$x/$x.json; done` prints five lines, each at least `1`.
 
 ### Out of scope
 
@@ -958,13 +966,13 @@ MobileNav, CartDrawer and the search Dialog themselves (the caller renders them;
 
 ### If blocked
 
-`components/cart-link/` is missing: M1-T34 is not done. The page-level check of tier 2 reports `header-outside-main` on fixture pages: as M5-T06 "If blocked". Liquid `default-body` differs in the CartLink count: the fixture omits `cart`, so the shim's global `cart` is used; when its item count is not `0`, draft pull request (the fixture needs `cart.empty` on Liquid only, which a fixture record cannot say).
+`components/cart-link/` is missing: M1-T34 is not done. The page-level checker of tier 2 reports `header-outside-main` on a fixture page: the fixture page wraps fixtures in `<main>`; draft pull request (the rule or the page must change; needs a ledger line). Liquid `default-body` differs in the CartLink count: the fixture omits `cart`, so the shim's global `cart` is used; when its item count is not `0`, draft pull request (the fixture needs `cart.empty` on Liquid only, which a fixture record cannot say).
 
 ---
 
-## M5-T14 Strict generator check: all 84 components present
+## M5-T14 Strict generator check: all 84 components present; delete `BRINGUP_SUBSET` and the entry-point filters (PLAN 4.4)
 
-- **Goal:** Delete `BRINGUP_SUBSET` and every bring-up line marked for M5-T14, so that `pnpm gen --check` enforces rule MB-20 (all 84 components) unless `--subset` is passed.
+- **Goal:** Delete `BRINGUP_SUBSET` and every bring-up line marked for M5-T14, so that `pnpm gen --check` enforces rule MB-20 (all 84 components) unless `--subset` is passed, and rule MB-1 is strict (doc 07 MB-20 row: "from then on MB-20 and MB-1 are strict").
 - **Depends on:** M2-T32, M3-T11, M4-T24, M5-T01 to M5-T13.
 - **Kind:** `infra`.
 
@@ -975,24 +983,25 @@ MobileNav, CartDrawer and the search Dialog themselves (the caller renders them;
 | `docs/PLAN.md` | `### 4.4 ` | 2 kB |
 | `docs/07-manifest-registry-cli.md` | in `### 1.6 ` only rule MB-20 | 1 kB |
 | `docs/01-architecture.md` | `## 7. ` (the 10 build steps) | 5 kB |
-| repository: `src/gen/index.ts`, `src/gen/build.ts`, `src/gen/size.ts`, `src/gen/size.test.ts`, `src/gen/index.test.ts`; output of `grep -rn "PLAN 4.4" src/ test/` | | 30 kB |
+| repository: `src/gen/index.ts`, `src/gen/build.ts`, `src/gen/size.ts`, `src/gen/size.test.ts`, `src/gen/index.test.ts`, the MB-1 part of `src/gen/registry.ts`; output of `grep -rn "PLAN 4.4" src/ test/` | | 30 kB |
 
 ### Files
 
-Change: `src/gen/index.ts`, `src/gen/build.ts`, `src/gen/size.ts`, `src/gen/size.test.ts`, `src/gen/index.test.ts`. No component file. No `package.json` change.
+Change: `src/gen/index.ts`, `src/gen/build.ts`, `src/gen/size.ts`, `src/gen/size.test.ts`, `src/gen/index.test.ts`, `src/gen/registry.ts`, `src/gen/registry.test.ts`. No component file. No `package.json` change.
 
 ### Steps
 
 1. Branch `task/M5-T14-strict-gen-check`. `pnpm install --frozen-lockfile`.
-2. Precondition: `ls -d components/*/ | wc -l` prints `84`, and `pnpm gen --check` exits 0. When the count is not 84: stop; write the missing ids (the 84 ids are the list rule MB-20 checks against) into a draft pull request. This task adds no component.
+2. Precondition: `ls -d components/*/ | wc -l` prints `84` (21 from M1, 28 from M2, 6 from M3, 17 from M4, 12 from M5: PLAN 4.2 row M5; 21 + 28 + 6 + 17 + 12 = 84), and `pnpm gen --check` exits 0. When the count is not 84: stop; write the missing ids (the 84 ids are the list rule MB-20 checks against) into a draft pull request. This task adds no component.
 3. `grep -rn "BRINGUP_SUBSET\|M5-T14" src/ test/` and handle every hit:
-   - `src/gen/index.ts`: delete the line `export const BRINGUP_SUBSET = true // PLAN 4.4: remove in M5-T14`; `subset` becomes true only when the argument `--subset` is passed (delete the `|| BRINGUP_SUBSET` operand). `checkManifest(manifest, { subset })` stays.
+   - `src/gen/index.ts`: delete the line `export const BRINGUP_SUBSET = true; // PLAN 4.4: remove in M5-T14`; `subset` becomes true only when the argument `--subset` is passed (delete the `|| BRINGUP_SUBSET` operand). `checkManifest(manifest, { subset })` stays.
    - `src/gen/build.ts`: delete the import of the constant; build step 2 calls `runGen(["--check"])` (strict); delete the filters "entry lists filtered to files that exist" of build steps 4, 5 and 7 that carry a marker `removed by M5-T14`: a missing entry file is now a build error.
    - `src/gen/size.ts`: delete the branch `if (BRINGUP_SUBSET)` that treats a `missing` budget as a pass (marker `missing budgets fail again, removed by M5-T14`).
-   - `src/gen/size.test.ts`: delete the `if (files.length === 0) return` guard and its marker.
-4. The marker `// PLAN 4.4: G9 and G10 added by M5-T14` in `src/gen/index.ts` is wrong (PR-M5-16): G9 belongs to M6-T01 and G10 to M7-T02. Replace its text with `// PLAN 4.4: G9 added by M6-T01, G10 added by M7-T02`. Do not implement G9 or G10.
+   - `src/gen/size.test.ts`: delete the `if (files.length === 0) return` guard and its marker `// PLAN 4.4: empty-list guard, removed by M5-T14`.
+   - `src/gen/registry.ts`: delete the MB-1 bring-up relaxation (marker `// PLAN 4.4: bring-up relaxation of MB-1, removed by M5-T14`, written by M0-T07): MB-1 no longer ignores an entry that names an absent ledger component, also under `--subset`. In `src/gen/registry.test.ts` delete or rewrite the test that asserts the relaxation.
+4. PR-M5-16 (kept): G9 belongs to M6-T01 and G10 to M7-T02, not to this task. M0-T15 writes the marker `// PLAN 4.4: G9 added by M6-T01, G10 added by M7-T02` in `src/gen/index.ts`. Check that `grep -c "G9 added by M6-T01, G10 added by M7-T02" src/gen/index.ts` prints `1` (or `0` when M6-T01 and M7-T02 are already merged and removed it) and leave the line as it is. When the file still says `G9 and G10 added by M5-T14`, replace that text with `G9 added by M6-T01, G10 added by M7-T02`. Do not implement G9 or G10.
 5. Leave every other `PLAN 4.4` line: the `build: skipped <step> (PLAN 4.4)` sub-steps whose module does not exist yet (registry, docs, skills copy) belong to the task that adds the module; a file a later milestone creates and that a build step lists stays filtered ONLY where its marker names that later task. When a filter marked for M5-T14 covers a file that does not exist yet because a later task creates it: keep that one filter, change its marker to name the creating task (find it in the PLAN table by the file path), and list it in the pull request.
-6. Test in `src/gen/index.test.ts`: `[T1] gen: the check is strict unless --subset is passed`: copy the fixture-directory technique of the existing `--subset` test in that file; with a source tree of fewer than 84 components, `runGen(["--check"])` returns non-zero with a message naming MB-20 and `runGen(["--check", "--subset"])` returns 0. Delete or rewrite any existing test that asserts the bring-up behaviour.
+6. Test in `src/gen/index.test.ts`: `[T1] gen: the check is strict unless --subset is passed`: copy the fixture-directory technique of the existing `--subset` test in that file; with a source tree of fewer than 84 components in which no manifest names an absent component, `runGen(["--check"])` returns non-zero with a message naming MB-20 and `runGen(["--check", "--subset"])` returns 0. Second test `[T1] gen: MB-1 is strict for an absent component`: the same tree plus one `embeds` entry that names an absent ledger id; `runGen(["--check", "--subset"])` returns non-zero with a message naming MB-1. Delete or rewrite any existing test that asserts the bring-up behaviour.
 7. Proof:
 
    ```bash
@@ -1030,17 +1039,17 @@ Fewer than 84 components: step 2. `pnpm build` fails on a missing entry file aft
 ## M5-T15 M5 gate
 
 - **Goal:** Prove that milestone M5 is complete.
-- **Depends on:** M5-T14.
+- **Depends on:** M5-T14, M5-T16.
 - **Kind:** `gate` (PLAN 3.5). Changes no source.
 
 ### Read first
 
-`docs/PLAN.md` section 4.2 (row M5) and section 3.5. `docs/12-components-chrome-and-blueprints.md` `## 4. ` (acceptance), items 1, 3, 6, 10 only. `ls docs/plan/done/`.
+`docs/PLAN.md` section 4.2 (row M5; it names the checks of steps 3, 4, 7 and 7a) and section 3.5. `docs/12-components-chrome-and-blueprints.md` `## 4. ` (acceptance), items 1, 3, 6, 10 only. `ls docs/plan/done/`.
 
 ### Steps
 
 1. Branch `task/M5-T15-gate`. `pnpm install --frozen-lockfile`.
-2. Done files: every one of `docs/plan/done/M5-T01.md` to `M5-T14.md` exists. Collect every line that starts with `FOLLOW-UP NEEDED` or `BLOCKED`.
+2. Done files: every one of `docs/plan/done/M5-T01.md` to `M5-T14.md` and `docs/plan/done/M5-T16.md` exists. Collect every line that starts with `FOLLOW-UP NEEDED` or `BLOCKED`.
 3. Components present and stable:
 
    ```bash
@@ -1053,7 +1062,16 @@ Fewer than 84 components: step 2. `pnpm build` fails on a missing entry file aft
 4. Strict mode: `grep -rn "BRINGUP_SUBSET" src/ test/` prints nothing; `pnpm gen --check` exits 0.
 5. `pnpm ci` exits 0; record its last line.
 6. Tier 4 for the `native` components: `pnpm test:hydration --grep="navigation-menu|mobile-nav" --no-skips` exits 0; record the last line.
-7. Element row: `grep -rn "E-15 " src/ | wc -l` prints at least `1`; `pnpm test:run --tiers=3,5,6 --files=src/elements/rp-navigation-menu,src/runtime/index.test.ts --no-skips` exits 0.
+7. Element row and NavigationMenu: `grep -rn "E-15 " src/ | wc -l` prints at least `1`. These exit 0 (`--files` takes one substring, so one command per file):
+
+   ```bash
+   pnpm test:run --tiers=3,5,6 --files=src/elements/rp-navigation-menu --no-skips
+   pnpm test:run --tiers=3,5,6 --files=src/runtime/index.test.ts --no-skips
+   pnpm test:behavior --files=components/navigation-menu/ --grep="AT-1[012] " --no-skips
+   ```
+
+   The last command reports 3 passed tests (AT-10, AT-11, AT-12).
+7a. Styling: `pnpm test:run --tiers=5,6 --files=css/styling.test.ts --no-skips` exits 0 (M5-T16).
 8. Doc 12 section 4, the component halves of items 1, 3, 6, 10: for each item write one line in the done file: the command that proves it (one of steps 3 to 7) or `deferred to M7 (blueprint half)`.
 9. Acceptance coverage: for each of the 12 ids, the number of `AT-<n>` items in `docs/components/<id>.md` equals the number of distinct `AT-<n>` ids in `components/<id>/<id>.test.ts`:
 
@@ -1065,11 +1083,11 @@ Fewer than 84 components: step 2. `pnpm build` fails on a missing entry file aft
    done        # prints nothing
    ```
 
-10. Write `docs/plan/done/M5-T15.md`: the outputs of steps 3 to 9 in one line each, every task of the milestone with its pull request number, the collected `FOLLOW-UP NEEDED` lines.
+10. Write `docs/plan/done/M5-T15.md`: the outputs of steps 3 to 9 (7a included) in one line each, every task of the milestone with its pull request number, the collected `FOLLOW-UP NEEDED` lines.
 
 ### Acceptance
 
-Steps 2 to 9 hold. The gate fails when any command fails; the done file then names the failing task and the task is not merged (PLAN 3.5).
+Steps 2 to 9 (7a included) hold. The gate fails when any command fails; the done file then names the failing task and the task is not merged (PLAN 3.5).
 
 ### Out of scope
 
@@ -1077,4 +1095,91 @@ Fixing anything. Cross-engine runs (they block only after M9-T06). Tier 7 and ti
 
 ### If blocked
 
-A `FOLLOW-UP NEEDED` line that this file expects (M5-T02 AccountLink AT-3 navigation half; M5-T11 page P when M3-T10 was not merged) is not a gate failure; record it as a plan note for Ben in the done file. Step 9 prints `FAIL` only because a test file names an AT id of ANOTHER component in a comment: check by hand and record the reason. Any other failing command: the gate fails.
+A `FOLLOW-UP NEEDED` line that this file expects (M5-T02 AccountLink AT-3 navigation half) is not a gate failure; record it as a plan note for Ben in the done file. Step 9 prints `FAIL` only because a test file names an AT id of ANOTHER component in a comment: check by hand and record the reason. Any other failing command: the gate fails.
+
+---
+
+## M5-T16 Styling acceptance tests `css/styling.test.ts`: doc 03 §15 A-02 to A-09, A-11, A-14, A-18 to A-22 and CSS-NEAR (§4.3)
+
+- **Goal:** Write `css/styling.test.ts` with one test (or one test per fixture where the row says "every component fixture") for each of the rows A-02 to A-09, A-11, A-14, A-18 to A-22 of `docs/03-styling-and-tokens.md` section 15 and for CSS-NEAR of section 4.3, and make them pass on the complete `pkg/browser/ripple.css` (all 84 components, M5-T14).
+- **Depends on:** M5-T14.
+- **Kind:** `harness`. Owner of these tests: `docs/13-testing.md` 10.6 names the file; ledger D-145 names this task. Change no CSS and no component file.
+
+### Read first
+
+| File | Section | Size |
+|---|---|---|
+| `docs/03-styling-and-tokens.md` | `## 15. ` (the table; the rows of this task) | 7.5 kB |
+| `docs/03-styling-and-tokens.md` | in `### 4.3 ` only the paragraph that starts `Acceptance test **CSS-NEAR**` | 1 kB |
+| `docs/03-styling-and-tokens.md` | in `### 3.4 ` only the table "Measured WCAG contrast of the defaults" | 1.5 kB |
+| `docs/03-styling-and-tokens.md` | in `### 7.4 ` only the table "Values a test can assert" | 1.5 kB |
+| `docs/03-styling-and-tokens.md` | `## 13. ` | 1.1 kB |
+| `docs/13-testing.md` | `### 2.4 `, `### 2.5 `, `### 10.6 ` | 5 kB |
+| `docs/13-testing.md` | `### 5.1 `, `### 5.2 `, `### 5.3 ` | 8.2 kB |
+| this file | section 0, rules M5-R16 and M5-R17 | 2 kB |
+| repository: `docs/research/spikes/styling-doc03/test.mjs` (reference for A-02 to A-09) and `tw-test.mjs` (reference for A-11); `src/elements/rp-dialog.test.ts` (the M5-R16 route handler); `test/support/browser.ts`, `test/support/server.ts`, `src/testing/fixtures.ts` (`loadFixtures`) | | 25 kB |
+
+### Files
+
+Create: `css/styling.test.ts`, `docs/plan/done/M5-T16.md`. Change nothing else.
+
+### Steps
+
+1. Branch `task/M5-T16-styling-tests`. `pnpm install --frozen-lockfile && pnpm build`.
+2. Precondition: `ls -d components/*/ | wc -l` prints `84` and `grep -c BRINGUP_SUBSET src/gen/index.ts` prints `0` (M5-T14 is merged).
+3. Write `css/styling.test.ts` with the tests of the table below. Rules for every test:
+   - Flat `test()` calls (N-4); browser and page only through `openPage()` inside the test, closed in `finally` (W-1, W-2); every browser test ends with `assert.deepEqual(errors, [])` (W-4).
+   - Name `[T<n>] styling: <row id> <statement>` (N-1). `<n>` is the tier of the row in doc 03 section 15 (`5` for every row except A-20, which is `6`). A test that runs once per fixture is named `[T5] <component id>/<fixture name>: <row id> <statement>`. No test carries `[chromium]`: A-17 re-runs A-02 to A-09 and A-19 to A-22 in WebKit and Gecko (N-3).
+   - Pages: either a fixture page (`fixturePageUrl(id, options)` of `test/support/server.ts`) or an M5-R16 page. An M5-R16 page here is the M5-R17 page WITHOUT the `<script>` line when the row says "no script", "undefined" or "before anything is defined"; otherwise with it. Component markup comes only from fixture files (M5-R17); attribute changes are made with `setAttribute` in `page.evaluate` before the measurement, and each test states them in a comment. The plain native elements named in the rows (`<div>`, `<form>`, `<dialog>`, `<button>` in CSS-NEAR) are written as the row prints them.
+   - Contrast (A-02, A-04): copy the in-page helpers `rgb`, `lum`, `contrastRgb`, `tok`, `pair` of `docs/research/spikes/styling-doc03/test.mjs` (the string `HELPERS`) into the test file as a string constant with the comment `// helpers: docs/research/spikes/styling-doc03/test.mjs` and install them with `page.addInitScript`. Do not import the spike file.
+   - Tailwind build (A-11, the Tailwind half of A-18): the page links `<fixture server url>/__test/tailwind.css` in place of `/ripple.css` (the entry already imports `ripple.css`, doc 13 5.3); the M5-R16 route handler calls `route.continue()` for every URL that starts with `(await getFixtureServer()).url`. The classes of A-11 and A-18 appear as string literals in `css/styling.test.ts`, so the Tailwind CLI finds them when it scans the repository (UNVERIFIED: check that the built file contains `.gap-8`, `.md\:gap-10`, `.rounded-none`, `.h-20`, `.rounded-md`, `.p-4`; see "If blocked").
+4. Run:
+
+   ```bash
+   pnpm typecheck
+   pnpm test:run --tiers=5,6 --files=css/styling.test.ts --no-skips
+   pnpm ci
+   ```
+
+5. Write `docs/plan/done/M5-T16.md`: the last line of the second command of step 4, and one line per row id with the name of its test.
+
+### Tests (`css/styling.test.ts`)
+
+| Row | Page and form |
+|---|---|
+| A-02 | M5-R16 page with no component: four `<div>` scopes as the row lists them (the nested light scope inside the dark one; the `x` scope with `style="--rp-brand: oklch(0.9 0.18 100)"`). In each scope: every row of the table "Measured WCAG contrast of the defaults" of section 3.4 is at least its `Required` value, and `pair(el, "--color-input", "--color-background")` and `pair(el, "--color-ring", "--color-background")` are at least 3 |
+| A-03 | M5-R16 page: the root of `components/button/fixtures/default.html` with `data-size="md"`, inside `<div data-scheme="x" style="--rp-radius: 1rem; --rp-density: 0.5; --rp-text-scale: 1.333">`; the four values of the row. `--text-4xl` is read as the computed `font-size` of a child `<i style="font-size: var(--text-4xl)">`, inside the `x` scope and directly in `<body>` (the `:root` value) |
+| A-04 | M5-R16 page: three scopes (`:root`, `[data-scheme="dark"]`, a nested `[data-scheme="light"]`), each holding the Button `default` fixture with `data-variant="primary"`; computed `--color-background` compared as the row says; label contrast at least 4.5 (the spike's button contrast line) |
+| A-05 | M5-R16 page holding exactly the two elements the row prints; viewports 375 by 720 and 800 by 720 (B-3 allows a width a specification names); the values of the row. `align-items` of `ui-tooltip-content` equals `normal` (the initial value) |
+| A-06 | M5-R16 page without script: `<rp-cart>` holding three copies of the Button `default` fixture with `data-rp-js` set to `overlay`, `inflow`, `fallback`; the values of the row before and after `customElements.define("rp-cart", class extends HTMLElement {})` in `page.evaluate` |
+| A-07 | M5-R16 page: one Button per row of the table "Values a test can assert" of section 7.4 (the `default` fixture root with the row's attribute; `[data-full-width]` inside a `<div style="inline-size: 400px">`); the two motion rows use `openPage({ reducedMotion: "no-preference" })` and the default `reduce`. Pending width: the `submit-pending` fixture against the same markup with `data-pending` removed, equal within 0.5 px |
+| A-08 | M5-R16 page with the Button `default` fixture and `<dialog id="d"><p>Text</p></dialog>`; `page.keyboard.press("Tab")` until the Button is `document.activeElement`; the four outline values; then `d.showModal()` and `outline-style: none` on the dialog |
+| A-09 | One test per fixture of `loadFixtures()` on `fixturePageUrl(id)` with the default `reducedMotion: "reduce"`: after `settled(page)`, every element under `#rp-test-root`, with `::before` and `::after`, computes `transition-duration` `0s` (every comma-separated value) and `animation-name` `none`. One more test: with `reducedMotion: "no-preference"`, the Button `default` fixture's first `transition-duration` is `0.1s` |
+| A-11 | Tailwind page (step 3) holding the elements as the row prints their attributes (a `<div>` for each `rp-stack`, a `<button>` for `rp-button`), plus `<style>@layer components { .my-button { background-color: rgb(1, 2, 3); } }</style>` and a Button with `class="rp-button my-button"`; viewports 375 and 800; the values of the row |
+| A-14 | One test per fixture of `loadFixtures()`: open `fixturePageUrl(id, { dir: "ltr" })` and `fixturePageUrl(id, { dir: "rtl" })`; for each element under `#rp-test-root` (same document order in both), the distance from its left edge to the left edge of `#rp-test-root` in LTR equals the distance from its right edge to the right edge of `#rp-test-root` in RTL, within 0.5 px. One more test: `--rp-dir` computes `-1` inside `<div dir="rtl">` and `1` inside a `<div dir="ltr">` nested in it |
+| A-18 | The Button `default` fixture with the `hidden` attribute computes `display: none`, once on the plain M5-R16 page and once on the Tailwind page |
+| A-19 | M5-R16 page without script: the ten tags of the row with no class, one `<rp-dialog><dialog></dialog></rp-dialog>` followed by `<p id="after">After</p>`, and `<ui-tabs-tab></ui-tabs-tab><ui-tabs-panel></ui-tabs-panel>`; the values of the row (the `#after` position compared with a second page load where the `rp-dialog` is absent) |
+| A-20 | `[T6]`. `openPage({ scripts: "disabled" })` on an M5-R16 page with the Tabs markup of the row and `<div hidden>Hidden</div>`; then `openPage()` (scripts on) on the same page with the script line and `settled(page)`. The skip of the row (`matchMedia("(scripting: none)").media` is `not all`) uses `t.skip()` and is the only permitted skip (T-2) |
+| A-21 | M5-R16 page with no component; the two values of the row |
+| A-22 | M5-R16 page without script: `<rp-cart><form data-rp-js="inflow"></form></rp-cart>`; the two values of the row |
+| CSS-NEAR | `[T5] styling: CSS-NEAR nearest owner decides the script state`. M5-R16 page without script holding exactly the markup of the paragraph; the assertions in the paragraph's order: before anything is defined; after `rp-dialog` and `rp-quantity` are defined; after `rp-cart` is defined |
+
+### Acceptance
+
+The commands of step 4 exit 0. Each id below is followed by a number of at least `1`:
+
+```bash
+for id in A-02 A-03 A-04 A-05 A-06 A-07 A-08 A-09 A-11 A-14 A-18 A-19 A-20 A-21 A-22 CSS-NEAR; do
+  printf '%s ' "$id"; grep -c "\] [^:]*: $id " css/styling.test.ts
+done
+```
+
+`grep -c '\[chromium\]' css/styling.test.ts` prints `0`. `git status --porcelain` lists only `css/styling.test.ts` and the done file.
+
+### Out of scope
+
+A-01, A-10, A-12, A-13, A-15, A-16, A-17, A-23 (other owners). Changing any CSS, token or component file. Cross-engine runs (A-17).
+
+### If blocked
+
+A test fails on the complete `ripple.css`: do not change CSS in this task; draft pull request naming the row, the component and the measured value (the CSS owner fixes it). The Tailwind build lacks a class of A-11 or A-18: do not change `test/support/tailwind-entry.css` (doc 13 5.3 prints it exactly); draft pull request (the entry needs an `@source` line, which needs a ledger line). A-14 fails for a fixture whose layout is not symmetric by design: draft pull request naming the fixture (the row has no exception list).

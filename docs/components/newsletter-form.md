@@ -149,6 +149,7 @@ Required rules: root `display: flex; flex-direction: column; gap: var(--rp-newsl
 
 ### Host notes
 
+- Binding paths (D-139): `static` that the template language of `07-manifest-registry-cli.md` 2.3 cannot express (D-072 row 2): no `template`; every fixture is `generated: "hand"`; `html` is generated from the fixture files; the `react`, `remix` and `liquid` files are hand-written with their generated regions. Where a line below says a binding is "generated", this line wins.
 - HTML: copy the fixture; the server needs the route of section 2.7.
 - React: `export function NewsletterForm(props: NewsletterFormProps): JSX.Element`. No hook; the form is uncontrolled (`defaultValue`).
 - Remix: no `data-rmx-document` (Remix may submit it as a frame navigation; the route answers with a redirect to the page).

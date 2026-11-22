@@ -2,7 +2,7 @@
 
 Status: detail file for the 35 rows of milestone M6 in `docs/PLAN.md` section 6. `docs/00-decisions.md` (the ledger) wins over every spec; a spec wins over this file. This file adds no public API. Where it fixes a choice the specs leave open, the choice is marked "Plan reading" and listed in section 0.9.
 
-How to use: read `AGENTS.md`, `docs/CONVENTIONS.md`, `docs/PLAN.md` sections 1 to 3 and 5.0, then section 0 of this file (about 14 kB), then ONLY your task's section `## <task id>`. Do not read other task sections and do not read the other `docs/plan/M*.md` files: every rule you need from them is restated in section 0.
+How to use: read `AGENTS.md`, `docs/CONVENTIONS.md`, `docs/PLAN.md` sections 1 to 3 and 5.0, then section 0 of this file (about 25 kB), then ONLY your task's section `## <task id>`. Do not read other task sections and do not read the other `docs/plan/M*.md` files: every rule you need from them is restated in section 0.
 
 Contents: 0 Rules for every M6 task. Then M6-T01 to M6-T35 in table order.
 
@@ -31,7 +31,23 @@ Contents: 0 Rules for every M6 task. Then M6-T01 to M6-T35 in table order.
 | Temporary directories | `mkdtempSync(join(tmpdir(), "ripple-"))` inside a test, removed in `finally`; never write under the repository | doc 13 W-5, W-6 |
 | Bring-up mode | until M5-T14 the constant `BRINGUP_SUBSET` is `true`; the repository holds a subset of the 84 components and no blueprint before M7. Every M6 module MUST work with any subset and with zero blueprints | PLAN 4.4 |
 | Proof commands | `pnpm typecheck && pnpm gen --check && pnpm build && pnpm examples:install && pnpm test --no-skips` (`pnpm ci`); while working: `pnpm test:unit --files=<path prefix>` | PLAN 5.0 |
-| Node below 24.3 | Remix cases skip; run without `--no-skips`, confirm every skip reason is `Remix needs Node 24.3 or later`, list the skips in the pull request | doc 13 T-7 |
+| Node in a session | Node 24.22.3; the install steps and the fallback are the text below this table | ledger D-136; `docs/PLAN.md` section 3.1 |
+| `ripple-kit` in test files | never as a literal: test A-04 searches every `src/**/*.ts` except `src/architecture.test.ts` (D-134 item 11), test files included. Build an expected value from `PKG_NAME` and `VERSION` of `src/identity.ts`, for example `` `npx ${PKG_NAME}@${VERSION}` `` | doc 01 `### 6.3 ` rule 1, row A-04 |
+
+Node in a task session (ledger D-136, `docs/PLAN.md` section 3.1):
+
+> Node 24 (ledger D-136, `docs/PLAN.md` section 3.1). `pnpm test --no-skips` needs Node 24.3 or later, because Remix needs it (rule T-7). Install once per machine, and repeat the two `export` lines in every new shell:
+>
+> ```bash
+> export PNPM_HOME="$HOME/.local/share/pnpm"
+> export PATH="$PNPM_HOME:$PATH"
+> pnpm env use --global 24.22.3
+> node --version   # prints v24.22.3
+> ```
+>
+> When that install fails, run each `--no-skips` command without `--no-skips`, check that every skip reason starts with `Remix needs Node 24.3 or later`, list the skip lines in the pull request; the `verify` CI job (Node 24) is the proof.
+
+Export `RIPPLE_NETWORK=1` before `pnpm ci`: the Remix morph tests start the npm example `examples/remix` with `startExample` and skip otherwise (doc 13 rule T-5). Without network access, run without `--no-skips`, list the skips (reason `RIPPLE_NETWORK is not 1`), and `verify` is the proof.
 
 ### 0.3 The extractor
 
@@ -59,7 +75,7 @@ Usage: `node node_modules/.cache/ripple/extract.mjs <doc file> '<heading prefix>
 | Output | Doc | Heading prefix | Lang | Index | Bytes | First line |
 |---|---|---|---|---|---|---|
 
-"Bytes" is what the script prints; "First line" is the first line of the output. Both were checked on 2026-11-22. When either differs, the doc changed: stop and report; do not guess another block. The extractor finds only code fences that start at column 0.
+"Bytes" is the number the script prints: `e - s + 1`, the JavaScript string length of the block in UTF-16 code units plus 1 for the trailing newline. It is NOT the output of `wc -c` (the two differ when the block has non-ASCII characters); compare a size with the number the extractor prints, or compare files with `cmp`. "First line" is the first line of the output. Both were re-checked on 2026-11-22 against the current docs. When either differs, the doc changed: stop and report; do not guess another block. The extractor finds only code fences that start at column 0.
 
 ### 0.4 What exists before M6 and what each task replaces
 
@@ -92,7 +108,7 @@ Separate sessions must agree on these. Each is PLAN-CHOSEN and internal (none is
 | `CliIo` | `src/cli/index.ts` | `{ cwd: string; packageRoot: string; env: Record<string, string \| undefined>; out(line: string): void; err(line: string): void }`. `out` and `err` receive one line without the trailing newline | M6-T09 |
 | `main` | `src/cli/index.ts` | `(argv: string[], io?: Partial<CliIo>) => Promise<number>`; returns the exit code; never calls `process.exit` | M6-T09 |
 | `getPackageRoot` | `src/cli/index.ts` | spec name (doc 07 section 7.1 rule 10): `() => string` | M6-T09 |
-| `commandForm`, `detectPackageManager` | `src/cli/index.ts` | `commandForm(io: CliIo, host: Host \| null) => string` returns the prefix of doc 07 section 7.1 rule 12 without a trailing space (`npx ripple-kit@0.1.0`, `pnpm exec ripple`, `npx ripple`); `detectPackageManager(cwd, env) => "npm" \| "pnpm" \| "yarn" \| "bun"` | M6-T09 |
+| `commandForm`, `detectPackageManager` | `src/cli/index.ts` | `commandForm(io: CliIo, host: Host \| null) => string` returns the prefix of doc 07 section 7.1 rule 12 without a trailing space (`npx <PKG_NAME>@<VERSION>`, `pnpm exec ripple`, `npx ripple`); `detectPackageManager(cwd, env) => "npm" \| "pnpm" \| "yarn" \| "bun"` | M6-T09 |
 | `CommandRun` and the export `run` | each `src/cli/commands/<command>.ts` | `export const run: CommandRun`, where `type CommandRun = (args: string[], io: CliIo, globals: { host?: string }) => Promise<number>`; `args` is the argument list after the command name with the global options removed | M6-T09 (type), each command task |
 | `scanProject`, `ScannedFile` | `src/cli/plan.ts` | spec name (doc 07 section 5.2): `(root: string, host: Host) => ScannedFile[]`; `ScannedFile` is `{ path: string; id: string; pkg: string; version: string; hash: string; modified: boolean }` | M6-T06 (M6-T10 adds the Liquid composite regions) |
 | `installTransform`, `TransformContext` | `src/cli/plan.ts` | spec (doc 07 section 4.6) | M6-T02 |
@@ -109,23 +125,16 @@ Separate sessions must agree on these. Each is PLAN-CHOSEN and internal (none is
 | Patch functions `patchCssEntry`, `patchAgents`, `patchPackageJson`, `patchHead`, `patchImportMap`, `patchThemeReference`, `patchSettings`, `patchLocale` | `src/cli/commands/init.ts` | each `(context: PlanContext, ...) => PlanEntry` (or `PlanEntry[]` for `patchLocale`); also `patchState(id, context) => "present" \| "stale" \| "absent" \| "skipped"`. They live in `init.ts` because doc 07 "Fallback (SPIKE-03)" puts the patch constant `THEME_REFERENCE_PATCH` there | M6-T11, M6-T12 |
 | `syncSkills`, `SkillsPlan` | `src/cli/commands/skills.ts` | `syncSkills(io: CliIo, host: Host, options: { force: boolean; dryRun: boolean }) => SkillsPlan`; `SkillsPlan` is `{ add: number; update: number; remove: number; unchanged: number; modified: number; conflicts: string[]; lines: string[] }` | M6-T26 |
 | `computeLock` | `src/cli/commands/status.ts` | `(io: CliIo, host: Host) => ComputedLock`; `ComputedLock` is the type-only declaration in `src/types.ts` written from doc 07 section 5.3 | M6-T22 |
-| `RuleContext.cwd` | `src/check/index.ts` | one added field `cwd: string`, the project root, set by the engine from `CheckOptions.cwd` (PR-M6-9) | the first of M6-T23, M6-T29, M6-T31, M6-T33 to run |
+| `RuleContext.cwd` | `src/check/index.ts` | the field `cwd: string`, the project root, set by the engine from `CheckOptions.cwd` (ledger D-142, which ratifies PR-M6-9). It exists before M6: no M6 task adds it; rules use it | M0-T42 |
 | CLI test helper | `test/support/cli.ts` | 0.8 | M6-T09, extended by M6-T15 |
 
-### 0.6 Order constraints the task table does not show
+### 0.6 Order
 
-Obey these in addition to the "Depends on" column. Before starting, check that `docs/plan/done/<id>.md` exists for each task named; when it does not, pick another task.
+The "Depends on" column of `docs/PLAN.md` section 6 is the only source of order (PLAN section 6). Before starting, check that `docs/plan/done/<id>.md` exists for each task in your row's cell. Facts for reading only:
 
-| Task | Also needs | Why |
-|---|---|---|
-| M6-T02 | nothing more; it creates `src/cli/plan.ts` when M6-T06 has not | both add to the same file |
-| M6-T15 | M6-T07, M6-T10, M6-T26 | `init` writes `ripple.json`, plans files, and runs `skills sync` (doc 07 section 7.4) |
-| M6-T19 | M6-T01, M6-T02, M6-T10 | `getBaseBody` reads a registry index and applies the install transform (doc 07 section 8.3) |
-| M6-T22 | M6-T26 | the `skills` field of the computed lock is a `skills sync` dry run |
-| M6-T23 | M6-T08 | the command detects the host |
-| M6-T26 | M6-T08 | the sync filters skills by the detected host |
-| M6-T11, M6-T12 | M6-T12 after M6-T11, or the reverse; never at the same time | both create `src/cli/commands/init.ts` |
-| M6-T17, M6-T20, M6-T21, M6-T22 | each edits only its own command file and its one line of the command table in `src/cli/index.ts` | group G |
+- M6-T15 depends on M6-T07, M6-T10 and M6-T26 because `init` writes `ripple.json`, plans files and runs `skills sync` (doc 07 section 7.4). M6-T19 depends on M6-T01, M6-T02 and M6-T10 (`getBaseBody` reads a registry index and applies the install transform). M6-T22 depends on M6-T26 (the `skills` field of the computed lock is a `skills sync` dry run). M6-T23 and M6-T26 depend on M6-T08 (host detection). M6-T09 depends on M6-T08 (`resolveHost`). M6-T12 depends on M6-T11 (both add to `src/cli/commands/init.ts`).
+- Two needs that the table does not show yet (reported to the core plan): M6-T10 needs `src/cli/merge3.ts` of M6-T18, and M6-T11 needs `renderAgentsSection` of M6-T13. Their sections say what to do when the file is missing: do not start, pick another task.
+- Tasks of the same group may edit the same registration file when each adds only its own lines (PLAN section 6 "Grp", ledger D-147): `src/cli/index.ts` (one command-table line each), `src/check/rules/index.ts` (ascending id order). On a rebase conflict keep both sides' lines and re-run the proof.
 
 ### 0.7 Shared files that several M6 tasks edit
 
@@ -139,7 +148,7 @@ Edit only what your task names. On a `git rebase origin/main` conflict keep both
 | `src/gen/registry.ts` | M6-T01, M6-T03, M6-T05 append; never change `assembleManifest` or `checkManifest` except the MB-15 line M6-T01 names |
 | `src/gen/build.ts` | each task replaces only the `build: skipped ...` line it names, or adds only the check it names to step 10 |
 | `src/check/rules/index.ts` | add your rules; keep ascending id order |
-| `src/check/index.ts`, `src/check/engine.ts` | M6-T31 adds the layer P driver, M6-T32 the layer B driver, M6-T30 the Theme Check sub-step; `RuleContext.cwd` per 0.5 |
+| `src/check/index.ts`, `src/check/engine.ts`, `src/check/flows.ts` | M6-T31 adds the layer P driver to `engine.ts`; M6-T32 writes the layer B driver and `FLOWS` in `flows.ts` and one call in `engine.ts`; M6-T30 adds the Theme Check sub-step to `engine.ts`. Checker types stay in `src/check/index.ts`. There is no file `src/check/types.ts`, `src/check/theme-check.ts` or `src/check/browser.ts` (ledger D-148). `RuleContext.cwd` exists since M0-T42 (D-142) |
 | `src/architecture.test.ts` | only the `IMPORT_RULES` entries that PR-M6-1 and PR-M6-3 name |
 | `test/support/cli.ts` | M6-T09 creates; M6-T15 extends; other tasks only import |
 
@@ -171,7 +180,7 @@ The specs say CLI tests are `[T1]` (doc 13 section 6.2) and give no harness. Thi
 
 ### 0.9 Plan readings made by this file
 
-Each is the smallest choice that keeps the gates green where two specs conflict or all are silent. The task that first applies one adds one line under `## Ledger issues` of the named owning doc (text: `<PR id>: <topic> (docs/plan/M6-cli-registry-checker.md 0.9)`) and mentions it in the pull request.
+Each was the smallest choice that keeps the gates green where two specs conflicted or all were silent. Ledger D-146 ratifies all thirteen (PR-M6-9 as D-142; the layer B driver is in `src/check/flows.ts` and the Theme Check sub-step in `src/check/engine.ts`, D-148). They are the rules to follow. No task adds a `## Ledger issues` line for them.
 
 | # | Topic | The specs | Reading | Owning doc | Applied by |
 |---|---|---|---|---|---|
@@ -183,7 +192,7 @@ Each is the smallest choice that keeps the gates green where two specs conflict 
 | PR-M6-6 | Example calls in component pages | doc 08 rule C-2: `renderComponentDoc` MUST use "the same emitters" as conformance. Those emitters are `liquidCaseSource` (`test/support/hosts/liquid.ts`) and `caseJsx` (`test/support/hosts/tsx.ts`); `src/gen` may not import `test/` | M6-T14 step 4: private copies in `src/gen/docs.ts` plus a test that proves them equal to the conformance emitters for every fixture | doc 08 | M6-T14 |
 | PR-M6-7 | CLI test harness | none | 0.8 | doc 13 | M6-T09 |
 | PR-M6-8 | Where patch code, `REGISTRY_VERSION`, `applyPlan`'s signature and the other names of 0.5 live | doc 07 names the files of `src/cli/` but not these | 0.5 | doc 07 | each creator |
-| PR-M6-9 | Rules that read project files | doc 07 section 9.3: `RuleContext` has no project root. RP307, RP402, RP403, RP405, RP406, RP503, RP505, the Liquid case of RP112 and cases (b), (c) of RP117 need one (M2 and M4 recorded this under `## Ledger issues` of doc 07) | Add the one field `cwd: string` to `RuleContext`; the engine sets it from `CheckOptions.cwd`. Rules read files with `node:fs` below `context.cwd` | doc 07 | 0.5 |
+| PR-M6-9 | Rules that read project files | now ledger D-142 and doc 07 section 9.3: `RuleContext.cwd: string`, added by M0-T42. RP307, RP402, RP403, RP405, RP406, RP503, RP505, the Liquid case of RP112 and cases (b), (c) of RP117 use it | Rules read files with `node:fs` below `context.cwd`. No M6 task adds the field | doc 07 | M0-T42 |
 | PR-M6-10 | Command form inside checker output | doc 07: `docs` and command fixes are printed in the command form (7.1 rule 12, owned by `src/cli`); `src/check` may not import `src/cli`; `CheckOptions` has no field for it | M6-T23 step 4 | doc 07 | M6-T23 |
 | PR-M6-11 | Tier of layer B rule tests | doc 13 section 6.2 calls checker rule tests `[T1]`; RP601 to RP609 need a browser | `[T5]`, in `src/check/rules/RP60<n>.test.ts`, using `openPage()` and `getFixtureServer()` of `test/support/` | doc 13 | M6-T32, M6-T33 |
 | PR-M6-12 | Text form of `ripple status` for blueprints, duplicates and orphans | doc 07 section 7.10 shows components, core, patches, unmanaged, skills only | M6-T22 step 4 | doc 07 | M6-T22 |
@@ -195,7 +204,7 @@ Every task ends with PLAN section 5.0 (commit, push, pull request in the five-he
 
 ---
 
-## M6-T01 Generator `src/gen/registry.ts`: registry index, file keys and targets, `manifest.json`, schemas, `custom-elements.json`, `html-custom-data.json`
+## M6-T01 Generator `src/gen/registry.ts` (step G9 and build step 8): `registry/index.json`, file keys and targets, `manifest.json`, schemas, `custom-elements.json`, `html-custom-data.json`
 
 - **Goal:** Build `pkg/registry/` with `index.json`, and write `pkg/custom-elements.json` and `pkg/html-custom-data.json`, from the manifest (generator step G9 and build step 8).
 - **Depends on:** M1-T46.
@@ -261,7 +270,7 @@ Change: `src/gen/registry.ts`, `src/types.ts` (append three types), `src/gen/bui
 
 ---
 
-## M6-T02 Install transform
+## M6-T02 Install transform (specifier, alias and prefix rewriting)
 
 - **Goal:** Add `installTransform` (steps T1 to T3: package name, Liquid block prefix, component import specifier) with its five acceptance cases.
 - **Depends on:** M6-T01.
@@ -306,9 +315,9 @@ A case of 11a fails with the extracted code: fix the code (D-113), list the chan
 
 ---
 
-## M6-T03 Core registry files and derived files
+## M6-T03 Core registry files and derived files (`core/tokens`, `core/base`, `core/props`, `core/theme`, `core/entry`, `core/js*`)
 
-- **Goal:** Add the constant `CORE_FILES` so that `registry/index.json` lists the files `ripple init` installs per host, and add the generator of the derived CSS entry file.
+- **Goal:** Add the constant `CORE_FILES` so that `registry/index.json` lists the files `ripple init` installs per host, and add the generator of the derived CSS entry file. This task owns the CSS entry files a project receives from the registry: `<paths.styles>/ripple.css` (`core/entry`, doc 03 `### 5.2 ` first block) and the `core/tokens`, `core/base`, `core/props`, `core/theme` rows (M0-T23 writes none of them). The edit of the project's own CSS entry (`core/patch:css-entry`, doc 03 `### 5.2 ` second and third blocks) is M6-T11.
 - **Depends on:** M6-T01.
 - **Kind:** `gen`. Size M.
 
@@ -494,6 +503,7 @@ Create: `src/cli/trailer.ts`, `src/cli/trailer.test.ts`. Create or append: `src/
    - Also delete nothing: leftover `*.ripple-tmp` handling is M6-T10.
 3. Tests:
    - `src/cli/trailer.test.ts` (acceptance item 7 and the list in the sentence above the code block of 5.1): `[T1] trailer: stamp then parseFile is unmodified for the three syntaxes` (paths `a.liquid`, `a.css`, `a.html`); `[T1] trailer: one changed byte gives modified`; `[T1] trailer: CRLF conversion of the whole file is unmodified`; `[T1] trailer: a scoped package name and a prerelease version parse` (`@acme/storefront-ui@0.2.0-next.1`); `[T1] trailer: a file whose last line is not a trailer is unmanaged`; `[T1] trailer: the trailer hash is the hash of the upstream body, not of the local body` (`stamp(syntax, id, pkg, v, upstream, local)` then `parseFile(...).modified === true` and `trailer.hash === hashBody(upstream)`); `[T1] trailer: syntaxForPath throws for an unknown extension`.
+   - When `src/cli/commands/skills.ts` exists and contains the line marked `// PLAN 4.4: M6-T06 adds trailer package names` (M6-T26 ran first), replace that line by the `scanProject` form of M6-T26 step 4 and delete the marker.
    - `src/cli/plan.test.ts`: `[T1] plan: scanProject finds trailered files and skips node_modules and dot directories`; `[T1] plan: scanProject ignores a trailer that is not the last non-empty line`; `[T1] plan: scanProject reports two files with the same id` (both entries are returned; choosing between them is the caller's rule).
 4. Proof: `pnpm typecheck && pnpm test:unit --files=src/cli/ && pnpm ci`.
 
@@ -614,8 +624,8 @@ A layout gives another result with the extracted code: fix the code (D-113) and 
 ## M6-T09 CLI entry `bin/`, `src/cli/index.ts`: general rules, argument parsing, command table, exit codes 0/1/2, no prompts
 
 - **Goal:** Replace the CLI stub by the real entry: global options, the command table, usage text, error printing, the command form, and the test helper.
-- **Depends on:** M1-T46.
-- **Kind:** `cli`. Size S.
+- **Depends on:** M1-T46, M6-T08.
+- **Kind:** `cli`. Size S. Group J.
 
 ### Read first
 
@@ -639,17 +649,30 @@ Change: `src/cli/index.ts` (replace the stub). Create: `src/cli/index.test.ts`, 
 4. `main(argv, io)`:
    - Fill `io` defaults: `cwd: process.cwd()`, `packageRoot: getPackageRoot()`, `env: process.env`, `out: (line) => process.stdout.write(line + "\n")`, `err: (line) => process.stderr.write(line + "\n")`.
    - Split the global options out of `argv` before the command sees them: `--host <value>`, `--cwd <dir>` (replaces `io.cwd`, resolved against the current `io.cwd`), `--help` / `-h`, `--version` / `-v`, `--yes` (no effect). `--version`: print `<PKG_NAME> <VERSION>`, return 0. No command, or the command `help`: print the usage text, return 0. `<command> --help`: print the usage line of that command (the `text` block at the top of its section in doc 07; keep them in one constant `USAGE: Record<string, string>` copied from sections 7.4, 7.5, 7.7, 7.8, 7.9, 7.10, 7.11, 7.12, 7.13 and 9.2), return 0.
-   - Usage text: the first line `Usage: ripple <command> [options]`, an empty line, then one line per row of the table of `### 7.2 `: the command padded to 34 characters, then the "Purpose" cell.
+   - Usage text: the first line `Usage: ripple <command> [options]`, an empty line, then exactly these ten lines (the rows of the table of `### 7.2 `: the command cell without backticks, padded with spaces to 34 characters, or followed by two spaces when it is 34 characters or longer; then the "Purpose" cell without backticks). Store them as one constant; do not compute them from the doc:
+
+     ```text
+     ripple init                       Install core files and patches; write ripple.json; sync skills
+     ripple add <component...>         Install components (and their dependencies) or blueprints
+     ripple diff [component...]        Show how installed files differ from the running package
+     ripple upgrade [component...]     Bring installed files to the running package's version, merging local edits
+     ripple remove <component...>      Delete a component's files
+     ripple status                     Print the computed lock
+     ripple check [paths...]           Run the checker (section 9)
+     ripple docs, ripple docs <component>, ripple docs <RULE>, ripple docs guide <topic>  Print documentation (7.11; positionals only)
+     ripple manifest [component]       Print manifest JSON
+     ripple skills sync, ripple skills check  Install or verify agent skills
+     ```
    - Unknown command: `error: unknown command "<name>".` and `fix: run ripple help`, return 2.
    - A command's `run` parses its own options with `parseArgs({ args, options, strict: true, allowPositionals: true })`. `main` wraps the call in `try`/`catch`: an error thrown by `parseArgs` (its `code` starts with `ERR_PARSE_ARGS`) prints `error: <message>` and returns 2; any other thrown `Error` prints `error: <message>` and returns 2 (commands throw only for usage and environment errors; findings are return values).
    - Rule 11 (version mismatch warning): after the command is known and before it runs, when `<cwd>/node_modules/<PKG_NAME>/package.json` exists and its `version` differs from `VERSION`, print the `warning:` line of rule 11.
    - Never read standard input. Never print ANSI codes (V1 prints plain text only, which satisfies rule 4).
 5. `getPackageRoot()`: the directory two levels above the file of `import.meta.url` (`dirname(dirname(dirname(fileURLToPath(import.meta.url))))`).
 6. `detectPackageManager(cwd, env)` and `commandForm(io, host)`: rule 12 of `### 7.1 `, in that order (the `packageManager` field; lockfiles `pnpm-lock.yaml`, `yarn.lock`, `package-lock.json`, `bun.lockb` or `bun.lock`; the first word of `npm_config_user_agent` before `/`; else `npm`). Result: `npx <PKG_NAME>@<VERSION>` when `host` is `liquid` or `<cwd>/package.json` does not exist; `npx ripple` for npm; otherwise `<pm> exec ripple`.
-7. `resolveHost(io, flag): Host` (used by every command that needs a host): calls `detectHost(io.cwd, flag)` of `./detect-host.ts`; on `ok: false` throws `Error(message)`; when the host is `liquid` calls `validateTheme(io.cwd)` and throws its message when it is a string. When `src/cli/detect-host.ts` does not exist yet (M6-T08 not done), do M6-T08 first.
+7. `resolveHost(io, flag): Host` (used by every command that needs a host): calls `detectHost(io.cwd, flag)` of `./detect-host.ts`; on `ok: false` throws `Error(message)`; when the host is `liquid` calls `validateTheme(io.cwd)` and throws its message when it is a string.
 8. `test/support/cli.ts`: `runCli` and `tempDir` of 0.8 (`runCli` REQUIRES `packageRoot` until M6-T15 adds the default).
 9. Tests, `src/cli/index.test.ts` (package root: a temporary directory holding only `manifest.json` with `{}`):
-   - `[T1] index: no command prints the usage table and exits 0` (the output contains one line starting with each of the ten command names).
+   - `[T1] index: no command prints the usage table and exits 0` (the output contains one line starting with `ripple <name>` for each of the ten names `init`, `add`, `diff`, `upgrade`, `remove`, `status`, `check`, `docs`, `manifest`, `skills`).
    - `[T1] index: help prints the same text`.
    - `[T1] index: --version prints the package name and version`.
    - `[T1] index: an unknown command exits 2 with the error format`.
@@ -659,7 +682,7 @@ Change: `src/cli/index.ts` (replace the stub). Create: `src/cli/index.test.ts`, 
    - `[T1] index: commandForm for npm is npx ripple` (`package-lock.json`).
    - `[T1] index: commandForm for liquid is npx with the version even with a package.json`.
    - `[T1] index: the module has one top-level side effect` (read `src/cli/index.ts`; its last non-empty line equals the statement of 0.8).
-10. Proof: PLAN 5.0. Also `node pkg/bin/ripple.mjs --version` prints `ripple-kit 0.1.0` and `node pkg/bin/ripple.mjs manifest; echo $?` prints `0`.
+10. Proof: PLAN 5.0. Also `node pkg/bin/ripple.mjs --version` prints `<PKG_NAME> <VERSION>` (today `ripple-kit 0.1.0`) and `node pkg/bin/ripple.mjs manifest; echo $?` prints `0`.
 
 ### Acceptance
 
@@ -698,7 +721,7 @@ Change: `src/cli/plan.ts`, `src/cli/plan.test.ts`. Must not change: `src/cli/com
    |---|---|---|---|---|---|---|
    | `node_modules/.cache/ripple/planfile.ts` | `docs/07-manifest-registry-cli.md` | `### 8.1 ` | `ts` | 0 | 2927 | `// src/cli/plan.ts - the upgrade decision table for one owned file.` |
 
-   Append it to `src/cli/plan.ts` unchanged (merge the import lines). It imports `merge3` from `./merge3.ts`: when `src/cli/merge3.ts` does not exist yet (M6-T18 not done), do NOT stub it; do M6-T18 first (it depends only on M1-T46), or stop.
+   Append it to `src/cli/plan.ts` unchanged (merge the import lines). It imports `merge3` from `./merge3.ts`. Before step 1, check `test -f docs/plan/done/M6-T18.md`: when it fails, this task cannot start (the table does not list M6-T18 yet; reported to the core plan); do not stub `merge3`; pick another task.
 2. Composite regions in `scanProject` (replace the marker `PLAN 4.4: composite regions are added by M6-T10`): for host `liquid`, when `assets/ripple.css` exists, call `parseComposite`; for every region segment call `parseFile(segment.content)`; a managed result gives a `ScannedFile` with `path: "assets/ripple.css#<region id>"`. A region whose content has no trailer is skipped.
 3. Add the functions of 0.5 with these behaviours:
    - `loadRegistry(packageRoot)`: 0.5.
@@ -740,7 +763,7 @@ Patches (M6-T11, M6-T12). Base retrieval (M6-T19; `getBase` is a parameter here)
 ## M6-T11 Patches for npm hosts: `core/patch:css-entry`, `core/patch:agents`, `core/patch:package-json`
 
 - **Goal:** Add the three patches that `init`, `add`, `upgrade` and `remove` apply on `html`, `react` and `remix` (the agents patch also on `liquid`).
-- **Depends on:** M6-T10. Order: 0.6 (not at the same time as M6-T12). M6-T13 (`renderAgentsSection`) is needed by `patchAgents`: when `src/gen/agents-md.ts` does not exist, do M6-T13 first.
+- **Depends on:** M6-T10. `patchAgents` also needs `renderAgentsSection` of M6-T13, which the table does not list yet (reported to the core plan): when `docs/plan/done/M6-T13.md` does not exist, this task cannot start; pick another task.
 - **Kind:** `cli`. Size S.
 
 ### Read first
@@ -753,7 +776,7 @@ Create or append: `src/cli/commands/init.ts`, `src/cli/commands/init.test.ts`. C
 
 ### Steps
 
-1. Branch `task/M6-T11-patches-npm`. Apply PR-M6-1 in `src/architecture.test.ts` and add its ledger-issue line to doc 01.
+1. Branch `task/M6-T11-patches-npm`. Apply PR-M6-1 in `src/architecture.test.ts` (ratified by D-146; no ledger-issue line).
 2. Each patch function returns one `PlanEntry` with `id` the patch id and action `patch` (the target changes; `content` is the new file text), `patch-skipped` (nothing to write and not an error) or `patch-failed` (anchor not found; `messages` holds the line `add this line to <file> <where>:` followed by the exact line). It reads files but writes nothing.
 3. `patchCssEntry(context)` (`#### 7.6.2 `): skipped when `config.css` is `null`. `R` is the relative POSIX path from the entry's directory to `paths.styles`, starting with `./`. Rules 1 to 3 literally, with the three regular expressions printed there. Rule 3 gives `patch-failed` with the instruction `move @import "<R>/ripple.css"; to the first line of <css>`.
 4. `patchAgents(context, installed, blueprints)` (`#### 7.6.5 `): target `AGENTS.md` at the project root. Build `AgentsSectionInput` (doc 08 `### 3.1 `): `pkg` = `index.package.name`; `command` = `commandForm(io, host)`; `version`; `host`; `installed` = for each installed component id, from `<packageRoot>/manifest.json`: `name`, `title`, `kind`, `summary`, `liquidBlock` (the manifest `liquid.block`, or `null`), sorted by the sorting rule of doc 08 section 2.1 (category order, then name); `blueprints`; `hasShell: true`. Body = `renderAgentsSection(input)`. File absent: the content is the region only. Markers absent: the existing text, one blank line, the region. Markers present: replace from the line `<!-- ripple:start agents -->` to the line `<!-- ripple:end agents -->` in place. Equal result: `patch-skipped`. Host `liquid` and the resulting file larger than 50,000 bytes: `patch-failed`, nothing written.
@@ -788,7 +811,7 @@ The Liquid patches (M6-T12). The `run` function of `init` (M6-T15). RP505, RP406
 ## M6-T12 Patches for Liquid: `core/patch:head`, `core/patch:import-map`, `core/patch:theme-reference`, `core/patch:settings`, `core/patch:locale`
 
 - **Goal:** Add the five patches that `init`, `add` and `upgrade` apply to a Liquid theme.
-- **Depends on:** M6-T05, M6-T10. Order: 0.6.
+- **Depends on:** M6-T05, M6-T10, M6-T11.
 - **Kind:** `cli`. Size M.
 
 ### Read first
@@ -931,7 +954,7 @@ The guides (M8-T04 to M8-T06). `meta.expected.json` and K-31 to K-36 (M8-T01). `
 ## M6-T15 Command `ripple init`
 
 - **Goal:** Add `ripple init` for the four hosts: core files, patches, `ripple.json`, skills, next-step lines; idempotent.
-- **Depends on:** M6-T03, M6-T08, M6-T09, M6-T11, M6-T12, M6-T13. Also 0.6: M6-T07, M6-T10, M6-T26.
+- **Depends on:** M6-T03, M6-T08, M6-T09, M6-T11, M6-T12, M6-T13, M6-T07, M6-T10, M6-T26.
 - **Kind:** `cli`. Size M.
 
 ### Read first
@@ -964,7 +987,8 @@ Change: `src/cli/commands/init.ts` (add `run`), `src/cli/index.ts` (the `init` l
    - `[T1] init: liquid on theme-min inserts the head line and exits 0`.
    - `[T1] init: remix writes six js files under paths.public and ripple.json with paths.pages app/pages` (item 11e).
    - `[T1] init: react writes no js file and paths.pages is src/pages` (item 11e).
-   - `[T1] init: a second run writes nothing` (item 18: `treeHash` equal; every plan line is `unchanged` or `patch-skipped`), once for `theme` and once for `react`.
+   - `[T1] init: a second run on theme writes nothing` (item 18 on `tempProject("theme")`: `treeHash` equal before and after the second run; every plan line of the second run is `unchanged` or `patch-skipped`).
+   - `[T1] init: a second run on react writes nothing` (the same on `tempProject("react")`).
    - `[T1] init: --dry-run writes nothing and marks the header`.
    - `[T1] init: an untrailered file at a target path gives conflict-unmanaged, exit 1, and no write` (`snippets/rp-head.liquid` exists without a trailer).
    - `[T1] init: a path flag that differs from ripple.json exits 2`.
@@ -983,8 +1007,8 @@ The twelve tests pass. The command of step 7 gives the stated result. `grep -c "
 
 ### If blocked
 
-- `syncSkills` does not exist: M6-T26 is not done (0.6); stop.
-- The second run is not idempotent: find the entry that is not `unchanged` or `patch-skipped`; the usual cause is a derived file stamped with a different hash on each run or a patch whose "already present" test does not match its own output. Fix the function that owns the entry; when that function belongs to another task, fix it here and name it in the pull request.
+- `syncSkills` does not exist although `docs/plan/done/M6-T26.md` exists: open a draft pull request naming the function `syncSkills` and its owning task M6-T26, and write the same sentence in the pull request body (a draft pull request has no done file, PLAN 1 item 7).
+- The second run is not idempotent: find the entry that is not `unchanged` or `patch-skipped`; the usual cause is a derived file stamped with a different hash on each run or a patch whose "already present" test does not match its own output. Fix the function that owns the entry when it is in a file this task changes. When that function belongs to another task: open a draft pull request naming the function and its owning task, and write the same sentence in the pull request body (a draft pull request has no done file, PLAN 1 item 7). Do not fix another task's function here (AGENTS.md).
 
 ---
 
@@ -1067,7 +1091,13 @@ Create: `src/cli/diff.ts`, `src/cli/diff.test.ts`, `src/cli/commands/diff.ts`, `
 
    | Output | Doc | Heading prefix | Lang | Index | Bytes | First line |
    |---|---|---|---|---|---|---|
-   | `src/cli/diff.ts` | `docs/07-manifest-registry-cli.md` | `### 7.7 ` | `ts` | 0 | 2478 | `// src/cli/diff.ts - unified diff printer for \`ripple diff\` and \`ripple add --diff\`. No dependencies.` |
+   | `src/cli/diff.ts` | `docs/07-manifest-registry-cli.md` | `### 7.7 ` | `ts` | 0 | 2478 | (the line below) |
+
+   First line of the output (the cell above cannot hold its backticks):
+
+   ```text
+   // src/cli/diff.ts - unified diff printer for `ripple diff` and `ripple add --diff`. No dependencies.
+   ```
 
 2. `src/cli/commands/diff.ts`, `run`: `resolveHost`; scan; for every installed file with registry mode `owned` or `library` (all, or those of the named components; an unknown or not-installed name is exit 2): compute the running body (registry source, `installTransform`) and the file state (`current`, `outdated`, `modified`, `modified-outdated`, definitions in `### 5.3 `). `current`: print nothing. Otherwise print `<state>  <path>` and `unifiedDiff(local body, running body, "<path> (yours)", "<path> (<pkg>@<running version>)")`. Last line `<n> files differ.` or `No differences.` Exit 0 when nothing differs, 1 when at least one file differs.
 3. `add --diff` (replace the marker of M6-T16): for each planned file that already exists print the same two things; write nothing; exit code as for the plan.
@@ -1140,7 +1170,7 @@ A random case disagrees: the grouping rule is `<=` ("a hunk that merely touches 
 ## M6-T19 Base retrieval `src/cli/base.ts`
 
 - **Goal:** Add `getBaseBody`, which returns a file's upstream body as shipped by an older package version (running package, project `node_modules`, cache, `npm pack`).
-- **Depends on:** M6-T06. Also 0.6: M6-T01, M6-T02, M6-T10.
+- **Depends on:** M6-T06, M6-T01, M6-T02, M6-T10.
 - **Kind:** `cli`. Size S.
 
 ### Read first
@@ -1163,7 +1193,7 @@ Create: `src/cli/base.ts`, `src/cli/base.test.ts`.
 3. Tests, `src/cli/base.test.ts` (no network: every test passes `env: { RIPPLE_OFFLINE: "1", RIPPLE_CACHE_DIR: <temp dir> }`):
    - `[T1] base: the running package is used for the running version`.
    - `[T1] base: project node_modules is used when its version matches`.
-   - `[T1] base: the cache directory is used` (a hand-made `<cache>/ripple-kit/0.0.9/package/registry/` with an `index.json` and one file).
+   - `[T1] base: the cache directory is used` (a hand-made `<cache>/<PKG_NAME>/0.0.9/package/registry/` with an `index.json` and one file; build the path from `PKG_NAME`, never the literal, 0.2).
    - `[T1] base: a scoped package name uses two path segments in the cache`.
    - `[T1] base: offline with an empty cache returns undefined`.
    - `[T1] base: a higher registryVersion returns undefined`.
@@ -1284,7 +1314,7 @@ The not-installed message is not worded by the spec ("exit code 2" only): use th
 ## M6-T22 Command `ripple status` (`--json`, the computed lock)
 
 - **Goal:** Add `computeLock` and the command that prints the computed lock as JSON or text.
-- **Depends on:** M6-T16. Also 0.6: M6-T26.
+- **Depends on:** M6-T16, M6-T26.
 - **Kind:** `cli`. Size S.
 
 ### Read first
@@ -1334,27 +1364,26 @@ Rules RP501 to RP512 (M6-T31). Writing a lock file (never, D-056).
 ## M6-T23 Command `ripple check` (`--json`, `--url`, `--browser`, `--rule`, `--max-warnings`)
 
 - **Goal:** Add the command module that parses the `check` options, calls `check()` of `src/check/index.ts`, prints the report and returns the exit code.
-- **Depends on:** M6-T09. Also 0.6: M6-T08.
+- **Depends on:** M6-T09, M6-T08.
 - **Kind:** `cli`. Size S.
 
 ### Read first
 
-doc 07: `### 9.2 ` (1.9 kB), `#### 9.4.1 ` (1.6 kB), `#### 9.4.2 ` (0.3 kB), in `### 9.3 ` only the interfaces `CheckOptions`, `Report`, `RuleContext` and the paragraph after the code block (2 kB), `### 7.1 ` rules 3 to 6 and 12 (2 kB), acceptance items 22 and 23 in `## 12. `. This file 0.5 (rows `CliIo`, `commandForm`, `CommandRun`, `RuleContext.cwd`), 0.8, PR-M6-9, PR-M6-10. Source: `src/check/index.ts`, `src/check/engine.ts`, `src/check/report.ts` (whole; they are small).
+doc 07: `### 9.2 ` (1.9 kB), `#### 9.4.1 ` (1.6 kB), `#### 9.4.2 ` (0.3 kB), in `### 9.3 ` only the interfaces `CheckOptions`, `Report`, `RuleContext` and the paragraph after the code block (2 kB), `### 7.1 ` rules 3 to 6 and 12 (2 kB), acceptance items 22 and 23 in `## 12. `. This file 0.5 (rows `CliIo`, `commandForm`, `CommandRun`, `RuleContext.cwd`), 0.8, PR-M6-10. Source: `src/check/index.ts`, `src/check/engine.ts`, `src/check/report.ts` (whole; they are small).
 
 ### Files
 
-Create: `src/cli/commands/check.ts`, `src/cli/commands/check.test.ts`. Change: `src/cli/index.ts` (the `check` line only), `src/check/index.ts` and `src/check/engine.ts` (only steps 3 and 4), `docs/07-manifest-registry-cli.md` (lines under `## Ledger issues`).
+Create: `src/cli/commands/check.ts`, `src/cli/commands/check.test.ts`. Change: `src/cli/index.ts` (the `check` line only), `src/check/engine.ts` and `src/check/report.ts` (only step 4), `docs/07-manifest-registry-cli.md` (a line under `## Ledger issues` only when "If blocked" says so).
 
 ### Steps
 
 1. Branch `task/M6-T23-check`.
 2. Options, parsed with `parseArgs` in strict mode (`allowPositionals: true`): `url` (string, multiple), `browser` (boolean), `rule` (string, multiple), `json` (boolean), `max-warnings` (string). Any other option is the usage error of doc 07 `### 7.1 ` (the same code path M6-T09 uses for an unknown option), exit 2.
-3. `RuleContext.cwd` (PR-M6-9): run `grep -n "cwd" src/check/index.ts`. When the interface `RuleContext` has no `cwd` field, add `cwd: string` to it and set it in the engine where the context object is built, from `options.cwd`. When it has one, change nothing.
+3. `RuleContext.cwd` exists since M0-T42 (ledger D-142); `check()` receives `cwd` in `CheckOptions` and the engine passes it on. This task adds nothing for it. Check: `grep -n "cwd: string" src/check/index.ts` prints two lines (`CheckOptions` and `RuleContext`); when it prints fewer, open a draft pull request naming M0-T42.
 4. Command form (PR-M6-10). `src/check` MUST NOT import `src/cli`, so the engine cannot call `commandForm`. Run `grep -n "command form\|docs RP\|docs \${" src/check/engine.ts src/check/report.ts`.
    - When the engine already writes the literal token `<command form>` (11 characters between the angle brackets, as printed here) into `docs` and into the last line of `formatText`: change nothing.
-   - Otherwise change the engine so that `docs` is the string `"<command form> docs " + meta.id`, and `formatText` so that its last line contains the literal token where 9.4.1 item 6 prints `<command form>`. Change the test of acceptance item 22 so that it applies `.replaceAll("<command form>", "npx ripple-kit@0.1.0")` to the output of `formatText` before the byte comparison. Rule files MUST write the same token wherever a `fix` cell of doc 08 section 5.5 prints `<command form>`.
+   - Otherwise change the engine so that `docs` is the string `"<command form> docs " + meta.id`, and `formatText` so that its last line contains the literal token where 9.4.1 item 6 prints `<command form>`. Change the test of acceptance item 22 so that it applies `` .replaceAll("<command form>", `npx ${PKG_NAME}@${VERSION}`) `` (both imported from `src/identity.ts`; never the literal package name, 0.2) to the output of `formatText` before the byte comparison. Rule files MUST write the same token wherever a `fix` cell of doc 08 section 5.5 prints `<command form>`.
    - The command module replaces every occurrence of the token: `const form = commandForm(io, host)`; for every diagnostic, `fix` and `docs` get `.replaceAll("<command form>", form)` (null stays null); the text returned by `formatText(report)` gets the same replacement. This holds for the text output and for `--json`.
-   - Add under `## Ledger issues` of doc 07: `PR-M6-10: command form in checker output (docs/plan/M6-cli-registry-checker.md 0.9)`.
 5. `run(args, io, globals)`:
    1. `const host = resolveHost(io, globals.host)` (M6-T08; it throws the exit-2 error when no host is detected). `check` works before `init`: do not call `readConfig` and do not require `ripple.json`.
    2. `--max-warnings`: the value MUST match `/^\d+$/`; otherwise `error: --max-warnings needs a whole number.`, exit 2 (wording PLAN-CHOSEN).
@@ -1392,7 +1421,7 @@ Passing the computed lock and the layer P driver (M6-T31). The layer B driver (M
 
 ### If blocked
 
-- `resolveHost` does not exist: M6-T08 is not done (0.6); stop and pick another task.
+- `resolveHost` does not exist although `docs/plan/done/M6-T09.md` exists: open a draft pull request naming the function `resolveHost` and its owning task M6-T09.
 - The item 22 test cannot be made to pass with the token: keep the engine's existing fixed string, make the command replace THAT string by `commandForm(...)`, and describe it in the done file and under `## Ledger issues` of doc 07.
 - `--no-skips` fails because of the skipped warning test: implement the test against a rule listed in `rules` with severity `warning`; when there is none, remove the test and say so in the pull request.
 
@@ -1505,7 +1534,7 @@ Validating the manifest (the generator does). Printing blueprints or elements.
 ## M6-T26 Command `ripple skills sync`
 
 - **Goal:** Add `syncSkills` and the `skills sync` command, which copy the shipped skills for the detected host into `.claude/skills/` and `.agents/skills/` with a metadata block.
-- **Depends on:** M6-T09. Also 0.6: M6-T08. M6-T06 when it is done (step 4 uses `scanProject`).
+- **Depends on:** M6-T09, M6-T08. (Step 4 uses `scanProject` of M6-T06 when it exists; when it does not, step 4 leaves a marker that M6-T06 replaces.)
 - **Kind:** `cli`. Size S.
 
 ### Read first
@@ -1542,7 +1571,7 @@ Create: `src/cli/commands/skills.ts`, `src/cli/commands/skills.test.ts`. Change:
 6. Tests, `src/cli/commands/skills.test.ts`. A helper builds a package root in `tempDir()` with `skills/alpha/SKILL.md` (frontmatter `name: alpha`, `description: Alpha. Use when testing.`, then a body line), `skills/alpha/ripple.json` `{ "hosts": ["html", "liquid"] }`, `skills/beta/...` with `{ "hosts": ["liquid"] }`. Projects are `tempDir()` with `--host html` or `--host liquid`.
    - `[T1] skills: injectMetadata then stripMetadata returns the original text and the three values`.
    - `[T1] skills: skillHash ignores the sidecar, CRLF and the metadata block`.
-   - `[T1] skills: sync on an empty project adds the host's skills to both destinations` (host `html`: `alpha` only; both `SKILL.md` files contain `source: "ripple-kit"`, `version: "0.1.0"` and a `hash: "sha256:` line of 64 hex digits; no `ripple.json` is copied; stdout is the two `Synced Ripple 0.1.0 skills to ...: 1 added, 0 updated, 0 unchanged, 0 removed.` lines).
+   - `[T1] skills: sync on an empty project adds the host's skills to both destinations` (host `html`: `alpha` only; both `SKILL.md` files contain `` `source: "${PKG_NAME}"` `` (built from `PKG_NAME`, never the literal, 0.2), `version: "0.1.0"` and a `hash: "sha256:` line of 64 hex digits; no `ripple.json` is copied; stdout is the two `Synced Ripple 0.1.0 skills to ...: 1 added, 0 updated, 0 unchanged, 0 removed.` lines).
    - `[T1] skills: a second sync reports unchanged and writes nothing` (compare the two trees).
    - `[T1] skills: a partial directory is updated`.
    - `[T1] skills: an unmanaged directory is a conflict, exits 1 and nothing is written anywhere` (the other destination stays absent).
@@ -1705,20 +1734,20 @@ Rules that use the calls (M2-T29: RP101 to RP104 on Liquid; M6-T29: RP401 to RP4
 ## M6-T29 Checker family "Liquid": RP401 to RP406
 
 - **Goal:** Add the six checker rules RP401 to RP406, each with a bad and a good example and tests.
-- **Depends on:** M6-T28. Also: the tests of RP405 and RP406 call `rule.project()` directly, because the layer P driver is M6-T31.
+- **Depends on:** M6-T28. (The tests of RP405 and RP406 call `rule.project()` directly, because the layer P driver is M6-T31.)
 - **Kind:** `checker`. Size M.
 
 ### Read first
 
-doc 07: in `### 9.3 ` the interfaces `RuleMeta`, `RuleContext`, `SourceFile`, `Rule` and "Engine rules" (2.5 kB); in `### 9.6 ` only the six rows RP401 to RP406 (2.5 kB); `### 9.7 ` (0.6 kB); the last paragraph of `#### 9.5.2 ` ("A call ... is a call of component C"); acceptance item 24a (first sentence). doc 08: `### 5.4 ` and in `### 5.5 ` only the rows RP401 to RP406 and the last note ("`bad` and `good` examples") (2.5 kB). `docs/06-bindings.md`: the item that starts `**L-13 Liquid subset` up to `**L-14` (2 kB). Source: `src/check/rules/RP113.ts`, `src/check/rules/RP113.test.ts`, `src/check/rules/index.ts`. This file PR-M6-9, PR-M6-10.
+doc 07: in `### 9.3 ` the interfaces `RuleMeta`, `RuleContext`, `SourceFile`, `Rule` and "Engine rules" (2.5 kB); in `### 9.6 ` only the six rows RP401 to RP406 (2.5 kB); `### 9.7 ` (0.6 kB); the last paragraph of `#### 9.5.2 ` ("A call ... is a call of component C"); acceptance item 24a (first sentence). doc 08: `### 5.4 ` and in `### 5.5 ` only the rows RP401 to RP406 and the last note ("`bad` and `good` examples") (2.5 kB). `docs/06-bindings.md`: the item that starts `**L-13 Liquid subset` up to `**L-14` (2 kB). Source: `src/check/rules/RP113.ts`, `src/check/rules/RP113.test.ts`, `src/check/rules/index.ts`. This file 0.5 row `RuleContext.cwd`, PR-M6-10.
 
 ### Files
 
-Create: `src/check/rules/RP401.ts` to `RP406.ts` and one `.test.ts` beside each (12 files). Change: `src/check/rules/index.ts` (add the six, ascending id order); `src/check/index.ts` and `src/check/engine.ts` only for `RuleContext.cwd` (0.5) when the field is absent.
+Create: `src/check/rules/RP401.ts` to `RP406.ts` and one `.test.ts` beside each (12 files). Change: `src/check/rules/index.ts` (add the six, ascending id order). `RuleContext.cwd` exists since M0-T42 (ledger D-142); do not change `src/check/index.ts` or `src/check/engine.ts`.
 
 ### Steps
 
-1. Branch `task/M6-T29-rules-rp4xx`. Add `RuleContext.cwd` exactly as M6-T23 step 3 describes when `grep -n "cwd" src/check/index.ts` shows the interface lacks it.
+1. Branch `task/M6-T29-rules-rp4xx`. Rules RP402, RP403, RP405 and RP406 read project files below `context.cwd` (ledger D-142).
 2. Per rule, copy the module shape of `src/check/rules/RP113.ts`. `meta.id`, `severity`, `layers`, `hosts` from the 9.6 row (`hosts` of RP401 to RP405 is `["liquid"]`; RP406 is all four); `meta.title` is the first sentence of the "Detects" cell; `meta.why` is the "why" cell of the doc 08 row. `text.problem` and `text.fix` are the doc 08 cells; where a cell has two forms separated by "or" or `/`, `text.problem` and `text.fix` hold the cell text unchanged and the rule passes the chosen form to `report`. Write `<command form>` as the literal token (PR-M6-10). Fill every `{placeholder}` (doc 08 5.4).
 3. Detection. Implement the 9.6 "Detects" cell literally. Details the cells leave open are fixed here (PLAN-CHOSEN where marked):
 
@@ -1766,7 +1795,7 @@ Theme Check and its duplicate suppression (M6-T30). The layer P driver (M6-T31).
 
 ---
 
-## M6-T30 Checker Theme Check sub-step (`TC:<CheckName>`)
+## M6-T30 Checker Theme Check sub-step (`TC:<CheckName>`) in `src/check/engine.ts` (D-148)
 
 - **Goal:** Run Theme Check on Liquid projects when it is installed, merge its offenses into the report as `TC:<CheckName>` diagnostics, and suppress the duplicated Ripple rules.
 - **Depends on:** M6-T29.
@@ -1778,12 +1807,12 @@ doc 07: `#### 9.5.4 ` (1.1 kB), the "What runs per host" table of `### 9.1 ` (0.
 
 ### Files
 
-Create: `src/check/theme-check.ts`, `src/check/theme-check.test.ts`. Change: `src/check/engine.ts` (the call).
+Change: `src/check/engine.ts` (the five exports of step 2 and the call of step 3). Create: `src/check/engine.test.ts` (append when it exists). There is no file `src/check/theme-check.ts` (ledger D-148).
 
 ### Steps
 
 1. Branch `task/M6-T30-theme-check`.
-2. `src/check/theme-check.ts` (names PLAN-CHOSEN, internal):
+2. In `src/check/engine.ts` (names PLAN-CHOSEN, internal; `src/check/index.ts` does not re-export them):
 
    ```ts
    export interface ThemeCheckOffense { check: string; severity: number; uri: string; start: { line: number; character: number }; message: string }
@@ -1795,23 +1824,23 @@ Create: `src/check/theme-check.ts`, `src/check/theme-check.test.ts`. Change: `sr
 
    - `loadThemeCheck`: try `createRequire(join(cwd, "package.json")).resolve("@shopify/theme-check-node")`; on a throw try `createRequire(import.meta.url).resolve("@shopify/theme-check-node")`; on a second throw return `null`. Load the resolved path with `await import(pathToFileURL(resolved).href)`. No static `import` of the package anywhere (doc 01: dynamic `import()` only).
    - `mapOffenses`: rule 3 of `#### 9.5.4 `. Severity `0` gives `error`, `1` gives `warning`, `2` is dropped. `file` is `relative(cwd, fileURLToPath(uri))` with `\` replaced by `/`; `line: start.line + 1`; `col: start.character + 1`; `rule: "TC:" + check`; `problem: message`; `url`, `selector`, `component`, `found`, `allowed`, `fix`, `why`, `docs` are null.
-   - `suppressDuplicates`: rule 4. Build the set of `file + ":" + line` of every diagnostic whose `rule` starts with `TC:`. Drop every diagnostic whose `rule` is `RP102`, `RP104` or `RP401` and whose `file` and `line` are in the set. The spec limits RP104 to "doc params"; a diagnostic does not record that, so every RP104 on such a line is dropped (PLAN-CHOSEN; add `M6-T30: RP104 suppression cannot tell doc params from other findings` under `## Ledger issues` of doc 07).
+   - `suppressDuplicates`: rule 4. Build the set of `file + ":" + line` of every diagnostic whose `rule` starts with `TC:`. Drop every diagnostic whose `rule` is `RP102`, `RP104` or `RP401` and whose `file` and `line` are in the set. The spec limits RP104 to "doc params"; a diagnostic does not record that, so every RP104 on such a line is dropped (PLAN-CHOSEN; add `M6-T30: RP104 suppression cannot tell doc params from other findings` under `## Ledger issues` of doc 07; this is a finding, not a plan reading).
 3. Engine: after layers S and H, when `options.host === "liquid"` and `options.rules` is absent (a `--rule` selection lists Ripple rule ids only, so Theme Check does not run with it; PLAN-CHOSEN):
    - `const mod = await loadThemeCheck(options.cwd)`. When `null`: push the note `Theme Check did not run: @shopify/theme-check-node is not installed. Run "shopify theme check" separately.` and continue.
    - Otherwise `const { offenses } = await mod.themeCheckRun(options.cwd)`; append `mapOffenses(...)`; when `options.paths` is given keep only the TC diagnostics whose `file` is one of the examined source files (PLAN-CHOSEN); then `suppressDuplicates` over all diagnostics, before sorting and counting.
    - A throw from `themeCheckRun` adds the note `Theme Check did not run: <error message>` and continues (PLAN-CHOSEN; the spec covers only "not installed").
    - TC diagnostics are counted in `counts` and sorted like any other.
-4. Tests, `src/check/theme-check.test.ts`:
-   - `[T1] theme-check: mapOffenses maps severity, file, line and col` (hand-built offenses of severities 0, 1, 2; `uri` from `pathToFileURL(join(dir, "snippets/x.liquid")).href`; expect two diagnostics, `file === "snippets/x.liquid"`, `line === start.line + 1`).
-   - `[T1] theme-check: suppressDuplicates drops RP102, RP104 and RP401 on a TC line and keeps RP101`.
-   - `[T1] theme-check: positions are zero-based in the installed @shopify/theme-check-node`. This is the test the spec requires (UNVERIFIED item 1 of 13.3). Write a theme in `tempDir()`: `layout/theme.liquid` holding `<html><head>{{ content_for_header }}</head><body>{{ content_for_layout }}</body></html>`, `snippets/x.liquid` holding three lines: `<p>a</p>`, `<p>b</p>`, `{% assign rp_unused = 1 %}`, and empty directories `templates/`, `config/`, `locales/`. Call `loadThemeCheck(repository root)` then `themeCheckRun(dir)`. Find the offense whose `check` is `UnusedAssign`; assert `mapOffenses` gives it `file === "snippets/x.liquid"` and `line === 3`, and `col >= 1`. The offense name and its exact column are UNVERIFIED by this plan: when no `UnusedAssign` offense is returned, print all offenses, choose one whose source line is known from the input, and assert its line with the same `+ 1` rule.
-   - `[T1] theme-check: the engine adds the not-installed note when the loader returns null` (call the engine function with a loader that returns `null`; give the engine an optional internal parameter or a module-level setter `__setThemeCheckLoader` used only by tests; PLAN-CHOSEN).
-   - `[T1] theme-check: Theme Check does not run for host html and does not run with a --rule selection`.
+4. Tests, `src/check/engine.test.ts`:
+   - `[T1] engine: theme check mapOffenses maps severity, file, line and col` (hand-built offenses of severities 0, 1, 2; `uri` from `pathToFileURL(join(dir, "snippets/x.liquid")).href`; expect two diagnostics, `file === "snippets/x.liquid"`, `line === start.line + 1`).
+   - `[T1] engine: theme check suppressDuplicates drops RP102, RP104 and RP401 on a TC line and keeps RP101`.
+   - `[T1] engine: theme check positions are zero-based in the installed @shopify/theme-check-node`. This is the test the spec requires (UNVERIFIED item 1 of 13.3). Write a theme in `tempDir()`: `layout/theme.liquid` holding `<html><head>{{ content_for_header }}</head><body>{{ content_for_layout }}</body></html>`, `snippets/x.liquid` holding three lines: `<p>a</p>`, `<p>b</p>`, `{% assign rp_unused = 1 %}`, and empty directories `templates/`, `config/`, `locales/`. Call `loadThemeCheck(repository root)` then `themeCheckRun(dir)`. Find the offense whose `check` is `UnusedAssign`; assert `mapOffenses` gives it `file === "snippets/x.liquid"` and `line === 3`, and `col >= 1`. The offense name and its exact column are UNVERIFIED by this plan: when no `UnusedAssign` offense is returned, print all offenses, choose one whose source line is known from the input, and assert its line with the same `+ 1` rule.
+   - `[T1] engine: theme check the engine adds the not-installed note when the loader returns null` (call the engine function with a loader that returns `null`; give the engine an optional internal parameter or a module-level setter `__setThemeCheckLoader` used only by tests; PLAN-CHOSEN).
+   - `[T1] engine: theme check Theme Check does not run for host html and does not run with a --rule selection`.
 5. Proof: PLAN 5.0.
 
 ### Acceptance
 
-The five tests pass (`pnpm test:unit --files=src/check/theme-check`). `grep -n "from \"@shopify/theme-check-node\"" -r src` prints nothing. `pnpm test:unit --files=src/architecture` passes (test A-05: `dist/check` loads without the package). `pnpm ci` exits 0.
+The five tests pass (`pnpm test:unit --files=src/check/engine`). `test ! -e src/check/theme-check.ts` succeeds. `grep -n "from \"@shopify/theme-check-node\"" -r src` prints nothing. `pnpm test:unit --files=src/architecture` passes (test A-05: `dist/check` loads without the package). `pnpm ci` exits 0.
 
 ### Out of scope
 
@@ -1828,12 +1857,12 @@ Configuring Theme Check (`.theme-check.yml` is the project's). Any text for TC f
 ## M6-T31 Checker family "project state" (layer P): RP501 to RP508, RP510 to RP512
 
 - **Goal:** Add the eleven project-state rules, the engine's layer P driver, and pass the computed lock from `ripple check`.
-- **Depends on:** M6-T06, M6-T22. Also needs M6-T23 for step 8 (when M6-T23 is not done, skip step 8 and say so in the done file; M6-T23 then passes the lock itself).
+- **Depends on:** M6-T06, M6-T22. (Step 8 changes `src/cli/commands/check.ts` of M6-T23; when `docs/plan/done/M6-T23.md` does not exist, skip step 8 and say so in the done file; M6-T23 then passes the lock itself.)
 - **Kind:** `checker`. Size M.
 
 ### Read first
 
-doc 07: in `### 9.6 ` only the rows RP501 to RP512 and the line "RP509 is reserved" (3.5 kB); `### 5.3 ` the JSON example and the "Field definitions" table (4.3 kB); in `### 9.3 ` the interfaces `CheckOptions`, `RuleContext`, `HtmlDocument`, `Rule` and "Engine rules" (2.5 kB); the last paragraph of `### 9.2 ` ("`check` works before `init`"); `### 9.4.1 ` item 1. doc 08: `### 5.4 ` and in `### 5.5 ` only the rows RP501 to RP512 and the last note (3 kB). doc 03: `### 5.2 ` (the CSS entry; 1 kB). Source: `src/check/rules/RP113.ts`, `src/check/engine.ts`, `src/types.ts` (the type `ComputedLock`).
+doc 07: in `### 9.6 ` only the rows RP501 to RP512 and the line "RP509 is reserved" (3.5 kB); `### 5.3 ` the JSON example and the "Field definitions" table (4.3 kB); in `### 9.3 ` the interfaces `CheckOptions`, `RuleContext`, `HtmlDocument`, `Rule` and "Engine rules" (2.5 kB); the last paragraph of `### 9.2 ` ("`check` works before `init`"); `#### 9.4.1 ` item 1. doc 08: `### 5.4 ` and in `### 5.5 ` only the rows RP501 to RP512 and the last note (3 kB). doc 03: `### 5.2 ` (the CSS entry; 1 kB). Source: `src/check/rules/RP113.ts`, `src/check/engine.ts`, `src/types.ts` (the type `ComputedLock`).
 
 ### Files
 
@@ -1841,7 +1870,7 @@ Create: `src/check/rules/RP501.ts` to `RP508.ts`, `RP510.ts`, `RP511.ts`, `RP512
 
 ### Steps
 
-1. Branch `task/M6-T31-rules-rp5xx`. Add `RuleContext.cwd` (0.5) when absent.
+1. Branch `task/M6-T31-rules-rp5xx`. RP503 and RP505 read project files below `context.cwd` (it exists since M0-T42, ledger D-142).
 2. Layer P driver in the engine. Run `grep -n "project" src/check/engine.ts` first; when a driver exists, make it satisfy this list, else add it:
    - `options.lock` undefined: layer P does not run; the note that says so stays.
    - Otherwise set `context.lock = options.lock` and call `rule.project(context)` for every rule that has `project`, has `"P"` in `meta.layers`, has `options.host` in `meta.hosts` and passes the `--rule` filter.
@@ -1896,10 +1925,10 @@ Computing the lock (M6-T22). `skills check` (M6-T27). The combined scenario "`up
 
 ---
 
-## M6-T32 Checker layer B procedure and `src/check/flows.ts`
+## M6-T32 Checker layer B procedure: the driver and `src/check/flows.ts` (no `src/check/browser.ts`, D-148)
 
 - **Goal:** Add the browser driver that loads each `--url` in Chromium in three passes and collects the facts the RP601 to RP609 rules read, plus the no-JavaScript flow data.
-- **Depends on:** M1-T46. Also needs `src/testing/upgrade-diff.ts` (M1) and the test helpers `getFixtureServer`, `fixturePageUrl` of `test/support/server.ts`.
+- **Depends on:** M1-T46. (`src/testing/upgrade-diff.ts` and the test helpers `getFixtureServer`, `fixturePageUrl` of `test/support/server.ts` exist since M0 and M1.)
 - **Kind:** `checker`. Size M.
 
 ### Read first
@@ -1908,12 +1937,12 @@ doc 07: `#### 9.5.5 ` (1.1 kB); in `### 9.6 ` only the rows RP601 to RP609 (3 kB
 
 ### Files
 
-Create: `src/check/browser.ts`, `src/check/flows.ts`, `src/check/browser.test.ts`. Change: `src/check/engine.ts` (the call), `src/architecture.test.ts` (PR-M6-3, one entry), `docs/01-architecture.md` and `docs/13-testing.md` (one line each under `## Ledger issues`).
+Create: `src/check/flows.ts` (the flow data and the layer B driver), `src/check/flows.test.ts`. Change: `src/check/engine.ts` (the call), `src/architecture.test.ts` (PR-M6-3, one entry). There is no file `src/check/browser.ts` (ledger D-148). No `## Ledger issues` line: PR-M6-3 and PR-M6-11 are ratified (D-146).
 
 ### Steps
 
 1. Branch `task/M6-T32-layer-b`.
-2. PR-M6-3: in `src/architecture.test.ts` add `"./src/testing/upgrade-diff.ts"` to the array of the `"src/check/**"` entry of `IMPORT_RULES`. Check `grep -n "^import" src/testing/upgrade-diff.ts`: every import MUST be `import type` (Playwright types only). When it has a value import of `playwright`, stop (If blocked). Add the ledger line to doc 01.
+2. PR-M6-3: in `src/architecture.test.ts` add `"./src/testing/upgrade-diff.ts"` to the array of the `"src/check/**"` entry of `IMPORT_RULES`. Check `grep -n "^import" src/testing/upgrade-diff.ts`: every import MUST be `import type` (Playwright types only). When it has a value import of `playwright`, stop (If blocked).
 3. `src/check/flows.ts` (shape PLAN-CHOSEN; the spec says only "data keyed by component id"):
 
    ```ts
@@ -1934,7 +1963,7 @@ Create: `src/check/browser.ts`, `src/check/flows.ts`, `src/check/browser.test.ts
    ```
 
    Exactly these five keys (the V1 flows of row RP606). Other components add entries in their own tasks.
-4. `src/check/browser.ts` (names PLAN-CHOSEN, internal):
+4. The driver, also in `src/check/flows.ts` below `FLOWS` (names PLAN-CHOSEN, internal):
 
    ```ts
    export interface Box { x: number; y: number; width: number; height: number }
@@ -1965,19 +1994,19 @@ Create: `src/check/browser.ts`, `src/check/flows.ts`, `src/check/browser.test.ts
    4. Store the facts in the WeakMap under the pass 2 page. Call `await rule.browser(page, url, context)` for every rule that has `browser`, `"B"` in `meta.layers`, the host in `meta.hosts`, and passes the `--rule` filter. A throw is reported as `RP000` like any rule (engine rule 4).
    5. Close both contexts.
 6. Engine: when `options.browser` is true and `options.urls` has entries, `await runLayerB({ urls, rules, context, chromium: await loadChromium(options.cwd) })`. When `options.browser` is not true, add no note for layer B. When `loadChromium` throws, rethrow an error whose message is `--browser needs Playwright.` (the CLI checks this before calling, M6-T23 step 5).
-7. Tests, `src/check/browser.test.ts`, tier `[T5]` (PR-M6-11; add the ledger line to doc 13). Each test obtains `chromium` with `const { chromium } = await import("playwright")` inside the test and the page URL from `fixturePageUrl(...)` of `test/support/server.ts`; a spy rule `{ meta: { id: "RP601", severity: "error", layers: ["B"], hosts: ["html"], title: "", why: "" }, browser: async (page) => { facts = browserFacts(page) } }` captures the facts.
-   - `[T5] browser: facts for the tabs default fixture have no upgrade failure, no error and equal boxes` (`facts.upgrade.failures.length === 0`, `facts.errors` is empty, every key of `boxesNoJs` is a key of `boxesJs`).
-   - `[T5] browser: overflow is recorded at 375 for a page with a 2000px wide element` (serve a page from a `node:http` server created inside the test on `127.0.0.1` port 0 and closed in `finally`; doc 13 W-1 allows a server started lazily inside a test).
-   - `[T5] browser: a console error and a failed same-origin request are collected` (same local server: an inline `console.error("boom")` and an `img` with a `src` that returns 404 are NOT both failures of `requestfailed`; assert only that `facts.errors` contains a line starting with `boom`).
-   - `[T5] browser: the accordion flow passes with JavaScript off` (a page holding the Accordion `default` fixture, when `accordion` is in the bring-up subset; otherwise `{ skip: "accordion is not in the bring-up subset" }` is NOT allowed under `--no-skips`: build the page from the literal `<details class="rp-accordion__item"><summary>Q</summary><p>A</p></details>` only when the component is absent, and name that in the done file).
-   - `[T5] browser: a flow with no form submitter is ok false`.
-   - `[T5] browser: one browser is launched for two urls` (wrap `chromium.launch` and count).
-   - `[T1] flows: FLOWS has exactly the five V1 keys` in `src/check/flows.test.ts` is NOT a separate file: put it in `browser.test.ts` as `[T1] browser: FLOWS has exactly the five V1 keys`.
-8. Proof: `pnpm build && pnpm test:behavior --files=src/check/browser`, `pnpm test:unit --files=src/architecture`, then PLAN 5.0.
+7. Tests, `src/check/flows.test.ts`, tier `[T5]` except the last (PR-M6-11). Each test obtains `chromium` with `const { chromium } = await import("playwright")` inside the test and the page URL from `fixturePageUrl(...)` of `test/support/server.ts`; a spy rule `{ meta: { id: "RP601", severity: "error", layers: ["B"], hosts: ["html"], title: "", why: "" }, browser: async (page) => { facts = browserFacts(page) } }` captures the facts.
+   - `[T5] flows: facts for the tabs default fixture have no upgrade failure, no error and equal boxes` (`facts.upgrade.failures.length === 0`, `facts.errors` is empty, every key of `boxesNoJs` is a key of `boxesJs`).
+   - `[T5] flows: overflow is recorded at 375 for a page with a 2000px wide element` (serve a page from a `node:http` server created inside the test on `127.0.0.1` port 0 and closed in `finally`; doc 13 W-1 allows a server started lazily inside a test).
+   - `[T5] flows: a console error and a failed same-origin request are collected` (same local server: an inline `console.error("boom")` and an `img` with a `src` that returns 404 are NOT both failures of `requestfailed`; assert only that `facts.errors` contains a line starting with `boom`).
+   - `[T5] flows: the accordion flow passes with JavaScript off` (a page holding the Accordion `default` fixture, when `accordion` is in the bring-up subset; otherwise `{ skip: "accordion is not in the bring-up subset" }` is NOT allowed under `--no-skips`: build the page from the literal `<details class="rp-accordion__item"><summary>Q</summary><p>A</p></details>` only when the component is absent, and name that in the done file).
+   - `[T5] flows: a flow with no form submitter is ok false`.
+   - `[T5] flows: one browser is launched for two urls` (wrap `chromium.launch` and count).
+   - `[T1] flows: FLOWS has exactly the five V1 keys`.
+8. Proof: `pnpm build && pnpm test:behavior --files=src/check/flows`, `pnpm test:unit --files=src/check/flows`, `pnpm test:unit --files=src/architecture`, then PLAN 5.0.
 
 ### Acceptance
 
-The seven tests pass. `grep -c "upgradeDiff" src/check/browser.ts` prints at least `1`; `grep -c "MutationObserver" src/check/browser.ts` prints `0` (UD-6). `grep -n "^import .* from \"playwright\"" src/check/*.ts | grep -v "import type"` prints nothing. Test A-05 of `src/architecture.test.ts` (and build step 10) still passes: `dist/check` loads without `playwright` installed.
+The seven tests pass. `test ! -e src/check/browser.ts` succeeds. `grep -c "upgradeDiff" src/check/flows.ts` prints at least `1`; `grep -c "MutationObserver" src/check/flows.ts` prints `0` (UD-6). `grep -n "^import .* from \"playwright\"" src/check/*.ts | grep -v "import type"` prints nothing. Test A-05 of `src/architecture.test.ts` (and build step 10) still passes: `dist/check` loads without `playwright` installed.
 
 ### Out of scope
 
@@ -1985,7 +2014,7 @@ The nine rule files (M6-T33). The `checkPattern` page script and the agent snaps
 
 ### If blocked
 
-- `pnpm test:behavior --files=src/check/browser` runs zero tests: the runner's tier 5 file list (doc 13 section 1 table: `components/`, `src/elements/`, `test/commerce/`, `test/a11y/`, `test/visual/`) does not include `src/check/`. Read how `test/run.ts` chooses files for a tier; when it selects by the `[T5]` name prefix over all test files, nothing is needed; when it uses path globs, add `src/check/**/*.test.ts` to the tier 5 globs AND make sure tier 1 does not execute `[T5]` tests of that file, record it under `## Ledger issues` of doc 13, and say so in the pull request.
+- `pnpm test:behavior --files=src/check/flows` runs zero tests: the runner's tier 5 file list (doc 13 section 1 table: `components/`, `src/elements/`, `test/commerce/`, `test/a11y/`, `test/visual/`) does not include `src/check/`. Read how `test/run.ts` chooses files for a tier; when it selects by the `[T5]` name prefix over all test files, nothing is needed; when it uses path globs, add `src/check/**/*.test.ts` to the tier 5 globs AND make sure tier 1 does not execute `[T5]` tests of that file, record it under `## Ledger issues` of doc 13, and say so in the pull request.
 - `src/testing/upgrade-diff.ts` has a value import of `playwright`: do not copy the recorder. Draft pull request naming M1's task for that file; UD-6 forbids a second implementation.
 - `layout-shift` entries are not delivered in headless Chromium for the fixture: keep `cls` at 0, keep the box comparison (the second half of RP602), record under `## Ledger issues` of doc 07. Layer B is UNVERIFIED in the spec (13.3 item 6); every deviation found by running it belongs in that list.
 - Chromium is not installed (`browserType.launch: Executable doesn't exist`): this is `BLOCKED-ON-ENV`; run `pnpm exec playwright install chromium` only when CONVENTIONS allows it for your session, otherwise draft pull request.
@@ -2000,16 +2029,16 @@ The nine rule files (M6-T33). The `checkPattern` page script and the agent snaps
 
 ### Read first
 
-doc 07: in `### 9.6 ` only the rows RP601 to RP609 (3 kB); `#### 9.5.5 ` (1.1 kB); `### 9.4.1 ` item 1 (layer B location is `<url> <selector>`). doc 08: `### 5.4 `, in `### 5.5 ` only the rows RP601 to RP609 and the notes on RP607 and on `bad` / `good` (3 kB); the item that starts "- RP607 applies only to roots whose manifest `agent.actions` is non-empty. It reports two things" (0.6 kB). doc 13: `### 5.5 ` (search ``### 5.5 `in-page.ts` ``; 1.5 kB). doc 01: the paragraph that starts `` `loadAgent()` imports the set's `agent` chunk `` (0.4 kB). Source: `src/check/browser.ts`, `src/check/rules/RP113.ts`. This file PR-M6-4, PR-M6-11.
+doc 07: in `### 9.6 ` only the rows RP601 to RP609 (3 kB); `#### 9.5.5 ` (1.1 kB); `#### 9.4.1 ` item 1 (layer B location is `<url> <selector>`). doc 08: `### 5.4 `, in `### 5.5 ` only the rows RP601 to RP609 and the notes on RP607 and on `bad` / `good` (3 kB); the item that starts "- RP607 applies only to roots whose manifest `agent.actions` is non-empty. It reports two things" (0.6 kB). doc 13: `### 5.5 ` (search ``### 5.5 `in-page.ts` ``; 1.5 kB). doc 01: the paragraph that starts `` `loadAgent()` imports the set's `agent` chunk `` (0.4 kB). Source: `src/check/browser.ts`, `src/check/rules/RP113.ts`. This file PR-M6-4, PR-M6-11.
 
 ### Files
 
-Create: `src/check/rules/RP601.ts` to `RP609.ts` and one `.test.ts` beside each (18 files). Change: `src/check/rules/index.ts`; `src/gen/build.ts` (section "RP605" below); `docs/07-manifest-registry-cli.md` (ledger lines).
+Create: `src/check/rules/RP601.ts` to `RP609.ts` and one `.test.ts` beside each (18 files). Change: `src/check/rules/index.ts`; `src/gen/build.ts` (section "RP605" below); `docs/07-manifest-registry-cli.md` (a line under `## Ledger issues` only when a step or "If blocked" says so).
 
 ### Steps
 
 1. Branch `task/M6-T33-rules-rp6xx`.
-2. Module shape, `meta` and `text` as in M6-T29 step 2. All nine: `layers: ["B"]`, hosts all four; severity `error` except RP607 and RP609 (`warning`). Each rule has only a `browser(page, url, context)` function; it reads `browserFacts(page)` and reports with `url`, `selector`, `file: null`, `line: null`, `col: null`.
+2. Module shape, `meta` and `text` as in M6-T29 step 2. All nine: `layers: ["B"]`, hosts all four; severity `error` except RP607 and RP609 (`warning`). Each rule has only a `browser(page, url, context)` function; it reads `browserFacts(page)` (imported from `../flows.ts`, M6-T32; there is no `src/check/browser.ts`) and reports with `url`, `selector`, `file: null`, `line: null`, `col: null`.
 3. Detection:
 
    | Rule | Detection |
@@ -2028,7 +2057,6 @@ Create: `src/check/rules/RP601.ts` to `RP609.ts` and one `.test.ts` beside each 
    - `src/gen/build.ts`: in the step that bundles the `dist/check` entry, before that bundle, build the page script in memory with esbuild (`entryPoints: ["test/support/in-page.ts"]`, `bundle: true`, `format: "iife"`, `platform: "browser"`, `target: "es2022"`, `write: false`, `minify: true`) and pass `define: { __RP_CHECK_IN_PAGE__: JSON.stringify(<the output text>) }` to the `dist/check` bundle and to any other bundle that inlines `src/check` (the CLI bundle when it does not import `dist/check` as an external).
    - `RP605.ts`: `declare const __RP_CHECK_IN_PAGE__: string | undefined`; the script text is `typeof __RP_CHECK_IN_PAGE__ === "string" ? __RP_CHECK_IN_PAGE__ : readFileSync("node_modules/.cache/ripple/test/in-page.js", "utf8")` (the second branch is reached only in tests, where the runner has built that file, doc 13 section 3). Inject with `page.addScriptTag({ content: text })`.
    - For every root on the page of a component whose manifest `a11y.checkPattern` is not null: evaluate in the page `__rpTesting.checkPattern(element, pattern)` inside `try`; on a throw, each non-empty line of the message is one diagnostic with `{Component}` the title and `{value}` the line.
-   - Add under `## Ledger issues` of doc 07: `PR-M6-4: RP605 page script is embedded at build time from test/support/in-page.ts (docs/plan/M6-cli-registry-checker.md 0.9)`.
 5. **RP607.** Only roots of components whose manifest `agent.actions` is a non-empty array. When the page has no such root: return.
    - Find the first `script[src]` whose `src` path ends with `/ripple.js` or `/ripple.elements.js`. In the page: `const mod = await import(src); const agent = await mod.loadAgent(); const snap = agent.createAgent().snapshot()` (doc 01: `loadAgent()` returns a promise of `{ createAgent, agentTools, registerTools }`). When the page has no such script (a bundled build), the rule cannot load the agent chunk: report nothing (the spec says "with `ripple-agent.js` loaded by the checker" and gives no path for bundled pages; record `M6-T33: RP607 on pages without a prebuilt script is not specified` under `## Ledger issues` of doc 07).
    - The shape of `snapshot()` is owned by `docs/04-elements.md` section 12 and doc 08 section 7: before writing the comparison, run `grep -n "snapshot()" docs/08-agent-kit-and-evals.md | head` and read the one paragraph that defines the entry fields `component`, `label`, `items`, `buttons`. Do not invent a field.
@@ -2065,10 +2093,10 @@ Changing the driver's facts (M6-T32) except to fix a defect a test here exposes.
 
 ---
 
-## M6-T34 Registry and CLI acceptance: RB-8, RB-9 and the remaining rows of doc 07 section 12
+## M6-T34 Registry and CLI acceptance: RB-8, RB-9 and the remaining rows of doc 07 §12
 
 - **Goal:** Add the build checks RB-8 and RB-9 that run the built CLI end to end, and the acceptance tests of doc 07 section 12 that no earlier task owns.
-- **Depends on:** M6-T15 to M6-T27. Also needs M6-T31 for the RP511 assertion of item 14 and M6-T33 for the 55-id form of item 20 (each is written conditionally, step 5).
+- **Depends on:** M6-T15 to M6-T27. (The RP511 assertion of item 14 needs M6-T31 and the 55-id form of item 20 needs M6-T33; step 5 writes each conditionally.)
 - **Kind:** `harness`. Size M.
 
 ### Read first
@@ -2178,12 +2206,10 @@ Create: `docs/plan/done/M6-T35.md`. Change nothing else.
    ls pkg/docs/rules/ | grep -c '^RP[0-9][0-9][0-9]\.md$'                   # 55
    ```
 
-8. Layer B ran at least once in CI: the output of `pnpm test --no-skips` contains a passing line starting `[T5] browser:` and one starting `[T5] RP601:`.
+8. Layer B ran at least once in CI: the output of `pnpm test --no-skips` contains a passing line starting `[T5] flows:` and one starting `[T5] RP601:`.
 9. `grep -rn 'PLAN 4.4: M6-' src/` prints nothing.
 10. Write `docs/plan/done/M6-T35.md`. First line `M6 gate: PASS`. Then the commands above with their observed output, the commit hash checked, the list of M6 tasks with their pull requests, and a section `## Open notes` that lists:
-    - every line added under `## Ledger issues` of docs 01, 07, 08, 13 by M6 tasks (the Plan readings PR-M6-1 to PR-M6-13 and the per-task lines);
-    - the rule parts deferred by earlier milestones that no M6 row completes, each with its current state read from the rule file: the Liquid case of RP112, cases (b) and (c) of RP117, the file-existence clause of RP307 (they needed `RuleContext.cwd`, which exists now);
-    - tests E-20, E-21 and the Liquid clauses of E-22 and E-28 of `docs/04-elements.md`, which M3 done files defer "to M6-T05" and which M6-T05 does not contain;
+    - every line added under `## Ledger issues` of docs 01, 07, 08, 13 by M6 tasks (the per-task lines; the Plan readings PR-M6-1 to PR-M6-13 are ratified by D-146 and add none);
     - every UNVERIFIED item of doc 07 `### 13.3 ` that an M6 task settled (Theme Check positions, layer B) with the result;
     - whether `BRINGUP_SUBSET` was still `true` when the gate ran.
     Commit only this file; PLAN 5.0.

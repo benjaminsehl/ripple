@@ -230,7 +230,7 @@ The theme MUST NOT contain: `sections/`, any `*.json` under `templates/`, `asset
 
 ### 4.1 Build procedure (the only way the tree is produced)
 
-Run from the Ripple repository root, after `pnpm build`. Steps 2 to 4 and 6 run `node bin/ripple.mjs` with `examples/liquid` as the working directory.
+Run from the Ripple repository root, after `pnpm build`. Steps 2 to 4 and 6 run `node ../../pkg/bin/ripple.mjs` with `examples/liquid` as the working directory (the built CLI is in `pkg/`; the repository's `bin/ripple.mjs` imports `../dist`, which exists only inside `pkg/`; D-134 item 18). Below, `node bin/ripple.mjs` is written short for that command.
 
 1. Create `examples/liquid/` holding exactly these seven hand-made files and nothing else:
    - `config/settings_data.json`: exactly `{"current": {}}`.
@@ -1082,7 +1082,7 @@ Live store (D-063 tier 8; blocked until Ben provides a store, ledger section 10 
 - **A-20** The questions of section 15 are answered and recorded in `docs/research/spikes/liquid-preview-store-rendering/`.
 - **A-21** With JavaScript disabled: add to cart from the product page ends on a page showing the line; changing a quantity and pressing "Update cart" changes the line; the remove link removes it; the checkout button reaches checkout.
 - **A-22** With JavaScript: add to cart opens the drawer showing the new line with no navigation and exactly one `partials.fetch` request; changing a quantity updates the line total and the summary total; choosing a variant changes price, selected state and the hidden `id` with no navigation; changing a filter changes the results and the URL with no navigation.
-- **A-23** The same fixture page rendered by Shopify and by the shim is canonical-equal for every component fixture (`templates/page.rp-fixtures.liquid`, one `<section data-rp-fixture="<component>/<fixture>">` per case; this template exists only in the test theme, never in `examples/liquid/`).
+- **A-23** The same fixture page rendered by Shopify and by the shim is canonical-equal for every component fixture (`templates/page.rp-fixtures.liquid`, one `<div data-rp-case="<fixture id>">` per case, the form of `13-testing.md` section 13 (D-134 item 17); this template exists only in the test theme, never in `examples/liquid/`).
 
 ---
 
@@ -1137,6 +1137,7 @@ When recommendations cannot be fetched as a partial ([11-components-commerce.md]
 
 2. `config/settings_schema.json` gains a third object: `{ "name": "t:ripple.settings.product", "settings": [ { "type": "collection", "id": "rp_related_collection", "label": "t:ripple.settings.related_collection" } ] }`, and the schema locale gains `ripple.settings.product` = `Product page` and `ripple.settings.related_collection` = `Related products collection`.
 3. Section 9.1 loses the row `rp-product-recommendations`, section 9.2 loses the row "Scroll near recommendations", and section 10.3 loses fact 3.
+4. The acceptance tests change in the same change: A-9 reads "exactly three objects; the second equals `registry/liquid/settings.json`; the third is the object of step 2", and A-13 compares against section 9.1 without the removed row (D-134 item 19).
 
 ---
 

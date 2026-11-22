@@ -186,7 +186,7 @@ Mapping to `RippleProductDetail`: the field list is owned by `05-commerce.md` se
 
 ### Fallback (SPIKE-09)
 
-If a partial cannot be fetched from `routes.product_recommendations_url` on Liquid, the fallback of `11-components-commerce.md` `## ProductRecommendations` (Fallback SPIKE-09) applies: the Liquid template removes the `rec_url` line and the `product-recommendations` block with its partial, and prints in their place `{% block 'featured-collection', collection: settings.rp_related_collection, limit: 4 %}{% endblock %}` inside `{% if settings.rp_related_collection != blank %}` (theme setting `rp_related_collection`, type `collection`, owned by `14-liquid-theme.md`). Test BT-5 skips `rp-product-recommendations` on Liquid, and `featured-collection` is added to the Liquid file's component list. `blueprint.json` regions and the other hosts do not change.
+If a partial cannot be fetched from `routes.product_recommendations_url` on Liquid, the fallback of `11-components-commerce.md` `## ProductRecommendations` (Fallback SPIKE-09) applies: the Liquid template removes the `rec_url` line and the `product-recommendations` block with its partial, and prints in their place `{% block 'featured-collection', collection: settings.rp_related_collection, limit: 4 %}{% endblock %}` inside `{% if settings.rp_related_collection != blank %}` (theme setting `rp_related_collection`, type `collection`, owned by `14-liquid-theme.md`). Test BT-5 skips `rp-product-recommendations` on Liquid, and `featured-collection` is added to the `components` array of `blueprints/product/blueprint.json` (that array is the union over hosts; D-134 item 19). `blueprint.json` regions and the other hosts do not change.
 
 ### Acceptance tests
 

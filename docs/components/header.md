@@ -229,6 +229,7 @@ The `data-hidden` attributes in the default body are matched by `props.css` (uni
 
 ### Host notes
 
+- Binding paths (D-139): `static` that the template language of `07-manifest-registry-cli.md` 2.3 cannot express (D-072 row 2): no `template`; every fixture is `generated: "hand"`; `html` is generated from the fixture files; the `react`, `remix` and `liquid` files are hand-written with their generated regions. Where a line below says a binding is "generated", this line wins.
 - HTML: copy the `default-body` fixture and replace the embedded subtrees with real data.
 - React: `export function Header(props: HeaderProps): JSX.Element`. No hook. `HeaderProps` is the Props table plus `children?: ReactNode`, `className?: string` and rest props (`RestProps<HeaderOwnProps>`). The default body renders `IconButton`, `Logo`, `NavigationMenu`, `AccountLink`, `CartLink` from their own files. The two openers are `<IconButton icon="menu" href={`#${linkList}`} dialog={mobileNav} ariaLabel={strings.menu} hidden="lg:true" />` and `<IconButton icon="search" href={searchUrl} dialog={searchDialog} ariaLabel={strings.search} />`; the cart link is `<CartLink drawer={cartDrawer} href={cartUrl} count={cart?.totalQuantity ?? 0} />`. `data-rp-open` is never passed through rest props (D-009).
 - Remix: same tree; no `data-rmx-*` of its own.

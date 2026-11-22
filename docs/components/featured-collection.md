@@ -160,6 +160,7 @@ Required rules: root `display: flex; flex-direction: column; gap: var(--rp-featu
 
 ### Host notes
 
+- Binding paths (D-139): `static` that the template language of `07-manifest-registry-cli.md` 2.3 cannot express (D-072 row 2): no `template`; every fixture is `generated: "hand"`; `html` is generated from the fixture files; the `react`, `remix` and `liquid` files are hand-written with their generated regions. Where a line below says a binding is "generated", this line wins.
 - HTML: copy the fixture.
 - React: `export function FeaturedCollection(props: FeaturedCollectionProps): JSX.Element | null`. No hook. Returns `null` for the empty case.
 - Remix: none of its own (Carousel prints its own `data-rmx-*`).

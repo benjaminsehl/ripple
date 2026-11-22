@@ -143,6 +143,7 @@ Required rules: `.rp-footer` sets background, colour and `border-block-start`; `
 
 ### Host notes
 
+- Binding paths (D-139): `static` that the template language of `07-manifest-registry-cli.md` 2.3 cannot express (D-072 row 2): no `template`; every fixture is `generated: "hand"`; `html` is generated from the fixture files; the `react`, `remix` and `liquid` files are hand-written with their generated regions. Where a line below says a binding is "generated", this line wins.
 - HTML: copy the `default-body` fixture.
 - React: `export function Footer(props: FooterProps): JSX.Element`. No hook.
 - Remix: same tree; no `data-rmx-*`.

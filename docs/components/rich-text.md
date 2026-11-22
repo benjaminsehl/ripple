@@ -141,6 +141,7 @@ The two last rows MUST be the last rules of file section 2 (they override the ma
 
 ### Host notes
 
+- Binding paths (D-139): `static` that the template language of `07-manifest-registry-cli.md` 2.3 cannot express (D-072 row 2): no `template`; every fixture is `generated: "hand"`; `html` is generated from the fixture files; the `react`, `remix` and `liquid` files are hand-written with their generated regions. Where a line below says a binding is "generated", this line wins.
 - HTML: None.
 - React: `export function RichText(props: RichTextProps)`; when `html` is set the root is rendered with `dangerouslySetInnerHTML={{ __html: html }}` and no children; otherwise with `children`.
 - Remix: when `html` is set the root is rendered with `innerHTML={unsafeHTML(html)}` (D-034 item 6); otherwise with `children`.

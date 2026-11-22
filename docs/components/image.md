@@ -151,6 +151,7 @@ With `ratio="auto"` the box takes the intrinsic ratio from the `width` and `heig
 
 ### Host notes
 
+- Binding paths (D-139): `static` that the template language of `07-manifest-registry-cli.md` 2.3 cannot express (D-072 row 2): no `template`; every fixture is `generated: "hand"`; `html` is generated from the fixture files; the `react`, `remix` and `liquid` files are hand-written with their generated regions. Where a line below says a binding is "generated", this line wins.
 - HTML: write the six `srcset` candidates by hand or copy the reference file; the URL parameters are those of `imageUrl` (`05-commerce.md` section 11.3).
 - React: `export function Image(props: ImageProps)`; generated; no hooks; no `children`. `fetchPriority` is passed to React as `fetchPriority` and printed as `fetchpriority`.
 - Remix: None.

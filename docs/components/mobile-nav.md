@@ -194,6 +194,7 @@ Manifest: `root.class` is `"rp-drawer rp-mobile-nav"`; `dependencies.components`
 
 ### Host notes
 
+- Binding paths (D-139): `native`, bindings loop over a menu: no `template`; every fixture is `generated: "hand"`; `html` is generated from the fixture files; the `react`, `remix` and `liquid` files are hand-written with their generated regions. Where a line below says a binding is "generated", this line wins.
 - HTML: copy the fixture.
 - React: `export function MobileNav(props: MobileNavProps): JSX.Element`, hand-written after the Drawer binding (`10-components-interactive.md` `## Drawer`, Host notes; `06-bindings.md` section 6.6): `useElement(ref, { events: { openchange: onOpenChange } })`; `<dialog>` is an ordinary React element; `suppressHydrationWarning` on `<rp-dialog>` and on `<dialog>`. The binding prints the Drawer markup itself (compose by contract, D-070); it does not render `<Drawer>`. The closer is `<IconButton icon="close" ariaLabel={strings.close} commandFor={id} command="close" />`. The file starts with `"use client"` and exports the component only (D-094).
 - Remix: `data-rmx-key={id}` on `<rp-dialog>`; `data-rmx-preserve-attrs="open"` on `<dialog>` and on every `<details class="rp-mobile-nav-group">`.

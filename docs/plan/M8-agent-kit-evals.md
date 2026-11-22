@@ -1,10 +1,10 @@
 # M8 Agent kit and evals: task detail
 
-Status: detail file for the 43 rows of milestone M8 in `docs/PLAN.md` section 6. `docs/00-decisions.md` (the ledger) wins over every spec; a spec wins over this file. This file adds no public API. Where it fixes a choice the specs leave open, the choice is marked PLAN-CHOSEN (a name) or "Plan reading" (a conflict or silence), and every Plan reading is listed in section 0.12.
+Status: detail file for the 45 rows of milestone M8 in `docs/PLAN.md` section 6. `docs/00-decisions.md` (the ledger) wins over every spec; a spec wins over this file. This file adds no public API. Where it fixes a choice the specs leave open, the choice is marked PLAN-CHOSEN (a name) or "Plan reading" (a conflict or silence), and every Plan reading is listed in section 0.12.
 
-How to use: read `AGENTS.md`, `docs/CONVENTIONS.md`, `docs/PLAN.md` sections 1 to 3 and 5.0, then the parts of section 0 of this file that your task's "Read first" names (0.1, 0.2, 0.5 to 0.8 and 0.13 always; about 16 kB), then ONLY your task's section `## <task id>`. Do not read other task sections and do not read the other `docs/plan/M*.md` files: every rule you need from them is restated in section 0.
+How to use: read `AGENTS.md`, `docs/CONVENTIONS.md`, `docs/PLAN.md` sections 1 to 3 and 5.0, then the parts of section 0 of this file that your task's "Read first" names (0.1, 0.2, 0.5 to 0.8 and 0.13 always; about 17 kB; PLAN section 1 item 4 does not count section 0 in the 60 kB budget), then ONLY your task's section `## <task id>`. Do not read other task sections and do not read the other `docs/plan/M*.md` files: every rule you need from them is restated in section 0.
 
-Contents: 0 Rules for every M8 task. Then M8-T01 to M8-T43 in table order.
+Contents: 0 Rules for every M8 task. Then M8-T01 to M8-T45 in table order (the table lists M8-T44 and M8-T45, the parts 2 and 3 of the eval harness, after the gate M8-T43).
 
 ---
 
@@ -25,7 +25,7 @@ Contents: 0 Rules for every M8 task. Then M8-T01 to M8-T43 in table order.
 | Package placeholder | `ripple-kit`, read only from `PKG_NAME` in `src/identity.ts`; binary `ripple`; `VERSION` `0.1.0`. Hand-written text under `skills/` and `guides/` writes `__PKG__`; the build replaces it in `pkg/` | doc 01 section 6.3 rules 1 and 2 |
 | Command form in static files | always `npx __PKG__ <command>`; the only `docs` forms are `docs`, `docs <component id>`, `docs <RULE>`, `docs guide <topic>` | doc 08 sections 0 and 2.7, ledger D-110 |
 | Hosts | `html`, `react`, `remix`, `liquid` | doc 07 section 4.4 |
-| Test name | `[T<n>] <subject>: <statement>`, flat `test()` from `node:test`, `node:assert/strict`, no `describe`. `<subject>` is the source module name without extension | doc 13 section 2.4 |
+| Test name | `[T<n>] <subject>: <statement>`, flat `test()` from `node:test`, `node:assert/strict`, no `describe`. `<subject>` is the source module name without extension. A name written as `<prefix> ...` fixes the prefix, and the rest is one sentence stating the acceptance item; a full name is used exactly (ledger D-141 (2)). Exception: eval unit tests under `evals/adapters/` run with `node --test` outside `test/run.ts` and are named `<module>: <statement>` with no tier tag (EV-2, PR-M8-10) | doc 13 section 2.4, ledger D-141 |
 | Root test runner | `test/run.ts`; it collects tests under `src/`, `css/`, `components/`, `blueprints/`, `test/` only. It never runs anything under `skills/`, `guides/` or `evals/` | doc 13 section 2.6 |
 | `tsconfig.json` | excludes `evals`; does not include `skills/` or `guides/` | doc 01 section 5.2 |
 | Root scripts | byte-equal to doc 13 section 2.3; they already contain `"eval": "node evals/adapters/run.ts"`. MUST NOT change | doc 13 section 2.3, D-061, D-103 |
@@ -33,7 +33,8 @@ Contents: 0 Rules for every M8 task. Then M8-T01 to M8-T43 in table order.
 | Eval harness runtime | erasable-syntax TypeScript run directly by Node 22.18 or later; no build step; `evals/adapters/package.json` is `"private": true` and depends on `"ripple-kit": "file:../../pkg"` and on `playwright` at the root's exact version | doc 08 section 8.1, doc 01 section 4.2 rule 2 |
 | Eval scoring | weights 35 / 15 / 20 / 10 / 10 / 10; a run passes at total 80 with all gates, functional fraction at least 0.9 and zero checker errors | doc 08 section 8.8 |
 | Proof commands | `pnpm typecheck && pnpm gen --check && pnpm build && pnpm examples:install && pnpm test --no-skips` (`pnpm ci`); while working: `pnpm test:unit --files=<path prefix>`. Eval tasks add the commands of 0.11 | PLAN 5.0 |
-| Node below 24.3 | Remix cases skip; run without `--no-skips`, confirm every skip reason is `Remix needs Node 24.3 or later`, list the skips in the pull request | doc 13 T-7 |
+| Node | Node 24.22.3 (ledger D-136, PLAN section 3.1). Install once per machine; repeat the two `export` lines in every new shell: `export PNPM_HOME="$HOME/.local/share/pnpm"`, `export PATH="$PNPM_HOME:$PATH"`, then `pnpm env use --global 24.22.3`; `node --version` prints `v24.22.3`. `pnpm test --no-skips` needs Node 24.3 or later, because Remix needs it (rule T-7). When that install fails, run each `--no-skips` command without `--no-skips`, check that every skip reason starts with `Remix needs Node 24.3 or later`, list the skip lines in the pull request; the `verify` CI job (Node 24) is the proof | PLAN section 3.1, doc 13 T-7 |
+| Network | Export `RIPPLE_NETWORK=1` before `pnpm ci` (PLAN 5.0): the Remix morph tests start `examples/remix` with `startExample` and skip otherwise (doc 13 T-5). Without network access, run without `--no-skips`, list the skips (reason `RIPPLE_NETWORK is not 1`) in the pull request; the `verify` CI job is the proof | PLAN section 3.1, ledger D-136 |
 
 ### 0.3 The extractors
 
@@ -73,7 +74,7 @@ console.log(out, body.length + 1, "bytes")
 EOF
 ```
 
-Usage: `node node_modules/.cache/ripple/extract.mjs <doc file> '<heading prefix>' <language> <index> <output path>` and `node node_modules/.cache/ripple/extract-indented.mjs <doc file> '<heading prefix>' <language> <indent> <output path>`. Extractions used by this file (bytes and first line checked on 2026-11-22; when either differs the doc changed: stop and report, do not guess another block):
+Usage: `node node_modules/.cache/ripple/extract.mjs <doc file> '<heading prefix>' <language> <index> <output path>` and `node node_modules/.cache/ripple/extract-indented.mjs <doc file> '<heading prefix>' <language> <indent> <output path>`. "Bytes" is the number the extractor prints: for `extract.mjs` `e - s + 1`, for `extract-indented.mjs` `body.length + 1`, that is the JavaScript string length of the block in UTF-16 code units, plus 1 for the trailing newline. It is NOT the output of `wc -c`: for a block with non-ASCII characters the two differ. Compare a size only with the number the extractor prints, or compare files with `cmp` against a fresh extraction. Extractions used by this file (bytes and first line re-run with exactly these arguments on 2026-11-22, after the plan review; when either differs the doc changed: stop and report, do not guess another block):
 
 | Id | Doc | Heading prefix | Lang | Index or indent | Bytes | First line |
 |---|---|---|---|---|---|---|
@@ -84,7 +85,7 @@ Usage: `node node_modules/.cache/ripple/extract.mjs <doc file> '<heading prefix>
 | X-5 | doc 08 | `### 8.14 ` | yaml | indent 2 | 735 | `  evals:` |
 | X-6 | doc 08 | `### 8.3 ` | ts | indent 4 | 292 | `import { serveTheme } from "<pkg>/testing";` |
 | X-7 | doc 08 | `### 7.4 ` | js | index 0 | 649 | `// bundled app (react)` |
-| X-8 | doc 13 | `### 17.4 ` | yaml | index 0 | 1484 | `name: nightly` |
+| X-8 | doc 13 | `### 17.4 ` | yaml | index 0 | 2029 | `name: nightly` |
 
 ### 0.4 Lint scripts for guides and skills
 
@@ -280,8 +281,8 @@ Usage, from the repository root, after `pnpm build` (K-22 also searches `pkg/doc
 | `src/cli/commands/skills.ts` | M6-T26: `syncSkills` reads `<packageRoot>/skills/<name>/{SKILL.md,ripple.json}`; an absent `skills/` syncs nothing | unchanged; M8-T21 tests it on the real skills (K-27) |
 | `skills/`, `guides/`, `evals/` | absent (or holding only what an earlier task created; check with `ls`) | M8-T07 to M8-T20, M8-T04 to M8-T06, M8-T22 onward |
 | `src/agent/` (bridge), `src/commerce/rp-*.ts` | M1, M4: the bridge `createAgent`, `registerTools`, `loadAgent()` on `ripple.js`; each commerce element declares its actions; `src/commerce/rp-cart.agent-confirm.test.ts` (SPIKE-08, M1-T41) | M8-T03 adds tests; it changes source only where a 7.8 test fails |
-| `examples/<host>/` | complete after M7 (M7-T20 to M7-T23): every blueprint installed by the CLI | read by M8-T22 (templates) and M8-T31 to M8-T38 (references) |
-| `.github/workflows/nightly.yml` | text of doc 13 section 17.4 (M0) | M8-T41 appends the `evals` job |
+| `examples/<host>/` | complete after M7 (M7-T20 to M7-T23, M7-T31): every blueprint installed by the CLI | read by M8-T45 (templates), M8-T44 (`reference` and `liquid-theme` states) and M8-T31 to M8-T38 (references) |
+| `.github/workflows/nightly.yml` | text of doc 13 section 17.4 (M0), including the job `commerce` (ledger D-137) | M8-T41 appends the `evals` job |
 | `BRINGUP_SUBSET` | deleted by M5-T14; all 84 components exist | - |
 
 A bring-up line in source carries a comment containing `PLAN 4.4` and the task that removes it. The task that adds the real code deletes the line and its marker. After M8 the only `PLAN 4.4` strings left under `src/` are ones a done file names for M9 (M9-T05 fails on any).
@@ -310,10 +311,10 @@ Eval harness modules (all under `evals/adapters/`; every function is exported fo
 | `RunRecord` | `types.ts` | the shape of `result.json` (X-3) as an interface; `visual` is `null` when unjudged; `scores.visual` is `number \| null` | M8-T22 |
 | `validateTask` | `types.ts` | `(value: unknown, id: string) => string[]`; one message per violation of `EvalTask` (missing or extra key, wrong type, `id` not equal to the directory name, `set` not matching 0.11 core list, `hosts` empty) | M8-T22 |
 | `CORE_SET` | `types.ts` | `["T01","T02","T03","T04","T06","T07","T08","T09","T10","T11"]` (doc 08 section 8.6) | M8-T22 |
-| `buildWorkspace` | `workspace.ts` | `(o: { task: EvalTask; host: Host; arm: Arm; workspaceDir: string; tarball: string; prevTarball?: string; cliImpl?: typeof cli }) => Promise<{ startCommit: string; startModified: string[] }>`; doc 08 sections 8.4 steps 2 and 3 and 8.5 | M8-T22 |
-| `spawnInContainer` | `workspace.ts` | `(argv: string[], o: { cwd: string; env: Record<string, string>; timeoutMs: number; name: string }) => Promise<{ exitCode: number; timedOut: boolean; stdout: string; stderr: string; wallMs: number }>`; the one place that runs `docker` | M8-T22 |
+| `buildWorkspace` | `workspace.ts` | `(o: { task: EvalTask; host: Host; arm: Arm; workspaceDir: string; tarball: string; prevTarball?: string; cliImpl?: typeof cli }) => Promise<{ startCommit: string; startModified: string[] }>`; doc 08 sections 8.4 steps 2 and 3 and 8.5; the options also take `templatesDir?: string` (default `evals/adapters/templates`) | M8-T44 |
+| `spawnInContainer` | `workspace.ts` | `(argv: string[], o: { cwd: string; env: Record<string, string>; timeoutMs: number; name: string }) => Promise<{ exitCode: number; timedOut: boolean; stdout: string; stderr: string; wallMs: number }>`; the one place that runs `docker` | M8-T44 |
 | `parseOptions`, `main` | `run.ts` | `parseOptions(argv: string[])` returns the options of 8.4 plus PR-M8-18; `main(argv: string[], inject?: { adapters?: Record<string, HarnessAdapter> }) => Promise<number>` returns the exit code | M8-T22 (`inject` added by M8-T30) |
-| `cli` | `workspace.ts` | `(workspaceDir: string, host: Host, args: string[]) => Promise<{ code: number; stdout: string; stderr: string }>`; runs the packed CLI in a workspace: Liquid `npx --yes ./vendor/ripple.tgz <args>`, npm hosts `pnpm exec ripple <args>` after the workspace install | M8-T22 |
+| `cli` | `workspace.ts` | `(workspaceDir: string, host: Host, args: string[]) => Promise<{ code: number; stdout: string; stderr: string }>`; runs the packed CLI in a workspace: Liquid `npx --yes ./vendor/ripple.tgz <args>`, npm hosts `pnpm exec ripple <args>` after the workspace install | M8-T44 |
 | `startApp` | `serve.ts` | `(workspaceDir: string, host: Host) => Promise<{ url: string; resetCart(): Promise<void>; close(): Promise<void> }>`; Liquid: exactly the `serveTheme` call of X-6; npm hosts: the template's `start` script on a free port, `resetCart` clears the cart cookie of the checks' browser context | M8-T23 |
 | `waitForRoutes` | `serve.ts` | `(url: string, paths: string[], timeoutMs = 120000) => Promise<void>` | M8-T23 |
 | `pickCatalogue` | `mockshop.ts` | `(runDir: string, fetchImpl = fetch) => Promise<{ product: string; collection: string; page: string }>`; one Storefront API query; cached in `<runDir>/mockshop.json` | M8-T23 |
@@ -337,16 +338,9 @@ Eval harness modules (all under `evals/adapters/`; every function is exported fo
 | sample transcripts | `evals/adapters/__fixtures__/<adapter>.jsonl` and `<adapter>.missing-usage.jsonl` | spec name for the first (E-4); the second is K-61's "missing usage fields" sample | M8-T25 to M8-T27 |
 | friction samples | `evals/adapters/__fixtures__/friction-text.json`, `friction-json.json` | two `RunResult` objects (only `toolOutputs` and `commands` filled) for K-65 | M8-T24 |
 
-### 0.7 Order constraints the task table does not show
+### 0.7 Order of tasks
 
-Obey these in addition to the "Depends on" column. Before starting, check that `docs/plan/done/<id>.md` exists for each task named; when it does not, pick another task. Each row is also reported as a table error (section 0.12).
-
-| Task | Also needs | Why |
-|---|---|---|
-| M8-T03 | M7-T29 | K-51, K-52 and K-54 render blueprint pages |
-| M8-T21 | M8-T04, M8-T05, M8-T06 | K-02 counts 12 guides; K-07 checks every guide |
-| M8-T31 to M8-T38 | M8-T24, and `evals/adapters/templates/<host>/` present for every host the task lists | the reference arm writes `result.json` through `score.ts`; start states `template` and `initialised` need the templates (M8-T22 step 9) |
-| M8-T42 | M8-T25 | the bar runs with the `pi` adapter |
+The "Depends on" column of the task table (PLAN section 6) is the only source of order (PLAN section 1 item 2). Every order constraint that an earlier version of this section listed is now in the table: M8-T03 depends on M7-T29; M8-T21 on M8-T04, M8-T05, M8-T06; M8-T31 to M8-T38 on M8-T24 and M8-T45 (the templates); M8-T33 on M8-T31; M8-T36 on M8-T31 and M8-T33; M8-T42 on M8-T25. No section of this file asks you to wait for a task that is not in its "Depends on" line.
 
 ### 0.8 Shared files that several M8 tasks edit
 
@@ -358,7 +352,9 @@ Edit only what your task names. On a `git rebase origin/main` conflict keep both
 | `test/upgrade/bundles.test.ts` | M8-T02 adds K-41; M8-T03 adds K-53. Never change A-07, A-08, A-13 |
 | `src/gen/build.ts` | only M8-T21, only the two skip lines |
 | `evals/adapters/types.ts` | M8-T22 creates; later tasks MAY add types, never change one |
-| `evals/adapters/run.ts` | M8-T22 creates the CLI with a `// step <n>` comment per step of doc 08 section 8.4; M8-T23, M8-T24, M8-T28, M8-T29, M8-T30 replace only the step stubs they name |
+| `evals/adapters/run.ts` | M8-T22 creates the CLI with a `// step <n>` comment per step of doc 08 section 8.4; M8-T44, M8-T23, M8-T24, M8-T28, M8-T29, M8-T30 replace only the step stubs they name |
+| `evals/adapters/workspace.ts`, `workspace.test.ts` | M8-T44 creates; M8-T32 adds only the T09 previous package and the K-66 test |
+| `evals/adapters/templates/<host>/` | M8-T45 creates; no other task changes them |
 | `evals/adapters/package.json`, `evals/adapters/pnpm-lock.yaml` | M8-T22 creates; a task that adds a dependency runs `pnpm --dir evals/adapters install` and commits both |
 | `evals/rubric/api-decisions.md` | M8-T30 creates; later entries are appended only |
 | `evals/rubric/bar.json` | M8-T29 creates; only M8-T42 (calibration date and numbers, after Ben names the models) writes it later |
@@ -406,16 +402,16 @@ Acceptance for every guide task: the lint prints `ok` for each topic; `grep -c "
 - **EV-6** Core set (`set: "core"`): T01, T02, T03, T04, T06, T07, T08, T09, T10, T11. Extended: T05, T12, T13, T14, T15, T16, T17 (doc 08 section 8.6).
 - **EV-7** Check ids are `<task>-C<n>` exactly as doc 08 section 8.6 numbers them (T03 has C11 between C3 and C4; keep the spec's ids, not a renumbering). Each task also gets `<task>-C0` and `<task>-CL` from `inheritedChecks`.
 - **EV-8** Task group tasks (M8-T31 to M8-T38) follow this order per task: `task.json` (`prompt` copied byte for byte from 8.6, `budgets` from 8.11 with `frozen: false`, `timeoutMs` 2700000, `maxCostUsd` 25 unless 8.6 says otherwise), `checks.spec.ts`, `start/<host>/` (only when 8.6 names an overlay), `reference/<host>/` (a passing solution, written by hand on top of the start state; it is the files that differ from the start state, copied over it by `--reference`), then `pnpm eval -- --reference --tasks <id> --hosts <its hosts>` until every reference passes with total at least 95.
-- **EV-9** `codeDirs` per host (PLAN-CHOSEN; doc 08 section 8.2 gives no values): `react` and `remix` `{ "routes": ["app/routes"], "data": ["app/lib"] }`, `html` `{ "routes": [], "data": ["server"] }`, `liquid` `{ "routes": [], "data": [] }`. One `task.json` serves all hosts, so `codeDirs` lists the union: `{ "routes": ["app/routes"], "data": ["app/lib", "server"] }`. M8-T22 step 9 MUST make the templates use exactly these directories.
+- **EV-9** `codeDirs` per host (PLAN-CHOSEN; doc 08 section 8.2 gives no values): `react` and `remix` `{ "routes": ["app/routes"], "data": ["app/lib"] }`, `html` `{ "routes": [], "data": ["server"] }`, `liquid` `{ "routes": [], "data": [] }`. One `task.json` serves all hosts, so `codeDirs` lists the union: `{ "routes": ["app/routes"], "data": ["app/lib", "server"] }`. M8-T45 MUST make the templates use exactly these directories.
 - **EV-10** A task's `reference/<host>/` holds every file that differs from its `start.base` state, including the files its `start.after` reference and its overlay brought (cumulative; PLAN-CHOSEN). `start.after: "T03"` then needs only one copy, as doc 08 8.5 describes.
 
 ### 0.12 Plan readings made by this file
 
-Each is the smallest choice that keeps the gates green where two specs conflict or all are silent. The task that first applies one adds one line under `## Ledger issues` of the named owning doc (text: `<PR id>: <topic> (docs/plan/M8-agent-kit-evals.md 0.12)`) and mentions it in the pull request.
+Each is the smallest choice that keeps the gates green where two specs conflict or all are silent. All of PR-M8-1 to PR-M8-24 are ratified by ledger D-146 (PR-M8-1 and PR-M8-18 as D-134 item 25, now written into doc 08): a task that applies one cites it in the pull request and adds no ledger-issue line for it.
 
 | # | Topic | The specs | Reading | Owning doc | Applied by |
 |---|---|---|---|---|---|
-| PR-M8-1 | Location of the skills acceptance test | doc 08 4.6: `skills/skills.test.ts`, "run by the root test script". doc 13 2.6: the runner never collects `skills/`; doc 01 6.1: `skills/` is copied to `pkg/skills/`, so a test file there would ship; K-20 allows only `SKILL.md` and `ripple.json` per skill | `src/gen/skills.test.ts`, subject `skills`, tier `[T1]`; it reads `skills/` with `node:fs` (allowed by doc 01 2.2 rule 1 for `src/gen/**`) | doc 08 | M8-T21 |
+| PR-M8-1 | Location of the skills acceptance test | doc 08 4.6 now names `src/gen/skills.test.ts` (D-134 item 25): the runner never collects `skills/`, and `skills/` ships in the package | Ratified as D-134 item 25: `src/gen/skills.test.ts`, subject `skills`, tier `[T1]`; it reads `skills/` with `node:fs` (allowed by doc 01 2.2 rule 1 for `src/gen/**`) | doc 08 | M8-T21 |
 | PR-M8-2 | Tier of package-content tests | K-01, K-02, K-06, K-09 read `pkg/` after a build; doc 13 6.2: a `[T1]` test reads no `pkg/` | `[T10]` (tier 10 runs after the build, doc 13 15.3), in `src/gen/docs.test.ts` | doc 13 | M8-T01 |
 | PR-M8-3 | Tier and file of K-41 and K-53 | both grep `pkg/browser/*.js` | `[T3]` in `test/upgrade/bundles.test.ts`, beside A-07 and A-08, which read the same files | doc 13 | M8-T02 |
 | PR-M8-4 | What K-40 scans | "every string literal passed to `console.warn(` or `console.error(`" | the first argument of every `console.warn(` and `console.error(` call in non-test files under `src/`; it passes when it is a string or template literal starting with `[ripple] `, or an identifier assigned in the same file from such a literal. Anything else fails with the file and line | doc 08 | M8-T02 |
@@ -428,12 +424,12 @@ Each is the smallest choice that keeps the gates green where two specs conflict 
 | PR-M8-11 | Model key and judge call | doc 08 8.14: the key is passed "under the name the harness CLI expects"; 8.9 gives no transport for the judge | `KEY_ENV` in `run.ts`: model id prefix `anthropic/` gives `ANTHROPIC_API_KEY`, `openai/` gives `OPENAI_API_KEY` (UNVERIFIED for each CLI; check each CLI's documentation when the adapter is written and correct the table). `judge.ts` calls the provider HTTP API named by the prefix with the key from `RIPPLE_EVAL_API_KEY` (UNVERIFIED); tests use a stub `fetchImpl` | doc 08 | M8-T22, M8-T28 |
 | PR-M8-12 | What `--reference` runs | K-62 scores references "as if an agent produced it; no model call" | `--reference` copies `reference/<host>/` over the start state as the end state and skips steps 4 to 6 (no container, no adapter, no canary); step 7 serves on the host machine; efficiency and adherence are set to full (8.14) | doc 08 | M8-T22 |
 | PR-M8-13 | Content of `tasks/T09/prev/` | 8.6 T09: "older versions of two files: the Button CSS and the Card CSS"; it does not give them | M8-T32 step 6 | doc 08 | M8-T32 |
-| PR-M8-14 | Source of the npm-host templates | 8.5 describes them; no source names their files | copy the server, data-loading and cart-handler files of `examples/<host>/` and remove every Ripple file (trailered files, `ripple.json`, Ripple imports, skills, the Ripple region of `AGENTS.md`) | doc 08 | M8-T22 |
+| PR-M8-14 | Source of the npm-host templates | 8.5 describes them; no source names their files | copy the server, data-loading and cart-handler files of `examples/<host>/` and remove every Ripple file (trailered files, `ripple.json`, Ripple imports, skills, the Ripple region of `AGENTS.md`) | doc 08 | M8-T45 |
 | PR-M8-15 | `ripple-agent-ready` names `references/agent-ready.md` | outline 4.5.14 "Defers to: `ui-sdk` (...; `references/agent-ready.md`)"; K-28 forbids `references/` in skills | the boundary sentence names `ui-sdk` and its agent-ready reference by words, without the path | doc 08 | M8-T20 |
 | PR-M8-16 | K-26 comparison | "Rules section byte-equal to `UNIVERSAL_RULES`" | the lines between `## Rules` and the next `##` heading, with leading and trailing blank lines removed, joined with `\n`, equal `UNIVERSAL_RULES` (joined with `\n` when it is an array) with `{command}` replaced by `npx __PKG__` | doc 08 | M8-T07 |
 | PR-M8-17 | `{page}` route | 8.5 fixes `/pages/{page}` in every template; `mockshop.ts` fills only `{product}` and `{collection}` | `pickCatalogue` also returns the handle of the first page of `pages(first: 1)`; UNVERIFIED that mock.shop has pages; when it has none, `{page}` is `about` and the template serves a static page for it | doc 08 | M8-T23 |
-| PR-M8-18 | Flags `--bar`, `--calibrate`, `--reference`, `--parallel` | used in 8.4, 8.9, 8.12, 8.15 but absent from the 8.4 synopsis | `run.ts` accepts all four; `--bar` runs the cells of 8.12 with `bar.json` and ignores `--tasks`, `--hosts`, `--adapter`, `--model`, `--arm`, `--runs` | doc 08 | M8-T22 |
-| PR-M8-19 | Files under `evals/adapters/` beyond the 8.1 tree | 8.1 lists the harness files; E-4 adds `__fixtures__/` | also `types.ts`, `tsconfig.json`, `pnpm-lock.yaml`, `*.test.ts` | doc 08 | M8-T22 |
+| PR-M8-18 | Flags `--bar`, `--calibrate`, `--reference`, `--parallel` | the 8.4 synopsis now lists `[--bar] [--calibrate] [--reference] [--parallel <n>]` (D-134 item 25) | Ratified: `run.ts` accepts all four; `--bar` runs the cells of 8.12 with `bar.json` and ignores `--tasks`, `--hosts`, `--adapter`, `--model`, `--arm`, `--runs` | doc 08 | M8-T22 |
+| PR-M8-19 | Files under `evals/adapters/` beyond the 8.1 tree | 8.1 lists the harness files; E-4 adds `__fixtures__/` | also `types.ts`, `tsconfig.json`, `pnpm-lock.yaml`, `*.test.ts` | doc 08 | M8-T22, M8-T44 |
 | PR-M8-20 | Guide summary | 2.5: at most 140 characters, no newline | also no `\|`, because `renderIndex` prints it in a table cell | doc 08 | M8-T04 |
 | PR-M8-21 | How K-31 compares a cell | doc 08 5.5 `RuleText` comment: several forms are joined with ` \| `; the cells are prose ("one of: ...", "... or ...") with code spans; the M6 plan stored multi-form cells unchanged | `normalizeCell` of M8-T01 step 4: a single code span loses its backticks, a cell starting with `computed` becomes `computed`, any other cell is compared unchanged | doc 08 | M8-T01 |
 | PR-M8-22 | `meta.title` | doc 08 5.5: "`meta.title` is the Reports cell"; doc 07 9.3 (and the M6 rule files): the first sentence of the 9.6 "Detects" cell | not changed by M8; recorded for the owners | doc 07, doc 08 | M8-T01 |
@@ -450,7 +446,7 @@ Every task ends with PLAN section 5.0 (commit, push, pull request in the five-he
 
 - **Goal:** Prove with committed tests that the 55 rule files carry exactly the `problem`, `fix` and `why` text of doc 08 section 5.5 and that every rule page is built, and correct the rule files where they do not.
 - **Depends on:** M6-T35.
-- **Kind:** `docs`. Size S.
+- **Kind:** `docs`. Size S. Group A.
 
 ### Read first
 
@@ -519,11 +515,11 @@ The output format of `check` (doc 07). K-35 (M8-T32). Changing the 5.5 table. Th
 
 - **Goal:** Make every message Ripple prints satisfy W-1 to W-6 of doc 08 section 6.1 and prove it with tests K-40, K-41 and K-42.
 - **Depends on:** M5-T15.
-- **Kind:** `runtime`. Size S.
+- **Kind:** `runtime`. Size S. Group A.
 
 ### Read first
 
-doc 08: `## 6. ` whole (`### 6.1 ` to `### 6.4 `, 4.9 kB). doc 06: `### 10. ` heading section "Validation of enumerated and responsive" (search `## 10. `, 2.2 kB) and the paragraph of rule V-2 (search `**V-2**`). doc 13: `### 2.4 `, `### 3.1 ` (the two lines for `test/upgrade/bundles.test.ts` and `test/conformance/hosts.test.ts`). This file 0.6, 0.12 (PR-M8-3, PR-M8-4, PR-M8-5, PR-M8-23, PR-M8-24).
+doc 08: `## 6. ` whole (`### 6.1 ` to `### 6.4 `, 4.9 kB). doc 06: `## 10. ` ("Validation of enumerated and responsive props, per host"; 2.2 kB) and the paragraph of rule V-2 (search `**V-2**`). doc 13: `### 2.4 `, `### 3.1 ` (the two lines for `test/upgrade/bundles.test.ts` and `test/conformance/hosts.test.ts`). This file 0.6, 0.12 (PR-M8-3, PR-M8-4, PR-M8-5, PR-M8-23, PR-M8-24).
 
 ### Files
 
@@ -559,8 +555,8 @@ New warning families. Liquid warnings (6.3: there are none; the checker reports)
 ## M8-T03 Agent surface tests: snapshot per commerce element (C-31), confirmation, labels, acceptance of doc 08 §7.8
 
 - **Goal:** Add the agent tests of doc 08 sections 7.6 and 7.8 (K-50 to K-56) and test C-31 of doc 05, and fix the elements where they fail.
-- **Depends on:** M1-T41, M4-T24. Also 0.7: M7-T29.
-- **Kind:** `harness`. Size M.
+- **Depends on:** M1-T41, M4-T24, M7-T29.
+- **Kind:** `harness`. Size M. Group A.
 
 ### Read first
 
@@ -604,7 +600,7 @@ The guide and skill text (`agent-ready`, M8-T05, M8-T20). RP607 itself (M6). Web
 
 - **Goal:** Write the guides 1 to 4 of doc 08 section 2.5 so that they pass K-07 and appear in the built `INDEX.md`.
 - **Depends on:** M7-T29.
-- **Kind:** `guide`. Size M.
+- **Kind:** `guide`. Size M. Group B.
 
 ### Read first
 
@@ -641,11 +637,11 @@ Guides 5 to 12 (M8-T05, M8-T06). Changing `renderIndex` (M6-T14).
 
 - **Goal:** Write guides 5, 6, 11 and 12 of doc 08 section 2.5.
 - **Depends on:** M7-T29.
-- **Kind:** `guide`. Size M.
+- **Kind:** `guide`. Size M. Group B.
 
 ### Read first
 
-doc 08: `### 2.5 `, `### 2.7 `, `### 2.8 ` rows K-06, K-07, K-09; `## 7. ` (sections 7.1 to 7.5, 9.6 kB) for `agent-ready`. Sources: doc 05 `### 4.4 ` (2.4 kB), `### 6.1 ` (1.6 kB), `### 8.1 ` (2 kB), `### 8.3 ` (8.3 kB), `### 9.2 ` (4.3 kB), `### 10.5 ` (1 kB); doc 11 `### 0.3 ` (5.9 kB), `### 0.7 ` (6.3 kB); ledger D-043, D-090, D-091, D-020; doc 04 `### 10.1 ` to `### 10.8 ` (only the first paragraph and the markup block of each, about 10 kB), `### 3.4 ` prose (not the code); doc 10 `### 0.2 ` (7.2 kB); doc 07 `### 5.1 ` (4.8 kB) prose, `### 7.7 ` (3.3 kB), `### 7.8 ` (2.4 kB), `### 8.4 ` (1.1 kB); ledger D-053, D-056. This file 0.2, 0.4, 0.10.
+doc 08: `### 2.5 `, `### 2.7 `, `### 2.8 ` rows K-06, K-07, K-09; `## 7. ` (sections 7.1 to 7.5, 9.6 kB) for `agent-ready`. Sources: doc 05 `### 4.4 ` (2.4 kB), `### 6.1 ` (1.6 kB), `### 8.1 ` (2 kB), `### 8.3 ` prose only, skip the code blocks (4.6 kB), `### 9.2 ` prose only (2.8 kB), `### 10.5 ` (1 kB); doc 11 `### 0.3 ` (5.9 kB), `### 0.7 ` (6.3 kB); ledger D-043, D-090, D-091, D-020; doc 04 `### 10.1 ` to `### 10.8 ` (only the first paragraph and the markup blocks of each, about 9 kB; skip `### 10.5 `, Menu is not in V1), `### 3.4 ` prose (not the code; 1.5 kB); doc 10 `### 0.2 ` rule G-3 only (search `**G-3**`; 0.9 kB); doc 07 `### 5.1 ` prose (1.7 kB), `### 7.7 ` prose (0.8 kB), `### 7.8 ` (2.4 kB), `### 8.4 ` (1.1 kB); ledger D-053, D-056. This file 0.2, 0.4, 0.10.
 
 ### Files
 
@@ -678,11 +674,11 @@ The skills that cover the same ground (M8-T10, M8-T13, M8-T16, M8-T20).
 
 - **Goal:** Write the four host guides 7 to 10 of doc 08 section 2.5.
 - **Depends on:** M7-T29.
-- **Kind:** `guide`. Size M.
+- **Kind:** `guide`. Size M. Group B.
 
 ### Read first
 
-doc 08: `### 2.5 `, `### 2.7 `, `### 2.8 ` rows K-06, K-07, K-09; `#### 4.5.13 ` "Fallback (SPIKE-11)" line. Sources: doc 06 `### 8.1 ` (1.3 kB), `### 8.2 ` (10 kB), `### 6.1 ` (4.6 kB), `### 6.2 ` prose only (skip code; about 3 kB), `### 7.1 ` (3.9 kB), `### 7.2 ` (2.2 kB), `### 7.3 ` (1.2 kB), `## 9. ` (1.2 kB); doc 14 `### 7.2 ` (0.9 kB), `### 7.3 ` prose above the code (about 1.5 kB), `### 9.3 ` (1 kB), `### 10.1 ` (1.6 kB), `## 11. ` intro (0.5 kB), `### 5.1 ` (1.4 kB); doc 12 `### 2.1 ` (5.6 kB); ledger D-097 (table); doc 05 `### 10.1 ` (5.9 kB), `### 10.2 ` (2.3 kB), `### 8.3 ` (8.3 kB); doc 02 `### 11.7 ` (1.3 kB). Ledger section 3 row SPIKE-11. This file 0.2, 0.4, 0.10.
+doc 08: `### 2.5 `, `### 2.7 `, `### 2.8 ` rows K-06, K-07, K-09; `#### 4.5.13 ` "Fallback (SPIKE-11)" line. Sources: doc 06 `### 8.1 ` (1.3 kB), `### 8.2 ` (10 kB), `### 6.1 ` (4.6 kB), `### 6.2 ` prose only (skip code; about 3 kB), `### 7.1 ` (3.9 kB), `### 7.2 ` (2.2 kB), `### 7.3 ` (1.2 kB), `## 9. ` (1.2 kB); doc 14 `### 7.2 ` (0.9 kB), `### 7.3 ` prose above the code (about 1.5 kB), `### 9.3 ` (1 kB), `### 10.1 ` (1.6 kB), `## 11. ` intro (0.5 kB), `### 5.1 ` (1.4 kB); doc 12 `### 2.1 ` the first table only (2 kB); ledger D-097 (table); doc 05 `### 10.1 ` (5.9 kB), `### 10.2 ` (2.3 kB), `### 8.3 ` prose only, skip the code blocks (4.6 kB); doc 02 `### 11.7 ` (1.3 kB). Ledger section 3 row SPIKE-11. This file 0.2, 0.4, 0.10.
 
 ### Files
 
@@ -715,7 +711,7 @@ The host skills (M8-T17 to M8-T19).
 
 - **Goal:** Write the routing skill `ripple` (doc 08 outline 4.5.1).
 - **Depends on:** M7-T29.
-- **Kind:** `skill`. Size S.
+- **Kind:** `skill`. Size S. Group C.
 
 ### Read first
 
@@ -763,7 +759,7 @@ The other 13 skills. The `AGENTS.md` section (M6-T13).
 
 - **Goal:** Write the skill `ripple-setup` (doc 08 outline 4.5.2).
 - **Depends on:** M7-T29.
-- **Kind:** `skill`. Size S.
+- **Kind:** `skill`. Size S. Group C.
 
 ### Read first
 
@@ -800,7 +796,7 @@ Other skills. Changing `init` messages (doc 07).
 
 - **Goal:** Write the skill `ripple-compose-page` (doc 08 outline 4.5.3).
 - **Depends on:** M7-T29.
-- **Kind:** `skill`. Size S.
+- **Kind:** `skill`. Size S. Group C.
 
 ### Read first
 
@@ -836,7 +832,7 @@ Other skills. Blueprint content (M7).
 
 - **Goal:** Write the skill `ripple-commerce` (doc 08 outline 4.5.4).
 - **Depends on:** M7-T29.
-- **Kind:** `skill`. Size S.
+- **Kind:** `skill`. Size S. Group C.
 
 ### Read first
 
@@ -872,7 +868,7 @@ Other skills. Commerce behaviour.
 
 - **Goal:** Write the skill `ripple-discovery` (doc 08 outline 4.5.5).
 - **Depends on:** M7-T29.
-- **Kind:** `skill`. Size S.
+- **Kind:** `skill`. Size S. Group C.
 
 ### Read first
 
@@ -907,7 +903,7 @@ Other skills.
 
 - **Goal:** Write the skill `ripple-theming` (doc 08 outline 4.5.6).
 - **Depends on:** M7-T29.
-- **Kind:** `skill`. Size S.
+- **Kind:** `skill`. Size S. Group C.
 
 ### Read first
 
@@ -941,7 +937,7 @@ Other skills. Token values (doc 03).
 
 - **Goal:** Write the skill `ripple-customize-component` (doc 08 outline 4.5.7).
 - **Depends on:** M7-T29.
-- **Kind:** `skill`. Size S.
+- **Kind:** `skill`. Size S. Group C.
 
 ### Read first
 
@@ -974,7 +970,7 @@ Other skills.
 
 - **Goal:** Write the skill `ripple-new-component` (doc 08 outline 4.5.8).
 - **Depends on:** M7-T29.
-- **Kind:** `skill`. Size S.
+- **Kind:** `skill`. Size S. Group C.
 
 ### Read first
 
@@ -1008,7 +1004,7 @@ Other skills. The T15 eval task (M8-T35).
 
 - **Goal:** Write the skill `ripple-check-and-fix` (doc 08 outline 4.5.9).
 - **Depends on:** M7-T29.
-- **Kind:** `skill`. Size S.
+- **Kind:** `skill`. Size S. Group C.
 
 ### Read first
 
@@ -1044,7 +1040,7 @@ Other skills. Rule text (M8-T01).
 
 - **Goal:** Write the skill `ripple-upgrade` (doc 08 outline 4.5.10).
 - **Depends on:** M7-T29.
-- **Kind:** `skill`. Size S.
+- **Kind:** `skill`. Size S. Group C.
 
 ### Read first
 
@@ -1078,7 +1074,7 @@ Other skills. The T09 eval task (M8-T32).
 
 - **Goal:** Write the skill `ripple-liquid` (doc 08 outline 4.5.11).
 - **Depends on:** M7-T29.
-- **Kind:** `skill`. Size S.
+- **Kind:** `skill`. Size S. Group C.
 
 ### Read first
 
@@ -1115,7 +1111,7 @@ Other skills. The theme (M7-T23).
 
 - **Goal:** Write the skill `ripple-react` (doc 08 outline 4.5.12).
 - **Depends on:** M7-T29.
-- **Kind:** `skill`. Size S.
+- **Kind:** `skill`. Size S. Group C.
 
 ### Read first
 
@@ -1150,7 +1146,7 @@ Other skills.
 
 - **Goal:** Write the skill `ripple-remix` (doc 08 outline 4.5.13).
 - **Depends on:** M7-T29.
-- **Kind:** `skill`. Size S.
+- **Kind:** `skill`. Size S. Group C.
 
 ### Read first
 
@@ -1186,7 +1182,7 @@ Other skills. SPIKE-11 itself (M1-T45).
 
 - **Goal:** Write the skill `ripple-agent-ready` (doc 08 outline 4.5.14).
 - **Depends on:** M7-T29.
-- **Kind:** `skill`. Size S.
+- **Kind:** `skill`. Size S. Group C.
 
 ### Read first
 
@@ -1220,8 +1216,8 @@ Other skills. Agent tests (M8-T03).
 ## M8-T21 Skills acceptance (doc 08 §4.6) and `AGENTS.md` section acceptance (§3.3, §3.4)
 
 - **Goal:** Commit tests K-20 to K-28 for the 14 skills, the remaining documentation tests K-02, K-06, K-07, K-09, publish `skills/` and `guides/` in `pkg/`, and confirm K-10 to K-16 with all 84 components.
-- **Depends on:** M6-T13, M8-T07 to M8-T20. Also 0.7: M8-T04, M8-T05, M8-T06.
-- **Kind:** `harness`. Size S.
+- **Depends on:** M6-T13, M8-T07 to M8-T20, M8-T04, M8-T05, M8-T06.
+- **Kind:** `harness`. Size S. Group D.
 
 ### Read first
 
@@ -1234,7 +1230,7 @@ Create: `src/gen/skills.test.ts`. Change: `src/gen/docs.test.ts` (K-02, K-06, K-
 ### Steps
 
 1. Branch `task/M8-T21-skills-acceptance`.
-2. `ls skills/ | wc -l` prints `14`; `ls guides/ | wc -l` prints `12`. Otherwise stop (0.7).
+2. `ls skills/ | wc -l` prints `14`; `ls guides/ | wc -l` prints `12`. Otherwise stop: a skill or guide task that this task depends on is not done.
 3. `src/gen/build.ts`: delete the `build: skipped skills (PLAN 4.4)` and `build: skipped guides (PLAN 4.4)` lines and their markers. Step 8 copies `skills/` to `pkg/skills/` with the `__PKG__` replacement of doc 01 section 7 step 8 (the replacement is already applied to every copied text file; use the same function the step uses for `css/`). After `pnpm build`: `ls pkg/skills | wc -l` prints `14`; `grep -rl "__PKG__" pkg/skills pkg/docs` prints nothing.
 4. `src/gen/skills.test.ts` (`[T1]`, subject `skills`), reading `skills/` and `docs/08-agent-kit-and-evals.md` with `node:fs`. Port the checks of `skill-lint.mjs` (0.4), one test per id:
    - `[T1] skills: K-20 skills holds exactly the 14 directories, each with exactly SKILL.md and ripple.json`.
@@ -1267,61 +1263,50 @@ Changing skill or guide content beyond what a failing test forces (fix in the sk
 
 ---
 
-## M8-T22 Eval harness: `evals/adapters/{package.json,run.ts,workspace.ts,Dockerfile,entrypoint.sh}`, `task.json` schema, start states, `templates/<host>/`
+## M8-T22 Eval harness, part 1: `evals/adapters/{package.json,tsconfig.json,types.ts,run.ts}` (option parsing and the step skeleton of doc 08 §8.4), `task.json` validator, `types.test.ts`, `run.test.ts`
 
-- **Goal:** Create the eval harness skeleton: the package, the shared types and `validateTask`, the `run.ts` command line with its nine steps (stubs where later tasks fill them), `workspace.ts` with the four base states and the arms, the container files, and the four base templates.
+- **Goal:** Create the eval harness package, the shared types with `validateTask`, and the `run.ts` command line: option parsing, step 0 and the nine steps of doc 08 8.4 as functions, with stubs that later tasks replace. Part 2 (M8-T44) adds `workspace.ts`, the container files and their tests; part 3 (M8-T45) adds the host templates.
 - **Depends on:** M0-T45.
-- **Kind:** `eval`. Size M (the templates part may be split, step 9).
+- **Kind:** `eval`. Size M. Group A.
 
 ### Read first
 
-doc 08: `## 8. ` intro, `### 8.1 ` to `### 8.5 ` (10.8 kB), `### 8.7 ` the table rows only (search `| Adapter | Command`, 1.5 kB), `### 8.14 ` the last paragraph (0.4 kB). doc 01 `### 4.2 ` rule 2 (search `ONE pnpm package`, 0.5 kB). doc 13 `## 16. ` (0.4 kB). `../hydrogen/scripts/storefront-benchmark-harness/Dockerfile` (0.6 kB) and `entrypoint.sh` (0.7 kB); the docker invocation in `run-opencode-docker.ts` (search `docker`, about 3 kB). This file 0.2, 0.3 (X-1, X-2, X-3, X-6), 0.6, 0.8, 0.11, PR-M8-9 to PR-M8-14, PR-M8-18, PR-M8-19.
+doc 08: `## 8. ` the intro paragraph only (up to `### 8.1 `; 0.5 kB), `### 8.1 ` (2 kB), `### 8.2 ` (1.2 kB), `### 8.4 ` (2.6 kB), `### 8.7 ` the table rows only (search `| Adapter | Command`; 1.5 kB), `### 8.14 ` the last paragraph (0.4 kB). doc 01 `### 4.2 ` rule 2 (search `ONE pnpm package`; 0.5 kB). doc 13 `## 16. ` (0.4 kB). This file 0.2, 0.3 (X-1, X-2, X-3), 0.6, 0.8, 0.11, PR-M8-9 to PR-M8-12, PR-M8-18, PR-M8-19.
 
 ### Files
 
-Create: `evals/adapters/package.json`, `evals/adapters/pnpm-lock.yaml` (written by pnpm), `evals/adapters/tsconfig.json`, `evals/adapters/types.ts`, `evals/adapters/types.test.ts`, `evals/adapters/run.ts`, `evals/adapters/run.test.ts`, `evals/adapters/workspace.ts`, `evals/adapters/workspace.test.ts`, `evals/adapters/Dockerfile`, `evals/adapters/entrypoint.sh`, `evals/adapters/templates/liquid/**`, and (step 9) `evals/adapters/templates/{html,react,remix}/**`.
+Create: `evals/adapters/package.json`, `evals/adapters/pnpm-lock.yaml` (written by pnpm), `evals/adapters/tsconfig.json`, `evals/adapters/types.ts`, `evals/adapters/types.test.ts`, `evals/adapters/run.ts`, `evals/adapters/run.test.ts`. Must not change: the root `package.json`, `tsconfig.json`, `.gitignore`. Do not create `evals/adapters/workspace.ts` (M8-T44) or `evals/adapters/templates/` (M8-T45).
 
 ### Steps
 
-1. Branch `task/M8-T22-eval-harness`.
+1. Branch `task/M8-T22-eval-harness-run`.
 2. `evals/adapters/package.json`: `{ "name": "ripple-evals", "private": true, "type": "module", "dependencies": { "ripple-kit": "file:../../pkg", "playwright": "<v>" }, "devDependencies": { "typescript": "<t>", "@types/node": "<n>" } }` where `<v>`, `<t>`, `<n>` are the exact versions of the root `package.json` (`node -p 'const p=require("./package.json");[p.devDependencies.playwright,p.devDependencies.typescript,p.devDependencies["@types/node"]].join(" ")'`). The name `ripple-evals` is PLAN-CHOSEN. Then `pnpm build && pnpm --dir evals/adapters install` (writes the lockfile). Do not add `evals/adapters` to any workspace file (there is none, doc 01).
 3. `evals/adapters/tsconfig.json`: exactly the object of 0.6 (row "eval type check").
 4. `types.ts`: extract X-1 and X-2 to `node_modules/.cache/ripple/x1.ts` and `x2.ts`, paste them, and prefix `interface EvalTask` with `export`. Add `Host`, `Arm`, `Tier`, `RunRecord` (fields of X-3; extract X-3 to read them, do not paste the JSON), `CORE_SET`, and `validateTask` (0.6). `validateTask` checks: every key of `EvalTask` present, no other key; types; `id` equals the directory name; `set` is `core` exactly when `id` is in `CORE_SET`; `hosts` non-empty and each a `Host`; `start.base` one of the four values; `budgets.frozen` boolean.
 5. `run.ts` (EV-1):
-   - `parseOptions(argv)` with `node:util` `parseArgs`, strict: `--tasks` (`<ids>` comma list, `core`, `all`; default `core`), `--hosts` (default `all`), `--adapter` (default `pi`), `--model` (default `agentModel` of `evals/rubric/bar.json` when that file exists, else `anthropic/claude-opus-4-6`), `--arm` (default `ripple`), `--runs` (default 1), `--judge`, `--out` (default `evals/runs/<UTC YYYYMMDD-HHMMSS>`), `--parallel` (default 2, at most 4), `--reference`, `--bar`, `--calibrate` (PR-M8-18). A leading `--` (from `pnpm eval -- ...`) is dropped. Unknown option or value: print `error: <one sentence>` to standard error, exit 2.
+   - `parseOptions(argv)` with `node:util` `parseArgs`, strict: `--tasks` (`<ids>` comma list, `core`, `all`; default `core`), `--hosts` (default `all`), `--adapter` (default `pi`), `--model` (default `agentModel` of `evals/rubric/bar.json` when that file exists, else `anthropic/claude-opus-4-6`), `--arm` (default `ripple`), `--runs` (default 1), `--judge`, `--out` (default `evals/runs/<UTC YYYYMMDD-HHMMSS>`), `--parallel` (default 2, at most 4), `--reference`, `--bar`, `--calibrate` (the 8.4 synopsis, D-134 item 25). A leading `--` (from `pnpm eval -- ...`) is dropped. Unknown option or value: print `error: <one sentence>` to standard error, exit 2.
    - `main(argv): Promise<number>`; the file ends with `if (import.meta.url === pathToFileURL(process.argv[1]).href) process.exitCode = await main(process.argv.slice(2))`.
-   - Step 0 (PR-M8-9): `pnpm build`, then `pnpm --dir evals/adapters install --frozen-lockfile`, then `await import()` of the sibling modules.
-   - Steps 1 to 9 of doc 08 8.4 as separate functions with a comment `// step <n>` each. This task implements steps 1, 2, 3, 4 (container start), 5 (adapter call through the `HarnessAdapter` loaded from `./<adapter>.ts`; when that file does not exist, exit 2 with `error: adapter <name> is not implemented`), and 9 (write `result.json` from whatever later steps returned; never delete a run directory). Steps 6, 7, 8 are stubs that throw `Error("step <n>: not implemented (<task id>)")` naming M8-T30, M8-T23 and M8-T23/M8-T24.
-   - `--reference` (PR-M8-12): for each cell, build the start state, copy `tasks/<id>/reference/<host>/` over it, skip steps 4 to 6, run step 7 on the host machine.
-   - `KEY_ENV` (PR-M8-11): read `RIPPLE_EVAL_API_KEY`; pass it into the container under `KEY_ENV[<model prefix>]`; an unknown prefix exits 2.
+   - Step 0 (PR-M8-9): `pnpm build`, then `pnpm --dir evals/adapters install --frozen-lockfile`, then `await import()` of the sibling modules that exist.
+   - Steps 1 to 9 of doc 08 8.4 as separate functions with a comment `// step <n>` each. This task implements step 1 (`pnpm build` once; `npm pack` in `pkg/` to `<out>/ripple.tgz`), step 5 (the adapter call through the `HarnessAdapter` loaded from `./<adapter>.ts`; when that file does not exist, exit 2 with `error: adapter <name> is not implemented`) and step 9 (write `result.json` from whatever the other steps returned; never delete a run directory). Every other step is a stub that throws `Error("step <n>: not implemented (<task id>)")` with this task id: steps 2, 3, 4 `M8-T44`; step 6 `M8-T30`; step 7 `M8-T23`; step 8 `M8-T23/M8-T24`.
+   - `--reference` (PR-M8-12): for each cell, call step 2 and step 3, copy `tasks/<id>/reference/<host>/` over the workspace, skip steps 4 to 6, call step 7 on the host machine.
+   - `KEY_ENV` (PR-M8-11): read `RIPPLE_EVAL_API_KEY`; step 5 passes it to the adapter under `KEY_ENV[<model prefix>]`; an unknown prefix exits 2.
    - Cells: tasks times hosts (only hosts the task lists) times runs; up to `--parallel` at once.
-6. `workspace.ts`: `buildWorkspace` (0.6) for the four base states of 8.5, `start.after`, the overlay `start/<host>/`, the arms table of 8.5, then `git init`, `git add -A`, `git -c user.name=ripple-eval -c user.email=eval@localhost commit -m start`. It returns `{ startCommit, startModified }` where `startModified` is the list of paths that `status --json` reports `modified` in the start state (empty for `template`). Rules:
-   - Every state copies the tarball to `workspace/vendor/ripple.tgz`. npm hosts: set the dependency `"ripple-kit": "file:./vendor/ripple.tgz"` in the workspace `package.json` (replace an existing `ripple-kit` entry), then `pnpm install`. Liquid: no install; the CLI is `npx --yes ./vendor/ripple.tgz` (function `cli` of 0.6).
-   - `initialised`: `template`, then `cli(["init"])`, `cli(["add", "--blueprint", "layout"])`, `cli(["skills", "sync"])`; on `liquid` delete `layout/theme.liquid` first and pass `--host liquid` to the first two.
-   - `reference` and `liquid-theme`: copy `examples/<host>/` without `node_modules/`, `.ripple-conformance/` and the example's lockfile, then `cli(["skills", "sync"])`.
-   - Arms: `no-skills` and `pi-package` delete `.claude/skills/ripple*` and `.agents/skills/ripple*`; `control` uses `template` for every task and, for `liquid`, a copy of `theme/` (never modify `theme/`).
-   - `spawnInContainer(argv, { cwd, env, timeoutMs, name })` (PLAN-CHOSEN, exported for the adapters): `docker run --rm --name <name> -v <cwd>:/workspace -w /workspace` plus `-e` for each env entry, image `ripple-eval:latest`, then `argv`. On timeout it runs `docker kill <name>` (E-2). It returns `{ exitCode, timedOut, stdout, stderr, wallMs }`. Port the mounts and the anonymous `node_modules` volume from `run-opencode-docker.ts` when present (M8-R4). Network egress limits (8.4 step 4): use the mechanism of the Hydrogen runner when it has one; otherwise leave a `// UNVERIFIED: egress is not limited` comment and record it in the done file.
-7. `Dockerfile`: `FROM node:24-bookworm-slim`; `apt-get install -y --no-install-recommends ca-certificates git ripgrep`; `npm install -g pnpm@10.33.0 opencode-ai@1.14.30 @earendil-works/pi-coding-agent@1.6.0 <claude package>@2.1.330`, where `<claude package>` is the npm name of Claude Code: UNVERIFIED in the sources; confirm it with `npm view <name>@2.1.330 version` before committing, and when the version does not exist, use the newest version that `claude --help` shows with every flag of the 8.7 row, and record the change. A non-root user `eval`; `WORKDIR /workspace`; `COPY entrypoint.sh /runner/`; `ENTRYPOINT ["/runner/entrypoint.sh"]`. `entrypoint.sh`: the Hydrogen file's three actions (create and chown `/workspace/node_modules`, set `HOME=/home/eval`, `exec setpriv --reuid=eval --regid=eval --init-groups "$@"`). Build tag `ripple-eval:latest` (`docker build -t ripple-eval:latest evals/adapters`) is done by `run.ts` step 4 when the image is missing.
-8. `templates/liquid/`: the platform skeleton only: `layout/theme.liquid` (doctype, `<html lang="en">`, `<head>` with `<meta charset="utf-8">`, `<title>{{ shop.name }}</title>` and a line `{{ content_for_header }}`, `<body>` with `{{ content_for_layout }}`), one empty `templates/<name>.liquid` for each file name in `ls theme/templates/`, `config/settings_schema.json` holding `[]`, `locales/en.default.json` holding `{}`, and `AGENTS.md` holding a `# Theme rules` heading and the bullet list of doc 14 `### 2.1 ` (the rules D-039 keeps) copied verbatim.
-9. `templates/html/`, `templates/react/`, `templates/remix/` (PR-M8-14). Only when `docs/plan/done/M7-T20.md`, `M7-T21.md` and `M7-T22.md` exist; otherwise skip this step, and write `FOLLOW-UP NEEDED: templates html, react, remix (M8-T22 step 9)` in the done file (0.7 makes M8-T31 to M8-T38 wait for them). For each host: copy `examples/<host>/` without `node_modules/`, `.ripple-conformance/`; delete every file that `node <repo>/pkg/bin/ripple.mjs status --json` (run in the copy) lists as installed, then `ripple.json`, `.claude/`, `.agents/`, the Ripple region of `AGENTS.md`, and every import of `ripple-kit`; replace every route file of the 8.5 path list (`/`, `/products/{product}`, `/collections/{collection}`, `/collections`, `/cart`, `/search`, `/pages/{page}`) by one that returns a page with only an `<h1>`; keep the Hydrogen client, the `/api/cart` handlers and the Tailwind v4 set-up. The directories MUST match EV-9 (`app/routes`, `app/lib` on react and remix; `server` on html). `package.json` has the scripts `dev`, `build`, `typecheck`, `start`; `AGENTS.md` lists `install`, `dev`, `build`, `typecheck`, `start` with their commands. Hydrogen's skills: run `npx @shopify/hydrogen skills sync` in the template when the Hydrogen package of the example provides that command and commit its output; otherwise record `UNVERIFIED: Hydrogen skills not synced` in the done file.
-10. Tests (`node --test`, names `<module>: <statement>`, EV-3, EV-4):
-    - `types.test.ts`: `types: validateTask accepts a complete task`, `types: validateTask reports a missing key, an extra key, a wrong set and an id mismatch`.
-    - `run.test.ts`: `run: parseOptions applies the defaults of doc 08 8.4`, `run: parseOptions drops a leading --`, `run: an unknown option exits 2`, `run: K-69 npm pack --dry-run in pkg lists no evals path` (spawns `npm pack --dry-run --json` in `pkg/`; requires a build, skipped with a clear message when `pkg/package.json` is absent).
-    - `workspace.test.ts`: with a synthetic task and a fake tarball file: `workspace: template copies the host template and commits it`, `workspace: an overlay replaces files of the base state`, `workspace: after copies the earlier reference first`, `workspace: no-skills deletes only ripple skills`. Pass a stub for `cli` through an optional `cliImpl` field of the options (PLAN-CHOSEN) so that no package is installed.
-11. Proof: PLAN 5.0 and EV-2.
+6. Tests (`node --test`, names `<module>: <statement>`, EV-3, EV-4; 0.2):
+   - `types.test.ts`: `types: validateTask accepts a complete task`, `types: validateTask reports a missing key, an extra key, a wrong set and an id mismatch`.
+   - `run.test.ts`: `run: parseOptions applies the defaults of doc 08 8.4`, `run: parseOptions drops a leading --`, `run: an unknown option exits 2`, `run: a stub step names the task that implements it` (call the step 2 function; it rejects with `step 2: not implemented (M8-T44)`), `run: K-69 npm pack --dry-run in pkg lists no evals path` (spawns `npm pack --dry-run --json` in `pkg/`; needs a build: when `pkg/package.json` is absent the test fails with the message `run pnpm build first`).
+7. Proof: PLAN 5.0 and EV-2.
 
 ### Acceptance
 
-EV-2 commands exit 0. `node evals/adapters/run.ts --nope; echo $?` prints the error line and `2`. `node -e 'JSON.parse(require("fs").readFileSync("evals/adapters/package.json","utf8")).private===true||process.exit(1)'` exits 0. `git check-ignore evals/runs/x` prints `evals/runs/x`. `ls evals/adapters/templates/liquid/templates | wc -l` equals `ls theme/templates | wc -l`.
+The EV-2 commands exit 0. `node evals/adapters/run.ts --nope; echo $?` prints a line starting `error: ` and then `2`. `node -e 'JSON.parse(require("fs").readFileSync("evals/adapters/package.json","utf8")).private===true||process.exit(1)'` exits 0. `git check-ignore evals/runs/x` prints `evals/runs/x`. `grep -c '// step [1-9]$' evals/adapters/run.ts` prints `9`. `node --test evals/adapters/types.test.ts evals/adapters/run.test.ts` reports `pass 7` and `fail 0`.
 
 ### Out of scope
 
-Serving, checks and scores (M8-T23, M8-T24). Adapters (M8-T25 to M8-T27). The canary (M8-T30). Task files (M8-T31 to M8-T38).
+`workspace.ts`, `spawnInContainer`, `Dockerfile`, `entrypoint.sh` (M8-T44). The host templates (M8-T45). Serving, checks and scores (M8-T23, M8-T24). Adapters (M8-T25 to M8-T27). The canary (M8-T30). Task files (M8-T31 to M8-T38).
 
 ### If blocked
 
 - `pnpm --dir evals/adapters install` resolves the root project instead: add `--ignore-workspace` to every such command in this file's steps and in `run.ts`, and record it.
-- Docker is not available in the session: implement and unit-test everything; state in the pull request that `spawnInContainer` was not run; M8-T39 runs it first.
 
 ---
 
@@ -1329,7 +1314,7 @@ Serving, checks and scores (M8-T23, M8-T24). Adapters (M8-T25 to M8-T27). The ca
 
 - **Goal:** Serve a workspace, pick the catalogue handles, and run a task's deterministic checks, gates `renders`, `no-page-error`, `no-secret`, the screenshots and the deterministic visual checks (steps 7 and 8 of doc 08 8.4, except scoring).
 - **Depends on:** M8-T22.
-- **Kind:** `eval`. Size M.
+- **Kind:** `eval`. Size M. Group B.
 
 ### Read first
 
@@ -1363,6 +1348,7 @@ Scores (M8-T24). Judging (M8-T28). Task checks (M8-T31 to M8-T38).
 
 - `ripple-kit/testing` does not export `serveTheme`: stop; the owner is the M0 or M7 task that built `src/testing/index.ts` (doc 13 4.7).
 - mock.shop has no pages: PR-M8-17 fallback (`about`).
+- `evals/adapters/workspace.ts` does not exist (M8-T44 is not done) and step 7 needs `spawnInContainer` from it: stop and draft pull request; the table is missing the dependency (reported against `docs/PLAN.md` section 6).
 
 ---
 
@@ -1370,7 +1356,7 @@ Scores (M8-T24). Judging (M8-T28). Task checks (M8-T31 to M8-T38).
 
 - **Goal:** Turn a cell's raw results into `result.json` (doc 08 8.8), the outside-Ripple measure (8.10), the friction data (8.13) and an invocation report, with tests K-63, K-64 and K-65.
 - **Depends on:** M8-T22.
-- **Kind:** `eval`. Size M.
+- **Kind:** `eval`. Size M. Group B.
 
 ### Read first
 
@@ -1415,7 +1401,7 @@ K-63 differs at the first decimal: compute without intermediate rounding; when i
 
 - **Goal:** Implement the `pi` adapter of doc 08 8.7 and its transcript test (K-61), including the `pi-package` arm.
 - **Depends on:** M8-T22.
-- **Kind:** `eval`. Size S.
+- **Kind:** `eval`. Size S. Group B.
 
 ### Read first
 
@@ -1444,7 +1430,8 @@ Running pi against a model (M8-T39). Other adapters.
 
 ### If blocked
 
-The pi documentation is not reachable: write the record names of 8.7 only, mark every other field path UNVERIFIED in the constants, and record it in the done file; M8-T39 replaces the sample with a recorded stream.
+- The pi documentation is not reachable: write the record names of 8.7 only, mark every other field path UNVERIFIED in the constants, and record it in the done file; M8-T39 replaces the sample with a recorded stream.
+- `evals/adapters/workspace.ts` does not exist (M8-T44 is not done) and this task imports `spawnInContainer` from it: stop and draft pull request; the table is missing the dependency (reported against `docs/PLAN.md` section 6).
 
 ---
 
@@ -1452,7 +1439,7 @@ The pi documentation is not reachable: write the record names of 8.7 only, mark 
 
 - **Goal:** Implement the `claude-code` adapter of doc 08 8.7 and its transcript test (K-61).
 - **Depends on:** M8-T22.
-- **Kind:** `eval`. Size S.
+- **Kind:** `eval`. Size S. Group B.
 
 ### Read first
 
@@ -1481,7 +1468,7 @@ Running Claude Code (M8-T39).
 
 ### If blocked
 
-As M8-T25.
+As M8-T25 (both items).
 
 ---
 
@@ -1489,7 +1476,7 @@ As M8-T25.
 
 - **Goal:** Port the `opencode` adapter from Hydrogen's `opencode-runner.ts` (doc 08 8.7) with its transcript test (K-61).
 - **Depends on:** M8-T22.
-- **Kind:** `eval`. Size S.
+- **Kind:** `eval`. Size S. Group B.
 
 ### Read first
 
@@ -1513,11 +1500,12 @@ EV-2 commands exit 0; both tests pass.
 
 ### Out of scope
 
-The Hydrogen runner's own docker code (M8-T22 already ported the mounts).
+The Hydrogen runner's own docker code (M8-T44 already ported the mounts).
 
 ### If blocked
 
-`../hydrogen/` is absent: write the adapter from the 8.7 row alone with a synthetic sample (M8-T25 step 4 form) and record it; mark the event names UNVERIFIED.
+- `../hydrogen/` is absent: write the adapter from the 8.7 row alone with a synthetic sample (M8-T25 step 4 form) and record it; mark the event names UNVERIFIED.
+- `evals/adapters/workspace.ts` does not exist (M8-T44 is not done) and this task imports `spawnInContainer` from it: stop and draft pull request; the table is missing the dependency (reported against `docs/PLAN.md` section 6).
 
 ---
 
@@ -1525,11 +1513,11 @@ The Hydrogen runner's own docker code (M8-T22 already ported the mounts).
 
 - **Goal:** Implement the visual judge and calibration of doc 08 8.9, write the rubric, and assemble the golden screenshot set.
 - **Depends on:** M8-T24.
-- **Kind:** `eval`. Size M.
+- **Kind:** `eval`. Size M. Group C.
 
 ### Read first
 
-doc 08: `### 8.9 ` (4 kB), `### 8.12 ` B-3 row and the `calibration` key of X-4 (0.5 kB). Ledger Q14 (search `| Q14 |`). This file 0.6, 0.11, PR-M8-11.
+doc 08: `### 8.9 ` (4 kB), `### 8.12 ` B-3 row and the `calibration` key of X-4 (0.5 kB). Ledger Q28 (search `| Q28 |`) and Q14 (search `| Q14 |`). This file 0.6, 0.11, PR-M8-11.
 
 ### Files
 
@@ -1541,7 +1529,7 @@ Create: `evals/adapters/judge.ts`, `judge.test.ts`, `__fixtures__/judge-answers.
 2. `evals/rubric/visual.md`: the nine-criterion table of 8.9 copied byte for byte, then one `## <key>` section per criterion with five paragraphs headed `0`, `1`, `2`, `3`, `4`. Paragraphs 0, 2, 4 restate the table's anchors; 1 and 3 are the midpoints ("poor", "good"); 4 also says "indistinguishable in quality from the reference blueprint".
 3. `judge.ts` `judgeRun` (0.6): procedure 8.9 steps 1 to 3 literally: temperature 0; input `visual.md`, the prompt and the screenshots only; JSON output with the nine keys; at most two retries for invalid JSON, then `null`; the pairwise cap per criterion against the reference solution's screenshot of the same route and viewport (order randomised with a seed recorded in the cell directory; labels A and B); three judgements, median per criterion. Transport: PR-M8-11 (`fetchImpl` injectable).
 4. `calibrate` (8.9 step 4): judge each golden screenshot (single judgement, no pairwise), compute Spearman correlation and mean absolute error over all (file, criterion) pairs against `ratings.json`; `passed` is Spearman at least 0.7 and MAE at most 0.75. `run.ts --calibrate`: prints the two numbers and `calibration: passed` or `calibration: failed`; exits 0 or 1; when fewer than 30 rated screenshots exist it prints `error: golden set has <n> rated screenshots; at least 30 are needed` and exits 2. It never writes `bar.json` (M8-T42 does).
-5. `rubric/golden/`: at least 30 PNG screenshots taken by `takeScreenshots` (M8-T23) of the reference solutions that exist and of the four examples, file names `<source>-<route>-<viewport>.png`. `ratings.json` is `[]` until people rate them: the ratings are human input (8.9 step 4, ledger Q14) that this task cannot produce. Record `BLOCKED-ON-BEN: golden ratings (ledger Q14)` in the done file.
+5. `rubric/golden/`: at least 30 PNG screenshots taken by `takeScreenshots` (M8-T23) of the reference solutions that exist and of the four examples, file names `<source>-<route>-<viewport>.png`. `ratings.json` is `[]` until Ben rates them: the ratings are human input (8.9 step 4, ledger Q28) that this task cannot produce. This task calibrates only when the ratings exist; it never waits for them. Record `BLOCKED-ON-BEN: golden ratings (ledger Q28; present when docs/plan/done/BEN-ratings.md exists)` in the done file.
 6. Until a calibration has passed, `report.ts` labels visual scores `uncalibrated` (add only that label).
 7. Tests (stub `fetchImpl` returning `__fixtures__/judge-answers.json` answers): `judge: three judgements give the median per criterion`, `judge: invalid JSON is retried twice then discarded`, `judge: a "no" in the pairwise question caps the criterion at 2 and lists it in capped`, `judge: calibrate computes Spearman and MAE` (a hand-computed case of 4 files), `judge: the judge input contains no code, arm or adapter name`.
 8. Proof: PLAN 5.0 and EV-2.
@@ -1556,7 +1544,8 @@ Rating the golden set and writing the calibration into `bar.json` (M8-T42). Ben'
 
 ### If blocked
 
-Fewer than 30 screenshots can be taken because few references exist yet: take the examples' screenshots at all three viewports for every route (4 hosts x 7 routes x 3 viewports is more than 30).
+- Fewer than 30 screenshots can be taken because few references exist yet: take the examples' screenshots at all three viewports for every route (4 hosts x 7 routes x 3 viewports is more than 30).
+- `takeScreenshots` (M8-T23) or the examples (M7-T29) are not done: steps 2 to 4, 6 and 7 do not need them; do those, and open the pull request as a draft for step 5. The table is missing these dependencies (reported against `docs/PLAN.md` section 6).
 
 ---
 
@@ -1564,7 +1553,7 @@ Fewer than 30 screenshots can be taken because few references exist yet: take th
 
 - **Goal:** Add the budget freeze script, `bar.json`, and the `--bar` run that evaluates B-1 to B-8, with test K-68.
 - **Depends on:** M8-T24.
-- **Kind:** `eval`. Size S.
+- **Kind:** `eval`. Size S. Group C.
 
 ### Read first
 
@@ -1601,7 +1590,7 @@ None expected.
 
 - **Goal:** Add the skill-discovery canary (8.4 step 6, K-67), the decision log file, and the computation of the G-1 to G-6 triggers in the report.
 - **Depends on:** M8-T24.
-- **Kind:** `eval`. Size S.
+- **Kind:** `eval`. Size S. Group C.
 
 ### Read first
 
@@ -1638,8 +1627,8 @@ None expected.
 ## M8-T31 Eval task group T01 (home), T02 (product page): `task.json`, `checks.spec.ts`, `start/<host>/`, `reference/<host>/`
 
 - **Goal:** Create the task files and passing reference solutions of T01 and T02.
-- **Depends on:** M7-T29, M8-T23. Also 0.7: M8-T24 and the templates.
-- **Kind:** `eval`. Size M.
+- **Depends on:** M7-T29, M8-T23, M8-T24, M8-T45.
+- **Kind:** `eval`. Size M. Group D.
 
 ### Read first
 
@@ -1676,8 +1665,8 @@ Agent runs (M8-T39). Other tasks.
 ## M8-T32 Eval task group T08 (fix), T09 (upgrade): `task.json`, `checks.spec.ts`, `start/<host>/`, `reference/<host>/`
 
 - **Goal:** Create T08 and T09 with their seeded and previous-package start states, passing references, and tests K-35 and K-66.
-- **Depends on:** M7-T29, M8-T23. Also 0.7: M8-T24 and the templates.
-- **Kind:** `eval`. Size M.
+- **Depends on:** M7-T29, M8-T23, M8-T24, M8-T45.
+- **Kind:** `eval`. Size M. Group D.
 
 ### Read first
 
@@ -1718,8 +1707,8 @@ The T02 and T03 checks themselves (M8-T31, M8-T33).
 ## M8-T33 Eval task group T03 (cart), T04 (collection): `task.json`, `checks.spec.ts`, `start/<host>/`, `reference/<host>/`
 
 - **Goal:** Create T03 and T04 with passing references.
-- **Depends on:** M7-T29, M8-T23. Also 0.7: M8-T24 and the templates; M8-T31 (T03 starts after T02).
-- **Kind:** `eval`. Size M.
+- **Depends on:** M7-T29, M8-T23, M8-T24, M8-T45, M8-T31.
+- **Kind:** `eval`. Size M. Group E.
 
 ### Read first
 
@@ -1755,8 +1744,8 @@ As M8-T31.
 ## M8-T34 Eval task group T05 (search), T16 (chrome): `task.json`, `checks.spec.ts`, `start/<host>/`, `reference/<host>/`
 
 - **Goal:** Create T05 and T16 with their overlays and passing references.
-- **Depends on:** M7-T29, M8-T23. Also 0.7: M8-T24 and the templates.
-- **Kind:** `eval`. Size M.
+- **Depends on:** M7-T29, M8-T23, M8-T24, M8-T45.
+- **Kind:** `eval`. Size M. Group D.
 
 ### Read first
 
@@ -1792,8 +1781,8 @@ As M8-T31.
 ## M8-T35 Eval task group T06 (restyle), T07 (new section), T15 (escape hatch): `task.json`, `checks.spec.ts`, `start/<host>/`, `reference/<host>/`
 
 - **Goal:** Create T06, T07 and T15 with passing references.
-- **Depends on:** M7-T29, M8-T23. Also 0.7: M8-T24 and the templates.
-- **Kind:** `eval`. Size M.
+- **Depends on:** M7-T29, M8-T23, M8-T24, M8-T45.
+- **Kind:** `eval`. Size M. Group D.
 
 ### Read first
 
@@ -1829,8 +1818,8 @@ As M8-T31.
 ## M8-T36 Eval task group T10 (dialog and accordion), T17 (agent ready): `task.json`, `checks.spec.ts`, `start/<host>/`, `reference/<host>/`
 
 - **Goal:** Create T10 and T17 with passing references.
-- **Depends on:** M7-T29, M8-T23. Also 0.7: M8-T24 and the templates; M8-T31 (T10 after T02); M8-T33 (T17 after T03).
-- **Kind:** `eval`. Size M.
+- **Depends on:** M7-T29, M8-T23, M8-T24, M8-T45, M8-T31, M8-T33.
+- **Kind:** `eval`. Size M. Group F.
 
 ### Read first
 
@@ -1866,8 +1855,8 @@ As M8-T31.
 ## M8-T37 Eval task group T11 (Liquid dialect), T12 (Liquid cart): `task.json`, `checks.spec.ts`, `start/<host>/`, `reference/<host>/`
 
 - **Goal:** Create the two Liquid-only tasks T11 and T12 with passing local-tier references.
-- **Depends on:** M7-T29, M8-T23. Also 0.7: M8-T24 and the Liquid template.
-- **Kind:** `eval`. Size M.
+- **Depends on:** M7-T29, M8-T23, M8-T24, M8-T45.
+- **Kind:** `eval`. Size M. Group D.
 
 ### Read first
 
@@ -1904,8 +1893,8 @@ As M8-T31.
 ## M8-T38 Eval task group T13 (plain HTML), T14 (markets): `task.json`, `checks.spec.ts`, `start/<host>/`, `reference/<host>/`
 
 - **Goal:** Create T13 and T14 with passing references.
-- **Depends on:** M7-T29, M8-T23. Also 0.7: M8-T24 and the html and react templates.
-- **Kind:** `eval`. Size M.
+- **Depends on:** M7-T29, M8-T23, M8-T24, M8-T45.
+- **Kind:** `eval`. Size M. Group D.
 
 ### Read first
 
@@ -1937,11 +1926,11 @@ As M8-T31.
 
 ---
 
-## M8-T39 Eval gate E1: baseline run of T01, T02, T08 on `react` and `liquid` (local tier); results in `docs/research/spikes/evals-baseline/README.md`. **BLOCKED-ON-BEN (model access)**
+## M8-T39 Eval gate E1: baseline run of T01, T02, T08 on `react` and `liquid` (local tier); results in `docs/research/spikes/evals-baseline/README.md`. BLOCKED-ON-BEN (model access)
 
 - **Goal:** Run the first agent baseline (doc 08 8.14 "M3" item, gate E1 of PLAN 4.2) and commit its results.
 - **Depends on:** M8-T24, M8-T25, M8-T26, M8-T31, M8-T32. Waits for `docs/plan/done/BEN-eval-access.md` (PLAN 4.3).
-- **Kind:** `gate`. Size S.
+- **Kind:** `gate`. Size S. Group -.
 
 ### Read first
 
@@ -1971,7 +1960,7 @@ Thresholds. Judging. Fixing API friction (decisions follow 8.13).
 ### If blocked
 
 - Model access absent: do not start (PLAN 4.3).
-- A harness failure stops a cell: fix the harness in this pull request only when the fix is under 30 lines and in one module; otherwise record it, name the owning task (M8-T22 to M8-T27), and write `E1: FAIL` with the failing step.
+- A harness failure stops a cell: fix the harness in this pull request only when the fix is under 30 lines and in one module; otherwise record it, name the owning task (M8-T22 to M8-T27, M8-T44, M8-T45), and write `E1: FAIL` with the failing step.
 
 ---
 
@@ -1979,7 +1968,7 @@ Thresholds. Judging. Fixing API friction (decisions follow 8.13).
 
 - **Goal:** Prove that the reference solutions of T01 to T17 all pass (K-62) and that the eval acceptance list K-60 to K-69 holds.
 - **Depends on:** M8-T24, M8-T31 to M8-T38.
-- **Kind:** `gate`. Size S. No source change.
+- **Kind:** `gate`. Size S. Group -. No source change.
 
 ### Read first
 
@@ -2012,11 +2001,11 @@ Any cell fails: write `E2: FAIL` with the cell, name the owning task (T01, T02: 
 
 ---
 
-## M8-T41 Nightly CI job `evals`. **BLOCKED-ON-BEN (model access)**
+## M8-T41 Nightly CI job `evals` (its run step is skipped while the secret `RIPPLE_EVAL_API_KEY` is unset; doc 08 §8.14)
 
-- **Goal:** Add the `evals` job of doc 08 8.14 to `.github/workflows/nightly.yml`.
-- **Depends on:** M8-T39. Waits for `docs/plan/done/BEN-eval-access.md` (PLAN 4.3).
-- **Kind:** `infra`. Size S.
+- **Goal:** Add the `evals` job of doc 08 8.14 to `.github/workflows/nightly.yml`. The task is not blocked (PLAN 4.3): the job's run step is skipped while the secret `RIPPLE_EVAL_API_KEY` is unset, and the job stays green.
+- **Depends on:** M8-T40.
+- **Kind:** `infra`. Size S. Group -.
 
 ### Read first
 
@@ -2048,11 +2037,11 @@ Branch protection. Making the job gate merges (it never does).
 
 ---
 
-## M8-T42 Eval gate E3: judge calibrated, budgets frozen, Sidekick bar B-1 to B-7. **BLOCKED-ON-BEN (model ids, ledger Q17)**
+## M8-T42 Eval gate E3: judge calibrated, budgets frozen, Sidekick bar B-1 to B-7. BLOCKED-ON-BEN (model ids, ledger Q17; human ratings, ledger Q28)
 
 - **Goal:** Calibrate the judge, freeze the budgets, and run the Sidekick bar (gate E3).
-- **Depends on:** M8-T28, M8-T29, M8-T40. Also 0.7: M8-T25. Waits for non-null `weakModel` and `judgeModel` in `evals/rubric/bar.json` (PLAN 4.3) and for at least 30 human ratings in `evals/rubric/golden/ratings.json` (M8-T28 step 5).
-- **Kind:** `gate`. Size M.
+- **Depends on:** M8-T28, M8-T29, M8-T40, M8-T25. BLOCKED-ON-BEN (PLAN 4.3): waits for non-null `weakModel` and `judgeModel` in `evals/rubric/bar.json` (ledger Q17) and for at least 30 human ratings in `evals/rubric/golden/ratings.json` with `docs/plan/done/BEN-ratings.md` present (ledger Q28).
+- **Kind:** `gate`. Size M. Group -.
 
 ### Read first
 
@@ -2064,7 +2053,7 @@ Change: `evals/rubric/bar.json` (`calibration` only), `evals/tasks/*/task.json` 
 
 ### Steps
 
-1. Branch `task/M8-T42-eval-bar`. Confirm both model keys are set and `node -e 'console.log(require("./evals/rubric/golden/ratings.json").length)'` prints at least `30`. Ben's sign-off (8.9 step 5): the reference-blueprint screenshots have a human median of at least 3 on every criterion; when not, stop (the pairwise anchor is not accepted).
+1. Branch `task/M8-T42-eval-bar`. Confirm both model keys are set, `test -f docs/plan/done/BEN-ratings.md` exits 0, and `node -e 'console.log(require("./evals/rubric/golden/ratings.json").length)'` prints at least `30` (ledger Q28). Ben's sign-off (8.9 step 5): the reference-blueprint screenshots have a human median of at least 3 on every criterion; when not, stop (the pairwise anchor is not accepted).
 2. `pnpm eval -- --calibrate`; it MUST print `calibration: passed`. Write the date (UTC `YYYY-MM-DD`), Spearman and MAE into `bar.json` `calibration`.
 3. Budgets: `pnpm eval -- --tasks all --hosts all --adapter pi --arm ripple --runs 10 --out evals/runs/budgets` (model: `agentModel`), then `node evals/adapters/freeze-budgets.ts evals/runs/budgets`; commit the changed `task.json` files (`frozen: true`).
 4. `pnpm eval -- --bar --out evals/runs/bar`. The report MUST show B-1 to B-7 `passed`; B-8 is `blocked` until the preview store exists (ledger Q5) and the Liquid host is not described as ready.
@@ -2089,8 +2078,8 @@ B-8 (M10-T09). Opening decisions for triggers in the report (people do it per 8.
 ## M8-T43 M8 gate
 
 - **Goal:** Prove that milestone M8 is complete by the gate row of `docs/PLAN.md` and record the result.
-- **Depends on:** M8-T40, M8-T01 to M8-T38.
-- **Kind:** `gate`. No source, test or spec file changes.
+- **Depends on:** M8-T01 to M8-T38, M8-T40, M8-T41, M8-T44, M8-T45.
+- **Kind:** `gate`. Size S. Group -. No source, test or spec file changes.
 
 ### Read first
 
@@ -2103,11 +2092,11 @@ Create: `docs/plan/done/M8-T43.md`. Change nothing else.
 ### Steps
 
 1. Branch `task/M8-T43-gate`, from an up-to-date `main`.
-2. Done files: `ls docs/plan/done/ | grep -c '^M8-T\(0[1-9]\|[12][0-9]\|3[0-8]\)\.md$'` MUST print `38`; `docs/plan/done/M8-T40.md` exists and starts with `E2: PASS`. `grep -l 'FOLLOW-UP NEEDED' docs/plan/done/M8-T*.md` prints nothing, or every file it prints names a follow-up task whose own done file exists.
+2. Done files: `ls docs/plan/done/ | grep -c '^M8-T\(0[1-9]\|[12][0-9]\|3[0-8]\|4[0145]\)\.md$'` MUST print `42` (M8-T01 to M8-T38, M8-T40, M8-T41, M8-T44, M8-T45); `docs/plan/done/M8-T40.md` exists and starts with `E2: PASS`. `grep -l 'FOLLOW-UP NEEDED' docs/plan/done/M8-T*.md` prints nothing, or every file it prints names a follow-up task whose own done file exists.
 3. `pnpm install --frozen-lockfile && pnpm ci` exits 0. `pnpm build 2>&1 | grep -c "build: skipped"` prints `0`. `grep -rn "PLAN 4.4" src/` prints nothing, or only lines whose marker names an M9 task.
 4. Acceptance lists (grep the passing lines of `pnpm test --no-skips`): doc 08 2.8 `[T10] docs: K-01`, `K-02`, `K-06`, `K-09`, `[T10] docs: K-07`, `[T1] docs: K-03`, `K-04`, `K-05`, `K-08`; 3.4 `[T1] agents-md: K-10`, `K-11`, `K-12`, `K-14`, `K-16` and the K-13 test of `src/cli/commands/init.test.ts`; 4.6 `[T1] skills: K-20`, `K-21`, `K-23` to `K-28` and `[T10] skills: K-22`; 5.6 `[T1] meta: K-31`, `K-32`, `K-34`, `K-36`, `[T1] report: K-33`; 6.4 `[T1] warnings: K-40`, `[T3] bundles: K-41`, `[T2] hosts: K-42`; 7.8 the K-50 to K-56 and C-31 tests of M8-T03.
 5. `ls pkg/skills | wc -l` prints `14`; `ls pkg/docs/guides | wc -l` prints `12`; `ls pkg/docs/rules | wc -l` prints `55`.
-6. Eval gates: E2 from step 2. E1: `docs/plan/done/M8-T39.md` starts with `E1: PASS`, or `BEN-eval-access.md` is absent and E1 is recorded `BLOCKED-ON-BEN (model access, RIPPLE_EVAL_API_KEY)`. E3: `docs/plan/done/M8-T42.md` starts with `E3: PASS`, or the inputs are absent and E3 is recorded `BLOCKED-ON-BEN (weakModel and judgeModel, ledger Q17; golden ratings, ledger Q14)`.
+6. Eval gates: E2 from step 2. E1: `docs/plan/done/M8-T39.md` starts with `E1: PASS`, or `BEN-eval-access.md` is absent and E1 is recorded `BLOCKED-ON-BEN (model access, RIPPLE_EVAL_API_KEY)`. E3: `docs/plan/done/M8-T42.md` starts with `E3: PASS`, or the inputs are absent and E3 is recorded `BLOCKED-ON-BEN (weakModel and judgeModel, ledger Q17; 30 human ratings, ledger Q28)`.
 7. Write the done file. First line `M8 gate: PASS`. Then the commands with their output, the commit checked, the M8 tasks with their pull requests, the E1 to E3 states, and `## Open notes`: every line added under `## Ledger issues` of docs 01, 07, 08, 13 by M8 tasks (the Plan readings PR-M8-1 to PR-M8-24 and per-task lines); the spike states the skills and guides used (SPIKE-02, -03, -10, -11); K-15 not measured until model access; UNVERIFIED items settled or still open (Claude Code package name, `KEY_ENV`, judge transport, network egress limit, pi record field paths). Commit only this file; PLAN 5.0.
 
 ### Acceptance
@@ -2121,3 +2110,87 @@ Fixing anything. Running blocked gates.
 ### If blocked
 
 Any check fails: first line `M8 gate: FAIL` with the failing command and output, name the owning task (2.8 items: M8-T01, M8-T21, M6-T14; 3.4: M6-T13, M8-T21; 4.6: M8-T21 and the skill task; 5.6: M8-T01; 6.4: M8-T02; 7.8: M8-T03; evals: M8-T40's list), open a draft pull request, stop. Never fix inside the gate task.
+
+---
+
+## M8-T44 Eval harness, part 2: `evals/adapters/workspace.ts` (start states, `spawnInContainer` with kill on timeout), `Dockerfile`, `entrypoint.sh`, `workspace.test.ts`
+
+- **Goal:** Build the eval workspaces (the four base states of doc 08 8.5, the arms, overlays and `start.after`) and run commands in the eval container, and replace the run.ts stubs of steps 2, 3 and 4. Part 1 (M8-T22) made the package and `run.ts`; part 3 (M8-T45) adds the host templates that the `template` and `initialised` states copy.
+- **Depends on:** M8-T22.
+- **Kind:** `eval`. Size M. Group -.
+
+### Read first
+
+doc 08: `### 8.1 ` (2 kB), `### 8.3 ` (1.5 kB), `### 8.4 ` steps 2 to 4 (1 kB), `### 8.5 ` (3.2 kB). `../hydrogen/scripts/storefront-benchmark-harness/Dockerfile` (0.6 kB) and `entrypoint.sh` (0.7 kB); the docker invocation in `run-opencode-docker.ts` of the same directory (search `docker`; about 3 kB) (M8-R4). This file 0.2, 0.6 (rows `buildWorkspace`, `spawnInContainer`, `cli`), 0.8, 0.11 (EV-3, EV-4, EV-9, EV-10). Repository: `evals/adapters/run.ts` (the step 2, 3 and 4 stubs), `evals/adapters/types.ts` (export list).
+
+### Files
+
+Create: `evals/adapters/workspace.ts`, `evals/adapters/workspace.test.ts`, `evals/adapters/Dockerfile`, `evals/adapters/entrypoint.sh`. Change: `evals/adapters/run.ts` (the step 2, 3 and 4 stubs only). Must not change: `theme/**`, `examples/**`, `evals/adapters/types.ts` (except adding types).
+
+### Steps
+
+1. Branch `task/M8-T44-eval-workspace`.
+2. `workspace.ts`: `buildWorkspace` (0.6) for the four base states of 8.5, `start.after`, the overlay `start/<host>/`, the arms table of 8.5, then `git init`, `git add -A`, `git -c user.name=ripple-eval -c user.email=eval@localhost commit -m start`. It returns `{ startCommit, startModified }` where `startModified` is the list of paths that `status --json` reports `modified` in the start state (empty for `template`). Rules:
+   - Every state copies the tarball to `workspace/vendor/ripple.tgz`. npm hosts: set the dependency `"ripple-kit": "file:./vendor/ripple.tgz"` in the workspace `package.json` (replace an existing `ripple-kit` entry), then `pnpm install`. Liquid: no install; the CLI is `npx --yes ./vendor/ripple.tgz` (function `cli` of 0.6).
+   - `template`: copy `evals/adapters/templates/<host>/` (M8-T45; when the directory does not exist, throw `Error("template <host> is missing (M8-T45)")`).
+   - `initialised`: `template`, then `cli(["init"])`, `cli(["add", "--blueprint", "layout"])`, `cli(["skills", "sync"])`; on `liquid` delete `layout/theme.liquid` first and pass `--host liquid` to the first two.
+   - `reference` and `liquid-theme`: copy `examples/<host>/` without `node_modules/`, `.ripple-conformance/` and the example's lockfile, then `cli(["skills", "sync"])`.
+   - Arms: `no-skills` and `pi-package` delete `.claude/skills/ripple*` and `.agents/skills/ripple*`; `control` uses `template` for every task and, for `liquid`, a copy of `theme/` (never modify `theme/`).
+   - Export `buildWorkspace`, `spawnInContainer` and `cli` each as `export async function <name>`.
+   - `templatesDir`: an optional field of the options (PLAN-CHOSEN), default `evals/adapters/templates`; tests pass a temporary directory.
+   - `cliImpl`: an optional field of the options (PLAN-CHOSEN, 0.6) that replaces `cli`, so that tests install no package.
+3. `spawnInContainer(argv, { cwd, env, timeoutMs, name })` (0.6, exported for the adapters): `docker run --rm --name <name> -v <cwd>:/workspace -w /workspace` plus `-e` for each env entry, image `ripple-eval:latest`, then `argv`. On timeout it runs `docker kill <name>`. It returns `{ exitCode, timedOut, stdout, stderr, wallMs }`. Port the mounts and the anonymous `node_modules` volume from `run-opencode-docker.ts` when present (M8-R4). Network egress limits (8.4 step 4): use the mechanism of the Hydrogen runner when it has one; otherwise leave a `// UNVERIFIED: egress is not limited` comment and record it in the done file.
+4. `Dockerfile`: `FROM node:24-bookworm-slim`; `apt-get install -y --no-install-recommends ca-certificates git ripgrep`; `npm install -g pnpm@10.33.0 opencode-ai@1.14.30 @earendil-works/pi-coding-agent@1.6.0 <claude package>@2.1.330`, where `<claude package>` is the npm name of Claude Code: UNVERIFIED in the sources; confirm it with `npm view <name>@2.1.330 version` before committing, and when the version does not exist, use the newest version that `claude --help` shows with every flag of the 8.7 row, and record the change. A non-root user `eval`; `WORKDIR /workspace`; `COPY entrypoint.sh /runner/`; `ENTRYPOINT ["/runner/entrypoint.sh"]`. `entrypoint.sh`: the Hydrogen file's three actions (create and chown `/workspace/node_modules`, set `HOME=/home/eval`, `exec setpriv --reuid=eval --regid=eval --init-groups "$@"`). The image tag `ripple-eval:latest` (`docker build -t ripple-eval:latest evals/adapters`) is built by `run.ts` step 4 when the image is missing.
+5. `run.ts`: replace the stubs of step 2 (`buildWorkspace` into `<out>/<task>-<host>-<arm>-<n>/workspace/`), step 3 (already done by `buildWorkspace`: the step returns its `startCommit`) and step 4 (build the image when missing, then the container is started by the adapter through `spawnInContainer`). Nothing else in `run.ts` changes.
+6. `workspace.test.ts` (`node --test`, names `<module>: <statement>`; a synthetic task, a fake tarball file, a temporary template directory passed as `templatesDir`, and `cliImpl`): `workspace: template copies the host template and commits it`, `workspace: an overlay replaces files of the base state`, `workspace: after copies the earlier reference first`, `workspace: no-skills deletes only ripple skills`, `workspace: spawnInContainer kills the container on timeout` (inject a fake `docker` executable through `PATH` that sleeps; assert `timedOut: true` and that the fake received `kill <name>`).
+7. Proof: PLAN 5.0 and EV-2.
+
+### Acceptance
+
+The EV-2 commands exit 0. `node --test evals/adapters/workspace.test.ts` reports `pass 5` and `fail 0`. `grep -c 'not implemented (M8-T44)' evals/adapters/run.ts` prints `0`. `grep -c '^export async function buildWorkspace\|^export async function spawnInContainer\|^export async function cli' evals/adapters/workspace.ts` prints `3`. `grep -c '^FROM node:24-bookworm-slim$' evals/adapters/Dockerfile` prints `1`.
+
+### Out of scope
+
+The host templates (M8-T45). Serving and checks (M8-T23). The T09 previous package (M8-T32). Adapters (M8-T25 to M8-T27).
+
+### If blocked
+
+- Docker is not available in the session: implement and unit-test everything (the timeout test uses the fake `docker`); state in the pull request that a real container was not started; M8-T39 runs it first.
+
+---
+
+## M8-T45 Eval harness, part 3: host templates `evals/adapters/templates/{liquid,html,react,remix}/`
+
+- **Goal:** Create the four base templates that the `template` and `initialised` start states copy (doc 08 8.5): the Liquid platform skeleton and the html, react and remix apps derived from the M7 examples with every Ripple file removed.
+- **Depends on:** M8-T44, M7-T29.
+- **Kind:** `eval`. Size S. Group -.
+
+### Read first
+
+doc 08: `### 8.5 ` (3.2 kB). doc 14: `### 2.1 ` (the rules D-039 keeps; 1 kB). This file 0.2, 0.11 (EV-9), PR-M8-14. Repository: `ls theme/templates/`; for each npm host the output of `(cd examples/<host> && node ../../pkg/bin/ripple.mjs status --json)` (the installed file list) and `ls -R examples/<host>/src` (react, remix: also `examples/remix/app`).
+
+### Files
+
+Create: `evals/adapters/templates/liquid/**`, `evals/adapters/templates/html/**`, `evals/adapters/templates/react/**`, `evals/adapters/templates/remix/**`. Must not change: `examples/**`, `theme/**`, any file under `evals/adapters/` outside `templates/`.
+
+### Steps
+
+1. Branch `task/M8-T45-eval-templates`. `pnpm build`.
+2. `templates/liquid/`: the platform skeleton only: `layout/theme.liquid` (doctype, `<html lang="en">`, `<head>` with `<meta charset="utf-8">`, `<title>{{ shop.name }}</title>` and a line `{{ content_for_header }}`, `<body>` with `{{ content_for_layout }}`), one empty `templates/<name>.liquid` for each file name in `ls theme/templates/`, `config/settings_schema.json` holding `[]`, `locales/en.default.json` holding `{}`, and `AGENTS.md` holding a `# Theme rules` heading and the bullet list of doc 14 `### 2.1 ` copied verbatim.
+3. `templates/html/`, `templates/react/`, `templates/remix/` (PR-M8-14). For each host: copy `examples/<host>/` without `node_modules/`, `.ripple-conformance/`, `.ripple-blueprints/`, `dist/`; delete every file that `node <repo>/pkg/bin/ripple.mjs status --json` (run in the copy) lists as installed, then `ripple.json`, `.claude/`, `.agents/`, the Ripple region of `AGENTS.md`, and every import of `ripple-kit`; replace every route of the 8.5 path list (`/`, `/products/{product}`, `/collections/{collection}`, `/collections`, `/cart`, `/search`, `/pages/{page}`) by one that returns a page with only an `<h1>`; keep the Hydrogen client, the `/api/cart` handlers and the Tailwind v4 set-up. Move the route code and the data code into the directories of EV-9 (`app/routes` and `app/lib` on react and remix; `server` on html). `package.json` has the scripts `dev`, `build`, `typecheck`, `start`; `AGENTS.md` lists `install`, `dev`, `build`, `typecheck`, `start` with their commands.
+4. Hydrogen's skills: run `npx @shopify/hydrogen skills sync` in each npm template when the Hydrogen package of the example provides that command, and commit its output; otherwise record `UNVERIFIED: Hydrogen skills not synced` in the done file.
+5. Check each npm template in a temporary copy (needs network), for `<host>` in `html`, `react`, `remix`: `d=$(mktemp -d) && cp -r evals/adapters/templates/<host> "$d/t" && (cd "$d/t" && pnpm install && pnpm build)` exits 0.
+6. Proof: PLAN 5.0 and EV-2 (the workspace tests of M8-T44 still pass).
+
+### Acceptance
+
+`ls evals/adapters/templates` prints `html`, `liquid`, `react`, `remix`. `ls evals/adapters/templates/liquid/templates | wc -l` equals `ls theme/templates | wc -l`. `grep -rl 'ripple-kit' evals/adapters/templates` prints nothing. `test -d evals/adapters/templates/react/app/routes && test -d evals/adapters/templates/react/app/lib && test -d evals/adapters/templates/remix/app/routes && test -d evals/adapters/templates/remix/app/lib && test -d evals/adapters/templates/html/server` exits 0. For each npm host, `node -e 'const s=require("./evals/adapters/templates/<host>/package.json").scripts; for (const k of ["dev","build","typecheck","start"]) if (!s[k]) process.exit(1)'` exits 0. With network: step 5 exits 0 for the three npm hosts.
+
+### Out of scope
+
+`workspace.ts` (M8-T44). Task start overlays and references (M8-T31 to M8-T38). Changing an example.
+
+### If blocked
+
+- No network for step 5: BLOCKED-ON-ENV for step 5 only; draft pull request with the templates.
+- `ripple status --json` does not list the installed files: do not guess which files are Ripple's; draft pull request naming the `status` command (M6) as the defect.

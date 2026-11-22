@@ -54,7 +54,7 @@ Fixture `default` (`fill`: `#1d4ed8`):
 <span class="rp-swatch" data-size="md" data-radius="full" aria-hidden="true" style="--rp-swatch-fill:#1d4ed8"></span>
 ```
 
-Fixture `image` (`image`: image of `product.basic`, `size`: `lg`, `radius`: `md`):
+Fixture `image` (`image`: `{ "$resource": "image.shirt-front" }`, `size`: `lg`, `radius`: `md`). The resource `image.shirt-front` is added by the Swatch task under `13-testing.md` RS-2 (D-140, D-134 item 13): both sides are the first image of `product.basic` (the constant `shirtFront` of `src/testing/resources.ts`):
 
 ```html
 <span class="rp-swatch" data-size="lg" data-radius="md" aria-hidden="true"><img class="rp-swatch-image" src="https://cdn.shopify.com/s/files/1/0001/linen-shirt.jpg?width=96" alt="" width="96" height="96" loading="lazy"></span>
@@ -121,6 +121,7 @@ Required rules: root `display: inline-block; overflow: hidden; background-color:
 
 ### Host notes
 
+- Binding paths (D-139): `static` that the template language of `07-manifest-registry-cli.md` 2.3 cannot express (D-072 row 2): no `template`; every fixture is `generated: "hand"`; `html` is generated from the fixture files; the `react`, `remix` and `liquid` files are hand-written with their generated regions. Where a line below says a binding is "generated", this line wins.
 - HTML: None.
 - React: generated. `Swatch(props: { fill?: string; image?: RippleImage | null; size?: "sm" | "md" | "lg"; radius?: "none" | "md" | "full"; className?: string })`; the style is passed as `style={{ "--rp-swatch-fill": fill } as CSSProperties}`.
 - Remix: None.

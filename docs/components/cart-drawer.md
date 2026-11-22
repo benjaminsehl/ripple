@@ -78,7 +78,7 @@ The comment stands for the complete reference HTML of the named CartSummary fixt
 
 Fixture `liquid-default` (same props; host `liquid`): identical except that the first child of body is the `liquid-empty` fixture of CartLines with `id` `cart-drawer-list` (so its form id is `cart-drawer-list-form`). The second child is the same CartSummary `empty` fixture.
 
-Further required fixtures (each in the two backend variants, FX-2): `two-lines` / `liquid-two-lines` (`cart`: `cart.two-lines`; body = CartLines `default` / `liquid-default` with id `cart-drawer-list`, then CartSummary `two-lines` / `liquid-two-lines` with `cartLines` `cart-drawer-list`); `start` (`side`: `start`; `data-side="start"`); `children` (children `<p>Custom</p>`; body contains only that paragraph); `class` (root class `rp-drawer rp-cart-drawer custom-a custom-b`); `invalid-enum-falls-back` (`side`: `top`; equals `default`).
+Further required fixtures: `two-lines` / `liquid-two-lines` (both backend variants, FX-2) (`cart`: `cart.two-lines`; body = CartLines `default` / `liquid-default` with id `cart-drawer-list`, then CartSummary `two-lines` / `liquid-two-lines` with `cartLines` `cart-drawer-list`); hydrogen hosts only, no `liquid-` variant (D-134 item 9): `start` (`side`: `start`; `data-side="start"`); `children` (children `<p>Custom</p>`; body contains only that paragraph); `class` (root class `rp-drawer rp-cart-drawer custom-a custom-b`); `invalid-enum-falls-back` (`side`: `top`; equals `default`).
 
 Host-owned regions and masks: the body's default content is the embedded components' contract; the masks of CartLines and CartSummary apply inside it.
 
@@ -178,7 +178,7 @@ Required rules: `.rp-cart-drawer .rp-drawer-body { display: flex; flex-direction
 
 ### Checker rules
 
-RP104 (`id`), RP114 (`<id>-title`, `<id>-list`), RP201 (dialog name), RP204, RP308 and RP404 (dialog not inside a region or partial), RP403. Manifest `rules[]`: `cart-drawer-status` (`requires-descendant`, selector `dialog`, target `rp-cart [data-rp-part="status"][role="status"]`; "The CartDrawer has no status part; cart changes are not announced inside the modal dialog."); `cart-drawer-one` (`max-count`, selector `.rp-cart-drawer`, count 1).
+RP104 (`id`), RP114 (`<id>-title`, `<id>-list`), RP201 (dialog name), RP204, RP308 and RP404 (dialog not inside a region or partial), RP403. Manifest `rules[]`: `cart-drawer-status` (`requires-descendant`, selector `dialog`, target `rp-cart [data-rp-part="status"][role="status"]`; message "The CartDrawer has no status part; cart changes are not announced inside the modal dialog.", fix "Keep the default body, or include one CartLines in the children."); `cart-drawer-one` (`custom`; detection: walk from R to its document; return `[R]` when an element with class `rp-cart-drawer` comes before R in document order, otherwise `[]`; message "A page has more than one CartDrawer.", fix "Render CartDrawer once, in the layout.") (D-134 item 9).
 
 ### Acceptance tests
 

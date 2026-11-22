@@ -2296,7 +2296,7 @@ Each line is pass or fail. The tier of D-063 is given in brackets.
 1. [1] `pnpm gen --check` exits 0, and exits non-zero after any of: editing a generated binding; changing a value array or a `{% doc %}` line in a hand-written binding (G-3); adding a 151st block file (L-4).
 2. [1] `bindings-lint` rejects each forbidden pattern of section 1.2 and accepts every file under `components/` (`src/gen/bindings-lint.test.ts`).
 3. [1] `src/index.test.ts` passes the table of section 4.
-4. [2] Every fixture of every component passes Q-1 in all hosts listed for it, including for the six example components the twelve fixtures `button/default`, `button/link-disabled`, `button/invalid-enum-falls-back`, `button/escaping`, `button/opener`, `button/popover`, `stack/responsive`, `stack/as`, `dialog/default`, `dialog/default-open`, `tabs/default`, `product-form/default`.
+4. [2] Every fixture of every component passes Q-1 in all hosts listed for it, including for the six example components the twelve fixtures `button/default`, `button/link-disabled`, `button/invalid-enum-falls-back`, `button/escaping`, `button/dialog-opener`, `button/with-icon` (the `popoverTarget` fixture), `stack/responsive`, `stack/row-list` (the `as` fixture; names as in the component specs, D-134 item 8), `dialog/default`, `dialog/default-open`, `tabs/default`, `product-form/default`.
 5. [2] React and Remix type checks exit 0 (Q-7, Q-12), with every `@ts-expect-error` line used.
 6. [2] Remix raw-output assertions pass (Q-14).
 7. [2] Theme Check reports zero errors and zero warnings (Q-19); the M-14 test passes for every block (Q-20).

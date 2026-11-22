@@ -1,10 +1,10 @@
 # M4 Commerce components: task detail
 
-Status: detail file for the 24 rows of milestone M4 in `docs/PLAN.md` section 6. `docs/00-decisions.md` (the ledger) wins over every spec; a spec wins over this file. This file adds no API. Where it fixes a process choice the specs leave open, the choice is marked "Plan reading" and is listed in section 0.8.
+Status: detail file for the 25 rows of milestone M4 in `docs/PLAN.md` section 6. `docs/00-decisions.md` (the ledger) wins over every spec; a spec wins over this file. This file adds no API. Where it fixed a process choice the specs left open, the choice was marked "Plan reading"; ledger section 13.5 (D-134 to D-148) has since ratified or replaced every reading, and section 0.8 names the decision for each. The task table of `docs/PLAN.md` section 6 is the only source of task order: a "Depends on" line below repeats it.
 
-How to use: read `AGENTS.md`, `docs/CONVENTIONS.md`, `docs/PLAN.md` sections 1 to 3 and the recipe of your task's kind (PLAN section 5), then section 0 of this file, then ONLY your task's section `## <task id>`. Do not read other task sections. Do not read `docs/plan/M1-golden-path.md`, `M2-foundations.md` or `M3-interactive.md`: every rule you need from them is restated in section 0.
+How to use: read `AGENTS.md`, `docs/CONVENTIONS.md`, `docs/PLAN.md` sections 1 to 3 and the recipe of your task's kind (PLAN section 5), then the parts of section 0 of this file that your task's kind needs, then ONLY your task's section `## <task id>`. Parts of section 0 by kind: a component task (kind `static`, `native` or `commerce`: M4-T01 to M4-T15, M4-T17, M4-T19) reads 0.1, 0.2, 0.3, 0.6, 0.7, 0.8; an element, runtime, harness or checker task (M4-T16, M4-T18, M4-T20, M4-T21, M4-T23, M4-T25) reads 0.1, 0.2, 0.4, 0.6, 0.7, 0.8; the spike task M4-T22 reads 0.1, 0.2, 0.4, 0.5, 0.7; the gate M4-T24 reads 0.2 and 0.8. Do not read other task sections. Do not read `docs/plan/M1-golden-path.md`, `M2-foundations.md` or `M3-interactive.md`: every rule you need from them is restated in section 0.
 
-Contents: 0 Rules for every M4 task. Then M4-T01 to M4-T24 in table order.
+Contents: 0 Rules for every M4 task. Then M4-T01 to M4-T25 in table order.
 
 ---
 
@@ -15,7 +15,7 @@ Contents: 0 Rules for every M4 task. Then M4-T01 to M4-T24 in table order.
 - **M4-R1** Spec files are large and are edited between sessions. Never use a line number. Find a section by searching for its heading text exactly as this file prints it (for example search `### 7.4 ` in `docs/05-commerce.md`) and read up to the next heading of the same or a higher level.
 - **M4-R2** "Read first" lists are complete. Sizes are approximate. Read nothing else unless a failing command names another file.
 - **M4-R3** "the spec" in a component task is `docs/components/<id>.md`. Its section order is fixed (PLAN 5.1 item 2). The spec's "HTML contract" section is the oracle for every fixture. If this file and the spec list different fixtures, props, parts or rules, the spec wins; note it in the pull request.
-- **M4-R4** `docs/11-components-commerce.md` section 0 is 43 kB. Read only the subsections a task lists. Their sizes: `### 0.2 Embedded components` 9 kB (read only the rows of the components your task embeds or composes), `### 0.3 Region slots` 6 kB (region owners only), `### 0.4 Backend-scoped fixtures and masks` 2 kB, `### 0.5 Resource fixtures` 4 kB (only the rows of the resources your fixtures name), `### 0.7 Shared conventions` 9 kB.
+- **M4-R4** `docs/11-components-commerce.md` section 0 is 27 kB. Read only the subsections a task lists. Their sizes (measured 2026-11-22): `### 0.2 ` 9 kB (read only the rows of the components your task embeds or composes), `### 0.3 ` 6 kB (region owners only), `### 0.4 ` 2 kB, `### 0.5 ` 4 kB (only the rows of the resources your fixtures name), `### 0.6 ` 2 kB, `### 0.7 ` 6 kB.
 
 ### 0.2 Values every M4 task uses
 
@@ -24,11 +24,13 @@ Contents: 0 Rules for every M4 task. Then M4-T01 to M4-T24 in table order.
 | Manifest `since` | `"0.1.0"` | `docs/07-manifest-registry-cli.md` section 1.7 |
 | Manifest `status` | `"stable"` for kinds `static` and `native`; `"beta"` for kind `commerce` | PLAN 3.2 |
 | Render hosts | `html`, `react`, `remix`, `liquid` (Liquid means the shim of `src/testing/liquid-shim.ts`) | CONVENTIONS 1 |
-| Bring-up mode | `BRINGUP_SUBSET` is `true`; `pnpm gen --check` accepts a subset of the 84 ids | PLAN 4.4 |
+| Bring-up mode | `BRINGUP_SUBSET` is `true`; `pnpm gen --check` accepts a subset of the 84 ids, and build check MB-1 ignores an entry that names a ledger component that is not present yet (for example a `liquid.embeddedBy` id of a component a later task adds) | PLAN 4.4; ledger D-135 |
+| Node | Node 24.22.3. The install step, the two `export` lines for every new shell, and the fallback when the install fails are in `docs/PLAN.md` section 3.1 (ledger D-136). Every `--no-skips` command of this file follows that rule | PLAN 3.1 |
+| Network | Every M4 task comes after M1-T15: export `RIPPLE_NETWORK=1` before `pnpm ci` (the Remix morph tests start `examples/remix` with `startExample` and skip otherwise, `docs/13-testing.md` rule T-5). Without network access, run without `--no-skips`, list the skips (reason `RIPPLE_NETWORK is not 1`) in the pull request; the `verify` CI job is the proof | PLAN 3.1; ledger D-136 |
 | Branch | `task/<task id>-<slug>`; the slug is given in each task's Steps | PLAN 2 |
-| Test name | `[T<tier>] <subject>: <ID> <statement>`; flat `test()` from `node:test`; no `describe`. `<subject>` and `<ID>` are given by this file; `<statement>` is a short fragment the implementer writes | `docs/13-testing.md` section 2.4 |
+| Test name | `[T<tier>] <subject>: <ID> <statement>`; flat `test()` from `node:test`; no `describe`. When this file writes a name as a prefix followed by `...`, the name starts with exactly that prefix and the rest is one sentence stating the acceptance item; a name written in full is used exactly | `docs/13-testing.md` section 2.4; ledger D-141 (2) |
 | Test style | `openPage()` per test, closed in `finally`; no fixed delay except a duration a spec states; last assertion `assert.deepEqual(opened.errors, [])` | `docs/13-testing.md` section 2.5 |
-| `[chromium]` tag | allowed only for a Chromium-only API or a computed-style snapshot, with the comment line `// [chromium]: <reason>` above the test | `docs/13-testing.md` N-2 |
+| `[chromium]` tag | at the END of the name; allowed only for a Chromium-only API, a computed-style snapshot or React client-render equality, with the comment line `// [chromium]: <reason>` above the test | `docs/13-testing.md` N-2 |
 
 The 26 components of `docs/11-components-commerce.md`: nine exist since M1 (`price add-to-cart-button checkout-button product-form cart-link cart-line cart-summary cart-lines cart-drawer`). M4 adds seventeen: `swatch search-form product-card collection-card article-card price-range filter-group live-form filters filter-chips sort-select variant-picker product-gallery cart-note discount-code predictive-search product-recommendations`.
 
@@ -48,30 +50,30 @@ A component task says "Recipe: S" (or C, C+R). Do every step of that recipe in `
 
   When the spec gives no value for a REQUIRED manifest key, stop: record it under `## Ledger issues` of `docs/11-components-commerce.md`, mention it in the pull request, take the smallest value that keeps `pnpm gen --check` green.
 - **M4-R6 Fixtures.** For a hand-written component every fixture is `generated: "hand"` (recipe C step 2). Write `components/<id>/fixtures/<name>.html` with the HTML of the spec. Where the spec prints a fenced block, copy it. Where it lists a fixture under "Further required fixtures", the HTML is the `default` fixture with exactly the stated change (FX-3). A line `<!-- <Component> fixture `<name>` -->` inside a fenced block stands for the complete file `components/<that id>/fixtures/<name>.html` with the prop changes stated next to the block; paste that file's content; no fixture file contains an HTML comment (FX-5). Only CartNote and DiscountCode have backend-scoped fixtures in M4: `<name>` with `"hosts": ["html", "react", "remix"]` and `liquid-<name>` with `"hosts": ["liquid"]` (FX-2). Every other M4 component has one fixture per name, rendered by all four hosts, made equal by the masks the spec lists. Add no mask the spec does not list; report instead.
-- **M4-R7 Fixture data that the resource set cannot express (Plan reading PR-M4-1; an open spec gap).** A fixture prop value is a string, a number, a boolean or `{ "$resource": "<type>.<name>" }` (`docs/02-html-contract.md` section 11, schema `propValue`), and the loader passes the WHOLE resource: its `hydrogen` side to `react` and `remix`, its `liquid` side to `liquid` (`docs/13-testing.md` rule RS-3). Several M4 fixtures name a member of a resource, an array, or data in no resource. Procedure, in this order:
+- **M4-R7 Fixture data that no resource holds (ledger D-140; `docs/13-testing.md` rule RS-2).** A fixture prop value is a string, a number, a boolean or `{ "$resource": "<type>.<name>" }` (`docs/02-html-contract.md` section 11, schema `propValue`), and the loader passes the WHOLE resource: its `hydrogen` side to `react` and `remix`, its `liquid` side to `liquid` (`docs/13-testing.md` rule RS-3). Several M4 fixtures name a member of a resource, an array, or data in no resource. Procedure, in this order:
   1. Read the keys of `RESOURCES` in `src/testing/resources.ts` and the table of `docs/11-components-commerce.md` `### 0.5 `. When a resource exists whose side already IS the value, use it. When section 0.5 now names a resource for your fixture, use that name (it was added after this file was written).
-  2. Otherwise add a resource, by `docs/13-testing.md` rule RS-2, in the same pull request: one entry in `RESOURCES`, one row in the table of `docs/13-testing.md` `### 4.2 `, one row in the table of `docs/11-components-commerce.md` `### 0.5 `, and one line under `## Ledger issues` of `docs/11-components-commerce.md` (`resource <name> added by <task id> (PLAN M4-R7)`). When a `[T1] resources:` test pins the list of names, add the name there.
-  3. Name: `<component id>.<fixture name>`. Its `hydrogen` side is the value of the TSX object prop of that fixture; its `liquid` side is the value of the Liquid object param of that fixture (the drop stand-in the Liquid binding reads). The fixture then passes the SAME reference to both props (the TSX prop has `hosts: ["react", "remix"]`, the Liquid param has `hosts: ["liquid"]`, so each host receives one of them). When one fixture needs a SECOND TSX object prop, that one is `<component id>-<prop in kebab-case>.<fixture name>` with both sides equal.
+  2. Otherwise add the resource in the task's own commit (RS-2, D-140): one entry in `RESOURCES` of `src/testing/resources.ts`, one row in the table of `docs/13-testing.md` `### 4.2 `, one row in the table of `docs/11-components-commerce.md` `### 0.5 `, and the name in the name list of the `[T1] resources:` test. Append the `RESOURCES` entry as the last entry and the table row as the last row, so that the test `[T1] resources: the set is the documented set` (same keys, same order) still passes. This is an allowed edit of a numbered doc (PLAN section 1, D-140); no `## Ledger issues` line is needed.
+  3. Name: use exactly the name the task section gives (those names are adopted by D-140). A resource that no task section names follows D-140: `<type>.<name>` when the value has a resource type (`product`, `variant`, `collection`, `article`, `line`, `cart`, `image`, `media`, `menu`, `shop`, `locale`, `filters`, `search`), otherwise `<component id>.<fixture name>`. Its `hydrogen` side is the value of the TSX object prop of that fixture; its `liquid` side is the value of the Liquid object param of that fixture (the drop stand-in the Liquid binding reads). The fixture then passes the SAME reference to both props (the TSX prop has `hosts: ["react", "remix"]`, the Liquid param has `hosts: ["liquid"]`, so each host receives one of them). When one fixture needs a SECOND TSX object prop, that one is `<component id>-<prop in kebab-case>.<fixture name>` with both sides equal.
   4. Values: exactly what the spec's fixture line and reference HTML show; shapes: `docs/05-commerce.md` section 11.1 (hydrogen side) and the Liquid members the component's Host notes name (liquid side). Copy members from the existing resource the fixture line refers to (for example "the `Availability` filter of `filters.basic`" is `RESOURCES["filters.basic"].hydrogen.filters[0]` and the first filter of its `liquid` side). Never change an existing resource (RS-5).
   5. A fixture whose data equals another fixture's (`class`, `invalid-enum-falls-back`, `children`) references that fixture's resource.
   Each task section lists the resources this rule yields under "Names and values". The `html` host needs nothing: its fixture file is written by hand.
 - **M4-R8 Embedding and composition (D-070).** Embed: TSX imports the sibling binding (`../../<other id>/react/<other id>` in React, `../../<other id>/remix/<other id>.tsx` in Remix; copy the path form of `components/cart-line/react/cart-line.tsx`); Liquid prints `{% render 'rp-<other id>', ... %}`. Never copy another component's markup. Compose by contract: the binding prints the element ITSELF with the base class first and its own class second, with every attribute the base contract prints for the same props (`docs/11-components-commerce.md` section 0.2, first table). Manifest: every embedded or composed component is in `dependencies.components`; an embedded one is also in `dependencies.embeds`, and THIS component's id is added to `liquid.embeddedBy` in `components/<embedded id>/<embedded id>.json` when it is not there yet (build check MB-1: the two lists are inverses). Then `pnpm gen` regenerates the embedded component's files; commit them; change nothing else in the embedded component. A hook attribute (`data-rp-part`, `data-rp-js`, `data-rp-field`, `form`) is never passed through rest props or `attributes`: `data-rp-field` only through the prop `rpField` (Liquid `rp_field`), `form` only through `formId` (Liquid `form_id`).
 - **M4-R9 Region parts (D-091).** A region owner exports the region part from the same TSX file and prints it on Liquid through the snippet named in the spec's Anatomy table. The region part is ONE element with `data-rp-region="<name>"`. The default body renders the region part; children (`{{ content }}` when `content != blank`) replace the region part and nothing else (RS-2, CV-6). A Ripple block or snippet file never contains `{% partial %}` (RS-3). The Liquid region-part snippet is rendered with exactly the params the spec's Props section lists, everywhere (D-091 item 4).
 - **M4-R10 Data helpers (D-094, CV-10).** A pure helper lives in `components/<id>/react/<id>.data.ts` AND `components/<id>/remix/<id>.data.ts` (ledger tree 5.1), with the same text except the import specifier form each host uses (React `./<id>.data`, Remix `./<id>.data.ts`). No `"use client"`. Manifest file key `data` (copy the `files` shape of `components/cart-lines/cart-lines.json`). Value imports from `@shopify/hydrogen` are only the seven of CONVENTIONS section 11; every other import from it is `import type`. Types come from `<pkg>` (`import type { ... } from "<pkg>"`, written the way `components/cart-lines/react/cart-lines.data.ts` writes it); declare no copy of a `Ripple*` type.
-- **M4-R11 Locale keys.** Add to `locales/en.default.json` only the keys the task section lists, with the English text given. For the schema name keys (`ripple.<id>.name`, `ripple.<id>.<part>_name`) do what M1 did: when the file contains `ripple.product-form.name`, add `ripple.<id>.name` with the component's title as text (for example `Product card`); when it does not, add none. Keys that exist since M1-T20 (`ripple.discount-code.applied`, `ripple.discount-code.removed`, `ripple.cart-note.saved`) are not added again. Never add `ripple.props.*` keys.
-- **M4-R12 Acceptance coverage.** `components/<id>/<id>.test.ts` MUST contain, for every numbered item `n` of the spec's "Acceptance tests", either a test whose name contains `AT-<n> ` or one comment line (`docs/13-testing.md` sections 10.1 and 18.2). The task section says which. Comment forms, exact:
+- **M4-R11 Locale keys.** Add to `locales/en.default.json` only the keys the task section lists, with the English text given. Never add the schema name keys `ripple.<id>.name` or `ripple.<id>.<part>_name` to that file: `pnpm gen` (step G5) writes them into `components/<id>/liquid/locales/<id>.json`; commit that generated file (ledger D-134 item 29). Keys that exist since M1-T20 (`ripple.discount-code.applied`, `ripple.discount-code.removed`, `ripple.cart-note.saved`) are not added again. Never add `ripple.props.*` keys.
+- **M4-R12 Acceptance coverage.** `components/<id>/<id>.test.ts` MUST contain, for every numbered item `n` of the spec's "Acceptance tests", either a test whose name contains `AT-<n> ` or one comment line (`docs/13-testing.md` sections 10.1 and 18.2; ledger D-141 (3)). The task section says which. `// AT-<n>: generic` is used only for the generic matrix; an item that another task's test proves uses `// AT-<n>: covered by <task id> (<file>: <test name or id>)`. Comment forms, exact:
 
   | Case | Line |
   |---|---|
   | generic tier 2, 3, 4 or 6 matrix | `// AT-<n>: generic (<files>)` with the files that apply out of `test/conformance/conformance.test.ts`, `test/upgrade/upgrade.test.ts`, `test/hydration/react.test.ts`, `test/hydration/remix.test.ts`, `test/nojs/render.test.ts` |
-  | a `C-nn` test of `docs/05-commerce.md` | `// AT-<n>: generic (test/commerce/hydrogen.test.ts C-<nn>)` or `(test/commerce/liquid.test.ts C-<nn>)` |
-  | the hydrogen dev server with scripting disabled | `// AT-<n>: generic (test/nojs/blueprints.test.ts NJ-F<k>, added by M7-T25)` with the NJ-F number the task section gives |
-  | tier 7 or mock.shop | `// AT-<n>: generic (test/commerce/e2e.test.ts, added by M7-T26)` |
-  | tier 8 | `// AT-<n>: generic (test/liquid/live.test.ts, added by M10-T01)` |
-  | a test in another component's file | `// AT-<n>: generic (components/<other id>/<other id>.test.ts AT-<m>, added by <task id>)` |
+  | a `C-nn` test of `docs/05-commerce.md` | `// AT-<n>: covered by <task id> (test/commerce/hydrogen.test.ts: C-<nn>)` or `// AT-<n>: covered by <task id> (test/commerce/liquid.test.ts: C-<nn>)`, with the task id the task section gives |
+  | the hydrogen dev server with scripting disabled | `// AT-<n>: covered by M7-T25 (test/nojs/blueprints.test.ts: NJ-F<k>)` with the NJ-F number the task section gives |
+  | tier 7 or mock.shop | `// AT-<n>: covered by M7-T26 (test/commerce/e2e.test.ts)` |
+  | tier 8 | `// AT-<n>: covered by M10-T01 (test/liquid/live.test.ts)` |
+  | a test in another component's file | `// AT-<n>: covered by <task id> (components/<other id>/<other id>.test.ts: AT-<m>)` |
 
   When one item has two halves, write the real test and put the comment for the other half on the line above it. Every other item is a real test, never skipped, never `todo`.
-- **M4-R13 Component rules.** For every manifest `rules[]` entry one test `[T1] <id>: rule <rule id> reports RP113`: run the checker (`src/check/index.ts`, layer H; copy the call from `components/product-form/product-form.test.ts`) on a failing HTML string and assert exactly one diagnostic `RP113` whose message contains `[<rule id>]`. Plus one test `[T1] <id>: default fixture reports no RP113`; when the component has a `requires-ancestor` rule, this test wraps the `default` fixture HTML in the ancestor the rule names (for example `<form method="get" action="/x">…</form>`).
+- **M4-R13 Component rules** (ledger D-134 item 23). For every manifest `rules[]` entry one test `[T1] <id>: rule <rule id> reports RP113`: run the checker (`src/check/index.ts`, layer H; copy the call from `components/product-form/product-form.test.ts`) on a failing HTML string written in the test (manifests have no example key) and assert exactly one diagnostic `RP113` whose message contains `[<rule id>]`. Plus one test `[T1] <id>: default fixture reports no RP113`; when the component has a `requires-ancestor` rule, this test wraps the `default` fixture HTML in the ancestor the rule names (for example `<form method="get" action="/x">…</form>`).
 - **M4-R14 Behaviour tests (`[T5]`).** Two kinds of page:
   1. `fixturePageUrl("<id>/<fixture>")` (`test/support/server.ts`). For a commerce component the fixture page loads `/__test/fake-sa.js` and a config element with host `html` (`docs/13-testing.md` section 5.2).
   2. A page built in the test, for anything that needs more than one fixture (a region next to an `rp-live` root, a cart form next to a CartNote, `dir="rtl"`). After `const opened = await openPage(...)` call `opened.page.route("**/*", handler)`. Reuse the handler and the page constants of `test/commerce/pages.ts` (M1-T29, M1-T30): `GET /` answers with the page HTML string; `/ripple.css` and any `/ripple*.js` with the files of `pkg/browser/`; `/sa.js` with `test/support/fake-sa.js`; everything else is recorded and answered by a per-test route table or `404`. The page markup comes from fixture files read at test time (`components/<id>/fixtures/<name>.html`, relative to `process.cwd()`) or from a block of a spec the task names; never invent component markup. A plain native element with no `rp-` class (a `<form>`, a `<div data-rp-region="...">`, an `<a href>`) MAY be added where the acceptance test describes it. Script: `<script type="module" src="/ripple.js"></script>` with the config element of the hydrogen page of `test/commerce/pages.ts`.
@@ -81,7 +83,7 @@ A component task says "Recipe: S" (or C, C+R). Do every step of that recipe in `
   - History assertions read `history.length` before and after, and `location.href`.
 - **M4-R15 No-JS tests (`[T6]`).** `openPage({ scripts: "disabled" })` on the fixture page or an M4-R14 page; act with a click or the keyboard; read the navigation or form request in a `page.route` handler and fulfil it with an empty HTML page. Assert the URL path, the query, and for a POST the field names of `docs/05-commerce.md` `### 10.5 `. For `noJs.level: "full"` write one test per function of the spec's "Behaviour without JavaScript" and one with `scripts: "blocked"` for the primary function; for `degraded` one test that the stated content is visible and the primary path works (`docs/13-testing.md` section 10.2).
 - **M4-R16 Other tests required by `docs/13-testing.md` section 10.2** (no `AT-` id): one `[T5]` test per numbered statement of the spec's "Behaviour with JavaScript" that no acceptance item covers; for a region owner `[T5] <id>: a refresh replaces the region root once` on an M4-R14 page (one `childList` record on the region root's parent; an element outside the region keeps its identity); for the Focus and Announcements statements one `[T5]` test each. The task section names them.
-- **M4-R17 Proof commands for a component**, in this order, all exit 0:
+- **M4-R17 Proof commands for a component**, in this order, all exit 0 (Node and network: section 0.2):
 
   ```bash
   pnpm gen && pnpm typecheck && pnpm gen --check
@@ -98,7 +100,7 @@ A component task says "Recipe: S" (or C, C+R). Do every step of that recipe in `
 ### 0.4 Element, runtime and test tasks
 
 - **M4-R20** An element task follows PLAN recipe E. The controller is copied from `docs/research/spikes/commerce/src/commerce/<tag>.ts`; the shell is appended as `docs/05-commerce.md` `### 7.7 Element shell` states. Markup for tests comes from the spike page (`docs/research/spikes/commerce/run3.cjs`, function `HPAGE`) or from a spec block; never invent markup.
-- **M4-R21** Tests of `docs/05-commerce.md` section 14 live in `test/commerce/`: liquid backend tests (marked E) in `test/commerce/liquid.test.ts` as `[T5] commerce-liquid: C-<nn> ...`; hydrogen backend tests in `test/commerce/hydrogen.test.ts` as `[T5] commerce-hydrogen: C-<nn> ...` (`docs/13-testing.md` section 3.1 tree; Plan reading PR-M4-3 for ids the tree does not place). They use the helpers of `test/commerce/pages.ts`. Replace every `sleep` of a spike scenario by `page.waitForFunction`.
+- **M4-R21** Tests of `docs/05-commerce.md` section 14 live in `test/commerce/`: liquid backend tests (marked E) in `test/commerce/liquid.test.ts` as `[T5] commerce-liquid: C-<nn> ...`; hydrogen backend tests in `test/commerce/hydrogen.test.ts` as `[T5] commerce-hydrogen: C-<nn> ...` (`docs/13-testing.md` section 3.1 tree; ledger D-141 (1) places each `C-nn` row by backend). They use the helpers of `test/commerce/pages.ts`. Replace every `sleep` of a spike scenario by `page.waitForFunction`.
 - **M4-R22** `src/commerce/**` import rules are enforced by `src/architecture.test.ts`: only `adapter-hydrogen.ts` and `adapter-liquid.ts` import values from `@shopify/hydrogen`; no file imports `announce` from `@ui-sdk/core` (use `../runtime/announcer`).
 
 ### 0.5 Spike task (M4-T22)
@@ -108,7 +110,7 @@ A component task says "Recipe: S" (or C, C+R). Do every step of that recipe in `
 
 ### 0.6 Shared files that several M4 tasks edit
 
-Edit only the lines your task names. When `git rebase origin/main` conflicts in one of them, keep both sides' lines, run `pnpm gen`, re-run the proof commands.
+Edit only the lines your task names. Tasks of the same group MAY edit the same registration file at the same time when each adds only its own lines (ledger D-147). When `git rebase origin/main` conflicts in one of them, keep both sides' lines, run `pnpm gen`, re-run the proof commands.
 
 | File | Rule |
 |---|---|
@@ -116,8 +118,8 @@ Edit only the lines your task names. When `git rebase origin/main` conflicts in 
 | `src/testing/resources.ts`, the tables of `docs/13-testing.md` 4.2 and `docs/11-components-commerce.md` 0.5 | add entries only (M4-R7); never change an existing entry |
 | `components/<other id>/<other id>.json` | only the `liquid.embeddedBy` list (M4-R8) |
 | `src/commerce/index.ts` | M4-T16 and M4-T18 each add one import and one `define...()` call; M4-T21 changes `create()` |
-| `test/commerce/hydrogen.test.ts` | M4-T16 adds C-14, M4-T18 adds C-15, M4-T20 adds C-27 |
-| `test/commerce/liquid.test.ts` | M4-T16, M4-T18, M4-T21 each add their tag to the list of test C-01; M4-T21 adds C-29 |
+| `test/commerce/hydrogen.test.ts` | M4-T16 adds C-14, M4-T18 adds C-15, M4-T20 adds C-27, M4-T25 adds C-33, C-34, C-37, C-39 |
+| `test/commerce/liquid.test.ts` | M4-T16, M4-T18, M4-T21 each add their tag to the list of test C-01; M4-T21 adds C-29; M4-T25 adds cases 2 to 4 of C-05, C-36, C-38 |
 | `src/check/rules/index.ts` | only M4-T23 |
 | generated files (`src/types.generated.ts`, `src/*/jsx.generated.ts`, `css/props.css`, `css/base.css` regions, `components/*/html`, generated regions) | never edited by hand; run `pnpm gen` |
 
@@ -127,20 +129,24 @@ A bring-up line in a source file carries the comment `// PLAN 4.4: <what replace
 
 Every task ends with PLAN section 5.0 (commit, push, pull request in the five-heading form, done file `docs/plan/done/<task id>.md`). "Acceptance" in a task section lists what is specific; PLAN section 3.1 (and 3.2 for components) always applies.
 
-### 0.8 Plan readings made by this file
+### 0.8 Plan readings and the decisions that replaced them
 
-| # | Topic | Reading |
+Ledger D-146 ratified or replaced every reading this file made. Cite the decision, not the reading.
+
+| # | Topic | Now |
 |---|---|---|
-| PR-M4-1 | Fixtures whose prop data is a member of a resource, an array or data in no resource (the fixture schema allows only whole `$resource` references) | M4-R7: new resources named `<component id>.<fixture name>`, added by the component task under RS-2 |
-| PR-M4-2 | Swatch is "generated" in `docs/11-components-commerce.md` 0.1 and ledger D-072, but has an `object` prop and a string test, which the template language excludes (`docs/07-manifest-registry-cli.md` 2.2, 2.3) | M4-T01 uses the hand-written path M4-R18. SearchForm (M4-T02) stays generated and switches only for a reason M4-R18 names |
-| PR-M4-3 | `docs/13-testing.md` 10.6 says the file of each `C-nn` test is stated in `docs/05-commerce.md` 14; it is not | C-14, C-15, C-27 in `test/commerce/hydrogen.test.ts`; C-29 in `test/commerce/liquid.test.ts`; C-24 in `src/types.test.ts`; C-28 is the test `[T4] react: useRegionHtml returns null during hydration and the HTML after the first publish` of `docs/13-testing.md` 9.1 in `test/hydration/react.test.ts` |
-| PR-M4-4 | Content of `src/commerce/rp-*.test.ts` (the specs name only the agent test of `docs/08-agent-kit-and-evals.md` 7.6, which is M8-T03) | one `[T1]` shape test and one `[T5]` smoke test per element, as M1 did |
-| PR-M4-5 | C-27 reads `getRegionHtml`, which no browser bundle exports | M4-T20 bundles `src/commerce/refresh-react.ts` with esbuild inside the test and calls the strategy and the store directly |
-| PR-M4-6 | C-29 says "one `shopify:page:view` event"; `docs/13-testing.md` ST-6 forbids listening for the event type | M4-T21 counts the `["pageView", init]` entries the emulation `STANDARD_EVENTS_EMULATION` writes to `window.__log` |
-| PR-M4-7 | C-24 needs the Shopify docs tool and `.data.ts` mappers that M4-T09 to M4-T12 create | M4-T20 has extra dependencies and a BLOCKED-ON-ENV path (its section) |
-| PR-M4-8 | CollectionCard: "a collection without an image ... no shared fixture; covered by a host unit test" names no test form | M4-T04 adds a fixture `no-image` (resource `collection-card.no-image`) so that every host is covered by tier 2 |
-| PR-M4-9 | Acceptance items that need a server-rendered page with scripting disabled (PriceRange AT-4, VariantPicker AT-4, CartNote AT-4, DiscountCode AT-4) | comment forms of M4-R12 naming the test that covers them; the component-level half is a real `[T6]` test |
-| PR-M4-10 | Tests C-33 to C-39 of `docs/05-commerce.md` 14 have no PLAN row (C-37 concerns the code of M4-T21) | not written in M4; listed in the M4-T24 done file |
+| PR-M4-1 | Fixtures whose prop data is a member of a resource, an array or data in no resource | Ratified as D-140: M4-R7; the resource names the task sections give are adopted |
+| PR-M4-2 | Swatch has an `object` prop and a string test that the template language cannot express | Ratified as D-139: Swatch is kind C (hand-written bindings, `generated: "hand"` fixtures). SearchForm (M4-T02) stays generated and switches only for a reason M4-R18 names |
+| PR-M4-3 | File of each `C-nn` test | Ratified; D-141 (1): C-14, C-15, C-27, C-33, C-34, C-37, C-39 in `test/commerce/hydrogen.test.ts`; C-05, C-29, C-36, C-38 in `test/commerce/liquid.test.ts`; C-24 in `src/types.test.ts`; C-28 is the test `[T4] react: useRegionHtml returns null during hydration and the HTML after the first publish` of `docs/13-testing.md` 9.1 in `test/hydration/react.test.ts` (D-145) |
+| PR-M4-4 | Content of `src/commerce/rp-*.test.ts` | Ratified: one `[T1]` shape test and one `[T5]` smoke test per element |
+| PR-M4-5 | C-27 reads `getRegionHtml`, which no browser bundle exports | Ratified: M4-T20 bundles `src/commerce/refresh-react.ts` with esbuild inside the test |
+| PR-M4-6 | C-29 counting | Ratified as D-134 item 26: count the `["pageView", init]` entries of `window.__log` |
+| PR-M4-7 | C-24 needs the `.data.ts` mappers of M1-T37 and M4-T09 to M4-T12 | Ratified; the dependencies are now in the PLAN table row of M4-T20 |
+| PR-M4-8 | CollectionCard without an image | Ratified: fixture `no-image` (resource `collection-card.no-image`) |
+| PR-M4-9 | Acceptance items that need a server-rendered page with scripting disabled | Ratified: the `covered by M7-T25` comment of M4-R12; the component-level half is a real `[T6]` test |
+| PR-M4-10 | Tests C-33 to C-39 had no PLAN row | Replaced by D-145: M4-T25 owns C-05 cases 2 to 4, C-33, C-34, C-36 to C-39; M7-T30 owns C-35 |
+| (checker) | RP307 and RP309 layer S read project files | Replaced by D-142: `RuleContext.cwd` exists (M0-T42); M4-T23 implements every clause in full |
+| (author 11) | MB-1 with an `embeddedBy` id that is not present yet | D-135: under bring-up MB-1 ignores it |
 
 ---
 
@@ -148,29 +154,30 @@ Every task ends with PLAN section 5.0 (commit, push, pull request in the five-he
 
 - **Goal:** Ship Swatch, the decorative colour or image sample used by VariantPicker and FilterGroup.
 - **Depends on:** M1-T46.
-- **Kind / recipe:** `static`, tier `block`. PLAN's table says recipe S. Path: hand-written (M4-R18), Plan reading PR-M4-2. Reason: the prop `image` is an `object` and the `fill` value needs a string test (drop a value that contains `;`, `{`, `}`, `<`, `>` or `"`); the template language has neither. `status: "stable"`.
+- **Kind / recipe:** `static/block; C` (PLAN table). Path: hand-written (M4-R18, ledger D-139; the spec's Host notes start with the line "Binding paths (D-139)"). Reason: the prop `image` is an `object` and the `fill` value needs a string test (drop a value that contains `;`, `{`, `}`, `<`, `>` or `"`); the template language has neither. `status: "stable"`.
 
 ### Read first
 
-`docs/components/swatch.md` (whole, 7 kB). `docs/11-components-commerce.md`: `### 0.4 `, `### 0.7 ` (11 kB). `docs/07-manifest-registry-cli.md` `### 3.3 ` (4 kB). Repository: `components/price/price.json`, `components/price/react/price.tsx`, `components/price/remix/price.tsx`, `components/price/liquid/snippets/rp-price.liquid`, `components/price/liquid/blocks/price.liquid`.
+`docs/components/swatch.md` (whole, 7 kB). `docs/11-components-commerce.md`: `### 0.4 `, `### 0.5 `, `### 0.7 ` (13 kB). `docs/13-testing.md`: in `### 4.2 ` only the resource table and rule RS-2 (search `**RS-2**`; 3 kB). `docs/07-manifest-registry-cli.md` `### 3.3 ` (4 kB). Repository: `components/price/price.json`, `components/price/react/price.tsx`, `components/price/remix/price.tsx`, `components/price/liquid/snippets/rp-price.liquid`, `components/price/liquid/blocks/price.liquid`.
 
 ### Files
 
-Create: `components/swatch/swatch.json`, `swatch.css`, `swatch.test.ts`, `fixtures/{default,image,class,invalid-enum-falls-back,unsafe-fill}.html`, `react/swatch.tsx`, `remix/swatch.tsx`, `liquid/blocks/swatch.liquid`, `liquid/snippets/rp-swatch.liquid`. Generated: `html/swatch.html`, generated regions. Change: `locales/en.default.json` (M4-R11: `ripple.swatch.name` = `Swatch` only when the M1 convention applies).
+Create: `components/swatch/swatch.json`, `swatch.css`, `swatch.test.ts`, `fixtures/{default,image,class,invalid-enum-falls-back,unsafe-fill}.html`, `react/swatch.tsx`, `remix/swatch.tsx`, `liquid/blocks/swatch.liquid`, `liquid/snippets/rp-swatch.liquid`. Generated (commit): `html/swatch.html`, `liquid/locales/swatch.json`, generated regions. Change (M4-R7, new resource `image.shirt-front`): `src/testing/resources.ts`, the resource table of `docs/13-testing.md` `### 4.2 `, the table of `docs/11-components-commerce.md` `### 0.5 `, and the name list of the `[T1] resources:` test. No change to `locales/en.default.json` (Swatch has no locale key of its own).
 
 ### Steps
 
 1. `git fetch origin && git switch -c task/M4-T01-swatch origin/main && pnpm install --frozen-lockfile`.
-2. Manifest (M4-R5), no `template`. Fixtures by hand (M4-R6) from the two fenced blocks and the "Further required fixtures" line of the spec.
-3. `pnpm gen`. Write the three bindings below the generated regions. The style attribute is exactly `--rp-swatch-fill:<escaped value>`: no space, no trailing semicolon. React passes it as the spec's Host notes show (`style={{ "--rp-swatch-fill": fill } as CSSProperties}`). An unsafe `fill` is treated as unset in every host; Liquid tests it with the `contains` operator once per forbidden character.
-4. CSS from the spec's Styling section (three custom properties, six modifier selectors, the "Required rules" line).
-5. Tests, then M4-R17 with `<id>` = `swatch`, then PLAN 5.0.
+2. New resource `image.shirt-front` (M4-R7 step 2; ledger D-134 item 13), in its own commit: both sides are the first image of `product.basic`: the constant `shirtFront` of `src/testing/resources.ts`, which is built with `img()` like `imageBasic`, so the entry is `"image.shirt-front": shirtFront,`. When `RESOURCES` already has the key `image.shirt-front`, use it and add nothing.
+3. Manifest (M4-R5), no `template`. Fixtures by hand (M4-R6) from the two fenced blocks and the "Further required fixtures" line of the spec.
+4. `pnpm gen`. Write the three bindings below the generated regions. The style attribute is exactly `--rp-swatch-fill:<escaped value>`: no space, no trailing semicolon. React passes it as the spec's Host notes show (`style={{ "--rp-swatch-fill": fill } as CSSProperties}`). An unsafe `fill` is treated as unset in every host; Liquid tests it with the `contains` operator once per forbidden character.
+5. CSS from the spec's Styling section (three custom properties, six modifier selectors, the "Required rules" line).
+6. Tests, then M4-R17 with `<id>` = `swatch`, then PLAN 5.0.
 
 ### Names and values
 
 - Root `span.rp-swatch` with `data-size`, `data-radius`, `aria-hidden="true"`; image part `img.rp-swatch-image` with `alt=""`, `width="96"`, `height="96"`, `loading="lazy"`; Liquid image URL `image | image_url: width: 96`; TSX `imageUrl(image.url, { width: 96 })` from `<pkg>`.
 - Props: `fill`, `image`, `size` (`sm md lg`, default `md`), `radius` (`none md full`, default `full`). Schema settings: `size`, `radius`.
-- Fixture `image`: prop `image` = `{ "$resource": "image.basic" }`; mask `{ "select": "img", "op": "attr", "name": "src" }`. (The spec says "image of `product.basic`"; the printed attributes other than the masked `src` do not depend on which image it is.)
+- Fixture `image`: props `image` = `{ "$resource": "image.shirt-front" }`, `size` = `lg`, `radius` = `md`; reference HTML: the fenced block of the spec under that fixture; mask `{ "select": "img", "op": "attr", "name": "src" }` (the spec's mask list).
 - No `rules[]` entry. No locale key of its own.
 
 ### Tests (`components/swatch/swatch.test.ts`)
@@ -179,7 +186,7 @@ Create: `components/swatch/swatch.json`, `swatch.css`, `swatch.test.ts`, `fixtur
 
 ### Acceptance
 
-M4-R17. `grep -c "style=" components/swatch/fixtures/unsafe-fill.html` prints `0`. `grep -c 'style="--rp-swatch-fill:#1d4ed8"' components/swatch/fixtures/default.html` prints `1`.
+M4-R17. `grep -c "style=" components/swatch/fixtures/unsafe-fill.html` prints `0`. `grep -c '"image.shirt-front"' src/testing/resources.ts` prints at least `1`. `grep -c 'style="--rp-swatch-fill:#1d4ed8"' components/swatch/fixtures/default.html` prints `1`.
 
 ### Out of scope
 
@@ -196,7 +203,7 @@ VariantPicker, FilterGroup. A text label. Any colour prop other than `fill`.
 
 - **Goal:** Ship SearchForm, the GET form to the search route that PredictiveSearch and the header embed.
 - **Depends on:** M1-T03, M1-T04, M1-T46, M2-T11.
-- **Kind / recipe:** `static`, tier `block`; recipe S (the spec's Host notes say the bindings are generated). `status: "stable"`.
+- **Kind / recipe:** `static/block; S` (PLAN table); `static`, tier `block`; recipe S (the spec's Host notes say the bindings are generated). `status: "stable"`.
 
 ### Read first
 
@@ -251,7 +258,7 @@ PredictiveSearch, `rp-predictive-search`, the search blueprint, Header.
 
 - **Goal:** Ship ProductCard: image, badge, vendor, title link and Price for one product.
 - **Depends on:** M1-T08, M1-T09, M1-T10, M1-T46, M2-T18.
-- **Kind / recipe:** `static`, tier `resource`; recipes C and R (hand-written). `status: "stable"`.
+- **Kind / recipe:** `static/resource; C+R` (PLAN table); `static`, tier `resource`; recipes C and R (hand-written). `status: "stable"`.
 
 ### Read first
 
@@ -282,7 +289,7 @@ Create: `components/product-card/product-card.json`, `product-card.css`, `produc
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (conformance) |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)` |
 | AT-2 | `[T5] product-card: AT-2 ...` (fixture `default`; route the product URL; a click at the centre of the image starts a navigation to `/products/linen-shirt`; pressing Tab from the page start reaches exactly one element inside the card) |
 | AT-3 | `[T6] product-card: AT-3 ...` (the same click with scripting disabled) |
 | AT-4 | `[T5] product-card: AT-4 ...` (fixture `sale` on an M4-R14 page, once with `<html dir="ltr">`, once with `dir="rtl"`: the badge box lies inside the media box) |
@@ -306,7 +313,7 @@ Quick add, swatches on cards, ratings, a second image on hover. ProductRecommend
 
 - **Goal:** Ship CollectionCard: image and title link for one collection.
 - **Depends on:** M1-T08, M1-T09, M1-T46.
-- **Kind / recipe:** `static`, tier `resource`; recipes C and R. `status: "stable"`.
+- **Kind / recipe:** `static/resource; C+R` (PLAN table); `static`, tier `resource`; recipes C and R. `status: "stable"`.
 
 ### Read first
 
@@ -314,7 +321,7 @@ Quick add, swatches on cards, ratings, a second image on hover. ProductRecommend
 
 ### Files
 
-Create: `components/collection-card/collection-card.json`, `.css`, `.test.ts`, `fixtures/{default,class,invalid-enum-falls-back,escaping,props,no-image}.html`, `react/collection-card.tsx`, `remix/collection-card.tsx`, `liquid/blocks/collection-card.liquid` (the markup is in the block; there is no snippet). Change: `locales/en.default.json` (M4-R11); `liquid.embeddedBy` of `components/image/image.json` and `components/placeholder/placeholder.json`; `src/testing/resources.ts` and the two resource tables (M4-R7).
+Create: `components/collection-card/collection-card.json`, `.css`, `.test.ts`, `fixtures/{default,class,invalid-enum-falls-back,escaping,props,no-image}.html`, `react/collection-card.tsx`, `remix/collection-card.tsx`, `liquid/blocks/collection-card.liquid` (the markup is in the block; there is no snippet). Change: `liquid.embeddedBy` of `components/image/image.json` and `components/placeholder/placeholder.json`; `src/testing/resources.ts` and the two resource tables (M4-R7).
 
 ### Steps
 
@@ -352,7 +359,7 @@ Default path only. If the fixture lint rejects a fixture the spec does not list 
 
 - **Goal:** Ship ArticleCard: image, date, title link and excerpt for one blog article.
 - **Depends on:** M1-T08, M1-T09, M1-T46.
-- **Kind / recipe:** `static`, tier `resource`; recipes C and R. `status: "stable"`.
+- **Kind / recipe:** `static/resource; C+R` (PLAN table); `static`, tier `resource`; recipes C and R. `status: "stable"`.
 
 ### Read first
 
@@ -360,7 +367,7 @@ Default path only. If the fixture lint rejects a fixture the spec does not list 
 
 ### Files
 
-Create: `components/article-card/article-card.json`, `.css`, `.test.ts`, `fixtures/{default,class,invalid-enum-falls-back,escaping,props}.html`, `react/article-card.tsx`, `remix/article-card.tsx`, `liquid/blocks/article-card.liquid`. Change: `locales/en.default.json` (M4-R11); `liquid.embeddedBy` of `components/image/image.json` and `components/placeholder/placeholder.json`.
+Create: `components/article-card/article-card.json`, `.css`, `.test.ts`, `fixtures/{default,class,invalid-enum-falls-back,escaping,props}.html`, `react/article-card.tsx`, `remix/article-card.tsx`, `liquid/blocks/article-card.liquid`. Change: `liquid.embeddedBy` of `components/image/image.json` and `components/placeholder/placeholder.json`.
 
 ### Steps
 
@@ -399,7 +406,7 @@ The shim's `date` filter does not implement `format: 'abbreviated_date'` (the sp
 
 - **Goal:** Ship PriceRange: the two number inputs of a price filter.
 - **Depends on:** M1-T46, M2-T11.
-- **Kind / recipe:** `static`, tier `resource`; recipes C and R. `status: "stable"`.
+- **Kind / recipe:** `static/resource; C+R` (PLAN table); `static`, tier `resource`; recipes C and R. `status: "stable"`.
 
 ### Read first
 
@@ -429,10 +436,10 @@ Create: `components/price-range/price-range.json`, `.css`, `.test.ts`, `fixtures
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (conformance) |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)` |
 | AT-2 | `[T2] price-range: AT-2 ...` (render `snippets/rp-price-range.liquid` through the shim with four `filter` values: max 5000 prints `value="50"`, 5005 prints `50.05`, 5050 prints `50.50`, blank prints no `value` attribute) |
 | AT-3 | `[T5] price-range: AT-3 ...` (accessible names `From` and `To`) |
-| AT-4 | `// AT-4: generic (components/filters/filters.test.ts AT-4, added by M4-T09)` |
+| AT-4 | `// AT-4: covered by M4-T09 (components/filters/filters.test.ts: AT-4)` |
 | no-JS | `[T6] price-range: the inputs are submitted with the enclosing GET form` (M4-R14 page: fixture `default` inside `<form method="get" action="/collections/summer">` with a submit button; the request query contains `filter.v.price.lte=50`) |
 | rules | M4-R13 (the default test wraps the fixture in `<form method="get" action="/x">`) |
 
@@ -454,7 +461,7 @@ The shim does not implement `modulo`, `minus` or `divided_by`: draft pull reques
 
 - **Goal:** Ship FilterGroup: one `<details>` per filter with checkboxes (and Swatches) or a PriceRange.
 - **Depends on:** M1-T07, M1-T46, M2-T14, M4-T01, M4-T06.
-- **Kind / recipe:** `static`, tier `resource`; recipes C and R. `status: "stable"`.
+- **Kind / recipe:** `static/resource; C+R` (PLAN table); `static`, tier `resource`; recipes C and R. `status: "stable"`.
 
 ### Read first
 
@@ -485,7 +492,7 @@ Create: `components/filter-group/filter-group.json`, `.css`, `.test.ts`, `fixtur
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (conformance) |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)` |
 | AT-2 | `[T5] filter-group: AT-2 ...` (fixture `default`: first checkbox name `In stock (8)`; summary name `Availability 1 selected`) |
 | AT-3 | `[T5] filter-group: AT-3 ...` (M4-R14 page: fixture `swatch-disabled` inside `<form method="get">`; the `Sand` checkbox matches `:disabled`; after checking `Blue`, `new FormData(form)` has no entry with value `Sand`) |
 | AT-4 | `[T6] filter-group: AT-4 ...` (scripting disabled: clicking the summary toggles the `open` property and the content's visibility) |
@@ -509,7 +516,7 @@ Filters (the form and the region). "Show more" for long value lists. A Liquid fi
 
 - **Goal:** Ship LiveForm: the `rp-live` wrapper that turns the GET forms and links inside it into in-place region refreshes.
 - **Depends on:** M1-T46.
-- **Kind / recipe:** `commerce`, tier `block`; recipe C. `status: "beta"`.
+- **Kind / recipe:** `commerce/block; C` (PLAN table); `commerce`, tier `block`; recipe C. `status: "beta"`.
 
 ### Read first
 
@@ -517,7 +524,7 @@ Filters (the form and the region). "Show more" for long value lists. A Liquid fi
 
 ### Files
 
-Create: `components/live-form/live-form.json`, `.css`, `.test.ts`, `fixtures/{default,form,class,escaping}.html`, `react/live-form.tsx`, `remix/live-form.tsx`, `liquid/blocks/live-form.liquid`. Change: `locales/en.default.json` (M4-R11).
+Create: `components/live-form/live-form.json`, `.css`, `.test.ts`, `fixtures/{default,form,class,escaping}.html`, `react/live-form.tsx`, `remix/live-form.tsx`, `liquid/blocks/live-form.liquid`. Generated (commit): `html/live-form.html`, `liquid/locales/live-form.json`, generated regions.
 
 ### Steps
 
@@ -539,7 +546,7 @@ All `[T5]` tests use an M4-R14 page: the fixture plus `<div data-rp-region="rp-c
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (conformance) |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)` |
 | AT-2 | `[T5] live-form: AT-2 ...` (fixture `default`: a click on the link dispatches one `rp:refresh` on `document` with `detail.regions` `["rp-collection-results"]` and `detail.reason` `"filter"`; `history.length` grows by 1; a Ctrl+click dispatches none) |
 | AT-3 | `[T5] live-form: AT-3 ...` (fixture `form`: selecting `48` yields a refresh whose URL contains `limit=48`) |
 | AT-4 | `[T5] live-form: AT-4 ...` (page with `refresh` `rp-product-buy` and a region of that name: `history.length` does not change; `location.href` is the new URL) |
@@ -566,7 +573,7 @@ A `[T5]` test fails because `rp-live` behaves differently from `docs/05-commerce
 
 - **Goal:** Ship Filters: the GET form of FilterGroups with the region `rp-collection-filters` and the no-JS Apply button.
 - **Depends on:** M1-T01, M1-T46, M4-T06, M4-T07.
-- **Kind / recipe:** `commerce`, tier `resource`; recipes C and R. `status: "beta"`.
+- **Kind / recipe:** `commerce/resource; C+R` (PLAN table); `commerce`, tier `resource`; recipes C and R. `status: "beta"`.
 
 ### Read first
 
@@ -600,7 +607,7 @@ Create: `components/filters/filters.json`, `.css`, `.test.ts`, `fixtures/{defaul
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (conformance) |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)` |
 | AT-2 | `[T5] filters: AT-2 ...` (no browser: import `toRippleFilters` from `components/filters/react/filters.data.ts`; input: a Storefront API `filters` array written in the test in the shape of the fragment `RippleFilter` of section 0.6 for the two filters of `filters.basic`, with `new URLSearchParams("filter.v.availability=1&filter.v.price.lte=50")` and pathname `/collections/summer`; the result deep-equals `RESOURCES["filters.basic"].hydrogen.filters`) |
 | AT-3 | `[T5] filters: AT-3 ...` (check `Out of stock`: one `rp:refresh` with `reason` `"filter"`; `history.length` grows by 1; the URL contains `filter.v.availability=0` and none of `page=`, `before=`, `after=`) |
 | AT-4 | `[T5] filters: AT-4 ...` (clear the `To` input and submit: the URL has no `filter.v.price.lte`; then type `20` into `From` and press Enter: the URL contains `filter.v.price.gte=20` and no `filter.v.price.lte`; this also covers PriceRange AT-4) |
@@ -611,7 +618,7 @@ Create: `components/filters/filters.json`, `.css`, `.test.ts`, `fixtures/{defaul
 
 ### Acceptance
 
-M4-R17. `grep -c 'data-rp-region="rp-collection-filters"' components/filters/fixtures/default.html` prints `1`. `cmp <(sed 's#\./filters\.data\.ts#./filters.data#' components/filters/remix/filters.data.ts) components/filters/react/filters.data.ts` prints nothing when the two files differ only in import specifiers.
+M4-R17. `grep -c 'data-rp-region="rp-collection-filters"' components/filters/fixtures/default.html` prints `1`. `diff <(sed 's#\.data\.ts"#.data"#g' components/filters/remix/filters.data.ts) components/filters/react/filters.data.ts` prints nothing (the two files differ only in the import specifier form, M4-R10).
 
 ### Out of scope
 
@@ -628,7 +635,7 @@ FilterChips, SortSelect, the `collection` and `search` blueprints, a Drawer arou
 
 - **Goal:** Ship FilterChips: one remove link per active filter value and a clear-all link, enhanced by `rp-live`.
 - **Depends on:** M1-T03, M1-T07, M1-T46.
-- **Kind / recipe:** `commerce`, tier `resource`; recipes C and R. `status: "beta"`.
+- **Kind / recipe:** `commerce/resource; C+R` (PLAN table); `commerce`, tier `resource`; recipes C and R. `status: "beta"`.
 
 ### Read first
 
@@ -660,7 +667,7 @@ Create: `components/filter-chips/filter-chips.json`, `.css`, `.test.ts`, `fixtur
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (conformance) |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)` |
 | AT-2 | `[T5] filter-chips: AT-2 ...` (no browser: `toFilterChips(RESOURCES["filters.basic"].hydrogen.filters, { pathname: "/collections/summer", searchParams: new URLSearchParams("filter.v.availability=1&filter.v.price.lte=50"), formatPrice: (amount) => "$" + amount })` returns two chips; the first `url` has no `filter.v.availability` and keeps `filter.v.price.lte=50`; `clearUrl` is `/collections/summer`) |
 | AT-3 | `[T5] filter-chips: AT-3 ...` (M4-R14 page: `<div data-rp-region="rp-collection-toolbar">` + fixture `default` + `</div>`, plus the two other regions; a click on the first chip yields one `rp:refresh` with `reason` `"filter"`, one history entry, and afterwards `document.activeElement` is inside the toolbar region) |
 | AT-4 | `[T6] filter-chips: AT-4 ...` (scripting disabled: the same click navigates to the chip's `href`) |
@@ -684,7 +691,7 @@ Filters, SortSelect, the toolbar region (blueprint-owned).
 
 - **Goal:** Ship SortSelect: the GET form with the `sort_by` select that keeps the active filters.
 - **Depends on:** M1-T01, M1-T46, M2-T10, M2-T13.
-- **Kind / recipe:** `commerce`, tier `resource`; recipes C and R. `status: "beta"`.
+- **Kind / recipe:** `commerce/resource; C+R` (PLAN table); `commerce`, tier `resource`; recipes C and R. `status: "beta"`.
 
 ### Read first
 
@@ -716,8 +723,8 @@ Create: `components/sort-select/sort-select.json`, `.css`, `.test.ts`, `fixtures
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (conformance) |
-| AT-2 | `// AT-2: generic (test/commerce/hydrogen.test.ts C-13)` and `[T5] sort-select: AT-2 ...` (choosing `Price, low to high` pushes a URL that contains `sort_by=price-ascending`, `filter.v.availability=1` and `filter.v.price.lte=50`) |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)` |
+| AT-2 | `// AT-2: covered by M1-T30 (test/commerce/hydrogen.test.ts: C-13)` and `[T5] sort-select: AT-2 ...` (choosing `Price, low to high` pushes a URL that contains `sort_by=price-ascending`, `filter.v.availability=1` and `filter.v.price.lte=50`) |
 | AT-3 | `[T5] sort-select: AT-3 ...` (after the refresh `document.activeElement.id` is `sort`) |
 | AT-4 | `[T6] sort-select: AT-4 ...` (scripting disabled: choose the option, press `Sort`; the navigation URL contains `sort_by=price-ascending` and both filter parameters) |
 | unit | `[T1] sort-select: sortParams keeps filter pairs and q in URL order` |
@@ -741,7 +748,7 @@ Liquid `sort_option` members `value` and `name` are UNVERIFIED in the spec: use 
 
 - **Goal:** Ship VariantPicker: option values as GET links (or a select per option) that `rp-live` turns into an in-place variant change.
 - **Depends on:** M1-T01, M1-T07, M1-T46, M2-T10, M2-T13, M4-T01.
-- **Kind / recipe:** `commerce`, tier `resource`; recipes C and R. `status: "beta"`.
+- **Kind / recipe:** `commerce/resource; C+R` (PLAN table); `commerce`, tier `resource`; recipes C and R. `status: "beta"`.
 
 ### Read first
 
@@ -777,17 +784,19 @@ Create: `components/variant-picker/variant-picker.json`, `.css`, `.test.ts`, `fi
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (conformance) |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)` |
 | AT-2 | `[T5] variant-picker: AT-2 ...` (no browser: `variantPickerOptions` on `RESOURCES["product.options"].hydrogen` returns for `Size` / `L` `exists: false`, `url: null`; for `Color` / `Sand` `exists: true`, `available: false`, `url: "/products/linen-shirt?Color=Sand&Size=S"`, `variantId: "13"`) |
-| AT-3 | `// AT-3: generic (test/commerce/hydrogen.test.ts C-13)` and `[T5] variant-picker: AT-3 ...` (a click on the `M` link: `history.length` unchanged, the region replaced, and `document.activeElement.id` equals the clicked link's id) |
-| AT-4 | `// AT-4: generic (test/nojs/blueprints.test.ts NJ-F3, added by M7-T25)` and `[T6] variant-picker: AT-4 ...` (scripting disabled: a click on `M` starts a navigation to the link's `href`; in fixture `dropdown`, choosing `M` and pressing `Apply` starts a GET to the product URL whose query carries the option value of Blue / M, the numeric variant id `12`) |
+| AT-3 | `// AT-3: covered by M1-T30 (test/commerce/hydrogen.test.ts: C-13)` and `[T5] variant-picker: AT-3 ...` (a click on the `M` link: `history.length` unchanged, the region replaced, and `document.activeElement.id` equals the clicked link's id) |
+| AT-4 | `// AT-4: covered by M7-T25 (test/nojs/blueprints.test.ts: NJ-F3)` and `[T6] variant-picker: AT-4 ...` (scripting disabled: a click on `M` starts a navigation to the link's `href`; in fixture `dropdown`, choosing `M` and pressing `Apply` starts a GET to the product URL whose query carries the option value of Blue / M, the numeric variant id `12`) |
 | AT-5 | `// AT-5: generic (test/upgrade/upgrade.test.ts)` |
 | AT-6 | `[T5] variant-picker: AT-6 ...` (a Ctrl+click on a value link dispatches no `rp:refresh`) |
+| behaviour 3 | `[T5] variant-picker: dropdown change refreshes through rp-live with ?variant=<id>` (M4-R16; fixture `dropdown` on the M4-R14 page: choosing `M` in the select fires one `rp:refresh` and the fetched URL is the form action plus `?variant=12`; spec "Behaviour with JavaScript" item 3) |
+| behaviour 5 | `[T5] variant-picker: a failed refresh navigates to the link href` (M4-R16; the document route answers `500` to the fetch; a click on the `M` link is followed by a navigation to that link's `href`; spec item 5) |
 | rules | M4-R13 |
 
 ### Acceptance
 
-M4-R17. `wc -c < components/variant-picker/fixtures/single-variant.html` prints `0`. `cmp components/variant-picker/react/variant-picker.data.ts components/variant-picker/remix/variant-picker.data.ts` prints nothing, or only the import specifier differs (M4-R10).
+M4-R17. `wc -c < components/variant-picker/fixtures/single-variant.html` prints `0`. `diff <(sed 's#\.data\.ts"#.data"#g' components/variant-picker/remix/variant-picker.data.ts) components/variant-picker/react/variant-picker.data.ts` prints nothing (M4-R10).
 
 ### Out of scope
 
@@ -804,7 +813,7 @@ ProductForm (the selected variant id is printed by the server into the ProductFo
 
 - **Goal:** Ship ProductGallery: a Carousel of product images in the region `rp-product-media`, with a lightbox Dialog.
 - **Depends on:** M1-T03, M1-T04, M1-T07, M1-T08, M1-T09, M1-T17, M1-T46, M3-T09.
-- **Kind / recipe:** `native`, tier `resource`; recipes C and R (every binding is hand-written, `docs/11-components-commerce.md` 0.1). `status: "stable"`.
+- **Kind / recipe:** `native/resource; C+R` (PLAN table); `native`, tier `resource`; recipes C and R (every binding is hand-written, `docs/11-components-commerce.md` 0.1). `status: "stable"`.
 
 ### Read first
 
@@ -838,7 +847,7 @@ Create: `components/product-gallery/product-gallery.json`, `.css`, `.test.ts`, `
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (conformance) |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)` |
 | AT-2 | `// AT-2: generic (test/upgrade/upgrade.test.ts)` |
 | AT-3 | `[T5] product-gallery: AT-3 ...` (fixture `default`: a click on the second zoom link sets `dialog.open` on `#gallery-content`; `location.href` unchanged; Escape closes it and focus returns to that link) |
 | AT-4 | `[T5] product-gallery: AT-4 ...` (press `next`: the viewport's `scrollLeft` changes and one `indexchange` with `detail.value` 1 is dispatched on the `rp-carousel`) |
@@ -852,7 +861,7 @@ No test carries `[chromium]` except where the Carousel tests it copies do.
 
 ### Acceptance
 
-M4-R17. `grep -c 'data-rp-region="rp-product-media"' components/product-gallery/fixtures/default.html` prints `1`. In `fixtures/default.html` the string `<dialog` occurs after the closing tag of the region part.
+M4-R17. `grep -c 'data-rp-region="rp-product-media"' components/product-gallery/fixtures/default.html` prints `1`. `pnpm test:unit --files=components/product-gallery --grep="default fixture reports no RP113" --no-skips` exits 0 (the rule `product-gallery-lightbox-outside-region` proves that no `dialog` is inside the region part of `fixtures/default.html`).
 
 ### Out of scope
 
@@ -870,7 +879,7 @@ Video and 3D media (skipped in V1). Thumbnails. Scrolling the lightbox to the cl
 
 - **Goal:** Ship CartNote: the order note textarea, saved through `rp-cart` with JavaScript and through a form without.
 - **Depends on:** M1-T01, M1-T06, M1-T46, M2-T10, M2-T12.
-- **Kind / recipe:** `commerce`, tier `resource`; recipes C and R. `status: "beta"`.
+- **Kind / recipe:** `commerce/resource; C+R` (PLAN table); `commerce`, tier `resource`; recipes C and R. `status: "beta"`.
 
 ### Read first
 
@@ -902,10 +911,10 @@ Create: `components/cart-note/cart-note.json`, `.css`, `.test.ts`, the ten fixtu
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (conformance) |
-| AT-2 | `// AT-2: generic (test/commerce/liquid.test.ts C-08)` and `[T5] cart-note: AT-2 ...` (fixture `default`, `**/api/cart` stubbed: type a note and blur; one POST carries the note; the status part then contains `Note saved`) |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)` |
+| AT-2 | `// AT-2: covered by M1-T29 (test/commerce/liquid.test.ts: C-08)` and `[T5] cart-note: AT-2 ...` (fixture `default`, `**/api/cart` stubbed: type a note and blur; one POST carries the note; the status part then contains `Note saved`) |
 | AT-3 | `[T5] cart-note: AT-3 ...` (M4-R14 page, host `liquid` config and `/sa.js`: `components/cart-lines/fixtures/liquid-default.html` plus `fixtures/liquid-default.html`; the textarea's `form` property is the cart form (`<cart lines id>-form`); changing the note leads to exactly one `updateCart` call carrying `note`) |
-| AT-4 | `// AT-4: generic (test/nojs/blueprints.test.ts NJ-F7, added by M7-T25)` |
+| AT-4 | `// AT-4: covered by M7-T25 (test/nojs/blueprints.test.ts: NJ-F7)` |
 | no-JS | `[T6] cart-note: liquid note posts with the cart form` (the AT-3 page with scripting disabled: submit the cart form; the POST body has the field `note`) and `[T6] cart-note: hydrogen save button posts intent note-update` (fixture `default`; the POST to `/api/cart` has `intent=note-update` and `note`) |
 | rules | M4-R13, four rule tests |
 
@@ -919,8 +928,8 @@ M4-R17. `ls components/cart-note/fixtures | wc -l` prints `10`. `grep -L 'data-r
 
 ### If blocked
 
-- The spec's AT-3 says `#cart-form`; the form id is `<cart lines id>-form`, which is `cart-form` when the CartLines id is `cart`. Use the id the CartLines fixture prints.
-- C-38 (note baseline, D-126) has no owning PLAN row: do not write it; list it in the done file.
+- The spec's AT-3 says `#cart-form`; the form id is `<cart lines id>-form` (ledger D-134 item 12), which is `cart-form` in fixture `liquid-default` of CartLines. Use the id that fixture prints.
+- C-38 (note baseline, D-126) is not part of this task: M4-T25 writes it (ledger D-145).
 
 ---
 
@@ -928,7 +937,7 @@ M4-R17. `ls components/cart-note/fixtures | wc -l` prints `10`. `grep -L 'data-r
 
 - **Goal:** Ship DiscountCode: the discount code form of the cart.
 - **Depends on:** M1-T01, M1-T06, M1-T46, M2-T10, M2-T11.
-- **Kind / recipe:** `commerce`, tier `resource`; recipes C and R. `status: "beta"`.
+- **Kind / recipe:** `commerce/resource; C+R` (PLAN table); `commerce`, tier `resource`; recipes C and R. `status: "beta"`.
 
 ### Read first
 
@@ -960,10 +969,10 @@ Create: `components/discount-code/discount-code.json`, `.css`, `.test.ts`, the t
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (conformance) |
-| AT-2 | `// AT-2: generic (test/commerce/liquid.test.ts C-03)` and `[T5] discount-code: AT-2 ...` (two cases on an M4-R14 page that holds `components/cart-lines/fixtures/default.html` and fixture `default`, `**/api/cart` stubbed: applying `SAVE10` puts `Discount applied` into this status part; a response with a discount `userErrors` entry shows its message in THIS error part while the CartLines cart-scope error part keeps `hidden`) |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)` |
+| AT-2 | `// AT-2: covered by M1-T29 (test/commerce/liquid.test.ts: C-03)` and `[T5] discount-code: AT-2 ...` (two cases on an M4-R14 page that holds `components/cart-lines/fixtures/default.html` and fixture `default`, `**/api/cart` stubbed: applying `SAVE10` puts `Discount applied` into this status part; a response with a discount `userErrors` entry shows its message in THIS error part while the CartLines cart-scope error part keeps `hidden`) |
 | AT-3 | `[T5] discount-code: AT-3 ...` (fixture `liquid-default`: the form has `data-rp-js="inflow"`) and `[T6] discount-code: AT-3 hidden without scripts` (the same fixture with scripting disabled: the form's computed `display` is `none`) |
-| AT-4 | `// AT-4: generic (test/nojs/blueprints.test.ts NJ-F8, added by M7-T25)` |
+| AT-4 | `// AT-4: covered by M7-T25 (test/nojs/blueprints.test.ts: NJ-F8)` |
 | no-JS | `[T6] discount-code: hydrogen form posts intent discount-apply` (fixture `default`, scripting disabled: the POST to `/api/cart` has `intent=discount-apply` and `discountCode`) |
 | rules | M4-R13, four rule tests |
 
@@ -978,7 +987,7 @@ The list of applied codes and their remove forms (CartSummary). Gift cards. A br
 ### If blocked
 
 - The form reset after a successful apply is UNVERIFIED in the spec: do not assert it.
-- C-05 fourth case (D-129, `usable === false` with an `inflow` form) has no owning PLAN row here: do not write it.
+- C-05 fourth case (D-129, `usable === false` with an `inflow` form) is not part of this task: M4-T25 writes it (ledger D-145).
 
 ---
 
@@ -990,7 +999,7 @@ The list of applied codes and their remove forms (CartSummary). Gift cards. A br
 
 ### Read first
 
-`docs/05-commerce.md`: `### 7.4 ` (2 kB), `### 7.7 Element shell` (5 kB), `### 8.2 ` (2 kB), rows 1 and 3 of the change table in `## 1. Reference implementation`, row C-14 of the table in `## 14. Acceptance tests`. `docs/04-runtime-and-elements.md`: `## 7. Rules for writing an ` and `### 3.5 `. Spike: `docs/research/spikes/commerce/src/commerce/rp-predictive-search.ts` (whole, 3.5 kB); in `docs/research/spikes/commerce/run3.cjs` the function `HPAGE`, the function `routes()` and scenario H5; in `docs/research/spikes/commerce/result.txt` the lines of H5. Repository: `src/commerce/rp-live.ts` and `src/commerce/rp-live.test.ts` (the shell and test shape to copy), `src/commerce/index.ts`, test `C-13` in `test/commerce/hydrogen.test.ts`, test `C-01` in `test/commerce/liquid.test.ts`.
+`docs/05-commerce.md`: `### 7.4 ` (2 kB), `### 7.7 Element shell` (5 kB), `### 8.2 ` (2 kB), rows 1 and 3 of the change table in `## 1. Reference implementation`, row C-14 of the table in `## 14. Acceptance tests`. `docs/04-elements.md`: `## 7. Rules for writing an ` (6 kB) and `### 3.5 ` (3 kB). Spike: `docs/research/spikes/commerce/src/commerce/rp-predictive-search.ts` (whole, 3.5 kB); in `docs/research/spikes/commerce/run3.cjs` the function `HPAGE`, the function `routes()` and scenario H5; in `docs/research/spikes/commerce/result.txt` the lines of H5. Repository: `src/commerce/rp-live.ts` and `src/commerce/rp-live.test.ts` (the shell and test shape to copy), `src/commerce/index.ts`, test `C-13` in `test/commerce/hydrogen.test.ts`, test `C-01` in `test/commerce/liquid.test.ts`.
 
 ### Files
 
@@ -1004,7 +1013,7 @@ Create: `src/commerce/rp-predictive-search.ts`, `src/commerce/rp-predictive-sear
 4. Append the shell exactly as `### 7.7 Element shell` states for this tag (copy the form of `src/commerce/rp-live.ts`). Values are under "Names and values".
 5. `src/commerce/index.ts`: add `import { definePredictiveSearch } from "./rp-predictive-search";` and the call `definePredictiveSearch();` on the line after `defineLive();`. In the comment `// PLAN 4.4: ...` that names the missing elements remove the text `M4-T16, `; when the comment then names no task, delete the whole comment line.
 6. `test/commerce/liquid.test.ts`: add `"rp-predictive-search"` to the list of tags test C-01 asserts as defined; when a `// PLAN 4.4:` comment next to that list names M4-T16, remove that name the same way.
-7. Write the tests (below). Proof: `pnpm typecheck && pnpm build && pnpm test:run --tiers=1,5 --files=src/commerce/rp-predictive-search --no-skips && pnpm test:commerce --no-skips && pnpm test:size && pnpm ci`. PLAN 5.0.
+7. Write the tests (below). Proof: `pnpm typecheck && pnpm build && pnpm test:run --tiers=1,5 --files=src/commerce/rp-predictive-search --no-skips && pnpm test:behavior --files=test/commerce/ --no-skips && pnpm test:size && pnpm ci`. PLAN 5.0. (`pnpm test:commerce` is tier 7, mock.shop: never use it here.)
 
 ### Names and values
 
@@ -1025,7 +1034,7 @@ Markup: the predictive part of `HPAGE`. The document route answers with a page w
 
 ### Acceptance
 
-The proof commands of step 7 exit 0. `pnpm test:commerce --no-skips 2>&1 | grep -c 'C-14'` prints at least `1` and the line is a pass. `grep -c 'definePredictiveSearch' src/commerce/index.ts` prints `2`. `grep -rn '@ui-sdk/core' src/commerce/rp-predictive-search.ts | grep -c announce` prints `0`.
+The proof commands of step 7 exit 0. `pnpm test:behavior --files=test/commerce/hydrogen --grep="C-14 " --no-skips` exits 0 (exit 2 means no test matched). `grep -c 'definePredictiveSearch' src/commerce/index.ts` prints `2`. `grep -rn '@ui-sdk/core' src/commerce/rp-predictive-search.ts | grep -c announce` prints `0`.
 
 ### Out of scope
 
@@ -1033,7 +1042,7 @@ The component PredictiveSearch (M4-T17). The `react` strategy and `useRegionHtml
 
 ### If blocked
 
-- `pnpm test:size` fails for the commerce entry: do not raise a budget. Draft pull request with the measured bytes; the budget owner is `docs/09-distribution-and-size.md` (record under its `## Ledger issues`).
+- `pnpm test:size` fails for the commerce entry: do not raise a budget. Draft pull request with the measured bytes; the budget owner is `docs/13-testing.md` section 15 (record the measured bytes under `## Ledger issues` at the end of `docs/13-testing.md`).
 - Arrow-key movement fails in WebKit or Firefox while Chromium passes: this is the SPIKE-04 question. Do NOT apply `### Fallback (SPIKE-04)` of `docs/05-commerce.md`; write `FOLLOW-UP NEEDED: apply "Fallback (SPIKE-04)" of docs/05-commerce.md` in the done file and stop with a draft pull request; do not skip or tag the failing test.
 - `src/commerce/index.ts` has no `defineLive();` line: add the call as the last `define...()` call and note the difference in the pull request.
 
@@ -1043,7 +1052,7 @@ The component PredictiveSearch (M4-T17). The `react` strategy and `useRegionHtml
 
 - **Goal:** Ship PredictiveSearch: a search form whose results panel is filled by a region refresh while the visitor types.
 - **Depends on:** M4-T02, M4-T03, M4-T16.
-- **Kind / recipe:** `commerce`, tier `resource`; recipes C and R. `status: "beta"`.
+- **Kind / recipe:** `commerce/resource; C+R` (PLAN table); `commerce`, tier `resource`; recipes C and R. `status: "beta"`.
 
 ### Read first
 
@@ -1076,8 +1085,8 @@ Create: `components/predictive-search/predictive-search.json`, `.css`, `.test.ts
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (conformance) |
-| AT-2 | `// AT-2: generic (test/commerce/hydrogen.test.ts C-14)` |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)` |
+| AT-2 | `// AT-2: covered by M4-T16 (test/commerce/hydrogen.test.ts: C-14)` |
 | AT-3 | `[T5] predictive-search: AT-3 ...` (M4-R14 page with fixture `default`; typing `shirt`: the one document request URL has `type=product` and `q=shirt`) |
 | AT-4 | `[T5] predictive-search: AT-4 ...` (after results are shown, clearing the input hides the panel and sends no further request) |
 | AT-5 | `// AT-5: generic (test/upgrade/upgrade.test.ts)` |
@@ -1121,7 +1130,7 @@ Create: `src/commerce/rp-recommendations.ts`, `src/commerce/rp-recommendations.t
 2. `cp docs/research/spikes/commerce/src/commerce/rp-recommendations.ts src/commerce/rp-recommendations.ts`. Append the shell of `### 7.7 Element shell` (change-table row 1). Change nothing else.
 3. `src/commerce/index.ts`: add `import { defineRecommendations } from "./rp-recommendations";` and `defineRecommendations();` as the LAST `define...()` call (final order when M4-T16 has merged: `defineCart(); defineProductForm(); defineLive(); definePredictiveSearch(); defineRecommendations();`). Remove `M4-T18` from the `// PLAN 4.4:` comment as M4-T16 step 5 describes.
 4. `test/commerce/liquid.test.ts`: add `"rp-recommendations"` to the tag list of C-01.
-5. Tests; proof `pnpm typecheck && pnpm build && pnpm test:run --tiers=1,5 --files=src/commerce/rp-recommendations --no-skips && pnpm test:commerce --no-skips && pnpm test:size && pnpm ci`. PLAN 5.0.
+5. Tests; proof `pnpm typecheck && pnpm build && pnpm test:run --tiers=1,5 --files=src/commerce/rp-recommendations --no-skips && pnpm test:behavior --files=test/commerce/ --no-skips && pnpm test:size && pnpm ci`. PLAN 5.0. (`pnpm test:commerce` is tier 7: never use it here.)
 
 ### Names and values
 
@@ -1140,7 +1149,7 @@ Create: `src/commerce/rp-recommendations.ts`, `src/commerce/rp-recommendations.t
 
 ### Acceptance
 
-Proof commands exit 0. `pnpm test:commerce --no-skips 2>&1 | grep -c 'C-15'` prints at least `1`, passing. `grep -c 'defineRecommendations' src/commerce/index.ts` prints `2`. After both M4-T16 and M4-T18 merged: `grep -c 'PLAN 4.4: M4-T1' src/commerce/index.ts` prints `0`.
+Proof commands exit 0. `pnpm test:behavior --files=test/commerce/hydrogen --grep="C-15 " --no-skips` exits 0. `grep -c 'defineRecommendations' src/commerce/index.ts` prints `2`. After both M4-T16 and M4-T18 merged: `grep -c 'PLAN 4.4: M4-T1' src/commerce/index.ts` prints `0`.
 
 ### Out of scope
 
@@ -1157,7 +1166,7 @@ ProductRecommendations (M4-T19). The real `routes.product_recommendations_url` f
 
 - **Goal:** Ship ProductRecommendations: a titled list of product cards that is server-rendered when products are passed and lazily refreshed otherwise.
 - **Depends on:** M4-T03, M4-T18.
-- **Kind / recipe:** `commerce`, tier `resource`; recipes C and R. `status: "beta"`.
+- **Kind / recipe:** `commerce/resource; C+R` (PLAN table); `commerce`, tier `resource`; recipes C and R. `status: "beta"`.
 
 ### Read first
 
@@ -1188,11 +1197,11 @@ Create: `components/product-recommendations/product-recommendations.json`, `.css
 
 | Id | Form |
 |---|---|
-| AT-1 | comment, generic (conformance) |
-| AT-2 | `// AT-2: generic (test/commerce/hydrogen.test.ts C-15)` |
+| AT-1 | `// AT-1: generic (test/conformance/conformance.test.ts)` |
+| AT-2 | `// AT-2: covered by M4-T18 (test/commerce/hydrogen.test.ts: C-15)` |
 | AT-3 | `// AT-3: generic (test/upgrade/upgrade.test.ts)` |
 | AT-4 | `[T6] product-recommendations: AT-4 ...` (scripting disabled: fixture `products` shows its cards; fixture `lazy` shows what the spec's "Behaviour without JavaScript" states and sends no request) |
-| AT-5 | `// AT-5: generic (test/liquid/live.test.ts, added by M10-T01)` |
+| AT-5 | `// AT-5: covered by M10-T01 (test/liquid/live.test.ts)` |
 | region | `[T5] product-recommendations: a refresh replaces the region root once` (M4-R16; fixture `lazy` on an M4-R14 page) |
 | rules | M4-R13, one rule test |
 
@@ -1214,8 +1223,8 @@ M4-R17. `ls components/product-recommendations/fixtures | wc -l` prints `5`. `gr
 ## M4-T20 Commerce tests C-24 (field names looked up) and C-27 (`react` strategy region store)
 
 - **Goal:** Add test C-24 (every UNVERIFIED Storefront API field name and Liquid expression of the shared data types is looked up and the mappers type-check against the Storefront API types) and test C-27 (the `react` refresh strategy and its region store).
-- **Depends on:** M4-T16, M4-T18 (table). C-24 ALSO needs M1-T37 and M4-T09, M4-T10, M4-T11, M4-T12 (their `.data.ts` mappers; Plan reading PR-M4-7). Do the C-27 half when only the table dependencies are done; do the C-24 half when the others are too.
-- **Kind:** `harness`. Size M.
+- **Depends on:** M4-T16, M4-T18, M1-T37, M4-T09, M4-T10, M4-T11, M4-T12 (the last five provide the `.data.ts` mappers that C-24 type-checks).
+- **Kind:** `harness`. Size M. Group D.
 
 ### Read first
 
@@ -1237,11 +1246,11 @@ Create: `src/types.test.ts` (C-24; when the file exists, add to it). Change: `te
    Take the exact export names and the argument shape from `src/commerce/refresh-react.ts`; when they differ from the names above, the source wins.
 3. **C-24, part 1 (lookup).** List every Storefront API field name and every Liquid expression that `### 11.1 ` marks `UNVERIFIED`. Look each one up with the Shopify documentation tool (`mcp__Shopify__search_docs_chunks`). Write in `src/types.test.ts` one constant `LOOKED_UP: ReadonlyArray<{ name: string; kind: "storefront" | "liquid"; page: string }>` with one entry per name; `page` is the documentation page URL the tool returned. A name the documentation contradicts is NOT silently corrected: record it under `## Ledger issues` of `docs/05-commerce.md` with the page, and leave the mapper as is.
 4. **C-24, part 2 (types).** In the same file write, per `.data.ts` mapper, a compile-time fixture: a value declared with the Storefront API response type (`import type { ... } from "@shopify/hydrogen/storefront-api-types"`) passed to the mapper, the result assigned to a variable of the `Ripple*` type. The test `[T1] types: C-24 ...` asserts `LOOKED_UP.length` equals the number of UNVERIFIED names counted in step 3 and that every `page` starts with `https://shopify.dev/`. The type half is proven by `pnpm typecheck`.
-5. Proof: `pnpm typecheck && pnpm test:unit --files=src/types.test.ts --no-skips && pnpm test:commerce --no-skips && pnpm ci`. PLAN 5.0.
+5. Proof: `pnpm typecheck && pnpm build && pnpm test:unit --files=src/types.test.ts --no-skips && pnpm test:behavior --files=test/commerce/hydrogen --no-skips && pnpm ci`. PLAN 5.0.
 
 ### Acceptance
 
-`pnpm test:commerce --no-skips 2>&1 | grep 'C-27'` shows passing lines. `pnpm test:unit --files=src/types.test.ts 2>&1 | grep 'C-24'` shows a passing line. `pnpm typecheck` exits 0. `grep -c 'UNVERIFIED' src/types.test.ts` prints `0`.
+`pnpm test:behavior --files=test/commerce/hydrogen --grep="C-27 " --no-skips` exits 0. `pnpm test:unit --files=src/types.test.ts --grep="C-24 " --no-skips` exits 0. `pnpm typecheck` exits 0. `grep -c 'UNVERIFIED' src/types.test.ts` prints `0`.
 
 ### Out of scope
 
@@ -1249,7 +1258,7 @@ Changing any type of `### 11.1 ` or any mapper. Chrome mappers (menus, localizat
 
 ### If blocked
 
-- The Shopify documentation tool is not available in the session: BLOCKED-ON-ENV for the C-24 half. Never write `LOOKED_UP` from memory. Ship C-27 alone in this pull request; write `BLOCKED-ON-ENV: C-24 needs the Shopify docs tool` in the done file; the M4 gate then fails on C-24 until a session with the tool finishes it.
+- The Shopify documentation tool is not available in the session: never write `LOOKED_UP` from memory. Push the branch with C-27 and whatever of C-24 is done, open the pull request as a draft with the line `BLOCKED-ON-ENV: C-24 needs the Shopify docs tool`, write no done file, and pick another task (PLAN section 1 item 7 and section 4.3). A later session with the tool finishes the branch.
 - A mapper does not type-check against the Storefront API type: do not cast. Record the field under `## Ledger issues` of `docs/05-commerce.md`, add the compile fixture with `// @ts-expect-error <field>: ledger issue` on the failing line, and report it in the pull request.
 - `esbuild` is not a dependency of the root package: use the bundler call the build script of the package already uses (search `scripts/` for `esbuild`); add no dependency.
 
@@ -1275,19 +1284,19 @@ Change: `src/commerce/adapter-hydrogen.ts`, `src/commerce/adapter-liquid.ts`, `s
 2. `src/commerce/adapter-hydrogen.ts`: replace the line `// PLAN 4.4: M4-T21 defines rp-view-event here ...` by the function `defineViewEvent()` with the complete class of `### 12.2 ` (`observedAttributes` is `["view-event-payload"]`; it publishes once per payload value). `afterReady` is exactly the code of `### 12.1 `.
 3. `src/commerce/adapter-liquid.ts`: replace the line `// PLAN 4.4: M4-T21 adds startStandardEvents here` by the exported function `startStandardEvents` of `### 12.3 `, copied unchanged.
 4. `src/commerce/index.ts`, function `create()`: add `if (options.backend === "liquid" && options.analytics) void startStandardEvents();` at the place `### 12.3 ` states (before the feature tests). Import `startStandardEvents` from `./adapter-liquid`.
-5. C-29 in `test/commerce/liquid.test.ts`, `[T5] commerce-liquid: C-29 ...`. The page of `test/commerce/pages.ts` for the liquid backend; the route `/events.js` answers with `STANDARD_EVENTS_EMULATION` (the spike's `/events.js` stub has no `PageViewEvent`; do not use it). Count the entries of `window.__log` whose first item is `"pageView"` (PR-M4-6). Cases:
+5. C-29 in `test/commerce/liquid.test.ts`, `[T5] commerce-liquid: C-29 ...`. The page of `test/commerce/pages.ts` for the liquid backend; the route `/events.js` answers with `STANDARD_EVENTS_EMULATION` (the spike's `/events.js` stub has no `PageViewEvent`; do not use it). Count the entries of `window.__log` whose first item is `"pageView"` (ledger D-134 item 26). Cases:
    1. After load: exactly one entry; its `init.page.template` equals the value of `main[data-template]`; `init.page.title === document.title`; `init.page.url === location.href`.
    2. After a region refresh and after an `rp-live` `pushState` navigation: still one entry.
    3. With `"analytics": false` in the config element: zero entries and `customElements.get("rp-view-event") === undefined`.
-6. Proof: `pnpm typecheck && pnpm build && pnpm test:unit --files=src/commerce/adapter --no-skips && pnpm test:behavior --files=test/commerce/liquid --no-skips && pnpm test:commerce --no-skips && pnpm test:size && pnpm ci`. `grep -rn 'PLAN 4.4: M4-T21' src/` prints nothing. PLAN 5.0.
+6. Proof: `pnpm typecheck && pnpm build && pnpm test:unit --files=src/commerce/adapter --no-skips && pnpm test:behavior --files=test/commerce/ --no-skips && pnpm test:size && pnpm ci`. `grep -rn 'PLAN 4.4: M4-T21' src/` prints nothing. PLAN 5.0.
 
 ### Acceptance
 
-Proof commands exit 0. `pnpm test:behavior --files=test/commerce/liquid --no-skips 2>&1 | grep 'C-29'` shows passing lines. `grep -c 'startStandardEvents' src/commerce/index.ts` prints at least `2`. `grep -rc 'shopify:page:view' test/commerce/liquid.test.ts` prints `0` (ST-6).
+Proof commands exit 0. `pnpm test:behavior --files=test/commerce/liquid --grep="C-29 " --no-skips` exits 0. `grep -c 'startStandardEvents' src/commerce/index.ts` prints at least `2`. `grep -rc 'shopify:page:view' test/commerce/liquid.test.ts` prints `0` (ST-6).
 
 ### Out of scope
 
-C-30 and the serve-theme page-view test (M7-T27). C-37 (no PLAN row; PR-M4-10). Blueprints or sections that print `<rp-view-event>`. Consent UI. Cart events (exist since M1).
+C-30 and the serve-theme page-view test (M7-T27). C-37, the hydrogen re-publish test (M4-T25; ledger D-145). Blueprints or sections that print `<rp-view-event>`. Consent UI. Cart events (exist since M1).
 
 ### If blocked
 
@@ -1324,7 +1333,7 @@ Change: `test/hydration/react.test.ts` (replace the placeholder comment for the 
 
 ### Acceptance
 
-`pnpm test:run --tiers=4 --files=test/hydration/react 2>&1 | grep -c 'useRegionHtml returns null during hydration'` prints at least `1`. `grep -c '^## Part (b)' docs/research/spikes/html-region-refresh/README.md` prints `1` and the part contains a `Verdict` line with `DEFAULT holds` or `FALLBACK required`. `git diff --stat origin/main -- docs/00-decisions.md` shows one changed line.
+`pnpm test:run --tiers=4 --files=test/hydration/react 2>&1 | grep -c 'useRegionHtml returns null during hydration'` prints at least `1`. `grep -c '^## Part (b)' docs/research/spikes/html-region-refresh/README.md` prints `1` and the part contains a `Verdict` line with `DEFAULT holds` or `FALLBACK required`. `git diff --numstat origin/main -- docs/00-decisions.md` prints one line that starts with `1	1	` (one line changed).
 
 ### Out of scope
 
@@ -1334,7 +1343,7 @@ Applying any fallback. ProductRecommendations checks beyond what SPIKE-10 lists.
 
 - A check fails: that is a result, not a blocker. Keep the failing test in the file marked with the exact failure in the report, verdict `FALLBACK required`, write `FOLLOW-UP NEEDED: apply "Fallback (SPIKE-10)" of docs/05-commerce.md (react paragraph) and of docs/components/predictive-search.md, docs/components/product-recommendations.md`, open a draft pull request. M4-T24 is then blocked until the fallback task exists and is done (PLAN 7.2). A failing test MUST NOT be merged into `main`: the pull request stays a draft.
 - The report file has no `## Part (b)` heading: add it after part (a).
-- Node is older than the tier-4 app needs: BLOCKED-ON-ENV; record `node --version` in the done file.
+- Node is older than 24.3 and the install step of `docs/PLAN.md` section 3.1 fails: follow the fallback of PLAN section 3.1 (run without `--no-skips`, every skip reason starts with `Remix needs Node 24.3 or later`, list the skips in the pull request). The React checks of this spike do not need Remix; record `node --version` in the report.
 
 ---
 
@@ -1362,13 +1371,13 @@ Create: `src/check/rules/RP301.ts` to `RP309.ts`, `RP320.ts`, `RP321.ts`, and on
    |---|---|---|---|
    | RP301 | error | H | |
    | RP302 | error | H | |
-   | RP303 | error | H | server HTML documents; four lettered cases a to d |
+   | RP303 | error | H | server HTML documents; four lettered cases a to d; case (b) does not report an empty element with class `rp-announcer` or with `role="status"` (ledger D-134 item 27) |
    | RP304 | warning | H | |
    | RP305 | error | H | form dialect, read from the manifest (`liquid.formDialect`, `hydrogenHost.formDialect`) through the context's component table |
    | RP306 | error | H | host `liquid` only |
-   | RP307 | error | S | host `liquid`; text `updateCart.configure` outside `assets/ripple*.js`; existence of `snippets/standard-actions-config.liquid` or `assets/standard-actions-override.js` |
+   | RP307 | error | S | host `liquid`; text `updateCart.configure` outside `assets/ripple*.js`; existence of `snippets/standard-actions-config.liquid` or `assets/standard-actions-override.js`, resolved against `ctx.cwd` (ledger D-142) |
    | RP308 | error (first case warning) | H | four cases; the containment case applies only to `rp-cart` |
-   | RP309 | error | H | three lettered cases a to c |
+   | RP309 | error | H | three lettered cases a to c; the source-file clause of case (a) ("when layer S ran") reads files under `ctx.cwd` (ledger D-142) |
    | RP320 | error | H | data-driven from the manifests' `agent.confirm[]` |
    | RP321 | warning | H | |
 
@@ -1389,7 +1398,7 @@ Rules RP310 to RP319 and RP322 onward (other milestones; see `### 9.7 `). The fi
 
 ### If blocked
 
-- `RuleContext` has no project file list or paths (needed by RP307's file-existence clause and any layer-S clause of RP309): implement the clauses the context supports and leave the other clause out. Do NOT mark the gap with a `// PLAN 4.4:` comment (that marker is for bring-up lines only); record `RP307 partial: file-existence clause needs project paths` under `## Ledger issues` of `docs/07-manifest-registry-cli.md` and in the pull request, the same way M2 recorded RP112 and RP117.
+- `RuleContext` has no field `cwd` (ledger D-142 says M0-T42 adds it): that is a defect of M0-T42; do not add the field here and do not leave a clause out. Open a draft pull request naming `src/check/index.ts` and D-142.
 - An existing fixture or example triggers a new rule: the fixture or the rule reading is wrong. Do not weaken the rule and do not edit the fixture; draft pull request naming the fixture and the rule.
 - The 9.6 row and doc 05 section 13 disagree: doc 07 9.6 wins for id, severity, layer; doc 05 wins for the detection detail; record the difference under `## Ledger issues` of `docs/07-manifest-registry-cli.md`.
 
@@ -1398,7 +1407,7 @@ Rules RP310 to RP319 and RP322 onward (other milestones; see `### 9.7 `). The fi
 ## M4-T24 M4 gate
 
 - **Goal:** Prove that milestone M4 is complete by running the gate checks of the M4 gate row of `docs/PLAN.md` and recording the result.
-- **Depends on:** M4-T01 to M4-T23.
+- **Depends on:** M4-T01 to M4-T23, M4-T25.
 - **Kind:** `gate`. No source, test or spec file changes.
 
 ### Read first
@@ -1412,7 +1421,7 @@ Create: `docs/plan/done/M4-T24.md`. Change nothing else.
 ### Steps
 
 1. Branch `task/M4-T24-gate`, from an up-to-date `main`.
-2. Done files: `ls docs/plan/done/ | grep -c '^M4-T\(0[1-9]\|1[0-9]\|2[0-3]\)\.md$'` MUST print `23`. No done file of M4 contains `BLOCKED` or `FOLLOW-UP NEEDED` (`grep -l 'BLOCKED\|FOLLOW-UP NEEDED' docs/plan/done/M4-T*.md` prints nothing).
+2. Done files: `ls docs/plan/done/ | grep -c '^M4-T\(0[1-9]\|1[0-9]\|2[0-3]\|25\)\.md$'` MUST print `24`. No done file of M4 contains `BLOCKED` or `FOLLOW-UP NEEDED` (`grep -l 'BLOCKED\|FOLLOW-UP NEEDED' docs/plan/done/M4-T*.md` prints nothing).
 3. `pnpm install --frozen-lockfile && pnpm ci` exits 0.
 4. The 26 components:
 
@@ -1422,16 +1431,35 @@ Create: `docs/plan/done/M4-T24.md`. Change nothing else.
    done
    ```
 
-   prints nothing. Every entry of kind `commerce` has `"status": "beta"`; every `static` or `native` one `"stable"`.
-5. Commerce tests: the output of `pnpm test --no-skips` contains a passing line for each of C-01 to C-16, C-18, C-22 to C-25, C-27, C-29, C-32 (grep each id; C-24 is in `src/types.test.ts`).
+   prints nothing. Statuses (PLAN 4.2): every entry of kind `commerce` has `"status": "beta"`, every `static` or `native` one `"stable"`. Check with:
+
+   ```bash
+   for id in price add-to-cart-button checkout-button product-form cart-link cart-line cart-summary cart-lines cart-drawer swatch search-form product-card collection-card article-card price-range filter-group live-form filters filter-chips sort-select variant-picker product-gallery cart-note discount-code predictive-search product-recommendations; do
+     node -e 'const m=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")); const want=m.kind==="commerce"?"beta":"stable"; if(m.status!==want) console.log(process.argv[1], m.kind, m.status)' components/$id/$id.json
+   done
+   ```
+
+   prints nothing.
+5. Commerce tests. Each of these commands exits 0 (exit 2 means no test matched, which is a failure):
+
+   ```bash
+   for id in C-01 C-02 C-03 C-04 C-05 C-06 C-07 C-08 C-29 C-36 C-38; do pnpm test:behavior --files=test/commerce/liquid --grep="$id " --no-skips >/dev/null || echo "FAIL $id"; done
+   for id in C-09 C-10 C-11 C-12 C-13 C-14 C-15 C-25 C-27 C-33 C-34 C-37 C-39; do pnpm test:behavior --files=test/commerce/hydrogen --grep="$id " --no-skips >/dev/null || echo "FAIL $id"; done
+   pnpm test:upgrade --grep="C-16 " --no-skips >/dev/null || echo "FAIL C-16"
+   for id in C-22 C-24 C-32; do pnpm test:unit --grep="$id " --no-skips >/dev/null || echo "FAIL $id"; done
+   pnpm test:hydration --grep="C-23 " --no-skips >/dev/null || echo "FAIL C-23"
+   pnpm test:hydration --files=test/hydration/react --grep="useRegionHtml returns null during hydration" --no-skips >/dev/null || echo "FAIL C-28"
+   ```
+
+   prints nothing. C-28 is the test `[T4] react: useRegionHtml returns null during hydration and the HTML after the first publish` (M4-T22; ledger D-145). C-05 has four cases and C-01 is complete (every tag of its list): read the C-01 and C-05 tests and confirm, and write one line for each in the done file. When an id is found in a different file than the command above uses, run the command with that file's path and record it; the id must pass in some file.
 6. SPIKE-10 part (b): `grep -c '^## Part (b)' docs/research/spikes/html-region-refresh/README.md` prints `1`; the verdict is `DEFAULT holds`, or the fallback follow-up task is done.
 7. Rules: `for n in 301 302 303 304 305 306 307 308 309 320 321; do test -f src/check/rules/RP$n.ts && test -f src/check/rules/RP$n.test.ts || echo "MISSING RP$n"; done` prints nothing.
 8. `grep -rn 'PLAN 4.4: M4-' src/` prints nothing.
-9. Write `docs/plan/done/M4-T24.md`: the commands above with their observed output, the commit hash checked, and a section `## Open notes` listing: tests C-33 to C-39 have no owning task (PR-M4-10); every line added under `## Ledger issues` of docs 05, 07, 11 by M4 tasks; every resource added under M4-R7. Commit only this file; PLAN 5.0.
+9. Write `docs/plan/done/M4-T24.md`: the commands above with their observed output, the commit hash checked, and a section `## Open notes` listing: every line added under `## Ledger issues` of docs 05, 07, 11 by M4 tasks; every resource added under M4-R7 (`git log --oneline origin/main -- src/testing/resources.ts`). Commit only this file; PLAN 5.0.
 
 ### Acceptance
 
-Every command of steps 2 to 8 gives the stated output. The done file exists and its first line is `M4 gate: PASS`.
+Every command of steps 2 to 8 gives the stated output. `head -1 docs/plan/done/M4-T24.md` prints `M4 gate: PASS`.
 
 ### Out of scope
 
@@ -1440,4 +1468,94 @@ Fixing anything. Changing statuses to `stable` (M7-T28). Deleting `BRINGUP_SUBSE
 ### If blocked
 
 - Any check fails: write `M4 gate: FAIL` as the first line of the done file with the failing command and output, name the task id that owns the failing item, open a draft pull request, stop. Never fix inside the gate task.
-- C-24 is missing because M4-T20 recorded `BLOCKED-ON-ENV`: the gate fails; the owner is M4-T20.
+- M4-T20 has no done file because its pull request is a draft with `BLOCKED-ON-ENV: C-24 needs the Shopify docs tool`: this task is not eligible yet (its dependency is not done); pick another task.
+
+---
+
+## M4-T25 Commerce tests C-05 cases 2 to 4, C-33, C-34, C-36, C-37, C-38, C-39 in `test/commerce/liquid.test.ts` and `test/commerce/hydrogen.test.ts` (D-145)
+
+- **Goal:** Add the commerce acceptance tests of the review decisions that had no owner (ledger D-145): cases 2 to 4 of C-05 and C-36, C-38 on the Liquid backend; C-33, C-34, C-37, C-39 on the hydrogen backend.
+- **Depends on:** M1-T29, M1-T30, M1-T32, M1-T33, M1-T35, M4-T14, M4-T15, M4-T21.
+- **Kind:** `harness`. Size M. These tests check code that exists since M1 and M4 (the eighteen changes of `docs/05-commerce.md` section 1). No source file under `src/` changes.
+
+### Read first
+
+| File | Section | Size |
+|---|---|---|
+| `docs/05-commerce.md` | in `## 14. Acceptance tests` only the rows C-05, C-33, C-34, C-36, C-37, C-38, C-39 | 4 kB |
+| `docs/05-commerce.md` | `### 7.1 ` (`rp-cart`: the empty-quantity guard, the `inflow` guard, the flush registration) | 9 kB |
+| `docs/05-commerce.md` | `### 4.6 ` (`registerFlush`, `hasUnsettled`, `settle`, `errorMessage`, `hasUserError`) | 5 kB |
+| `docs/05-commerce.md` | `### 5.1 ` (hydrogen `submit` part, the checkout click listener) and `### 5.2 ` (Liquid `probe`, the `submit` part) | 8 kB |
+| `docs/05-commerce.md` | `### 6.3 ` (baseline and `sent`) | 4 kB |
+| `docs/05-commerce.md` | in `### 12.2 ` only the hydrogen class code (search `observedAttributes`) | 4 kB |
+| `docs/04-elements.md` | in `### 3.3 ` only item 8 and the code line that sets `window.rpDomReady` (search `rpDomReady`) | 2 kB |
+| `docs/00-decisions.md` | the `- Decision:` lines of D-116, D-117, D-119, D-122, D-123, D-126, D-127, D-129 | 3 kB |
+| repository | `test/commerce/pages.ts`; in `test/commerce/liquid.test.ts` the tests C-02, C-04 and C-05; in `test/commerce/hydrogen.test.ts` the tests C-09 and C-10; `test/support/fake-sa.js`; `src/runtime/commands-polyfill.ts` (the export `INLINE_COMMANDS_POLYFILL`) | 15 kB |
+
+Fixture files read at test time (M4-R14): `components/cart-lines/fixtures/{default,liquid-default}.html`, `components/checkout-button/fixtures/default.html`, `components/product-form/fixtures/default.html`, `components/cart-drawer/fixtures/liquid-two-lines.html`, `components/cart-note/fixtures/{default,liquid-default}.html`, `components/discount-code/fixtures/liquid-default.html`.
+
+### Files
+
+Change: `test/commerce/liquid.test.ts` (add the C-05 cases 2 to 4, C-36, C-38), `test/commerce/hydrogen.test.ts` (add C-33, C-34, C-37, C-39). Change only when a step says so: `test/commerce/pages.ts` (one option of an existing page builder). Do NOT change `test/support/fake-sa.js`: it is a byte-for-byte copy of the spike file (`docs/13-testing.md` rule ST-2 and its tree in section 3.1). Create nothing else.
+
+### Steps
+
+1. Branch `task/M4-T25-commerce-review-tests`.
+2. Pages: use the liquid and hydrogen page builders and route handlers of `test/commerce/pages.ts` (M4-R14). Page markup comes only from the fixture files listed above. Wait with `page.waitForFunction`; no fixed delay except the 100 ms of C-34, which is the time the row states.
+3. **C-05 cases 2 to 4** in `test/commerce/liquid.test.ts`, as three tests whose names start with `[T5] commerce-liquid: C-05 ` and continue with one sentence each (D-141 (2)). The liquid page prints, in the place where `rp-head` prints it on a theme, the classic inline script `<script>` + one line break + the value of `INLINE_COMMANDS_POLYFILL` (import it from `src/runtime/commands-polyfill.ts`) + one line break + `</script>`, after the config element `#rp-commerce` and before the module script (`docs/04-elements.md` section 3.3 item 8). `snippets/rp-head.liquid` itself is created later by M6-T05; do not read or create it. When the page builder of `test/commerce/pages.ts` has no way to insert a head script, add one optional parameter for extra head HTML and use it.
+   1. Case 2 (D-122): a classic inline script placed BEFORE the inline polyfill script registers a `DOMContentLoaded` listener that calls `window.Shopify.actions.updateCart.configure({ handler: (defaultHandler) => defaultHandler() })`; it runs before the listener of the polyfill, so `updateCart.isDefault()` is `false` when `window.rpDomReady` resolves. Assert: after `getCommerce().ready`, `getCommerce().usable === false`; `customElements.get(tag)` is defined for `rp-cart`, `rp-product-form`, `rp-live`, `rp-predictive-search`, `rp-recommendations`; submitting the cart form of `components/cart-lines/fixtures/liquid-default.html` produces a native POST (record it in the route handler and fulfil it with an empty HTML page, as the first case of C-05 does).
+   2. Case 3 (D-122): a classic inline script placed AFTER the inline polyfill script (the position of `content_for_header`) registers a `DOMContentLoaded` listener that calls the same `configure` and stores its return value in `window.__otherConfigure`. Assert `window.__otherConfigure === false` and `getCommerce().usable === true`.
+   3. Case 4 (D-129): the setup of the first case of C-05 (`usable === false`), plus the fixture `components/discount-code/fixtures/liquid-default.html` (its form carries `data-rp-js="inflow"`). Type `SAVE10` and submit the discount form with its button: zero requests other than those made before the submit, no navigation (`location.href` unchanged), and the form's error part has the text `Something went wrong. Try again.` and no `hidden` attribute.
+4. **C-38** (D-126) in `test/commerce/liquid.test.ts`, `[T5] commerce-liquid: C-38 ...`: the liquid page with `components/cart-lines/fixtures/liquid-default.html` and `components/cart-note/fixtures/liquid-default.html`; the cart note is `""`. Count the `["updateCart", payload]` entries of `window.__log`. Type `gift` into the note and blur: one more entry, payload `{ "note": "gift" }`. Clear the note and blur: one more entry, payload `{ "note": "" }`. Change a line quantity through the Update button path (`form.requestSubmit(<the submit part of that line>)`): no entry made by it has a `note` key. Then a cart-form submit with nothing changed: no new entry, and the status part of the CartLines root is empty.
+5. **C-36** (D-119) in `test/commerce/liquid.test.ts`, two tests `[T5] commerce-liquid: C-36 ...`: the liquid page with `components/product-form/fixtures/default.html` and `components/cart-drawer/fixtures/liquid-two-lines.html` (the drawer is closed). The cart of `fake-sa.js` (`window.__initialCart`, set before navigation the way C-02 sets it) holds a line of the product form's variant, so that `[data-rp-line]` for it is in the drawer.
+   1. (a) Set `window.__userErrors` to one entry whose `field` targets that line, in the shape test C-04 uses. Submit the product form with its submit button. Assert: the PRODUCT FORM error part shows the API message (not `Something went wrong. Try again.`); no `action` event; `#cart-drawer` stays closed.
+   2. (b) A warnings-only answer. `fake-sa.js` cannot answer with `warnings` and MUST NOT change, so the page adds this classic inline script directly after the `fake-sa.js` script element (UNVERIFIED: written for this plan, not run):
+
+      ```js
+      (function () {
+        const real = window.Shopify.actions.updateCart;
+        const wrapped = async (payload, options) => {
+          const result = await real(payload, options);
+          return window.__warnings ? { ...result, warnings: window.__warnings } : result;
+        };
+        wrapped.configure = real.configure;
+        wrapped.isDefault = real.isDefault;
+        window.Shopify.actions.updateCart = wrapped;
+      })();
+      ```
+
+      Set `window.__warnings` to one entry targeting the line, in the same shape as the `userErrors` entry of (a) plus a `message`. Submit the product form. Assert: the product form error part shows the warning text; one `action` event; `#cart-drawer` is open; the text `Added to cart` is not announced (it is in no `[data-rp-part="status"]` and in no announcer region).
+6. **C-33** (D-116) in `test/commerce/hydrogen.test.ts`, two tests `[T5] commerce-hydrogen: C-33 ...`: the hydrogen page with `components/cart-lines/fixtures/default.html` and the stub `/api/cart` route; count the `POST /api/cart` requests. (1) Remove the `required` attribute of the first line's quantity input with `page.evaluate`, clear the input, press Enter: zero POSTs; the line is still in the DOM; the CartLines status part is empty. (2) The same with `required` left in place: same observations.
+7. **C-34** (D-117) in `test/commerce/hydrogen.test.ts`, `[T5] commerce-hydrogen: C-34 ...`: the hydrogen page with `components/cart-lines/fixtures/default.html`, `components/cart-note/fixtures/default.html` and `components/checkout-button/fixtures/default.html`. The `/api/cart` stub answers each POST after 300 ms and records the time it answered; the route of the checkout URL (the `href` of `a.rp-checkout-button`) records the time of its request and answers with an empty HTML page. Cases: (1) type a new quantity into the first line's quantity input, then within 100 ms click `a.rp-checkout-button`: exactly one POST carrying the new quantity, answered BEFORE the checkout request. (2) The same with a changed note: the `note-update` POST is answered first. (3) With nothing changed: the click navigates and no POST is made. (4) A click with `Control` held (`page.click(selector, { modifiers: ["Control"] })`): a capture-phase `click` listener installed on `window` before the click records `event.defaultPrevented === false`.
+8. **C-37** (D-123) in `test/commerce/hydrogen.test.ts`, `[T5] commerce-hydrogen: C-37 ...`: the hydrogen page with config `"analytics": true`; `page.addInitScript` installs `window.Shopify = { ...window.Shopify, analytics: { publish: (event, payload) => (window.__published ??= []).push([event, payload]) } }` before any script runs. The hydrogen class of section 12.2 calls `window.Shopify?.analytics?.publish(event, payload)` with the parsed `{ event, payload }` of the attribute. Payload texts written in the test: A = `{"event":"product_viewed","payload":{"products":[{"id":"gid://shopify/Product/1"}]}}`, B = the same text with `Product/2`. Create the element with `document.createElement("rp-view-event")`, set `view-event-trigger` to `connect` and `view-event-payload` to A, append it to `main`. Assert in order: one publish after connect; `setAttribute("view-event-payload", B)` on the same element: exactly one more publish, with B's event and payload; setting B again: no publish; remove and re-insert the same element: no publish; a NEW element with B: one publish. Each assertion reads `window.__published.length` and the last entry.
+9. **C-39** (D-127) in `test/commerce/hydrogen.test.ts`, `[T5] commerce-hydrogen: C-39 ...`: the hydrogen page with `components/product-form/fixtures/default.html` and the stub `/api/cart`. Run `document.querySelector("rp-product-form form").requestSubmit()` (no argument) in `page.evaluate`. Assert: exactly one `POST /api/cart` whose body adds the form's `merchandiseId` with its quantity (the field names of `docs/05-commerce.md` `### 10.5 `); one `action` event; the error part of the product form keeps `hidden`.
+10. Proof:
+
+    ```bash
+    pnpm typecheck && pnpm build
+    pnpm test:behavior --files=test/commerce/ --no-skips
+    pnpm ci
+    ```
+
+    PLAN 5.0.
+
+### Acceptance
+
+The proof commands exit 0. Each of these commands exits 0 (exit 2 means no test matched):
+
+```bash
+for id in C-05 C-36 C-38; do pnpm test:behavior --files=test/commerce/liquid --grep="$id " --no-skips || echo "FAIL $id"; done
+for id in C-33 C-34 C-37 C-39; do pnpm test:behavior --files=test/commerce/hydrogen --grep="$id " --no-skips || echo "FAIL $id"; done
+```
+
+prints no `FAIL` line. `grep -c 'C-05 ' test/commerce/liquid.test.ts` prints at least `4` (case 1 from M1-T29 and the three new cases). `git diff --stat origin/main -- test/support/fake-sa.js src/` prints nothing.
+
+### Out of scope
+
+C-35 (locale prefix; M7-T30). Any change under `src/` or to `test/support/fake-sa.js`. C-30 and the theme-server page-view test (M7-T27). Tier 7 (`pnpm test:commerce`).
+
+### If blocked
+
+- A test fails because the code under test does not do what the row says: that is a defect of the task that wrote the code (C-05 cases 2 and 3, C-38: M1 adapter tasks for `adapter-liquid.ts`; C-05 case 4, C-33: `rp-cart.ts`; C-34: `adapter.ts` and `adapter-hydrogen.ts`; C-36, C-39: `rp-product-form.ts` and the adapters; C-37: M4-T21). Do not change `src/` here and do not weaken the test: open a draft pull request that names the failing assertion and the source file.
+- The wrapper script of C-36 (b) does not reach the code that reads the result (the product form shows no warning, and the `__log` entries show the call): keep case (a), mark case (b) as not done in a draft pull request, and record under `## Ledger issues` of `docs/05-commerce.md`: `C-36 (b): fake-sa.js cannot answer with warnings and must stay byte-equal (13-testing.md ST-2); the test needs an emulation option.`
+- `INLINE_COMMANDS_POLYFILL` is not exported by `src/runtime/commands-polyfill.ts`: defect of the M0 task that wrote the file; draft pull request.
