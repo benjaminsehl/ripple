@@ -886,7 +886,7 @@ The exact schema (JSON Schema draft 2020-12), stored as `fixture.schema.json` an
 | `name` | yes | Kebab-case, unique within the component. The first fixture MUST be `default`. |
 | `props` | yes (may be `{}`) | Props passed to the ROOT component. Keys are manifest prop names (camelCase); `class` is written `class`. Values: string, number, boolean, or a resource reference. A key that is not a manifest prop of the component (or `class`) fails the build. |
 | `children` | no | An HTML fragment placed in the root's default outlet. Mutually exclusive with `parts`. For content model `none` neither key is present. |
-| `parts` | no | An ordered list of part instances placed in the root's outlet. Each instance: `part` (a part name from the manifest), `props` (that part's props), and either `children` (HTML fragment in the part's outlet) or nested `parts`. Only parts with `authoredBy: "author"` may appear; parts printed by the component itself never appear. |
+| `parts` | no | An ordered list of part instances placed in the root's outlet. Each instance: `part` (a part name from the manifest), `props` (that part's props), and either `children` (HTML fragment in the part's outlet) or nested `parts`. Only parts with `authoredBy: "author"` may appear; parts printed by the component itself never appear. A fixture that needs an author part followed by free content (Popover fixture `title`) writes the whole content, the part's markup included, as one `children` string and stays `generated: "template"` (D-149 item 16). |
 | `html` | only in built `manifest.json` | The reference HTML (F-1). |
 | `hosts` | no | The hosts in which the fixture is rendered and compared. Absent means all four. Allowed in exactly two cases: a prop of the fixture does not exist in a host (manifest `prop.hosts`); or the fixture is one of a backend-scoped pair (F-24). |
 | `mask` | no | Mask rules applied to BOTH sides before comparison (11.6). |
@@ -932,7 +932,7 @@ The names `default`, `invalid-enum-falls-back`, `responsive`, `escaping` and `cl
 
 ### 11.6 Masks
 
-A mask replaces or removes a non-portable value on BOTH sides (reference HTML and host output) before the canonical forms are compared. Masks are applied by `canonicalize(html, { mask })` (section 12).
+A mask replaces or removes a non-portable value on BOTH sides (reference HTML and host output) before the canonical forms are compared. Masks are applied by `canonicalize(html, { mask })` (section 12). A fixture's `mask` applies in every host; there is no per-host mask. A difference that only some hosts produce is masked for all hosts, and an acceptance test asserts the masked value where it matters (D-149 item 14).
 
 | `op` | `name` | Effect on every element matching `select` |
 |---|---|---|

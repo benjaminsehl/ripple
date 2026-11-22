@@ -340,7 +340,7 @@ Eval harness modules (all under `evals/adapters/`; every function is exported fo
 
 ### 0.7 Order of tasks
 
-The "Depends on" column of the task table (PLAN section 6) is the only source of order (PLAN section 1 item 2). Every order constraint that an earlier version of this section listed is now in the table: M8-T03 depends on M7-T29; M8-T21 on M8-T04, M8-T05, M8-T06; M8-T31 to M8-T38 on M8-T24 and M8-T45 (the templates); M8-T33 on M8-T31; M8-T36 on M8-T31 and M8-T33; M8-T42 on M8-T25. No section of this file asks you to wait for a task that is not in its "Depends on" line.
+The "Depends on" column of the task table (PLAN section 6) is the only source of order (PLAN section 1 item 2). Every order constraint that an earlier version of this section listed is now in the table: M8-T03 depends on M7-T29; M8-T21 on M8-T04, M8-T05, M8-T06; M8-T31 to M8-T38 on M8-T24 and M8-T45 (the templates); M8-T33 on M8-T31; M8-T36 on M8-T31 and M8-T33; M8-T42 on M8-T25; M8-T23, M8-T25, M8-T26 and M8-T27 on M8-T44; M8-T28 on M8-T23 and M7-T29 (D-149 item 3). No section of this file asks you to wait for a task that is not in its "Depends on" line.
 
 ### 0.8 Shared files that several M8 tasks edit
 
@@ -641,7 +641,7 @@ Guides 5 to 12 (M8-T05, M8-T06). Changing `renderIndex` (M6-T14).
 
 ### Read first
 
-doc 08: `### 2.5 `, `### 2.7 `, `### 2.8 ` rows K-06, K-07, K-09; `## 7. ` (sections 7.1 to 7.5, 9.6 kB) for `agent-ready`. Sources: doc 05 `### 4.4 ` (2.4 kB), `### 6.1 ` (1.6 kB), `### 8.1 ` (2 kB), `### 8.3 ` prose only, skip the code blocks (4.6 kB), `### 9.2 ` prose only (2.8 kB), `### 10.5 ` (1 kB); doc 11 `### 0.3 ` (5.9 kB), `### 0.7 ` (6.3 kB); ledger D-043, D-090, D-091, D-020; doc 04 `### 10.1 ` to `### 10.8 ` (only the first paragraph and the markup blocks of each, about 9 kB; skip `### 10.5 `, Menu is not in V1), `### 3.4 ` prose (not the code; 1.5 kB); doc 10 `### 0.2 ` rule G-3 only (search `**G-3**`; 0.9 kB); doc 07 `### 5.1 ` prose (1.7 kB), `### 7.7 ` prose (0.8 kB), `### 7.8 ` (2.4 kB), `### 8.4 ` (1.1 kB); ledger D-053, D-056. This file 0.2, 0.4, 0.10.
+doc 08: `### 2.5 `, `### 2.7 `, `### 2.8 ` rows K-06, K-07, K-09; `### 7.1 `, `### 7.3 `, `### 7.4 `, `### 7.5 ` for `agent-ready` (5.4 kB; skip the intro of `## 7. ` and `### 7.2 `, which step 4 does not use; D-149 item 17). Sources: doc 05 `### 4.4 ` (2.4 kB), `### 6.1 ` (1.6 kB), `### 8.1 ` (2 kB), `### 8.3 ` prose only, skip the code blocks (4.6 kB), `### 9.2 ` prose only (2.8 kB), `### 10.5 ` (1 kB); doc 11 `### 0.3 ` (5.9 kB), `### 0.7 ` (6.3 kB); ledger D-043, D-090, D-091, D-020; doc 04 `### 10.1 ` to `### 10.8 ` (only the first paragraph and the markup blocks of each, about 9 kB; skip `### 10.5 `, Menu is not in V1), `### 3.4 ` prose (not the code; 1.5 kB); doc 10 `### 0.2 ` rule G-3 only (search `**G-3**`; 0.9 kB); doc 07 `### 5.1 ` prose (1.7 kB), `### 7.7 ` prose (0.8 kB), `### 7.8 ` (2.4 kB), `### 8.4 ` (1.1 kB); ledger D-053, D-056. This file 0.2, 0.4, 0.10.
 
 ### Files
 
@@ -1313,7 +1313,7 @@ The EV-2 commands exit 0. `node evals/adapters/run.ts --nope; echo $?` prints a 
 ## M8-T23 Eval harness: `serve.ts`, `mockshop.ts`, `checks.ts`
 
 - **Goal:** Serve a workspace, pick the catalogue handles, and run a task's deterministic checks, gates `renders`, `no-page-error`, `no-secret`, the screenshots and the deterministic visual checks (steps 7 and 8 of doc 08 8.4, except scoring).
-- **Depends on:** M8-T22.
+- **Depends on:** M8-T22, M8-T44 (`spawnInContainer` in `evals/adapters/workspace.ts`).
 - **Kind:** `eval`. Size M. Group B.
 
 ### Read first
@@ -1348,7 +1348,6 @@ Scores (M8-T24). Judging (M8-T28). Task checks (M8-T31 to M8-T38).
 
 - `ripple-kit/testing` does not export `serveTheme`: stop; the owner is the M0 or M7 task that built `src/testing/index.ts` (doc 13 4.7).
 - mock.shop has no pages: PR-M8-17 fallback (`about`).
-- `evals/adapters/workspace.ts` does not exist (M8-T44 is not done) and step 7 needs `spawnInContainer` from it: stop and draft pull request; the table is missing the dependency (reported against `docs/PLAN.md` section 6).
 
 ---
 
@@ -1400,7 +1399,7 @@ K-63 differs at the first decimal: compute without intermediate rounding; when i
 ## M8-T25 Eval adapter `pi`
 
 - **Goal:** Implement the `pi` adapter of doc 08 8.7 and its transcript test (K-61), including the `pi-package` arm.
-- **Depends on:** M8-T22.
+- **Depends on:** M8-T22, M8-T44 (`spawnInContainer` in `evals/adapters/workspace.ts`).
 - **Kind:** `eval`. Size S. Group B.
 
 ### Read first
@@ -1431,14 +1430,13 @@ Running pi against a model (M8-T39). Other adapters.
 ### If blocked
 
 - The pi documentation is not reachable: write the record names of 8.7 only, mark every other field path UNVERIFIED in the constants, and record it in the done file; M8-T39 replaces the sample with a recorded stream.
-- `evals/adapters/workspace.ts` does not exist (M8-T44 is not done) and this task imports `spawnInContainer` from it: stop and draft pull request; the table is missing the dependency (reported against `docs/PLAN.md` section 6).
 
 ---
 
 ## M8-T26 Eval adapter `claude-code`
 
 - **Goal:** Implement the `claude-code` adapter of doc 08 8.7 and its transcript test (K-61).
-- **Depends on:** M8-T22.
+- **Depends on:** M8-T22, M8-T44 (`spawnInContainer` in `evals/adapters/workspace.ts`).
 - **Kind:** `eval`. Size S. Group B.
 
 ### Read first
@@ -1475,7 +1473,7 @@ As M8-T25 (both items).
 ## M8-T27 Eval adapter `opencode`
 
 - **Goal:** Port the `opencode` adapter from Hydrogen's `opencode-runner.ts` (doc 08 8.7) with its transcript test (K-61).
-- **Depends on:** M8-T22.
+- **Depends on:** M8-T22, M8-T44 (`spawnInContainer` in `evals/adapters/workspace.ts`).
 - **Kind:** `eval`. Size S. Group B.
 
 ### Read first
@@ -1505,14 +1503,13 @@ The Hydrogen runner's own docker code (M8-T44 already ported the mounts).
 ### If blocked
 
 - `../hydrogen/` is absent: write the adapter from the 8.7 row alone with a synthetic sample (M8-T25 step 4 form) and record it; mark the event names UNVERIFIED.
-- `evals/adapters/workspace.ts` does not exist (M8-T44 is not done) and this task imports `spawnInContainer` from it: stop and draft pull request; the table is missing the dependency (reported against `docs/PLAN.md` section 6).
 
 ---
 
 ## M8-T28 Eval judge and visual rubric: `judge.ts`, `rubric/visual.md`, `rubric/golden/`
 
 - **Goal:** Implement the visual judge and calibration of doc 08 8.9, write the rubric, and assemble the golden screenshot set.
-- **Depends on:** M8-T24.
+- **Depends on:** M8-T23, M8-T24, M7-T29 (`takeScreenshots` of M8-T23; the four examples of M7).
 - **Kind:** `eval`. Size M. Group C.
 
 ### Read first
@@ -1545,7 +1542,6 @@ Rating the golden set and writing the calibration into `bar.json` (M8-T42). Ben'
 ### If blocked
 
 - Fewer than 30 screenshots can be taken because few references exist yet: take the examples' screenshots at all three viewports for every route (4 hosts x 7 routes x 3 viewports is more than 30).
-- `takeScreenshots` (M8-T23) or the examples (M7-T29) are not done: steps 2 to 4, 6 and 7 do not need them; do those, and open the pull request as a draft for step 5. The table is missing these dependencies (reported against `docs/PLAN.md` section 6).
 
 ---
 

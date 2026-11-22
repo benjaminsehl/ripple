@@ -150,7 +150,7 @@ Create: `components/popover/popover.json`, `components/popover/popover.css`, `co
 ### Names and values
 
 - Fixtures (5), all `generated: "template"`: `default` (id `shipping-info`, children `<p>Free shipping on orders over $50.</p>`), `title` (id `shipping-info`, part `title` with children `Shipping`, then the paragraph: see the note below), `placement` (id `order-actions`, `side` `top`, `align` `end`, children `<p>Actions</p>`), `invalid-enum-falls-back` (id `w1`, `side` `bogus`, children `<p>Text</p>`), `class` (id `w2`, `class` `custom-a custom-b`, children `<p>Text</p>`).
-- Note on fixture `title`: a fixture record has either `children` or `parts` (`docs/02-html-contract.md` 11.2). The `title` fixture needs a title part followed by a paragraph. Write it in the `parts` form when `pnpm gen --check` accepts that. When the record format cannot express a part followed by free content, do NOT switch it to `generated: "hand"` (the spec does not say so, and ledger D-139 does not list Popover): keep `generated: "template"` and give the record a `children` string that is exactly the content of the spec's fixture `title` inside the root (the title `<p class="rp-popover-title">Shipping</p>` and then the paragraph). Add one line under `## Ledger issues` at the end of `docs/02-html-contract.md` (`Popover fixture title: a fixture record cannot hold a part followed by free content; written as children`) and say so in the pull request.
+- Note on fixture `title`: a fixture record has either `children` or `parts` (`docs/02-html-contract.md` 11.2). The `title` fixture needs a title part followed by a paragraph, which the `parts` form cannot express. Do NOT switch it to `generated: "hand"` (the spec does not say so, and ledger D-139 does not list Popover): keep `generated: "template"` and give the record a `children` string that is exactly the content of the spec's fixture `title` inside the root (the title `<p class="rp-popover-title">Shipping</p>` and then the paragraph). This is the form doc 02 section 11.3 (row `parts`) prescribes (ledger D-149 item 16); name it in the pull request.
 - Rules (3): `popover-needs-popover-attribute`, `popover-one-title`, `popover-title-in-popover`; kind, selector, target, message and fix as the spec's `### Checker rules` prints them.
 - Locale keys for printed strings: none.
 - Opener for tests (not part of any fixture): `<button type="button" class="rp-button" popovertarget="shipping-info">Shipping</button>` (the spec prints it).
@@ -353,7 +353,7 @@ The Tabs, Tooltip and Toast components (M3-T04, M3-T05, M3-T07). `--release-chec
 
 | File | Section | Size |
 |---|---|---|
-| `docs/components/tabs.md` | whole file | 35 kB |
+| `docs/components/tabs.md` | whole file except `### Evidence and UNVERIFIED` and `### Fallback (SPIKE-06)` (the spike follow-ups are other tasks, PLAN 3.4) | 32.8 kB |
 | `docs/10-components-interactive.md` | `### 0.3 ` item 1; in `### 0.2 ` only G-1, G-2, G-6, G-11, G-13, G-14, G-15 | 5 kB |
 | `docs/06-bindings.md` | in `### 6.6 `: from the line `` `components/tabs/react/tabs.tsx`: `` to the end of the section | 5.5 kB |
 | `docs/06-bindings.md` | in `### 7.6 `: from the line `` `components/tabs/remix/tabs.tsx`: `` to the end of the section | 4 kB |
@@ -361,7 +361,7 @@ The Tabs, Tooltip and Toast components (M3-T04, M3-T05, M3-T07). `--release-chec
 | `docs/02-html-contract.md` | in `### 11.9 `, only `#### Fixture 3` (the Tabs fixture record) | 4 kB |
 | repository: `components/dialog/dialog.test.ts` | only the `checkPattern` call and one `[T4]` test | 2 kB |
 
-About 61 kB. For the shape of the other manifest keys use M3-R4 and `components/dialog/dialog.json` only for the key you are writing.
+About 59 kB. For the shape of the other manifest keys use M3-R4 and `components/dialog/dialog.json` only for the key you are writing.
 
 Why no template: tab and panel ids are `<tabs>-tab-<value>` and `<tabs>-panel-<value>`, built from TWO props; a template value takes one prop (`docs/07-manifest-registry-cli.md` 2.3) and the language MUST NOT gain string functions (2.1: "A component that needs more is hand-written").
 
@@ -781,7 +781,7 @@ ProductGallery and FeaturedCollection (they compose this contract in M4 and M5).
 | `docs/research/spikes/elements-runtime/test.mjs` | the checks named `upgrade:`, `loader:`, `opener`, `agent:` (the spike form of these rows; port them to page P, do not copy the spike page) | 6 kB |
 | repository: `src/elements/rp-dialog.test.ts` (the page handler of M3-R11), `src/elements/rp-quantity.test.ts` (the E-17 test), `src/elements/ui-toast.test.ts` | | 12 kB |
 
-About 29 kB. Page P is defined at the start of `docs/04-elements.md` section 13 (the PLAN row's "doc 04 §8 (page P)" points at the `rp-quantity` worked example; do not read section 8).
+About 29 kB. Page P is defined at the start of `docs/04-elements.md` section 13 (do not read section 8, the `rp-quantity` worked example).
 
 ### Files
 

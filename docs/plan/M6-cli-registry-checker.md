@@ -133,7 +133,7 @@ Separate sessions must agree on these. Each is PLAN-CHOSEN and internal (none is
 The "Depends on" column of `docs/PLAN.md` section 6 is the only source of order (PLAN section 6). Before starting, check that `docs/plan/done/<id>.md` exists for each task in your row's cell. Facts for reading only:
 
 - M6-T15 depends on M6-T07, M6-T10 and M6-T26 because `init` writes `ripple.json`, plans files and runs `skills sync` (doc 07 section 7.4). M6-T19 depends on M6-T01, M6-T02 and M6-T10 (`getBaseBody` reads a registry index and applies the install transform). M6-T22 depends on M6-T26 (the `skills` field of the computed lock is a `skills sync` dry run). M6-T23 and M6-T26 depend on M6-T08 (host detection). M6-T09 depends on M6-T08 (`resolveHost`). M6-T12 depends on M6-T11 (both add to `src/cli/commands/init.ts`).
-- Two needs that the table does not show yet (reported to the core plan): M6-T10 needs `src/cli/merge3.ts` of M6-T18, and M6-T11 needs `renderAgentsSection` of M6-T13. Their sections say what to do when the file is missing: do not start, pick another task.
+- M6-T10 depends on M6-T18 (`src/cli/merge3.ts`) and M6-T11 on M6-T13 (`renderAgentsSection`); the table lists both (D-149 item 2).
 - Tasks of the same group may edit the same registration file when each adds only its own lines (PLAN section 6 "Grp", ledger D-147): `src/cli/index.ts` (one command-table line each), `src/check/rules/index.ts` (ascending id order). On a rebase conflict keep both sides' lines and re-run the proof.
 
 ### 0.7 Shared files that several M6 tasks edit
@@ -149,7 +149,7 @@ Edit only what your task names. On a `git rebase origin/main` conflict keep both
 | `src/gen/build.ts` | each task replaces only the `build: skipped ...` line it names, or adds only the check it names to step 10 |
 | `src/check/rules/index.ts` | add your rules; keep ascending id order |
 | `src/check/index.ts`, `src/check/engine.ts`, `src/check/flows.ts` | M6-T31 adds the layer P driver to `engine.ts`; M6-T32 writes the layer B driver and `FLOWS` in `flows.ts` and one call in `engine.ts`; M6-T30 adds the Theme Check sub-step to `engine.ts`. Checker types stay in `src/check/index.ts`. There is no file `src/check/types.ts`, `src/check/theme-check.ts` or `src/check/browser.ts` (ledger D-148). `RuleContext.cwd` exists since M0-T42 (D-142) |
-| `src/architecture.test.ts` | only the `IMPORT_RULES` entries that PR-M6-1 and PR-M6-3 name |
+| `src/architecture.test.ts` | no M6 task changes it: doc 01 2.2 already holds the `IMPORT_RULES` entries of PR-M6-1 and PR-M6-3 (D-149 item 24) |
 | `test/support/cli.ts` | M6-T09 creates; M6-T15 extends; other tasks only import |
 
 ### 0.8 CLI tests (Plan reading PR-M6-7)
@@ -184,9 +184,9 @@ Each was the smallest choice that keeps the gates green where two specs conflict
 
 | # | Topic | The specs | Reading | Owning doc | Applied by |
 |---|---|---|---|---|---|
-| PR-M6-1 | `src/cli` needs `renderAgentsSection` | doc 07 sections 3.2 and 7.6.5: `src/gen/agents-md.ts` is "bundled into the CLI". doc 01 section 2.2 `IMPORT_RULES`: `src/cli/**` may import only `src/gen/{props-css,theme-css,tokens-source}.ts` | In `src/architecture.test.ts` change the `src/cli/**` entry `"./src/gen/{props-css,theme-css,tokens-source}.ts"` to `"./src/gen/{props-css,theme-css,tokens-source,agents-md}.ts"`. `src/gen/agents-md.ts` imports nothing except `src/types.ts` and `src/identity.ts` (reading rule 5 of that section then holds for it too) | doc 01 | M6-T11 |
+| PR-M6-1 | `src/cli` needs `renderAgentsSection` | doc 07 sections 3.2 and 7.6.5: `src/gen/agents-md.ts` is "bundled into the CLI". doc 01 section 2.2 `IMPORT_RULES`: `src/cli/**` may import only `src/gen/{props-css,theme-css,tokens-source}.ts` | Now in doc 01 2.2 (`src/gen/{props-css,theme-css,tokens-source,agents-md}.ts` under `src/cli/**`, D-149 item 24). `src/gen/agents-md.ts` imports nothing except `src/types.ts` and `src/identity.ts` (reading rule 5 of that section then holds for it too) | doc 01 | M6-T11 |
 | PR-M6-2 | `RegistryIndex` type location | doc 07 section 4.2 prints the types as `// src/gen/registry.ts (types)`; the CLI reads the index and may not import that file | 0.5 first row | doc 07 | M6-T01 |
-| PR-M6-3 | Layer B needs the upgrade recorder | doc 13 UD-6: layer B MUST call `installUpgradeRecorder` (`src/testing/upgrade-diff.ts`). doc 01 `IMPORT_RULES`: `src/check/**` may import only `src/testing/canonicalize.ts` | Add `"./src/testing/upgrade-diff.ts"` to the `src/check/**` entry. That file imports Playwright types only, so `dist/check` still loads without Playwright (test A-05) | doc 01 | M6-T32 |
+| PR-M6-3 | Layer B needs the upgrade recorder | doc 13 UD-6: layer B MUST call `installUpgradeRecorder` (`src/testing/upgrade-diff.ts`). doc 01 `IMPORT_RULES`: `src/check/**` may import only `src/testing/canonicalize.ts` | Now in doc 01 2.2 (`./src/testing/{canonicalize,upgrade-diff}.ts` under `src/check/**`, D-149 item 24). That file imports Playwright types only, so `dist/check` still loads without Playwright (test A-05) | doc 01 | M6-T32 |
 | PR-M6-4 | Source of the `checkPattern` page script for RP605 | doc 07 row RP605: "injected with `page.addScriptTag`". doc 01 section 2.3: `@ui-sdk/core/testing` is for test files only; `pkg/` has no file for it | M6-T33, section "RP605" | doc 07 | M6-T33 |
 | PR-M6-5 | `registry/liquid/locales/core.json` content | doc 07 section 4.1 rule 2: `storefront` is `{}`. doc 14 section 7.3 rule 4: it MUST hold the seven keys `rp-head` reads; doc 07's own generation check (same rule 2, last item) requires every key a file reads to be in its owner's file. doc 14 section 11.2: the `schema` part holds "exactly" `settings`; doc 07 adds `props` | `storefront` holds the seven keys; `schema` holds `settings` and `props` (doc 07 acceptance item 5b needs `props`) | doc 07 | M6-T05 |
 | PR-M6-6 | Example calls in component pages | doc 08 rule C-2: `renderComponentDoc` MUST use "the same emitters" as conformance. Those emitters are `liquidCaseSource` (`test/support/hosts/liquid.ts`) and `caseJsx` (`test/support/hosts/tsx.ts`); `src/gen` may not import `test/` | M6-T14 step 4: private copies in `src/gen/docs.ts` plus a test that proves them equal to the conformance emitters for every fixture | doc 08 | M6-T14 |
@@ -444,6 +444,7 @@ Create: `src/gen/liquid-core/rp-head.liquid`, `rp-tokens.liquid`, `rp-import-map
 
 3. `buildRegistry` (`src/gen/registry.ts`): copy the three `.liquid` files to `registry/liquid/snippets/` and `settings.json` to `registry/liquid/settings.json` (read with `node:fs`; the files are never imported). Delete the `PLAN 4.4: liquid-core is added by M6-T05` markers (also the one in `src/gen/registry-build.test.ts` when M6-T03 is done).
 4. `locales/core.json` (generated by step G5; shape `{ "storefront": <object>, "schema": <object> }`, doc 07 `### 4.1 ` rule 2, with PR-M6-5):
+   - In `src/gen/liquid.ts`, replace the M0-T18 comment `// PLAN 4.4: settings half of locales/core.json added by M6-T05` by the code that writes the `settings` half (D-149 item 9).
    - `schema`: `{ "settings": <the "settings" object of src/gen/liquid-core/settings.locale.json>, "props": { <every ripple.props.* key, ascending byte order> } }`. The `props` half is what M0 already generates; keep it.
    - `storefront`: the seven keys that `rp-head.liquid` reads with the `t` filter, as a nested object under their component ids, with the values of `locales/en.default.json`: `product-form.added`, `cart-lines.updated`, `cart-lines.removed`, `discount-code.applied`, `discount-code.removed`, `cart-note.saved`, `cart-lines.error`. Find the keys by scanning the three liquid-core files for a string literal immediately followed by `| t` (use `findLiquidUses` or `findLiquidCalls` of `src/check/liquid-calls.ts` when M6-T28 is done; otherwise the regular expression `/'(ripple\.[a-z0-9_.-]+)'\s*\|\s*t\b/g`). A key missing from `locales/en.default.json` fails `pnpm gen` with `gen: src/gen/liquid-core/rp-head.liquid: locale key <key> is not in locales/en.default.json`.
 5. Bring-up only: when `pnpm gen` fails in step 4 because the component that owns a key is not in the repository yet (DiscountCode: M4-T15; CartNote: M4-T14), add exactly that key to `locales/en.default.json` with the English text of doc 05 `### 4.3 Strings` (`Discount applied`, `Discount removed`, `Note saved`) and list it in the done file. Do not add any other key.
@@ -460,7 +461,7 @@ Create: `src/gen/liquid-core/rp-head.liquid`, `rp-tokens.liquid`, `rp-import-map
 
 ### Acceptance
 
-`ls src/gen/liquid-core | wc -l` prints `5`. `pnpm build` exits 0; `test -f pkg/registry/liquid/snippets/rp-head.liquid && test -f pkg/registry/liquid/settings.json`. `pnpm gen --check` exits 0. The seven tests pass. `grep -rn "liquid-core is added by M6-T05" src/` prints nothing.
+`ls src/gen/liquid-core | wc -l` prints `5`. `pnpm build` exits 0; `test -f pkg/registry/liquid/snippets/rp-head.liquid && test -f pkg/registry/liquid/settings.json`. `pnpm gen --check` exits 0. The seven tests pass. `grep -rn "liquid-core is added by M6-T05" src/` prints nothing. `grep -rn "PLAN 4.4: settings half" src/` prints nothing.
 
 ### Out of scope
 
@@ -702,7 +703,7 @@ Every command body. Plan printing (M6-T10). `--host`'s effect inside commands be
 ## M6-T10 Install plan `src/cli/plan.ts` and `src/cli/composite.ts`
 
 - **Goal:** Add the per-file decision table `planFile`, the plan entry model, the plan printer and the writer, and connect them to the Liquid composite stylesheet.
-- **Depends on:** M6-T02, M6-T04, M6-T06, M6-T07.
+- **Depends on:** M6-T02, M6-T04, M6-T06, M6-T07, M6-T18.
 - **Kind:** `cli`. Size M.
 
 ### Read first
@@ -721,7 +722,7 @@ Change: `src/cli/plan.ts`, `src/cli/plan.test.ts`. Must not change: `src/cli/com
    |---|---|---|---|---|---|---|
    | `node_modules/.cache/ripple/planfile.ts` | `docs/07-manifest-registry-cli.md` | `### 8.1 ` | `ts` | 0 | 2927 | `// src/cli/plan.ts - the upgrade decision table for one owned file.` |
 
-   Append it to `src/cli/plan.ts` unchanged (merge the import lines). It imports `merge3` from `./merge3.ts`. Before step 1, check `test -f docs/plan/done/M6-T18.md`: when it fails, this task cannot start (the table does not list M6-T18 yet; reported to the core plan); do not stub `merge3`; pick another task.
+   Append it to `src/cli/plan.ts` unchanged (merge the import lines). It imports `merge3` from `./merge3.ts` (M6-T18, a dependency; do not stub `merge3`).
 2. Composite regions in `scanProject` (replace the marker `PLAN 4.4: composite regions are added by M6-T10`): for host `liquid`, when `assets/ripple.css` exists, call `parseComposite`; for every region segment call `parseFile(segment.content)`; a managed result gives a `ScannedFile` with `path: "assets/ripple.css#<region id>"`. A region whose content has no trailer is skipped.
 3. Add the functions of 0.5 with these behaviours:
    - `loadRegistry(packageRoot)`: 0.5.
@@ -763,7 +764,7 @@ Patches (M6-T11, M6-T12). Base retrieval (M6-T19; `getBase` is a parameter here)
 ## M6-T11 Patches for npm hosts: `core/patch:css-entry`, `core/patch:agents`, `core/patch:package-json`
 
 - **Goal:** Add the three patches that `init`, `add`, `upgrade` and `remove` apply on `html`, `react` and `remix` (the agents patch also on `liquid`).
-- **Depends on:** M6-T10. `patchAgents` also needs `renderAgentsSection` of M6-T13, which the table does not list yet (reported to the core plan): when `docs/plan/done/M6-T13.md` does not exist, this task cannot start; pick another task.
+- **Depends on:** M6-T10, M6-T13 (`patchAgents` needs `renderAgentsSection` of M6-T13).
 - **Kind:** `cli`. Size S.
 
 ### Read first
@@ -772,11 +773,11 @@ doc 07: the first paragraph of `### 7.6 ` (0.4 kB), `#### 7.6.2 ` (1 kB), `#### 
 
 ### Files
 
-Create or append: `src/cli/commands/init.ts`, `src/cli/commands/init.test.ts`. Change: `src/architecture.test.ts` (PR-M6-1, one entry).
+Create or append: `src/cli/commands/init.ts`, `src/cli/commands/init.test.ts`. Do not change `src/architecture.test.ts` (its `IMPORT_RULES` already allow `src/gen/agents-md.ts`, D-149 item 24).
 
 ### Steps
 
-1. Branch `task/M6-T11-patches-npm`. Apply PR-M6-1 in `src/architecture.test.ts` (ratified by D-146; no ledger-issue line).
+1. Branch `task/M6-T11-patches-npm`. Check `grep -c 'tokens-source,agents-md' src/architecture.test.ts` prints `1` (doc 01 2.2, D-149 item 24); when it prints `0`, stop: M0-T04 extracted an older doc 01.
 2. Each patch function returns one `PlanEntry` with `id` the patch id and action `patch` (the target changes; `content` is the new file text), `patch-skipped` (nothing to write and not an error) or `patch-failed` (anchor not found; `messages` holds the line `add this line to <file> <where>:` followed by the exact line). It reads files but writes nothing.
 3. `patchCssEntry(context)` (`#### 7.6.2 `): skipped when `config.css` is `null`. `R` is the relative POSIX path from the entry's directory to `paths.styles`, starting with `./`. Rules 1 to 3 literally, with the three regular expressions printed there. Rule 3 gives `patch-failed` with the instruction `move @import "<R>/ripple.css"; to the first line of <css>`.
 4. `patchAgents(context, installed, blueprints)` (`#### 7.6.5 `): target `AGENTS.md` at the project root. Build `AgentsSectionInput` (doc 08 `### 3.1 `): `pkg` = `index.package.name`; `command` = `commandForm(io, host)`; `version`; `host`; `installed` = for each installed component id, from `<packageRoot>/manifest.json`: `name`, `title`, `kind`, `summary`, `liquidBlock` (the manifest `liquid.block`, or `null`), sorted by the sorting rule of doc 08 section 2.1 (category order, then name); `blueprints`; `hasShell: true`. Body = `renderAgentsSection(input)`. File absent: the content is the region only. Markers absent: the existing text, one blank line, the region. Markers present: replace from the line `<!-- ripple:start agents -->` to the line `<!-- ripple:end agents -->` in place. Equal result: `patch-skipped`. Host `liquid` and the resulting file larger than 50,000 bytes: `patch-failed`, nothing written.
@@ -1328,7 +1329,7 @@ Create: `src/cli/commands/status.ts`, `src/cli/commands/status.test.ts`. Change:
 ### Steps
 
 1. Branch `task/M6-T22-status`.
-2. `src/types.ts`: declare (or complete, when a partial declaration exists) the type-only `ComputedLock` with exactly the keys of the JSON example of `### 5.3 `: `lockVersion: 1`; `package: { name; version; source: "node_modules" | "npx" }`; `host`; `prefix: { css; element; liquidFile }`; `initialized`; `components: Record<string, { state: "current" | "outdated" | "modified" | "modified-outdated" | "incomplete"; missing: string[]; files: LockFile[] }>`; `core: LockFile[]`; `blueprints: Record<string, { state: ...; missing: string[]; files: LockFile[] }>`; `patches: { id: string; path: string; state: "present" | "stale" | "absent" | "skipped" }[]`; `unmanaged: string[]`; `duplicates: { id: string; paths: string[] }[]`; `orphans: { id: string; path: string; modified: boolean }[]`; `skills: { version: string; pending: { add: number; update: number; remove: number; modified: number }; conflicts: string[] }`. `LockFile` is `{ id; path; mode: "owned" | "library" | "derived"; version; upstream; local; state: "current" | "outdated" | "modified" | "modified-outdated" | "stale" }`.
+2. `src/types.ts`: replace the M0-T42 placeholder line `export type ComputedLock = Record<string, unknown> // PLAN 4.4: placeholder, replaced by M6-T22 (doc 07 section 5.3)` (D-149 item 9) by the type-only `ComputedLock` with exactly the keys of the JSON example of `### 5.3 `: `lockVersion: 1`; `package: { name; version; source: "node_modules" | "npx" }`; `host`; `prefix: { css; element; liquidFile }`; `initialized`; `components: Record<string, { state: "current" | "outdated" | "modified" | "modified-outdated" | "incomplete"; missing: string[]; files: LockFile[] }>`; `core: LockFile[]`; `blueprints: Record<string, { state: ...; missing: string[]; files: LockFile[] }>`; `patches: { id: string; path: string; state: "present" | "stale" | "absent" | "skipped" }[]`; `unmanaged: string[]`; `duplicates: { id: string; paths: string[] }[]`; `orphans: { id: string; path: string; modified: boolean }[]`; `skills: { version: string; pending: { add: number; update: number; remove: number; modified: number }; conflicts: string[] }`. `LockFile` is `{ id; path; mode: "owned" | "library" | "derived"; version; upstream; local; state: "current" | "outdated" | "modified" | "modified-outdated" | "stale" }`.
 3. `computeLock(io, host)`: every row of the "Field definitions" table of `### 5.3 `, literally. `prefix.liquidFile` is the project's block prefix. File `state` for modes `owned` and `library`, and for `derived`, by the two rows. Component `state`: the worst file state, `incomplete` when `missing` is not empty; a component is listed when at least one of its files is found. `patches`: `patchState` of every patch id of `index.core[host]` (and one entry per installed component or blueprint locale patch is NOT listed: only the `core/patch:*` ids). `unmanaged`: registry targets of ANY component or core file of this host that exist and have no trailer. `skills`: `syncSkills(io, host, { force: false, dryRun: true })`. Sorting: the last paragraph of the section. The function writes nothing.
 4. `run`: `--json` prints `JSON.stringify(lock, null, 2)`. Without it, the text form of `### 7.10 `: the first line `<pkg>@<version>  host: <host>  block prefix: <prefix or (none)>  initialized: <yes|no>`; then the sections `components (<n>)` (always printed; rows: two spaces, the id padded to 20, the state padded to 20, `<n> files`), `core` (id, state, path), `patches` (id, state, path), `unmanaged (<n>)` (two spaces and the path), the line `skills: <a> to add, <u> to update, <r> to remove`. Sections with no rows are omitted, except `components`. PR-M6-12, for the three fields the example does not show: `blueprints (<n>)` with rows like `components`, printed after `components`; `duplicates (<n>)` with rows `<id>` padded to 20 then the paths joined by `, `, and `orphans (<n>)` with rows `<id>` padded to 20, `modified` or `unmodified` padded to 20, the path, both printed after `unmanaged`. Exit 0 (a project that is not initialized prints `initialized: no`); no host detected is exit 2 (thrown by `resolveHost`).
 5. Tests, `src/cli/commands/status.test.ts`:
@@ -1348,7 +1349,7 @@ Create: `src/cli/commands/status.ts`, `src/cli/commands/status.test.ts`. Change:
 
 ### Acceptance
 
-The twelve tests pass. `grep -c "PLAN 4.4: M6-T22" src/cli/index.ts` prints `0`. `grep -c "ComputedLock" src/types.ts` prints at least `1`.
+The twelve tests pass. `grep -c "PLAN 4.4: M6-T22" src/cli/index.ts` prints `0`. `grep -c "ComputedLock" src/types.ts` prints at least `1`. `grep -c "PLAN 4.4: placeholder, replaced by M6-T22" src/types.ts` prints `0`.
 
 ### Out of scope
 
@@ -1660,7 +1661,7 @@ doc 07: `#### 9.5.2 ` prose only (the three paragraphs outside the code block, 1
 
 ### Files
 
-Create: `src/check/liquid-calls.ts`, `src/check/liquid-calls.test.ts`. Change: `src/check/engine.ts` (step 4 only).
+Create: `src/check/liquid-calls.ts`, `src/check/liquid-calls.test.ts`. Change: `src/check/engine.ts` (step 4 only), `src/check/index.ts` (step 4, the `LiquidCall` placeholder line only).
 
 ### Steps
 
@@ -1713,12 +1714,12 @@ Create: `src/check/liquid-calls.ts`, `src/check/liquid-calls.test.ts`. Change: `
    - `[T1] liquid-calls: an unterminated tag does not throw` (`{% block 'button', label: 'x'` with no closing: the result is `[]`).
 
    When an assertion on line numbers, columns or the two joined strings fails, FIRST re-check the test source against the lists above (a mistyped line is the usual cause), THEN adjust the PLAN-CHOSEN source lines so that the function output matches item 24. Change `liquid-calls.ts` only when a result contradicts the prose of `#### 9.5.2 ` or item 24 itself, and list the change under "Deviations".
-4. Engine: run `grep -n "liquid" src/check/engine.ts`. Where the engine builds a `SourceFile`, set `liquid: path.endsWith(".liquid") ? findLiquidCalls(text) : null`. When it already does, change nothing. Remove any `PLAN 4.4` comment that names M6-T28.
+4. Engine: run `grep -n "liquid" src/check/engine.ts`. Where the engine builds a `SourceFile`, set `liquid: path.endsWith(".liquid") ? findLiquidCalls(text) : null`. When it already does, change nothing. Remove any `PLAN 4.4` comment that names M6-T28. In `src/check/index.ts` replace the M0-T42 placeholder line `type LiquidCall = unknown // PLAN 4.4: replaced by the import from ./liquid-calls in M6-T28` by `import type { LiquidCall } from "./liquid-calls"` (D-149 item 9).
 5. Proof: PLAN 5.0.
 
 ### Acceptance
 
-`pnpm test:unit --files=src/check/liquid-calls` passes with the four tests. `cmp <(node node_modules/.cache/ripple/extract.mjs docs/07-manifest-registry-cli.md '#### 9.5.2 ' ts 0 /dev/stdout | sed '$d') src/check/liquid-calls.ts` reports no difference, or every difference is listed under "Deviations". `grep -c "findLiquidCalls" src/check/engine.ts` prints at least `1`. `grep -rn "PLAN 4.4: M6-T28" src` prints nothing.
+`pnpm test:unit --files=src/check/liquid-calls` passes with the four tests. `grep -rc "PLAN 4.4.*M6-T28" src/check/` prints `0` for every file. `cmp <(node node_modules/.cache/ripple/extract.mjs docs/07-manifest-registry-cli.md '#### 9.5.2 ' ts 0 /dev/stdout | sed '$d') src/check/liquid-calls.ts` reports no difference, or every difference is listed under "Deviations". `grep -c "findLiquidCalls" src/check/engine.ts` prints at least `1`. `grep -rn "PLAN 4.4: M6-T28" src` prints nothing.
 
 ### Out of scope
 
@@ -1937,12 +1938,12 @@ doc 07: `#### 9.5.5 ` (1.1 kB); in `### 9.6 ` only the rows RP601 to RP609 (3 kB
 
 ### Files
 
-Create: `src/check/flows.ts` (the flow data and the layer B driver), `src/check/flows.test.ts`. Change: `src/check/engine.ts` (the call), `src/architecture.test.ts` (PR-M6-3, one entry). There is no file `src/check/browser.ts` (ledger D-148). No `## Ledger issues` line: PR-M6-3 and PR-M6-11 are ratified (D-146).
+Create: `src/check/flows.ts` (the flow data and the layer B driver), `src/check/flows.test.ts`. Change: `src/check/engine.ts` (the call). Do not change `src/architecture.test.ts` (its `IMPORT_RULES` already allow `src/testing/upgrade-diff.ts`, D-149 item 24). There is no file `src/check/browser.ts` (ledger D-148). No `## Ledger issues` line: PR-M6-3 and PR-M6-11 are ratified (D-146).
 
 ### Steps
 
 1. Branch `task/M6-T32-layer-b`.
-2. PR-M6-3: in `src/architecture.test.ts` add `"./src/testing/upgrade-diff.ts"` to the array of the `"src/check/**"` entry of `IMPORT_RULES`. Check `grep -n "^import" src/testing/upgrade-diff.ts`: every import MUST be `import type` (Playwright types only). When it has a value import of `playwright`, stop (If blocked).
+2. PR-M6-3: `grep -c 'canonicalize,upgrade-diff' src/architecture.test.ts` prints `1` (doc 01 2.2, D-149 item 24; when `0`, stop: the extracted object is older). Check `grep -n "^import" src/testing/upgrade-diff.ts`: every import MUST be `import type` (Playwright types only). When it has a value import of `playwright`, stop (If blocked).
 3. `src/check/flows.ts` (shape PLAN-CHOSEN; the spec says only "data keyed by component id"):
 
    ```ts

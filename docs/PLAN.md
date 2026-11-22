@@ -28,7 +28,7 @@ Rules that hold for every task:
 - Never invent a name, prop, attribute, file path, rule id or API. If the spec lacks something the task needs, stop and record it under `## Ledger issues` at the end of the owning doc (ledger section 0), mention it in the pull request, and take the smallest choice that keeps the gate green.
 - Never edit `docs/00-decisions.md` except the one-line update a spike task makes to its row in ledger section 3.
 - Never edit a numbered doc (`docs/01-*.md` to `docs/14-*.md`) or a spec under `docs/components/` or `docs/blueprints/`, except: an entry under its `## Ledger issues` heading, and the resource rows that a component task adds under rule RS-2 of `docs/13-testing.md` section 4.2 (D-140).
-- The ledger's section 13.5 (D-134 to D-148) records the plan review. Where a detail file contradicts a decision there, the decision wins.
+- The ledger's section 13.5 (D-134 to D-148) records the plan review and section 13.6 (D-149) the closing corrections. Where a detail file contradicts a decision there, the decision wins.
 - Never edit `theme/` or `docs/research/` (reference material), except that a spike task adds its report directory `docs/research/spikes/<spike name>/`.
 - A generated file is never edited by hand. Change its source and run `pnpm gen`.
 
@@ -365,7 +365,7 @@ Columns:
 | `release` | release checks | 5.0; 3.1 |
 
 - **Depends on**: task ids that MUST be done first. `A to B` means every id in the range. For a component the list contains the tasks of every component its spec lists under "Depends on".
-- **Grp**: parallel group inside the milestone. Tasks with the same letter have no dependency on each other and touch different source files; they MAY run at the same time once their dependencies are done. `-` means run it alone (it touches shared files or is a gate). Exception (D-147): tasks of the same group MAY edit the same registration file when each adds only its own lines or fills only its own named slot: `src/gen/index.ts`, `src/commerce/index.ts`, `src/elements/index.ts`, `src/check/rules/index.ts` (ascending id order), `src/check/rules/RP113.ts` (`CUSTOM_RULES`, one function per rule), `src/cli/index.ts`, `src/testing/resources.ts` (RS-2), `locales/en.default.json`. On a rebase conflict in such a file, keep both sides' lines and re-run the proof.
+- **Grp**: parallel group inside the milestone. Tasks with the same letter have no dependency on each other and touch different source files; they MAY run at the same time once their dependencies are done. `-` means run it alone (it touches shared files or is a gate). Exception (D-147): tasks of the same group MAY edit the same registration file when each adds only its own lines or fills only its own named slot: `src/gen/index.ts`, `src/commerce/index.ts`, `src/elements/index.ts`, `src/check/rules/index.ts` (ascending id order), `src/check/rules/RP113.ts` (`CUSTOM_RULES`, one function per rule), `src/cli/index.ts`, `src/testing/resources.ts` (RS-2), `locales/en.default.json`, `test/a11y/keyboard.test.ts` (`FOCUS_INDICATOR_CARRIERS`, D-149 item 29). On a rebase conflict in such a file, keep both sides' lines and re-run the proof.
 - **Size**: `S` is at most half a session (mostly copying complete code from the spec, or one small file with tests). `M` is one full session. Nothing is larger; a task that proves larger is split by adding a follow-up row, never by widening scope.
 - **Read**: the material beyond `docs/CONVENTIONS.md`. `doc 07 §9.6` means the section 9.6 of `docs/07-manifest-registry-cli.md` (numbered docs are `docs/NN-*.md`). `components/x.md` is `docs/components/x.md`; `blueprints/x.md` is `docs/blueprints/x.md`. Sizes in kB are the spec file sizes. Component rows also read `docs/13-testing.md` section 10.2 and one worked manifest entry (recipe 5.1).
 
@@ -398,7 +398,7 @@ Detail file for every row: `docs/plan/M0-bootstrap.md`, section `## <task id>`. 
 | M0-T19 | Generator `src/gen/types.ts` (step G7): `src/types.generated.ts`, `jsx.generated.ts` for React and Remix | gen | M0-T15, M0-T08 | D | S | doc 07 §3.2 row G7; doc 06 §6.3, §7.2 |
 | M0-T20 | Source lint `src/gen/bindings-lint.ts` (`lintBinding`; part of step G8) | gen | M0-T15 | D | M | doc 06 §1.2 |
 | M0-T21 | Core CSS: `css/layers.css`, `css/tokens.css`, `css/base.css` | css | M0-T02 | A | M | doc 03 §1, §2, §3.3, §4.1, §4.2 |
-| M0-T22 | Generator step G2: `src/gen/props-css.ts` (`css/props.css`) and `src/gen/display-css.ts` (marker regions of `css/base.css`) | gen | M0-T15, M0-T21 | D | S | doc 03 §4.3, §6 |
+| M0-T22 | Generator step G2: `src/gen/props-css.ts` (`css/props.css`) and `src/gen/display-css.ts` (marker regions of `css/base.css`) | gen | M0-T15, M0-T21, M0-T23 | K | S | doc 03 §4.3, §6 |
 | M0-T23 | Generator step G2: `src/gen/theme-css.ts` (`css/theme.css`), `src/gen/tokens-source.ts` (the project CSS entry files of doc 03 §5.2 are registry output, M6-T03 `core/entry`) | gen | M0-T15, M0-T21 | D | M | doc 03 §5.1, §5.2, §5.5 |
 | M0-T24 | CSS linter `src/gen/css-lint.ts` (part of step G8; constructs L-1 to L-16 of doc 03 §7.9, D-145) | gen | M0-T15, M0-T21 | D | M | doc 03 §7.1 to §7.3, §7.9 |
 | M0-T25 | Runtime `src/runtime/{index,loader,commands-polyfill,opener,announcer}.ts` | runtime | M0-T02 | A | S | doc 04 §3 |
@@ -420,7 +420,7 @@ Detail file for every row: `docs/plan/M0-bootstrap.md`, section `## <task id>`. 
 | M0-T41 | Tier 6: `test/nojs/render.test.ts` (scripts disabled and scripts blocked) | harness | M0-T30 | F | S | doc 13 §11.1 |
 | M0-T42 | Checker core `src/check/{index,engine,report}.ts`: API, layers S and H, text and JSON output, `fix` computation; `RuleContext.cwd` (D-142) | checker | M0-T10 | D | M | doc 07 §9.1, §9.3, §9.4, §9.5.1; doc 08 §5.3 (`FIX_SYNONYMS`) |
 | M0-T43 | Checker rule RP113: structure rule kinds and `CUSTOM_RULES` in `src/check/rules/RP113.ts` | checker | M0-T42 | E | S | doc 07 §9.5.3, §9.6 (row RP113); ledger D-111; doc 08 §5.5 (row RP113) |
-| M0-T44 | CI workflows `.github/workflows/ci.yml` and `nightly.yml` | infra | M0-T28 | E | S | doc 13 §17 |
+| M0-T44 | CI workflows `.github/workflows/ci.yml` and `nightly.yml` | infra | M0-T28, M0-T35 | L | S | doc 13 §17 |
 | M0-T45 | M0 gate | gate | M0-T01 to M0-T44, M0-T46, M0-T47 | - | S | PLAN §4.2 |
 | M0-T46 | Manifest build checks MB-13 to MB-24 (second half of M0-T07) | gen | M0-T07 | - | M | doc 07 §1.6 rows MB-13 to MB-24; ledger §8 |
 | M0-T47 | Fixture lint `lintFixtures` in `src/gen/index.ts` (doc 02 §11.8; part of step G8) | gen | M0-T05, M0-T09, M0-T15 | - | M | doc 02 §11.8; doc 13 RS-4 |
@@ -533,7 +533,7 @@ Detail file for every row: `docs/plan/M3-interactive.md`, section `## <task id>`
 | M3-T07 | Toast (`toast`); first run of A-07, A-08, A-13 in `test/upgrade/bundles.test.ts` (D-145) | ui/block; U | M1-T11, M1-T12, M3-T03, M3-T06, M1-T46, M3-T04 | D | M | `components/toast.md` (27 kB); doc 10 §0 |
 | M3-T08 | Element `rp-carousel` (`src/elements/rp-carousel.ts` and test) | element | M1-T14, M1-T46 | A | M | doc 04 §7, §9.2 |
 | M3-T09 | Carousel (`carousel`) | native/parts; N | M1-T03, M1-T11, M1-T12, M3-T08, M1-T46 | B | M | `components/carousel.md` (34 kB); doc 10 §0; doc 04 §10.9 |
-| M3-T10 | Element acceptance: E-01, E-02, E-04, E-10, E-17, E-18, E-19, E-29 (page P, loader, chunks, agent snapshot, globals) except the NavigationMenu clauses (M5-T11) | harness | M3-T04, M3-T05, M3-T07, M3-T09, M1-T15, M1-T17, M1-T18, M1-T40, M3-T02 | C | S | doc 04 §13 rows E-01, E-02, E-04, E-10, E-17, E-18, E-19, E-29; doc 04 §8 (page P) |
+| M3-T10 | Element acceptance: E-01, E-02, E-04, E-10, E-17, E-18, E-19, E-29 (page P, loader, chunks, agent snapshot, globals) except the NavigationMenu clauses (M5-T11) | harness | M3-T04, M3-T05, M3-T07, M3-T09, M1-T15, M1-T17, M1-T18, M1-T40, M3-T02 | C | S | doc 04 §13 rows E-01, E-02, E-04, E-10, E-17, E-18, E-19, E-29; doc 04 §13 (the page P paragraph and list) |
 | M3-T11 | M3 gate | gate | M3-T01 to M3-T10, M3-T13, M3-T14 | - | S | PLAN §4.2 |
 | M3-T12 | SPIKE-06 completion: the three probes that need Popover, Tabs and Accordion; complete `test/cross-engine/features.test.ts` and the report `docs/research/spikes/cross-engine-features/README.md`. **BLOCKED-ON-ENV without WebKit and Gecko builds**; writes its done file in any case (PLAN §4.3) | spike | M1-T42, M3-T01, M3-T02, M3-T04 | - | S | ledger §3 row SPIKE-06; doc 13 §11.3, §21 Fallback (SPIKE-06); `docs/plan/done/M1-T42.md` |
 | M3-T13 | Element acceptance on the Liquid assets: E-20, E-21, E-22, E-28 (they read `pkg/registry/liquid/`) | harness | M3-T10, M6-T05 | - | S | doc 04 §13 rows E-20, E-21, E-22, E-28; doc 04 §5.4 |
@@ -609,8 +609,8 @@ Detail file for every row: `docs/plan/M6-cli-registry-checker.md`, section `## <
 | M6-T07 | Project configuration `src/cli/config.ts`, `src/gen/schema/config.schema.json` | cli | M1-T46 | A | S | doc 07 §6 |
 | M6-T08 | Host detection `src/cli/detect-host.ts` | cli | M1-T46 | A | M | doc 07 §7.3 |
 | M6-T09 | CLI entry `bin/`, `src/cli/index.ts`: general rules, argument parsing, command table, exit codes 0/1/2, no prompts | cli | M1-T46, M6-T08 | J | S | doc 07 §7.1, §7.2 |
-| M6-T10 | Install plan `src/cli/plan.ts` and `src/cli/composite.ts` | cli | M6-T02, M6-T04, M6-T06, M6-T07 | C | M | doc 07 §7.5, §4.5, §5.1 |
-| M6-T11 | Patches for npm hosts: `core/patch:css-entry`, `core/patch:agents`, `core/patch:package-json` | cli | M6-T10 | D | S | doc 07 §7.6.2, §7.6.5, §7.6.6 |
+| M6-T10 | Install plan `src/cli/plan.ts` and `src/cli/composite.ts` | cli | M6-T02, M6-T04, M6-T06, M6-T07, M6-T18 | C | M | doc 07 §7.5, §4.5, §5.1 |
+| M6-T11 | Patches for npm hosts: `core/patch:css-entry`, `core/patch:agents`, `core/patch:package-json` | cli | M6-T10, M6-T13 | D | S | doc 07 §7.6.2, §7.6.5, §7.6.6 |
 | M6-T12 | Patches for Liquid: `core/patch:head`, `core/patch:import-map`, `core/patch:theme-reference`, `core/patch:settings`, `core/patch:locale` | cli | M6-T05, M6-T10, M6-T11 | K | M | doc 07 §7.6.3, §7.6.4; doc 14 §6 |
 | M6-T13 | Generator `src/gen/agents-md.ts` (the `AGENTS.md` section) | gen | M6-T01 | B | S | doc 08 §3 |
 | M6-T14 | Generator `src/gen/docs.ts`: `docs/components/<id>.md`, `docs/INDEX.md`, `docs/llms.txt`, `docs/rules/<RULE>.md` in `pkg/` | gen | M6-T01 | B | M | doc 08 §2.1 to §2.4, §2.6, §2.8 |
@@ -666,13 +666,13 @@ Detail file for every row: `docs/plan/M7-blueprints-examples.md`, section `## <t
 | M7-T22 | Example `examples/html`: the same on the `html` host | example | M7-T07 to M7-T19, M7-T31 | G | M | doc 13 §12.1; doc 12 §2.3, §2.5 to §2.7; doc 04 §5.1; doc 05 §10.1 |
 | M7-T23 | Example `examples/liquid`: finish the Ripple theme by the remaining steps of doc 14 §4.1 (`ripple add --blueprint` for the 14 blueprints in order, `pnpm theme:css`, `ripple check`); check the theme `AGENTS.md` and `DESIGN.md` that M7-T04 created | example | M7-T07 to M7-T19 | D | M | doc 14 §2, §4, §6, §11 |
 | M7-T24 | Ripple theme acceptance A-1 to A-19, A-24, A-25 | harness | M7-T23 | E | M | doc 14 §14, §12 |
-| M7-T25 | No-JS flows `test/nojs/blueprints.test.ts`: NJ-F1 to NJ-F16 on the four examples | harness | M7-T20, M7-T21, M7-T22, M7-T23, M7-T31 | E | M | doc 13 §11.2 |
+| M7-T25 | No-JS flows `test/nojs/blueprints.test.ts`: NJ-F1 to NJ-F17 on the four examples | harness | M7-T20, M7-T21, M7-T22, M7-T23, M7-T31 | E | M | doc 13 §11.2 |
 | M7-T26 | Tier 7 `test/commerce/e2e.test.ts`: E2E-1 to E2E-10 and the E2E-11 probes of rule E-4 against mock.shop. **BLOCKED-ON-ENV without network access to mock.shop** | harness | M7-T20, M7-T21, M7-T22, M7-T31 | E | M | doc 13 §12.2 |
 | M7-T27 | Page-view tests: `[T5] serve-theme: one page view per document load` and C-30; re-point the theme-server tests of M1-T39 at `examples/liquid` | harness | M4-T21, M7-T23 | E | S | doc 13 §4.6; doc 05 §14 (C-29, C-30); PLAN §8 note P-3 |
 | M7-T28 | Set every `commerce` component to `status: "stable"` after tier 7 passes (checklist line 16); delete the test-side `BRINGUP` constants and their guards (D-135) | infra | M7-T26 | F | S | doc 13 §18.1 |
 | M7-T29 | M7 gate | gate | M7-T01 to M7-T28, M7-T30, M7-T31, M4-T25, M5-T16 | - | S | PLAN §4.2 |
 | M7-T30 | Commerce test C-35: the locale path prefix on the hydrogen hosts (D-118) | harness | M7-T21, M7-T31 | - | S | doc 05 §14 row C-35, §4.2, §10.1; ledger D-118 |
-| M7-T31 | Example `examples/react`, part 2: `src/routes.ts` (with `/api/cart`), `src/server.tsx`, `build.mjs`, `server.mjs`, smoke run | example | M7-T20 | - | M | doc 13 §12.1; doc 12 §2.6, §2.7; doc 05 §10.1, §10.3 |
+| M7-T31 | Example `examples/react`, part 2: `src/routes.ts` (with `/api/cart`), `src/server.tsx`, `src/client.tsx`, `build.mjs`, `server.mjs`, smoke run | example | M7-T20 | - | M | doc 13 §12.1; doc 12 §2.6, §2.7; doc 05 §10.1, §10.3 |
 
 ### M8 Agent kit and evals
 
@@ -702,12 +702,12 @@ Detail file for every row: `docs/plan/M8-agent-kit-evals.md`, section `## <task 
 | M8-T20 | Skill `ripple-agent-ready` (`skills/ripple-agent-ready/SKILL.md`, `ripple.json`) | skill | M7-T29 | C | S | doc 08 §4.1, §4.3, §4.4, §4.5 (outline of `ripple-agent-ready`) |
 | M8-T21 | Skills acceptance (doc 08 §4.6) and `AGENTS.md` section acceptance (§3.3, §3.4) | harness | M6-T13, M8-T07 to M8-T20, M8-T04, M8-T05, M8-T06 | D | S | doc 08 §3.3, §3.4, §4.6 |
 | M8-T22 | Eval harness, part 1: `evals/adapters/{package.json,tsconfig.json,types.ts,run.ts}` (option parsing and the step skeleton of doc 08 §8.4), `task.json` validator, `types.test.ts`, `run.test.ts` | eval | M0-T45 | A | M | doc 08 §8.1, §8.2, §8.4 |
-| M8-T23 | Eval harness: `serve.ts`, `mockshop.ts`, `checks.ts` | eval | M8-T22 | B | M | doc 08 §8.3, §8.4 |
+| M8-T23 | Eval harness: `serve.ts`, `mockshop.ts`, `checks.ts` | eval | M8-T22, M8-T44 | B | M | doc 08 §8.3, §8.4 |
 | M8-T24 | Eval scoring: `score.ts`, `outside.ts`, `friction.ts`, `report.ts` (weights 35/15/20/10/10/10, pass at 80) | eval | M8-T22 | B | M | doc 08 §8.8, §8.10 |
-| M8-T25 | Eval adapter `pi` | eval | M8-T22 | B | S | doc 08 §8.7 |
-| M8-T26 | Eval adapter `claude-code` | eval | M8-T22 | B | S | doc 08 §8.7 |
-| M8-T27 | Eval adapter `opencode` | eval | M8-T22 | B | S | doc 08 §8.7 |
-| M8-T28 | Eval judge and visual rubric: `judge.ts`, `rubric/visual.md`, `rubric/golden/` | eval | M8-T24 | C | M | doc 08 §8.9 |
+| M8-T25 | Eval adapter `pi` | eval | M8-T22, M8-T44 | B | S | doc 08 §8.7 |
+| M8-T26 | Eval adapter `claude-code` | eval | M8-T22, M8-T44 | B | S | doc 08 §8.7 |
+| M8-T27 | Eval adapter `opencode` | eval | M8-T22, M8-T44 | B | S | doc 08 §8.7 |
+| M8-T28 | Eval judge and visual rubric: `judge.ts`, `rubric/visual.md`, `rubric/golden/` | eval | M8-T23, M8-T24, M7-T29 | C | M | doc 08 §8.9 |
 | M8-T29 | Eval budgets and bar: `freeze-budgets.ts`, `rubric/bar.json`, the `--bar` run | eval | M8-T24 | C | S | doc 08 §8.11, §8.12 |
 | M8-T30 | Eval canary skill `evals/adapters/canary/SKILL.md` and `rubric/api-decisions.md` (gates G-1 to G-7) | eval | M8-T24 | C | S | doc 08 §8.13 |
 | M8-T31 | Eval task group T01 (home), T02 (product page): `task.json`, `checks.spec.ts`, `start/<host>/`, `reference/<host>/` | eval | M7-T29, M8-T23, M8-T24, M8-T45 | D | M | doc 08 §8.2, §8.5, §8.6 (rows of these tasks) |
@@ -808,7 +808,7 @@ The DEFAULT path is always built first and is what every task implements. A spik
 
 ## 8. Plan notes and ledger issues
 
-These are the places where this plan had to read the specs narrowly or add process. A row marked "Decided" is now a ledger decision (section 13.5); the others are candidates for a one-line ledger amendment by Ben. None changes a decided API.
+These are the places where this plan had to read the specs narrowly or add process. A row marked "Decided" is now a ledger decision (sections 13.5 and 13.6); the others are candidates for a one-line ledger amendment by Ben. None changes a decided API.
 
 | # | Topic | What the specs say | What this plan does |
 |---|---|---|---|
@@ -818,7 +818,7 @@ These are the places where this plan had to read the specs narrowly or add proce
 | P-4 | Eval baseline timing | D-061 and `docs/08-agent-kit-and-evals.md` section 8.14: T01, T02, T08 MUST run by the end of the commerce milestone | The start states of T02 and T08 need the blueprints and the CLI (M6, M7). The baseline is gate E1 (M8-T39), run as soon as those exist. The eval harness tasks M8-T22 to M8-T30 depend only on M0 and MAY start early |
 | P-5 | Checker schedule | `docs/07-manifest-registry-cli.md` section 9.7: layers S, H and P ship with the foundations | Engine, layer H and RP113 in M0; usage, structure, accessibility families in M2; commerce family in M4; Liquid, project-state and browser families in M6. A rule that is not implemented is absent from `src/check/rules/index.ts` |
 | P-6 | Root `README.md` and `PLAN.md` | `docs/01-architecture.md` test A-01 requires both at the repository root; ledger section 12 lists `PLAN.md` and `README.md` as documents | The plan and the doc index live in `docs/PLAN.md` and `docs/README.md`. M0-T01 creates a root `PLAN.md` that contains one line pointing to `docs/PLAN.md`, and a root `README.md` stub that M9-T04 completes |
-| P-7 | Acceptance-coverage test | `docs/13-testing.md` section 18.2 reads the `## <title>` sections of docs 09 to 12 | The specs are one file per component (ledger, "File layout of the component specs"). M0-T32 reads `docs/components/<id>.md` and its `### Acceptance tests` heading |
+| P-7 | Acceptance-coverage test | `docs/13-testing.md` section 18.2 reads the `## <title>` sections of docs 09 to 12 | Decided: D-149 item 5. The specs are one file per component (ledger, "File layout of the component specs"); doc 13 section 18.2 now reads `docs/components/<id>.md` and its `### Acceptance tests` heading, and step 4 accepts the `generic`, `covered by` and `removed` forms (M0-T32) |
 | P-8 | Commerce component status | `docs/13-testing.md` section 18.1 line 16 needs tier 7, which needs the example storefronts | Commerce components merge as `beta`; M7-T28 promotes them (section 3.2) |
 | P-9 | SPIKE-10 split | Ledger section 3 lists SPIKE-10 as one local spike | Part (a) (cart and `rp-live` on `html` and `remix`) runs in M1; part (b) (React `useRegionHtml` with PredictiveSearch and ProductRecommendations) runs in M4 when those bindings exist. `rp-live` is built in M1 for this reason |
 | P-10 | Task tracking | Not specified | `docs/plan/done/<task id>.md` files and `task/<task id>-*` branches (sections 1 and 2) |
@@ -826,5 +826,6 @@ These are the places where this plan had to read the specs narrowly or add proce
 | P-12 | Plan readings | The detail files adopted readings `PR-...` where a spec is silent | Decided: D-146 ratifies them, except M3 PR-M3-6 (overturned by D-139) and the readings it names as replaced |
 | P-13 | Repository tree | Ledger section 5.1 omitted files that the specs name | Decided: D-148 adds them (`src/types.generated.ts`, `src/gen/bindings-lint.ts`, `src/check/rules/index.ts`, generated locale patches, `blueprints/_sample/<id>.json`) |
 | P-14 | Tier 7 in CI | `verify` ran `pnpm test:commerce --no-skips`, which fails before M7 | Decided: D-137. `verify` is `pnpm ci`; tier 7 runs in the nightly job `commerce` |
+| P-15 | Blueprint client-navigation tests | `docs/12-components-chrome-and-blueprints.md` has the React file without a router; CL-7, PR-7, LT-9 need client navigation; NF-1 needs the route code | Decided: D-146 (PR-M7-10, PR-M7-11) and D-149 item 31. The blueprint tasks M7-T08, M7-T10 and M7-T17 write these `[T7]` tests but cannot run them, because the react app exists only after M7-T31; they first run in the M7 gate (M7-T29) |
 
 When Ben answers an open question of ledger section 10 or a spike changes a decision, the ledger is updated first, then the affected rows of section 6 and their detail sections.

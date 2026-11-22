@@ -253,7 +253,7 @@ Steps:
 
 | Output | Doc | Heading prefix | Lang | Index | Bytes | First line |
 |---|---|---|---|---|---|---|
-| `node_modules/.cache/ripple/import-rules.ts` | `docs/01-architecture.md` | `### 2.2 ` | `ts` | 0 | 3680 | `// key: glob of importer, relative to repo root. value: allowed specifiers.` |
+| `node_modules/.cache/ripple/import-rules.ts` | `docs/01-architecture.md` | `### 2.2 ` | `ts` | 0 | 3705 | `// key: glob of importer, relative to repo root. value: allowed specifiers.` |
 
    The object has the keys `"src/{index,responsive,image,types}.ts"` (its value includes `./src/{identity,index,responsive,image,types,types.generated}.ts`) and `"src/types.generated.ts": ["./src/types.ts"]` (ledger D-148).
 
@@ -778,7 +778,7 @@ Acceptance: phase P2 (no test is added). For each of the three rows, a fresh ext
 ## M0-T22 Generator step G2: `src/gen/props-css.ts` (`css/props.css`) and `src/gen/display-css.ts` (marker regions of `css/base.css`)
 
 - **Goal:** Generate `css/props.css` and the marker regions of `css/base.css` (generator step G2).
-- **Depends on:** M0-T15, M0-T21. (`props-css.ts` imports `tokens-source.ts` of M0-T23; step 2 says what to do when that file is not on `main` yet.)
+- **Depends on:** M0-T15, M0-T21, M0-T23 (`props-css.ts` imports `tokens-source.ts`, which M0-T23 creates; D-149 item 1).
 - **Read first:** `docs/03-styling-and-tokens.md` "### 4.3 Display values and the generator" (prose), "### 6.1 Grammar and attributes", "### 6.2 Generator rules", "### 6.4 Output shape" (do not read the block of 6.3).
 - **Files (create):** `src/gen/props-css.ts`, `src/gen/display-css.ts`, `src/gen/props-css.test.ts`, `src/gen/display-css.test.ts`, generated and committed `css/props.css`, done file. **Modify:** `css/base.css` (regions, by `pnpm gen` only), `src/gen/index.ts` (slots `g2Props`, `g2Display`).
 
@@ -793,7 +793,7 @@ Steps:
 
    `props-css.ts` exports `propRules` and `generatePropsCss(tokensCss)`; `display-css.ts` exports `ElementDisplay`, `generateDisplayRegion`, `generateScriptStateRegion`, `replaceRegion` and `generateBaseCss(baseCss, elements)`.
 
-2. `props-css.ts` imports from `./tokens-source` (file of M0-T23). When `src/gen/tokens-source.ts` does not exist on `main`, extract it yourself with the row given in M0-T23 step 1 and say so in the pull request; M0-T23 then finds the identical file.
+2. `props-css.ts` imports from `./tokens-source` (file of M0-T23, already on `main` because M0-T23 is a dependency). Do not extract or change `src/gen/tokens-source.ts`.
 3. Slot `g2Props`: `files` gets `css/props.css` = `generatePropsCss(context.read("css/tokens.css"))`. Slot `g2Display`: `files` gets `css/base.css` = `generateBaseCss(context.read("css/base.css"), <the element table of src/gen/elements.json>)`. Pass the element data in the shape the extracted function's parameter type declares.
 4. Run `pnpm gen`; commit `css/props.css`, and `css/base.css` when `git status --porcelain css/base.css` lists it (the extracted file already holds the generated regions of section 4.1; when `pnpm gen` changes them, write `git diff css/base.css` into the pull request under "Deviations"). Run `pnpm gen` again: it MUST write nothing.
 5. Tests:
@@ -830,7 +830,6 @@ Steps:
 
    `tokens-source.ts` exports `stripComments`, `readScales`, `readStaticDeclarations`; `theme-css.ts` exports `generateThemeCss(tokensCss)`.
 
-   When `src/gen/tokens-source.ts` already exists (M0-T22 step 2), run `git diff --exit-code src/gen/tokens-source.ts` after extraction; it MUST show no change.
 2. Slot `g2Theme`: `files` gets `css/theme.css` = `generateThemeCss(context.read("css/tokens.css"))`.
 3. Run `pnpm gen`; then `diff css/theme.css node_modules/.cache/ripple/theme.expected.css` MUST print nothing. Commit `css/theme.css`.
 4. In `assembleManifest` (`src/gen/registry.ts`) set the manifest field `scales` from `readScales(<text of css/tokens.css>)` when doc 07 section 1.1 defines that field so (search `scales` in doc 07 section 1.1); when M0-T06 hard-coded it, replace the hard-coded value.
@@ -861,7 +860,7 @@ Steps:
 
 2. Implement `lintComponentCss` as requirement 1 of 7.9 states: no dependency; tokenise the file with a brace-and-semicolon scanner. It implements every rule marked "lint" in 7.3, ignores a trailing provenance trailer comment (requirement 2), and accepts every construct L-1 to L-16 of the table in 7.9 (requirement 4). One finding per violation; the `rule` value is the rule id of 7.3.
 3. Slot `g8CssLint`: for every `components/<id>/<id>.css`, build the `CssLintContext` from the manifest entry as the table of 7.9 describes and turn each finding into the problem line `<file>:<line> <rule> <message>` (requirement 3 of 7.9). With zero components the slot returns no problem.
-4. Tests in `src/gen/css-lint.test.ts`, the list of item 5 of section 7.9, with one addition: the Button file with the context 7.9 gives has zero findings (item 5.1); one failing sample per rule CSS-01 to CSS-21, CSS-27, CSS-29, CSS-30, CSS-31 (item 5.2, 25 tests); one `accepts L-<n>` test for each row L-1 to L-16 (16 tests: item 5.3 says L-1 to L-15; row L-16 was added to the table later and ledger D-145 gives its test to this task); the quantity-input root class case (5.4); the cart-drawer composition case (5.5); the CSS-30 cases (5.6); the L-3, L-4 and L-15 restrictions (5.7). Name each `[T1] css-lint: <statement>`, with the statement of the item (for item 5.3: `[T1] css-lint: accepts L-<n>`). Paste the Button CSS into the test as a literal.
+4. Tests in `src/gen/css-lint.test.ts`, the list of item 5 of section 7.9, with one addition: the Button file with the context 7.9 gives has zero findings (item 5.1); one failing sample per rule CSS-01 to CSS-21, CSS-27, CSS-29, CSS-30, CSS-31 (item 5.2, 25 tests); one `accepts L-<n>` test for each row L-1 to L-16 (16 tests, item 5.3); the quantity-input root class case (5.4); the cart-drawer composition case (5.5); the CSS-30 cases (5.6); the L-3, L-4 and L-15 restrictions (5.7). Name each `[T1] css-lint: <statement>`, with the statement of the item (for item 5.3: `[T1] css-lint: accepts L-<n>`). Paste the Button CSS into the test as a literal.
 
 Acceptance: phase P3; `pnpm test:unit --files=src/gen/css-lint.test.ts` has 0 failed and at least 46 passed (1 + 25 + 16 + 1 + 1 + 1 + 1 when items 5.4 to 5.7 are one test each); the done file states the test count per item of 7.9 item 5.
 
@@ -1099,7 +1098,7 @@ Steps:
 | `test/support/hosts/html.ts` | `docs/13-testing.md` | `### 7.2 ` | `ts` | 1 | 1667 | `// test/support/hosts/html.ts  (06-bindings.md Q-22; 02-html-contract.md F-21 to F-23)` |
 
 2. `hosts/index.ts` imports the adapters `./liquid`, `./react`, `./remix` (M0-T33, M0-T34), which do not exist yet. Until they do, create each missing file as a three-line placeholder exporting the adapter name `index.ts` imports, with `unavailable: "adapter not written yet (M0-T33)"` (or `M0-T34`) and `render: async () => ""`, in the shape of the adapter interface `index.ts` declares. M0-T33 and M0-T34 overwrite them. List the placeholders in the pull request.
-3. `test/conformance/acceptance-coverage.test.ts`: one test per component, named `[T1] <id>: every acceptance test of the spec is covered`, implementing 18.2: read `docs/components/<id>.md`, section `### Acceptance tests` (rule P-7 of `docs/PLAN.md`), and assert what 18.2 states about each listed test name. The loop is over `loadComponents()`; zero components give zero tests.
+3. `test/conformance/acceptance-coverage.test.ts`: one test per component, named `[T1] <id>: every acceptance test of the spec is covered`, implementing 18.2: read `docs/components/<id>.md`, section `### Acceptance tests` (rule P-7 of `docs/PLAN.md`), and assert what 18.2 states about each listed test name. Step 4 accepts exactly four forms: `<id> `, `// <id>: generic`, `// <id>: covered by `, `// <id>: removed` (D-149 item 5); write one passing and one failing unit case for each form inside the same file, using an in-memory spec text and test text. The loop is over `loadComponents()`; zero components give zero tests.
 4. With zero components both files register zero tests, so `pnpm test:conformance` exits 2 with `test: no test matched <pattern>` (section 0.3, "Single-tier scripts"). That is expected; do not change the runner. The proof is `pnpm test` (tiers 1,2,3,4,5,6,10 together).
 
 Acceptance: phase P4 or P5; `pnpm typecheck` exits 0; `pnpm test --no-skips` exits 0.
@@ -1248,7 +1247,7 @@ Acceptance: phase P5; `pnpm typecheck` exits 0; `pnpm ci` exits 0. (`pnpm test:h
 ## M0-T38 Tier 4: `test/hydration/remix.test.ts`
 
 - **Goal:** Add the generic Remix morph test file.
-- **Depends on:** M0-T34 (and M0-T31 for `startExample`).
+- **Depends on:** M0-T34, M0-T31 (`startExample`).
 - **Read first:** `docs/13-testing.md` "### 9.2 `test/hydration/remix.test.ts`", "### 12.1" function description of `startExample`; `docs/06-bindings.md` "### 11.3 Remix adapter": rule Q-15.
 - **Files (create):** `test/hydration/remix.test.ts`, done file.
 
@@ -1269,7 +1268,7 @@ Acceptance: phase P5; `pnpm typecheck` exits 0; `pnpm ci` exits 0 (zero tests re
 - **Goal:** Add the automated WCAG scan, its exception list, and the three generic keyboard tests.
 - **Depends on:** M0-T30.
 - **Read first:** `docs/13-testing.md` "### 10.3 Automated WCAG scan" (prose), "### 10.4 Keyboard, focus visibility and target size" (whole), "### 10.5 Announcements".
-- **Files (create):** `test/a11y/axe.test.ts`, `test/a11y/axe-exceptions.ts`, `test/a11y/keyboard.test.ts`, done file. **Modify:** `docs/13-testing.md` (one entry under `## Ledger issues` only, step 3).
+- **Files (create):** `test/a11y/axe.test.ts`, `test/a11y/axe-exceptions.ts`, `test/a11y/keyboard.test.ts`, done file. No doc changes.
 
 Steps:
 
@@ -1285,7 +1284,7 @@ Steps:
    - `[T5] <fixture id>: Tab visits each focusable element once, in document order`
    - `[T5] <fixture id>: every Tab stop shows a focus indicator`
    - `[T5] <fixture id>: interactive targets are at least 24 by 24 CSS px`
-   Each loads `fixturePageUrl(id)` and awaits `settled` (exported by `test/support/collect.ts` or `browser.ts`; use the existing export, do not write a second one). The second test needs the exception of 10.4 "OR the component spec's Accessibility section names another element that carries the indicator". No manifest field holds that element (spec silence): implement only the main condition, and add one entry under `## Ledger issues` at the end of `docs/13-testing.md` that names this silence (the exception has no manifest field; owner doc 13 section 10.4). Write the same text into the done file.
+   Each loads `fixturePageUrl(id)` and awaits `settled` (exported by `test/support/collect.ts` or `browser.ts`; use the existing export, do not write a second one). The second test needs the exception of 10.4 "OR the component spec's Accessibility section names another element that carries the indicator". Implement the exception with the constant `FOCUS_INDICATOR_CARRIERS` and its two initial rows exactly as the paragraph below the table of 10.4 prints them (D-149 item 29); there is no manifest field for it.
 
 Acceptance: phase P4 or P5; `pnpm typecheck` exits 0; `pnpm test --no-skips` exits 0 (one `[T1]` test passes with an empty exception list; the generic tests register zero).
 
@@ -1400,7 +1399,7 @@ Acceptance: the phase in force; `pnpm test:unit --files=src/check/rules/RP113.te
 ## M0-T44 CI workflows `.github/workflows/ci.yml` and `nightly.yml`
 
 - **Goal:** Add the two GitHub Actions workflows.
-- **Depends on:** M0-T28.
+- **Depends on:** M0-T28, M0-T35 (with M0-T35 merged a tier 2 test exists, so the `node22` job's `pnpm test:conformance` does not exit 2; D-149 item 12).
 - **Read first:** `docs/13-testing.md` "## 17. CI": intro, "### 17.2 What each job gates", "### 17.3" (not the YAML blocks).
 - **Files (create):** `.github/workflows/ci.yml`, `.github/workflows/nightly.yml`, done file.
 
@@ -1416,7 +1415,7 @@ Steps:
 2. Do not edit either file. The files MUST be byte-equal to the blocks.
 3. Syntax check: `node -e "const y=require('yaml');for(const f of ['.github/workflows/ci.yml','.github/workflows/nightly.yml'])y.parse(require('fs').readFileSync(f,'utf8'))"` exits 0 when the package `yaml` is installed (it is a transitive dependency; when `require` fails, skip this step and say so).
 
-Acceptance: the phase in force; `node node_modules/.cache/ripple/extract.mjs docs/13-testing.md '### 17.1 ' yaml 0 node_modules/.cache/ripple/ci.yml` prints a line that ends with `3606 bytes`, and `cmp node_modules/.cache/ripple/ci.yml .github/workflows/ci.yml` prints nothing; the same for `### 17.4 ` (2029 bytes) and `nightly.yml`. After pushing the branch, read the result of the workflow run of the pull request: the job `verify` (exactly `pnpm ci`, ledger D-137, doc 13 CI-2) MUST be green; it needs no tier 7 test file. Write into the pull request, as known and expected: (a) the job `node22` runs `pnpm test:conformance`, which exits 2 (`test: no test matched <pattern>`) until a tier 2 test is registered, that is until M0-T35 is merged (section 0.3); (b) the job `package-node20` runs `node pkg/bin/ripple.mjs manifest` against the CLI stub of M0-T26 and passes only because the stub exits 0; (c) the nightly job `commerce` is skipped while `test/commerce/e2e.test.ts` does not exist.
+Acceptance: the phase in force; `node node_modules/.cache/ripple/extract.mjs docs/13-testing.md '### 17.1 ' yaml 0 node_modules/.cache/ripple/ci.yml` prints a line that ends with `3606 bytes`, and `cmp node_modules/.cache/ripple/ci.yml .github/workflows/ci.yml` prints nothing; the same for `### 17.4 ` (2029 bytes) and `nightly.yml`. After pushing the branch, read the result of the workflow run of the pull request: the job `verify` (exactly `pnpm ci`, ledger D-137, doc 13 CI-2) MUST be green; it needs no tier 7 test file. The job `node22` MUST be green too. Write into the pull request, as known and expected: (a) the job `package-node20` runs `node pkg/bin/ripple.mjs manifest` against the CLI stub of M0-T26 and passes only because the stub exits 0; (b) the nightly job `commerce` is skipped while `test/commerce/e2e.test.ts` does not exist.
 
 - **Out of scope:** the `evals` job (doc 08); branch protection settings.
 - **If blocked:** when `verify` is red, do NOT edit the YAML (D-113: the workflow is the gate). Find the failing step; the failure belongs to the task that owns the failing file: report the step, its output and that task id in a draft pull request.

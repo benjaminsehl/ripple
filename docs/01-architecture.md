@@ -155,8 +155,8 @@ Layers L2 to L6 and T are **library** code; L7 is **scaffolded** code (D-053).
 | `src/remix/**` | `src/remix/**`; L2 files | `remix/component` (types only, and only as the statement `import type {} from "remix/component"`) |
 | `src/agent/**` | L2 files | `@ui-sdk/web/agent` |
 | `src/testing/**` | `src/testing/**`; L2 files | `parse5`, `liquidjs`, `node:*`; `playwright` (types only) |
-| `src/check/**` | `src/check/**`; `src/testing/canonicalize.ts`; L2 files | `parse5`, `node:*`; `playwright` and `@shopify/theme-check-node` (dynamic `import()` only) |
-| `src/cli/**` | `src/cli/**`; `src/check/**`; `src/gen/props-css.ts`, `src/gen/theme-css.ts`, `src/gen/tokens-source.ts` (the CLI regenerates `props.css` and `theme.css` in a project, D-029); L2 files | `node:*` |
+| `src/check/**` | `src/check/**`; `src/testing/canonicalize.ts`, `src/testing/upgrade-diff.ts` (layer B calls `installUpgradeRecorder`, doc 13 UD-6; D-149 item 24); L2 files | `parse5`, `node:*`; `playwright` and `@shopify/theme-check-node` (dynamic `import()` only) |
+| `src/cli/**` | `src/cli/**`; `src/check/**`; `src/gen/props-css.ts`, `src/gen/theme-css.ts`, `src/gen/tokens-source.ts` (the CLI regenerates `props.css` and `theme.css` in a project, D-029), `src/gen/agents-md.ts` (`renderAgentsSection`, bundled into the CLI, doc 07 7.6.5; D-149 item 24); L2 files | `node:*` |
 | `src/gen/**` | `src/gen/**`; `src/testing/**`; `src/check/**`; `src/cli/**` (trailers and the Liquid composite stylesheet, used by the registry build); L2 files | `parse5`, `liquidjs`, `esbuild`, `typescript`, `rollup`, `@rollup/plugin-node-resolve`, `@rollup/plugin-terser`, `lightningcss`, `node:*` |
 | `components/<id>/react/<id>.tsx` (scaffolded) | sibling component bindings as `./<other id>`; its own `./<id>.data` | `<pkg>`, `<pkg>/react`, `react`; from `@shopify/hydrogen` only the seven functions of rule 4 |
 | `components/<id>/remix/<id>.tsx` (scaffolded) | sibling component bindings as `./<other id>.tsx`; its own `./<id>.data.ts` | `<pkg>`, `<pkg>/remix`, `remix` (only the subpaths `06-bindings.md` allows); from `@shopify/hydrogen` only the seven functions of rule 4 |
@@ -211,8 +211,8 @@ export const IMPORT_RULES: Record<string, string[]> = {
   "src/remix/**": ["./src/remix/**", "./src/{identity,index,responsive,image,types}.ts", "remix/component (type)"],
   "src/agent/**": ["./src/{identity,index,responsive,image,types}.ts", "@ui-sdk/web/agent"],
   "src/testing/**": ["./src/testing/**", "./src/{identity,index,responsive,image,types}.ts", "parse5", "liquidjs", "node:*", "playwright (type)"],
-  "src/check/**": ["./src/check/**", "./src/testing/canonicalize.ts", "./src/{identity,index,responsive,image,types}.ts", "parse5", "node:*", "playwright", "@shopify/theme-check-node"],
-  "src/cli/**": ["./src/cli/**", "./src/check/**", "./src/gen/{props-css,theme-css,tokens-source}.ts", "./src/{identity,index,responsive,image,types}.ts", "node:*"],
+  "src/check/**": ["./src/check/**", "./src/testing/{canonicalize,upgrade-diff}.ts", "./src/{identity,index,responsive,image,types}.ts", "parse5", "node:*", "playwright", "@shopify/theme-check-node"],
+  "src/cli/**": ["./src/cli/**", "./src/check/**", "./src/gen/{props-css,theme-css,tokens-source,agents-md}.ts", "./src/{identity,index,responsive,image,types}.ts", "node:*"],
   "src/gen/**": ["./src/gen/**", "./src/testing/**", "./src/check/**", "./src/cli/**", "./src/{identity,index,responsive,image,types}.ts", "parse5", "liquidjs", "esbuild", "typescript", "rollup", "@rollup/plugin-node-resolve", "@rollup/plugin-terser", "lightningcss", "node:*"]
 };
 ```

@@ -126,7 +126,7 @@ Every extraction of this milestone is in this table. A task names rows by their 
 | `loadBlueprintSample(id, root = "blueprints")` | in `src/testing/fixtures.ts` since M0-T10 (doc 13 4.1 text), NOT RUN; its gate is `[T1] fixtures: blueprint samples resolve` | M7-T01 makes the gate run against real files |
 | `const BRINGUP = true // PLAN 4.4: set false and delete in M7-T28` | in `src/testing/fixtures.test.ts` and `src/testing/resources.test.ts` (M0-T10): guards "every key of `RESOURCES` is referenced" and the `layout` sample assertion | M7-T28 (ledger D-135) |
 | `src/gen/index.ts` marker | `// PLAN 4.4: G9 added by M6-T01, G10 added by M7-T02` (text fixed by M5) | M7-T02 removes the G10 half |
-| `examples/{html,react,remix}/` | M0-T31 skeletons: `package.json` (`private`, `type: module`, scripts `build` = `node -e ""` and `start` = `node server.mjs`, dependency `ripple-kit: file:../../pkg`, `@shopify/hydrogen 2026.10.3`, react `react`/`react-dom` 19.3.1, remix `remix` 3.3.0), `server.mjs` (`GET /` 200, else 404; remix: `/__rp/morph/a` and `/b` under `RIPPLE_TEST_ROUTES=1`, rendering since M1-T01), committed lockfiles, `examples/.gitignore` | M7-T04 (components), M7-T20 and M7-T31 (react), M7-T21 (remix), M7-T22 (html) |
+| `examples/{html,react,remix}/` | M0-T31 skeletons: `package.json` (`private`, `type: module`, scripts `build` = `node -e ""` and `start` = `node server.mjs`, dependency `ripple-kit: file:../../pkg`, `@shopify/hydrogen 2026.10.3`, react `react`/`react-dom` 19.3.1, remix `remix` 3.3.0), `server.mjs` (`GET /` 200, else 404; remix: `/__rp/morph/a` and `/b` under `RIPPLE_TEST_ROUTES=1`, rendering since M1-T47), committed lockfiles, `examples/.gitignore` | M7-T04 (components), M7-T20 and M7-T31 (react), M7-T21 (remix), M7-T22 (html) |
 | `examples/react/.ripple-conformance/`, `examples/remix/.ripple-conformance/` | conformance work directories, git-ignored (doc 13 X-1) | unchanged |
 | `examples/liquid/` | does not exist | M7-T04 (steps 1 to 3 of doc 14 4.1), M7-T23 (steps 4 to 6) |
 | `test/support/examples.ts` | `startExample(host)` (doc 13 12.1 steps 1 to 6); `liquid` returns `serveTheme({ themeRoot: "examples/liquid" })` | unchanged |
@@ -212,7 +212,7 @@ doc 13 12.1 fixes the contract (scripts, routes, mock.shop through `@shopify/hyd
 
 ### 0.9 Plan readings made by this file
 
-Each is the smallest choice that keeps the gates green where two specs conflict or all are silent. PR-M7-1 to PR-M7-14 are ratified by ledger D-146 (PR-M7-1 as D-134 item 18; PR-M7-3 as D-135): a task that applies one cites it in the pull request and adds no ledger-issue line. PR-M7-15 was added after the plan review: the task that first applies it (M7-T20) adds one line under `## Ledger issues` of the owning doc (text: `PR-M7-15: <topic> (docs/plan/M7-blueprints-examples.md 0.9)`) and mentions it in the pull request.
+Each is the smallest choice that keeps the gates green where two specs conflict or all are silent. PR-M7-1 to PR-M7-14 are ratified by ledger D-146 (PR-M7-1 as D-134 item 18; PR-M7-3 as D-135): a task that applies one cites it in the pull request and adds no ledger-issue line. PR-M7-15 was added after the plan review and is ratified by ledger D-149 item 18 (doc 13 12.1 item 3 now states it); no task adds a ledger-issue line for it.
 
 | # | Topic | The specs | Reading | Owning doc | Applied by |
 |---|---|---|---|---|---|
@@ -230,7 +230,7 @@ Each is the smallest choice that keeps the gates green where two specs conflict 
 | PR-M7-12 | Password layout reads `ripple.blueprints.layout.skip` | BP-6 / doc 07 generation check: every key a file reads is in its owner's locale file | Leave the key in the `layout` table; `password` depends on `layout` being installed first (order of 0.2). No code change | doc 12 | M7-T18 |
 | PR-M7-13 | Locale patch entry for blueprints without keys | doc 12 2.1 example `product` lists a `locale` entry; spec `product` has no locale keys; M6 keeps a `locale` entry only when the owner has a generated locale file | `blueprint.json` of a blueprint with no key table (`product`, `page`) has no `locale` entry | doc 12 | M7-T10 |
 | PR-M7-14 | `title` and `summary` of `blueprint.json` | doc 12 2.1 gives them only for `product` (`Product page`; one sentence) | `title`: the id in words, capitalised, plus ` page` (`Home page`, `Collections list page`, `Not found page`, `Gift card page`; `layout`: `Layout`); `summary`: the first sentence of the spec's `### Purpose` | doc 12 | M7-T05 |
-| PR-M7-15 | Locales of the npm examples | doc 05 C-35 requests `/fr-ca/cart` and `/fr-ca/products/<handle>` on a hydrogen host and expects `/fr-ca/api/cart`; doc 13 12.1 names no locale for the examples | `i18nDefinition` in `src/data.ts` (react, remix) has the default locale (path prefix `""`) and one more locale with path prefix `/fr-ca` (language `FR`, country `CA`); take the option names from the Hydrogen skill `hydrogen-markets`, not from memory. `src/routes.ts` matches every route also under `/fr-ca`. `examples/html` serves the static CLI pages (PR-M7-7) and has no `/fr-ca` routes, so C-35 runs on react and remix only | doc 13 (12.1) | M7-T20, M7-T31, M7-T30 |
+| PR-M7-15 | Locales of the npm examples | doc 05 C-35 requests `/fr-ca/cart` and `/fr-ca/products/<handle>` on a hydrogen host and expects `/fr-ca/api/cart`; doc 13 12.1 names no locale for the examples | `i18nDefinition` in `src/data.ts` (react, remix) has the default locale (path prefix `""`) and one more locale with path prefix `/fr-ca` (language `FR`, country `CA`); take the option names from the Hydrogen skill `hydrogen-markets`, not from memory. `src/routes.ts` matches every route also under `/fr-ca`. `examples/html` serves the static CLI pages (PR-M7-7) and has no `/fr-ca` routes, so C-35 runs on react and remix only. Ratified: D-149 item 18 | doc 13 (12.1) | M7-T20, M7-T31, M7-T30 |
 
 ### 0.10 Order of tasks
 
@@ -1168,8 +1168,7 @@ Create: `examples/react/src/data.ts`, the CLI output of step 2 (`src/pages/**` a
    ```
 
    It prints `{"layoutKeys":true,"home":200,"missing":404}`.
-7. Add the ledger-issue line of PR-M7-15 under `## Ledger issues` of `docs/13-testing.md`.
-8. Proof: PLAN 5.0.
+7. Proof: PLAN 5.0.
 
 ### Acceptance
 
@@ -1184,7 +1183,7 @@ The command of step 5 exits 0. `grep -c '^export const \(i18nDefinition\|routeTe
 - No network: step 6 cannot run; BLOCKED-ON-ENV for step 6 only (PLAN 4.3): open the pull request as a draft with steps 1 to 5 done, and say so.
 - esbuild cannot resolve an import of an installed page file: do not edit the installed file; record the import and draft pull request naming the CLI install (M6) as the defect.
 - mock.shop lacks a resource (doc 12 2.5 UNVERIFIED list): the loader returns the empty-list props (every blueprint renders with empty lists); record the gap in the done file.
-- `hydrogen-markets` names no way to give a locale a path prefix: write `i18nDefinition` with the default locale only, record it in the done file and in the PR-M7-15 ledger line, and tell the coordinator that C-35 (M7-T30) cannot pass.
+- `hydrogen-markets` names no way to give a locale a path prefix: write `i18nDefinition` with the default locale only, record it in the done file and under `## Ledger issues` of `docs/13-testing.md`, and tell the coordinator that C-35 (M7-T30) cannot pass.
 
 ---
 
@@ -1345,7 +1344,7 @@ A-20 to A-23 (tier 8, M10). Fixing the theme (owners per M7-T23 "If blocked").
 
 ---
 
-## M7-T25 No-JS flows `test/nojs/blueprints.test.ts`: NJ-F1 to NJ-F16 on the four examples
+## M7-T25 No-JS flows `test/nojs/blueprints.test.ts`: NJ-F1 to NJ-F17 on the four examples
 
 - **Goal:** Write the whole-page flows of doc 13 11.2 for the four examples with scripting disabled and make them pass. Its Liquid NJ-F rows are also test C-18 of doc 05 (doc 13 NJ-6, ledger D-145).
 - **Depends on:** M7-T20, M7-T21, M7-T22, M7-T23, M7-T31.
@@ -1362,7 +1361,7 @@ Create: `test/nojs/blueprints.test.ts`. Must not change: the examples (a failing
 ### Steps
 
 1. Branch `task/M7-T25-nojs-flows`.
-2. For each host in `["html", "react", "remix", "liquid"]` and each row NJ-F1 to NJ-F16 (rows say when a host is excluded: NJ-F8 hydrogen only), one test `[T6] <host>: NJ-F<n> <statement>`; `startExample(host)` once per host (shared across its tests, `stop()` in `after`); `openPage(url, { scripts: "disabled" })`; selectors only those of the table (NJ-5). Product and collection handles: the discovery query of 12.1 (hydrogen) or the ST-3 catalogue (liquid).
+2. For each host in `["html", "react", "remix", "liquid"]` and each row NJ-F1 to NJ-F17 (rows say when a host is excluded: NJ-F8 on `html`, `react`, `remix`; NJ-F17 on `react`, `remix`), one test `[T6] <host>: NJ-F<n> <statement>`; `startExample(host)` once per host (shared across its tests, `stop()` in `after`); `openPage(url, { scripts: "disabled" })`; selectors only those of the table (NJ-5). Product and collection handles: the discovery query of 12.1 (hydrogen) or the ST-3 catalogue (liquid).
 3. NJ-F11 needs a collection with more than one page: on liquid pass `pageSize` (serveTheme option) small enough; on hydrogen, when the discovered collection has one page only, the test skips with `mock.shop collection has one page` (UNVERIFIED that mock.shop has a collection with more than 24 products). NJ-F16 runs only when the example offers more than one locale (the row says so); otherwise it skips with `one locale`. Under `--no-skips` either skip fails the run, and the M7 gate needs NJ-F11 and NJ-F16 to pass: when one skips, list it in the done file, add a line under `## Ledger issues` of `docs/13-testing.md` (`M7-T25: NJ-F<n> skips on <host>: <reason>`), and open the pull request as a draft.
 3a. C-18 (doc 05 section 14) is the Liquid NJ-F rows (doc 13 NJ-6, ledger D-145): write no separate C-18 test; write the comment `// C-18: the liquid NJ-F tests of this file (doc 13 NJ-6)` at the top of the file and name those tests in the done file.
 4. References: every comment `// AT-<n>: generic (test/nojs/blueprints.test.ts NJ-F<k>, added by M7-T25)` found in step "Read first" names an NJ-F id that now has a test; list them in the done file.
@@ -1371,7 +1370,7 @@ Create: `test/nojs/blueprints.test.ts`. Must not change: the examples (a failing
 
 ### Acceptance
 
-Step 5 exits 0 with 16 flows times the hosts each row names (63 tests when NJ-F8 is hydrogen only). `grep -c '// C-18: ' test/nojs/blueprints.test.ts` prints `1`. Without network: the liquid tests pass and every hydrogen test skips with `RIPPLE_NETWORK is not 1`.
+Step 5 exits 0 with 17 flows times the hosts each row names (65 tests: NJ-F8 on three hosts, NJ-F17 on two). `grep -c '// C-18: ' test/nojs/blueprints.test.ts` prints `1`. Without network: the liquid tests pass and every hydrogen test skips with `RIPPLE_NETWORK is not 1`.
 
 ### Out of scope
 
@@ -1517,7 +1516,7 @@ Create: `docs/plan/done/M7-T29.md`. Nothing else.
    - `ls docs/plan/done/ | grep -c '^\(M7-T\(0[1-9]\|1[0-9]\|2[0-8]\|3[01]\)\|M4-T25\|M5-T16\)\.md$'` prints `32` (every M7 task except this gate, plus M4-T25 and M5-T16).
    - `RIPPLE_NETWORK=1 pnpm test:commerce` (without `--no-skips`, D-137) reports `0 failed`; every skipped line is an E2E-11 probe with a reason that starts `mock.shop has no `; list each in the done file and check that `docs/13-testing.md` has its line under `## Ledger issues` (M7-T26 step 5).
    - `RIPPLE_NETWORK=1 pnpm test:behavior --files=test/commerce/hydrogen --grep='C-35 ' --no-skips` reports 2 passed (M7-T30).
-   - `RIPPLE_NETWORK=1 pnpm test:nojs --no-skips` exits 0 and shows NJ-F1 to NJ-F16.
+   - `RIPPLE_NETWORK=1 pnpm test:nojs --no-skips` exits 0 and shows NJ-F1 to NJ-F17.
    - `pnpm test --files=test/liquid/theme --no-skips` passes A-1 to A-19 (except the withdrawn A-11), A-24, A-25.
    - `grep -l '"kind": "commerce"' components/*/*.json | xargs grep -L '"status": "stable"'` prints nothing.
 3. Write the done file: the commands, their summarised output, every M7 task with its pull request, and every ledger-issue line added by M7 tasks.
@@ -1576,7 +1575,7 @@ The html host and the Liquid backend (PR-M7-15). Changing example code (a failur
 
 ---
 
-## M7-T31 Example `examples/react`, part 2: `src/routes.ts` (with `/api/cart`), `src/server.tsx`, `build.mjs`, `server.mjs`, smoke run
+## M7-T31 Example `examples/react`, part 2: `src/routes.ts` (with `/api/cart`), `src/server.tsx`, `src/client.tsx`, `build.mjs`, `server.mjs`, smoke run
 
 - **Goal:** Turn `examples/react` into a running storefront on top of part 1 (M7-T20): the route table with the Hydrogen cart handlers and the locale, newsletter and contact handlers, the server render through `renderDocument`, the client entry and the build, satisfying doc 13 12.1 items 1 to 4.
 - **Depends on:** M7-T20.
@@ -1624,4 +1623,4 @@ Create: `examples/react/build.mjs`, `examples/react/src/server.tsx`, `examples/r
 
 - No network: the build and the bundle can run, step 6 cannot; BLOCKED-ON-ENV (PLAN 4.3): draft pull request with steps 1 to 5 done.
 - DS-5 hydration fails in the browser: apply the spec's "Fallback for DS-5" (the installed `lib/locale-route.ts` is already that form) and report it.
-- `handleShopifyRoutes` does not serve `/fr-ca/api/cart`: record the observed status in the done file and in the PR-M7-15 ledger line; C-35 (M7-T30) will fail and names this task.
+- `handleShopifyRoutes` does not serve `/fr-ca/api/cart`: record the observed status in the done file and under `## Ledger issues` of `docs/13-testing.md`; C-35 (M7-T30) will fail and names this task.

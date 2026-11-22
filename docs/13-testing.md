@@ -54,8 +54,8 @@ Evidence marker: code blocks marked **RUN** were executed for this document in `
 | 2 | Fixture conformance | `[T2]` | `pnpm test:conformance` | `test/conformance/conformance.test.ts`, `test/conformance/hosts.test.ts` | `pnpm build`, `pnpm examples:install` | Chromium for Q-9 only |
 | 3 | Upgrade stability | `[T3]` | `pnpm test:upgrade` | `test/upgrade/upgrade.test.ts`, `[T3]` tests in element and component test files | `pnpm build` | Chromium |
 | 4 | Hydration and morph | `[T4]` | `pnpm test:hydration` | `test/hydration/react.test.ts`, `test/hydration/remix.test.ts` | `pnpm build`, `pnpm examples:install`; Remix: Node 24.3 or later | Chromium |
-| 5 | Behaviour, keyboard, a11y, style | `[T5]` | `pnpm test:behavior` | `components/<id>/<id>.test.ts`, `src/elements/*.test.ts`, `test/commerce/*.test.ts` (emulated), `test/a11y/*.test.ts`, `test/visual/*.test.ts` | `pnpm build` | Chromium |
-| 6 | No-JS and scripts blocked | `[T6]` | `pnpm test:nojs` | `test/nojs/*.test.ts`, `[T6]` tests in component test files | `pnpm build`, `pnpm examples:install` | Chromium |
+| 5 | Behaviour, keyboard, a11y, style | `[T5]` | `pnpm test:behavior` | `components/<id>/<id>.test.ts`, `src/elements/*.test.ts`, `test/commerce/*.test.ts` (emulated), `test/a11y/*.test.ts`, `test/visual/*.test.ts`, `css/styling.test.ts` | `pnpm build` | Chromium |
+| 6 | No-JS and scripts blocked | `[T6]` | `pnpm test:nojs` | `test/nojs/*.test.ts`, `[T6]` tests in component test files and in `css/styling.test.ts` (A-20) | `pnpm build`, `pnpm examples:install` | Chromium |
 | 7 | Commerce end to end (mock.shop) | `[T7]` | `pnpm test:commerce` | `test/commerce/e2e.test.ts` | network access to `https://mock.shop/api`; `RIPPLE_NETWORK=1` | Chromium |
 | 8 | Liquid live | `[T8]` | `pnpm test:liquid-live` | `test/liquid/live.test.ts` | preview store (ledger Q5); `RIPPLE_STORE_URL` | Chromium |
 | 9 | Cross-engine | tiers 3, 5, 6 re-run, plus `[T9]` | `pnpm test:webkit`, `pnpm test:firefox` | all `[T3]`, `[T5]`, `[T6]` tests without the `[chromium]` tag; `test/cross-engine/features.test.ts` | Playwright WebKit and Firefox builds | WebKit, Gecko |
@@ -160,7 +160,7 @@ Required commands and the order in which a developer or agent runs them:
 ### 2.4 Test names and tags
 
 - **N-1** Every test name MUST match `^\[T(10|[1-9])\] <subject>: <statement>( \[chromium\])?$`.
-  - `<subject>` is a fixture id (`button/default`), a component id (`dialog`), or a source module name without extension (`canonicalize`, `rp-quantity`, `run`).
+  - `<subject>` is a fixture id (`button/default`), a component id (`dialog`), or a source module name without extension (`canonicalize`, `rp-quantity`, `run`). A module name MAY carry its directory as a prefix with `-` (`gen-html`, `gen-react`, `commerce-liquid`); a test file without one module under test uses its file name (`fixture-server`, `styling`); whole-page tests use the host name (`html`, `react`, `remix`, `liquid`). The regular expression is the check; these words do not narrow it (D-149 item 30).
   - `<statement>` is a sentence fragment saying what holds. When the test implements a numbered acceptance test of a specification, the statement starts with that test's id: `AT-3` for item 3 of a component's "Acceptance tests" section; `E-05`, `C-02`, `A-07`, `Q-10` for the ids of the documents named in section 0.
   - A component acceptance test is named `AT-<n>`; prefixed ids of infrastructure documents and blueprints (`E-05`, `C-02`, `A-07`, `LT-3`, `CR-2`, `CA-4`, `BP-11`) are kept as written. `CA-<n>` names only the common component tests of `09-components-foundation.md`; the `cart` blueprint's tests are `CR-<n>` (D-104 item 1).
 - **N-2** The `[chromium]` tag, at the END of the name, marks a test that MUST NOT run in WebKit or Gecko. It is allowed only for: a Chromium-only API (Navigation API, `layout-shift` performance entries), computed-style serialisation snapshots (14), and React client-render equality (Q-9). The line above the test MUST be a comment `// [chromium]: <reason>`.
@@ -659,7 +659,7 @@ A fixture references commerce data only as `{ "$resource": "<type>.<name>" }` (`
 | `shop.basic`, `shop.logo` | shop name `Mock Shop`, without and with a logo | doc 12 section 1.6 |
 | `locale.multi` | two countries, two languages | doc 12 section 1.6 |
 
-There are no `money.*`, `variant.*` or `media.*` resources: a money, variant or media value is always reached through a product, line or cart.
+The table above starts with no `money.*`, `variant.*` or `media.*` resources: a money, variant or media value is normally reached through a product, line or cart. A component whose prop takes such a value directly adds the resource under RS-2 and ledger D-140; Price (M1-T10) adds `money.usd-48`, `money.usd-12` and `money.usd-16` with the values of `components/price.md` (ledger D-149 item 4).
 
 ```ts
 // Resource fixtures: the only commerce and chrome data a fixture may reference
@@ -1175,7 +1175,7 @@ Rules:
 
 - **RS-1** The `hydrogen` side has exactly the shapes of `05-commerce.md` 11.1 for product, collection, article, line and cart resources, the prop types of `11-components-commerce.md` for `filters.basic` and `search.shirt`, and the JSON of `12-components-chrome-and-blueprints.md` 1.6 for `menu.*`, `shop.*` and `locale.multi`. The `liquid` side has the fields named in the "Liquid" column of the `05-commerce.md` 11.1 table plus the drop members the component snippets read. A component that reads another field MUST add the field to the resource here in the same change; it MUST NOT inline data in a fixture.
 - **RS-2** A new resource is added by its owning component document first (doc 11 section 0.5 or doc 12 section 1.6), then by one entry in `RESOURCES` and one row in the table above, in the same change. Resource names are kebab-case. A component task whose fixture needs data that no resource holds (a member of a resource, an array, or data in no resource) adds the resource itself, in its own commit: the `RESOURCES` entry, the row in the table above, the entry in doc 11 section 0.5 or doc 12 section 1.6, and the name in the `[T1] resources:` test list. The name is `<type>.<name>` when the value has a resource type of `05-commerce.md` 11.1 or doc 12 section 1.6, otherwise `<component id>.<fixture name>`. RS-3 replaces a Liquid global only for the types `cart`, `shop`, `locale` and `search` (D-140).
-- **RS-3** How each host receives a resource: `html`: the fixture file is written by hand from the `hydrogen` side (`02-html-contract.md` F-9). `react`, `remix`: the adapter passes `resolveResource(ref, "hydrogen")` as the prop value. `liquid`: the adapter binds `resolveResource(ref, "liquid")` to the Liquid variable `rp_<reference with "." and "-" replaced by "_">` (`product.basic` becomes `rp_product_basic`) and passes that variable as the argument. In addition, for a resource whose type is a key of `LIQUID_GLOBAL_OF_TYPE` (`cart`, `shop`, `locale`, `search`), the adapter sets the Liquid global named there (`cart`, `shop`, `localization`, `search`) to the same value for that render, because Liquid components of those types read the global. `filters.basic` on the liquid side is a collection drop stand-in (`filters`, `sort_options`, `sort_by`, `url`).
+- **RS-3** How each host receives a resource: `html`: the fixture file is written by hand from the `hydrogen` side (`02-html-contract.md` F-9). `react`, `remix`: the adapter passes `resolveResource(ref, "hydrogen")` as the prop value. `liquid`: the adapter binds `resolveResource(ref, "liquid")` to the Liquid variable `rp_<reference with "." and "-" replaced by "_">` (`product.basic` becomes `rp_product_basic`) and passes that variable as the argument. In addition, for a resource whose type is a key of `LIQUID_GLOBAL_OF_TYPE` (`cart`, `shop`, `locale`, `search`), the adapter sets the Liquid global named there (`cart`, `shop`, `localization`, `search`) to the same value for that render, because Liquid components of those types read the global. The global is set for every such reference in the fixture record, also when FX-4 skips the prop that carries it on Liquid (the code of 7.3 loops over `resourceRefs(testCase.fixture)`, not over the passed props; D-149 item 28). `filters.basic` on the liquid side is a collection drop stand-in (`filters`, `sort_options`, `sort_by`, `url`).
 - **RS-4** `pnpm gen --check` MUST fail when a fixture references a name that is not a key of `RESOURCES` (the check calls `resolveResource`).
 - **RS-5** Resource values are fixed. Changing a value is a change to every fixture that prints it and needs the fixtures regenerated in the same change.
 
@@ -2283,7 +2283,7 @@ Behaviour:
 Rules:
 
 - **ST-1** The server is a test double. It MUST NOT be exported from any entry other than `<pkg>/testing`, and no file outside `test/`, `evals/` and `src/testing/` may import it.
-- **ST-2** `STANDARD_ACTIONS_SERVER_EMULATION` differs from `05-commerce.md`'s `fake-sa.js` only in where the cart lives (the server instead of the page). Tests C-01 to C-08 of `05-commerce.md` use `fake-sa.js` unchanged (`test/support/fake-sa.js`); tests that render a whole theme use `serveTheme`.
+- **ST-2** `STANDARD_ACTIONS_SERVER_EMULATION` differs from `05-commerce.md`'s `fake-sa.js` only in where the cart lives (the server instead of the page). Tests C-01 to C-08 of `05-commerce.md` use `fake-sa.js` unchanged (`test/support/fake-sa.js`); tests that render a whole theme use `serveTheme`. An answer that `fake-sa.js` cannot give (C-36 (b): a `warnings` entry) is added by the test page with a classic inline script placed directly after the `fake-sa.js` script element that wraps `window.Shopify.actions.updateCart` and adds `warnings: window.__warnings` to its result; `fake-sa.js` itself never changes (ledger D-149 item 19).
 - **ST-3** The catalogue is `product.basic`, `product.sale`, `product.sold-out` and `product.options` of `resources.ts`. `product.basic` and `product.options` share the handle `linen-shirt` (doc 11 section 0.5); `/products/linen-shirt` and every listing serve `product.options`. A theme template that needs other data receives it through `routes[].scope`.
 - **ST-4** `PARTIAL_RENDERING_EMULATION` implements the SPIKE-02 default path: a region is the element carrying `data-rp-region="<partial name>"`. See [Fallback (SPIKE-02)](#fallback-spike-02).
 - **ST-5** Not run for this document: a real `ripple.js` commerce element against this server (no such file exists yet). The first test to do so is C-01 in `test/commerce/liquid.test.ts` re-run through `serveTheme` as `[T5] cart: theme server add-to-cart updates the count and the lines region`; it is the gate for this file.
@@ -2471,6 +2471,8 @@ Tailwind build for `css=tailwind` (used by CA-7 of `09-components-foundation.md`
 @import "../../pkg/css/theme.css";
 ```
 
+The entry has no `@source` line: the classes come from Tailwind's automatic source detection, which scans the files under the working directory (the repository root) that git does not ignore, test files included; the classes of A-11 and A-18 are string literals in `css/styling.test.ts` (ledger D-149 item 21; UNVERIFIED for test files). When the build lacks one of them, the entry stays unchanged and the task stops with a draft pull request.
+
 NOT RUN for this document: `server.ts` itself. Its routes are exercised by every tier 3, 5 and 6 test; `[T3] tabs/default: zero unpermitted mutations at upgrade` is the first gate.
 
 ### 5.4 `collect.ts` (complete; NOT RUN in this form: the spike ran an inline version of `collectBoxes` that returned tuples without `root` and `js`; `collectStyles` NOT RUN)
@@ -2629,7 +2631,7 @@ Tests this document adds to tier 1 (file, name, assertion):
 | `src/testing/fixtures.test.ts` | `[T1] fixtures: host-scoped props are skipped` | `hostHasProp([{ name: "shop", type: "resource", hosts: ["html", "react", "remix"] }], "shop", "liquid")` is `false`, and `true` for `"react"`; an unknown prop name gives `true`; `liquidCaseSource` of a case with that prop does not contain `shop:` |
 | `src/testing/fixtures.test.ts` | `[T1] fixtures: blueprint samples resolve` | for every directory `blueprints/<id>/` other than `_sample`: `loadBlueprintSample(id)` does not throw; `props` contains no `$resource` key at any depth; `liquid` contains no `$resource` and no `$liquid` key; `loadBlueprintSample("layout")` does not throw |
 | `src/testing/resources.test.ts` | `[T1] resources: every $resource reference resolves and every resource is referenced` | the set of references found by `resourceRefs` over `loadFixtures()` plus every `$resource` value in `blueprints/_sample/*.json` is a subset of the keys of `RESOURCES` (a missing key fails with `unknown resource fixture`), and every key of `RESOURCES` is in that set (an unreferenced key fails with `resource "<name>" is not referenced by any fixture or blueprint sample`) |
-| `src/testing/resources.test.ts` | `[T1] resources: the set is the documented set` | the keys of `RESOURCES` are exactly the 21 references of the table of 4.2, in that order |
+| `src/testing/resources.test.ts` | `[T1] resources: the set is the documented set` | the keys of `RESOURCES` are exactly the references of the table of 4.2 (22 before any ledger D-140 addition), in that order |
 | `src/testing/resources.test.ts` | `[T1] resources: values the worked fixtures depend on` | `product.basic` hydrogen `id` is `gid://shopify/Product/1`, `title` `Linen Shirt`, `price.amount` `48.00`; liquid `selected_or_first_available_variant.id` is `11`; `product.sale` hydrogen `compareAtPrice.amount` is `16.00`; `product.sold-out` hydrogen `availableForSale` is `false` and `featuredImage` is `null`; `cart.two-lines` hydrogen `totalQuantity` is 3 and `total.amount` is `108.00`; `cart.discounted` hydrogen `total.amount` is `97.20`; `line.basic` hydrogen `variantTitle` is `Blue / S` and liquid `key` is `11:abc`; `image.basic` hydrogen `url` is `https://cdn.shopify.com/s/files/1/0000/0001/files/linen-shirt.jpg`, `width` 1600, `height` 2000; `image.no-alt` `altText` is `null` |
 | `test/liquid/shim.test.ts` | the `[T1]` rows of 4.6 | as listed |
 | `test/run.test.ts` | 6.3 | as listed |
@@ -3274,6 +3276,8 @@ Three generic tests per case (NOT RUN). Each loads `fixturePageUrl(id)` and awai
 | `[T5] <fixture id>: every Tab stop shows a focus indicator` | During the same walk, at each stop read computed `outline-style`, `outline-width`, `outline-color`, `box-shadow` of the focused element. | `outline-style` is `solid` and `outline-width` is at least `2px` and `outline-color` equals the computed value of `--color-ring` resolved on that element; OR the component spec's Accessibility section names another element that carries the indicator, in which case that element satisfies the same condition (A-08 of `03-styling-and-tokens.md`) |
 | `[T5] <fixture id>: interactive targets are at least 24 by 24 CSS px` | For every `button, a[href], input:not([type="hidden"]), select, summary` in `#rp-test-root` that is visible and not inside `.rp-rich-text` or `.rp-text`: `getBoundingClientRect()`. | `width >= 24` and `height >= 24` (D-066; CA-8 of `09-components-foundation.md`). For `input[type="checkbox"]` and `input[type="radio"]`, the box of the wrapping `label` is used when the input is inside a `label` |
 
+The exception "another element carries the indicator" is data in `test/a11y/keyboard.test.ts`, not a manifest field (D-149 item 29): `const FOCUS_INDICATOR_CARRIERS: Array<{ component: string; focused: string; carrier: string }>`. When the focused element matches `focused` inside a root of `component`, the condition is read from `focused.closest(carrier)`, or, when `carrier` is `"::after"`, from `getComputedStyle(focused, "::after")`. The initial rows are `{ component: "quantity-input", focused: ".rp-quantity-input", carrier: ".rp-quantity" }` (`components/quantity-input.md`, Styling item 2) and `{ component: "product-card", focused: ".rp-product-card-link", carrier: "::after" }` (`components/product-card.md`, Accessibility). A component task whose spec names another carrier adds its row in its own commit.
+
 ### 10.5 Announcements
 
 A test asserts an announcement by polling (at most 2 s, with `page.waitForFunction`) until the expected text is contained in the text content of any of these elements: `[data-ui-sdk-announcer]` (the kernel live regions appended to `<body>`, `02-html-contract.md` U-3), `[data-rp-part="status"]`, `[role="status"]`, `[role="alert"]`. Where the text goes is fixed by D-079: when the announcing element is inside an open modal `<dialog>`, the test MUST find the text in a `[data-rp-part="status"]` element inside that dialog (CartLines, CartSummary, CartNote and DiscountCode each print one); otherwise in the page-level region. The `layout` blueprint prints no Announcer, so a page-level `[data-rp-part="status"]` outside every `rp-*` root and `<dialog>` is a failure of `[T5] layout: no page-level Announcer`. The expected text is read from `locales/en.default.json` (W-7), with `{{ name }}` placeholders replaced by the test.
@@ -3282,7 +3286,7 @@ A test asserts an announcement by polling (at most 2 s, with `page.waitForFuncti
 
 | Tests | File | Owner |
 |---|---|---|
-| A-02 to A-09, A-11, A-14, A-18 to A-22 (tokens, dials, schemes, props, focus, motion, RTL, hidden, display of custom elements, Tabs without JS, scroll padding, `data-rp-js` on a form) | `css/styling.test.ts` | `03-styling-and-tokens.md` 15 |
+| A-02 to A-09, A-11, A-14, A-18 to A-22 (tokens, dials, schemes, props, focus, motion, RTL, hidden, display of custom elements, Tabs without JS, scroll padding, `data-rp-js` on a form); every one is `[T5]` except A-20, which is `[T6]` (tier 6 of `03-styling-and-tokens.md` 15; D-149 item 20) | `css/styling.test.ts` | `03-styling-and-tokens.md` 15 |
 | A-23 (the linter's own tests) | `src/gen/css-lint.test.ts` | `03-styling-and-tokens.md` 7.9, 15 |
 | E-02 to E-32 | `src/elements/<tag>.test.ts` for a row about one element, `src/runtime/<name>.test.ts` for a row about one runtime module (loader, opener, polyfill, announcer); `04-elements.md` 13 states no file, so a row about several modules is placed by the plan task that owns it (D-141) | `04-elements.md` 13 |
 | C-01 to C-39 | `test/commerce/liquid.test.ts` for a liquid-backend row, `test/commerce/hydrogen.test.ts` for a hydrogen-backend row; a row about one element alone (C-14, C-15) MAY be in `src/commerce/<tag>.test.ts`; `05-commerce.md` 14 states no file, so the plan task that owns a row names its file (D-141) | `05-commerce.md` 14 |
@@ -3365,9 +3369,10 @@ Test names are `[T6] <host>: NJ-F<n> <statement>`; every flow runs for `html`, `
 | NJ-F14 | Click the MobileNav opener `a[data-rp-open="mobile-nav"]` at viewport width 375. | The browser navigates to the opener's `href`, `#footer-menu`: the URL fragment is `#footer-menu`, the element with that id is in the viewport, and `dialog#mobile-nav` is not open |
 | NJ-F15 | Submit the NewsletterForm with `test@example.com`. | The form's request is sent with method `POST` and a field holding the address; the response status is below 500 |
 | NJ-F16 | Submit the LocaleSelector form with another option, when the example offers more than one. | A navigation or form post occurs whose request contains the chosen value |
+| NJ-F17 | hydrogen backend only (`react`, `remix`): on `/cart` with one line, submit the DiscountCode form with the text `SAVE10`; when the re-rendered page contains `form.rp-cart-summary-remove`, submit the first one. | Each navigation ends on a page with status 200. When a remove form was submitted, the re-rendered page contains no `form.rp-cart-summary-remove` (CartSummary AT-5, hydrogen half). When mock.shop applies no code (no remove form after the apply), the test passes after the status check and prints the line `NJ-F17: no applicable discount code on mock.shop` with `console.log` (ledger D-149 item 6) |
 
 - **NJ-5** The selectors above use only tags, ledger hook attributes, native field names fixed by D-043 and D-047, and manifest classes. Where a component document later fixes a more precise hook for the same control, the test uses that hook and this table is updated in the same change.
-- **NJ-6** C-17 and C-18 of `05-commerce.md` are NJ-F4 to NJ-F9 (hydrogen) and the Liquid rows respectively; they are not implemented twice.
+- **NJ-6** C-17 and C-18 of `05-commerce.md` are NJ-F4 to NJ-F9 and NJ-F17 (hydrogen) and the Liquid rows respectively; they are not implemented twice.
 
 ### 11.3 Tier 9: cross-engine
 
@@ -3400,10 +3405,10 @@ Contract that each of `examples/html`, `examples/react`, `examples/remix` MUST s
 
 1. `package.json` has scripts `build` and `start`. `pnpm --dir examples/<host> build` exits 0 and may be a no-op. `pnpm --dir examples/<host> start` serves the built project on `127.0.0.1` at the port given by the environment variable `PORT`.
 2. Storefront data comes from `https://mock.shop/api` (Ben decision 10) through `@shopify/hydrogen`.
-3. Routes: `/` (home), `/collections/<handle>`, `/products/<handle>` (variant in the query), `/cart`, `/search` (query `q`), and the cart handlers at `/api/cart` (D-041).
+3. Routes: `/` (home), `/collections/<handle>`, `/products/<handle>` (variant in the query), `/cart`, `/search` (query `q`), and the cart handlers at `/api/cart` (D-041). `examples/react` and `examples/remix` have a second locale with path prefix `/fr-ca` (language `FR`, country `CA`) and match every route also under `/fr-ca`; `examples/html` serves static pages and has no `/fr-ca` routes, so C-35 of `05-commerce.md` runs on `react` and `remix` only (ledger D-149 item 18).
 4. The cart drawer's `<dialog>` has the id `cart-drawer`, equal to `CommerceOptions.cartDrawer` (D-087). It is absent on `/cart` (D-091 item 5).
 5. `examples/liquid` is a theme directory and is served by `serveTheme({ themeRoot: "examples/liquid" })`.
-6. `examples/remix` only: when the environment variable `RIPPLE_TEST_ROUTES` is `1`, the routes `/__rp/morph/a?c=<component id>` and `/__rp/morph/b?c=<component id>` of 9.2 exist; otherwise they answer `404`.
+6. `examples/remix` only: when the environment variable `RIPPLE_TEST_ROUTES` is `1`, the routes `/__rp/morph/a?c=<component id>` and `/__rp/morph/b?c=<component id>` of 9.2 exist; otherwise they answer `404`. `examples/remix/server.mjs` builds them once at start-up from the Remix adapter helpers of 7.4 (`writeTsxWorkDir`, `caseJsx`, `caseModuleSource`, `restoreChildren`) into the ignored directory `examples/remix/.ripple-morph/`, rendering the `default` fixture of the component named by `c` (ledger D-149 item 8; plan task M1-T47 gives the steps).
 7. `examples/remix` configures neither `reloadFrames` nor `navigate`: regions are plain elements and the `html` refresh strategy runs (D-090 item 5). The configuration with both options is SPIKE-11; it is not part of tier 7.
 
 `startExample(host: "html" | "react" | "remix" | "liquid"): Promise<{ url: string; stop(): Promise<void> }>`:
@@ -3860,7 +3865,7 @@ jobs:
 
 ### 17.3 When `cross-engine` becomes blocking
 
-Tier 9 is non-blocking until the SPIKE-06 report exists (D-063 as amended). `continue-on-error: true` stays on the `cross-engine` job until the file `docs/research/spikes/cross-engine-features/README.md` (the SPIKE-06 report) exists. The spike task that adds that file only reports (D-134 item 15). Each per-feature fallback the report calls for (section 21) is applied by its own follow-up task. The pull request that makes the job blocking runs after those tasks: it deletes the `continue-on-error: true` line and leaves `cross-engine` passing. A raised browser floor changes D-032 and needs Ben (ledger Q27). From then on the job is required to merge.
+Tier 9 is non-blocking until the SPIKE-06 report exists (D-063 as amended). `continue-on-error: true` stays on the `cross-engine` job until the file `docs/research/spikes/cross-engine-features/README.md` (the SPIKE-06 report) exists. The spike task that adds that file only reports (D-134 item 15). Each per-feature fallback the report calls for (section 21) is applied by its own follow-up task. The pull request that makes the job blocking runs after those tasks: it deletes the `continue-on-error: true` line and leaves `cross-engine` passing. A raised browser floor changes D-032 and needs Ben (ledger Q27). Once that pull request is merged, the job is required to merge. While a known gap without a fallback fails (section 21, Fallback (SPIKE-06)), that pull request is not merged: `continue-on-error: true` stays and the job stays non-blocking (D-149 item 25).
 
 ### 17.4 `.github/workflows/nightly.yml` (complete, except the `evals` job that `08-agent-kit-and-evals.md` section 8.14 adds from M3 onward; CI-8)
 
@@ -3987,11 +3992,11 @@ A component with `status: "beta"` satisfies lines 1 to 9, 13 and 21 to 24. A com
 
 For every loaded component (status not `planned`), one test `[T1] <id>: every acceptance test of the spec is covered`:
 
-1. Read `docs/09-components-foundation.md`, `docs/10-components-interactive.md`, `docs/11-components-commerce.md`, `docs/12-components-chrome-and-blueprints.md` (those that exist).
-2. Find the level-2 heading `## <title>` where `<title>` equals the component's manifest `title`. Within that section (up to the next level-2 heading), find the heading `### Acceptance tests` and take the lines up to the next heading that starts with `###`.
+1. Read `docs/components/<id>.md` (one file per component; PLAN P-7, ledger D-149 item 5).
+2. Find the heading `### Acceptance tests` and take the lines up to the next heading that starts with `###` or `##`.
 3. Collect the required ids. A list item matching `^(\d+)\. ` with number `n` gives the id `AT-<n>` (D-104 item 1). A list item matching `^- \*\*([A-Z]{1,3}-\d+)\*\*` gives that prefixed id as written (`E-05`, `C-02`, `LT-3`, `CR-2`); prefixed ids are never renumbered to `AT-`. The set MUST NOT be empty.
-4. Read `components/<id>/<id>.test.ts`. For every required id, the file text MUST contain the string `<id> ` (in a test name; for example `AT-3 ` or `CR-2 `) or the string `// <id>: generic`.
-5. Fail with `components/<id>/<id>.test.ts: no test or generic note for <list of missing ids>`; fail with `<id>: no "## <title>" section with "### Acceptance tests" found in docs 09 to 12` when step 2 finds nothing.
+4. Read `components/<id>/<id>.test.ts`. For every required id, the file text MUST contain one of: the string `<id> ` (in a test name; for example `AT-3 ` or `CR-2 `); the string `// <id>: generic` (the generic matrix, BH-2); the string `// <id>: covered by ` (a later task proves it, ledger D-141 (3)); the string `// <id>: removed` (an item the component spec allows to be removed, for example `components/dialog.md` AT-14; the line names the reason).
+5. Fail with `components/<id>/<id>.test.ts: no test or generic note for <list of missing ids>`; fail with `<id>: no "### Acceptance tests" found in docs/components/<id>.md` when step 2 finds nothing.
 
 ### 18.3 `[T1] test-names` (in `test/run.test.ts`)
 
@@ -4013,7 +4018,7 @@ Each line is pass or fail and checkable by a command.
 8. `pnpm ci` exits 0 on the main branch with `RIPPLE_NETWORK=1`, with the last runner line reporting `0 failed, 0 skipped`.
 9. Removing one attribute that an element writes at upgrade from an `upgrade-snapshot` fixture makes `pnpm test:upgrade` fail with a line in the format of U3-1 (verified on the Tabs fixture: removing `aria-selected="true"` gives `... button#t-tab-account: attributes aria-selected: null -> "true"`).
 10. `<pkg>/testing` imports in Node without `playwright` installed (A-05 of `01-architecture.md`), and `serveTheme` is among its exports.
-11. The keys of `RESOURCES` equal the 21 references of 4.2 (`[T1] resources: the set is the documented set`), and `SHIM_TAGS` plus `SHIM_FILTERS` equal the union of the three scopes of `06-bindings.md` L-13 (`[T1] liquid-shim: filters`, `[T1] liquid-shim: tags outside the union throw`).
+11. The keys of `RESOURCES` equal the references of the table of 4.2 (22 before any ledger D-140 addition) (`[T1] resources: the set is the documented set`), and `SHIM_TAGS` plus `SHIM_FILTERS` equal the union of the three scopes of `06-bindings.md` L-13 (`[T1] liquid-shim: filters`, `[T1] liquid-shim: tags outside the union throw`).
 
 ---
 
@@ -4077,7 +4082,7 @@ Per feature, when a `[T9]` probe of 11.3 fails in an engine at the floor. The CS
 | `anchor positioning or centred popover` | none on the default fallback (centred). If the positioning routine of the ledger's fallback is added to the runtime, add `[T5] popover: panel is placed on the requested side` and remove `[chromium]` from nothing (the test runs in all engines) |
 | `scripting none or default panel` | NJ-4 already limits the Tabs comparison; no change |
 | `details name is exclusive` | Accordion `type="single"` becomes `noJs.level: "degraded"` in that engine only if the ledger records it; the probe then asserts that each item still toggles |
-| `attribute-token props match`, `revert-layer` | no fallback exists; record the engine and version in the ledger and raise the floor (D-032); the probe keeps failing below the new floor and passes at it |
+| `attribute-token props match`, `revert-layer` | no fallback exists; the SPIKE-06 report records the engine and version as a known gap. Raising the floor (D-032) is ledger Q27; until Ben decides, the floor stays, the probe keeps failing in that engine, and `cross-engine` stays non-blocking (17.3; D-149 item 25) |
 | `closedby or backdrop click`, `Invoker Commands or polyfill` | the fallback is already the tested path (the element's handler and the polyfill) |
 
 ---

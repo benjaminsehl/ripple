@@ -62,7 +62,7 @@ A component task says "Recipe: S" (or N, C, C+R). Do every step of that recipe i
   | a checker rule other than RP113 (`ripple check` reports `RP104`, `RP320`, `RP404`, ...) | `// AT-<n>: covered by <task> (src/check/rules/<RULE>.test.ts: <RULE>)` where `<task>` is M2-T29 for RP101 to RP105, M4-T23 for RP301 to RP321, M6-T29 for RP401 to RP406 |
   | a test that another component task writes in its own test file | `// AT-<n>: covered by <task id> (<file>: <test name prefix>)` exactly as the task section prints it |
 
-  Every other item is a real test in the component's test file. A real test is never skipped and never `todo`. `docs/13-testing.md` section 18.2 step 4 names only the `generic` form; ledger D-141 (3) adds the `covered by` form and wins. When `test/conformance/acceptance-coverage.test.ts` rejects a `// AT-<n>: covered by` line, that is a harness defect: M1-T01 fixes it (M1-R10); a later task stops and reports it (draft pull request).
+  Every other item is a real test in the component's test file. A real test is never skipped and never `todo`. `docs/13-testing.md` section 18.2 step 4 accepts the `generic`, `covered by` and `removed` forms (D-149 item 5; M0-T32 implements them). When `test/conformance/acceptance-coverage.test.ts` rejects a `// AT-<n>: covered by` line, that is a harness defect: stop and report it (draft pull request naming M0-T32).
 - **M1-R8 Component rules.** For every manifest `rules[]` entry write one `[T1]` test named `[T1] <id>: rule <rule id> reports RP113` that runs the checker (`src/check/index.ts`, layer H) on a failing HTML string and asserts exactly one diagnostic `RP113` whose message contains `[<rule id>]`, plus one test `[T1] <id>: default fixture reports no RP113` (`docs/13-testing.md` section 10.2, row "component rules").
 - **M1-R9 Proof commands for a component** (PLAN 3.2), in this order, all exit 0:
 
@@ -552,15 +552,17 @@ Nothing else. Default path only.
 | `docs/05-commerce.md` | `### 11.2 Money` | 1 kB |
 | `docs/07-manifest-registry-cli.md` | `#### 1.7.3 ` (shape for hand fixtures and masks) and `### 3.3 Generated regions inside hand-written files` | 20 kB |
 | `docs/06-bindings.md` | `## 3. Generated versus hand-written` | 3 kB |
+| `docs/13-testing.md` | in `### 4.2 `: the table, the paragraph after it, and rule RS-2 (search `**RS-2**`); the `RESOURCES` code only to find the shape of one existing entry (`image.basic`) | 4 kB |
 
 ### Files
 
-Create: `components/price/price.json`, `price.css`, `price.test.ts`, `fixtures/{default,sale,from,compare-not-higher,class,invalid-enum-falls-back}.html`, `react/price.tsx`, `remix/price.tsx`, `liquid/blocks/price.liquid`, `liquid/snippets/rp-price.liquid`. Generated: `html/price.html`, the generated regions of the four binding files. Change: `locales/en.default.json` (`ripple.price.sale` = `Sale price`, `ripple.price.regular` = `Regular price`, `ripple.price.from` = `From`).
+Create: `components/price/price.json`, `price.css`, `price.test.ts`, `fixtures/{default,sale,from,compare-not-higher,class,invalid-enum-falls-back}.html`, `react/price.tsx`, `remix/price.tsx`, `liquid/blocks/price.liquid`, `liquid/snippets/rp-price.liquid`. Generated: `html/price.html`, the generated regions of the four binding files. Change: `src/testing/resources.ts`, `src/testing/resources.test.ts`, `docs/13-testing.md` section 4.2 table, `docs/11-components-commerce.md` section 0.5 (step 2a), `locales/en.default.json` (`ripple.price.sale` = `Sale price`, `ripple.price.regular` = `Regular price`, `ripple.price.from` = `From`).
 
 ### Steps
 
 1. Branch `task/M1-T10-price`. Recipe C steps 1 to 5.
 2. Write each fixture file with the exact HTML of the spec. `compare-not-higher` equals `default`; `invalid-enum-falls-back` (`size: "huge"`) equals `default`.
+2a. Add the resources `money.usd-48`, `money.usd-12`, `money.usd-16` under ledger D-140 and D-149 item 4, in this commit and in this order, appended last: the `RESOURCES` entries (hydrogen `{ amount: "48.0", currencyCode: "USD" }` and Liquid `4800`; `12.0` / `1200`; `16.0` / `1600`; the values `components/price.md` prints), one row each at the end of the table of `docs/13-testing.md` section 4.2 ("What it is": `48.00 USD`, `12.00 USD`, `16.00 USD`; "Values owned by": `components/price.md`), one row each in the table of `docs/11-components-commerce.md` section 0.5, and the three names in the name list of `[T1] resources: the set is the documented set`.
 3. `pnpm gen`, then write the bindings BELOW the generated regions.
 
 ### Names and values
@@ -867,7 +869,7 @@ Create: `src/elements/rp-dialog.ts` (M0-T26 creates no file at this path), `src/
 
 1. Branch `task/M1-T16-rp-dialog`.
 2. Copy the complete source of section 9.1 unchanged into `src/elements/rp-dialog.ts`. In `src/elements/index.ts` add the line `import "./rp-dialog"` directly after `import "../runtime/index"` (its position in section 4.1) and remove the bring-up line M0-T26 left for `rp-dialog`, if any (section 0.5; ledger D-134 item 28). `pnpm typecheck && pnpm build`.
-3. Write the tests. Page (M1-R11, M1-R12): the opener of section 10.1 (Button `dialog-opener`), then the Dialog of section 10.1 (dialog id `size-guide`). Insert the closer of section 10.1 (IconButton `dialog-closer`) as the last child of the `<dialog>` of section 10.1 (this placement is the plan's instruction; 10.1 rule 3 requires the closer inside the `<dialog>`). Script `/ripple.elements.js`. E-31: the same page with `<input type="text" name="q">` inserted into the `<dialog>` directly after its `h2` (the row requires a text input inside the dialog; 10.1 prints none). E-12 uses the `default-open` markup: the section 10.1 dialog with id `promo` and `data-default-open=""` on the `<dialog>` (the Dialog component spec does not exist in the repository tree as a fixture yet; build the markup from section 10.1 and the E-12 row).
+3. Write the tests. Page (M1-R11, M1-R12): the opener of section 10.1 (Button `dialog-opener`), then the Dialog of section 10.1 (dialog id `size-guide`). Insert the closer of section 10.1 (IconButton `dialog-closer`) as the last child of the `<dialog>` of section 10.1 (this placement is the plan's instruction; 10.1 rule 3 requires the closer inside the `<dialog>`). Script `/ripple.elements.js`. E-31: the same page with `<input type="text" name="q">` inserted into the `<dialog>` directly after its `h2` (the E-31 row, D-149 item 7). E-12 uses the `default-open` markup: the section 10.1 dialog with id `promo` and `data-default-open=""` on the `<dialog>` (the Dialog component spec does not exist in the repository tree as a fixture yet; build the markup from section 10.1 and the E-12 row).
 4. Proof commands. PLAN 5.0.
 
 ### Names and values
@@ -1888,7 +1890,7 @@ Create: `components/cart-summary/cart-summary.json`, `.css`, `.test.ts`, fixture
 
 ### Tests
 
-AT-1 comment. `[T5] cart-summary: AT-2 ...` (M1-R22: one store call with intent `discount-remove` and the code; one refresh of `rp-cart-summary`; status text). `[T5] cart-summary: AT-3 ...` (start from `cart.empty`). `[T5] cart-summary: AT-4 ...` (two cases, one per backend; the click handler records `defaultPrevented` and then cancels navigation itself). AT-5: Liquid half `[T6] cart-summary: AT-5 ...` (the remove form computes `display: none` with scripting disabled). Hydrogen half (hydrogen dev server, scripting disabled, discount remove form): no NJ-F row of `docs/13-testing.md` section 11.2 and no E2E row covers it. Write `// AT-5: covered by M7-T25 (test/nojs/blueprints.test.ts: no NJ-F row yet for the discount remove form)` above the `[T6]` test, add an entry under `## Ledger issues` of `docs/13-testing.md` naming the missing NJ-F row, and list it in the pull request. Rule tests.
+AT-1 comment. `[T5] cart-summary: AT-2 ...` (M1-R22: one store call with intent `discount-remove` and the code; one refresh of `rp-cart-summary`; status text). `[T5] cart-summary: AT-3 ...` (start from `cart.empty`). `[T5] cart-summary: AT-4 ...` (two cases, one per backend; the click handler records `defaultPrevented` and then cancels navigation itself). AT-5: Liquid half `[T6] cart-summary: AT-5 ...` (the remove form computes `display: none` with scripting disabled). Hydrogen half (hydrogen dev server, scripting disabled, discount remove form): write `// AT-5: covered by M7-T25 (test/nojs/blueprints.test.ts: NJ-F17)` above the `[T6]` test (doc 13 section 11.2 row NJ-F17, D-149 item 6). Rule tests.
 
 ### Acceptance
 
@@ -2401,7 +2403,7 @@ Change: `examples/remix/server.mjs`; `examples/.gitignore` (one line `.ripple-mo
 
 1. Branch `task/M1-T47-remix-morph-routes`. `pnpm build && pnpm examples:install` (network needed; section 0.2).
 2. In `examples/remix/server.mjs`, replace the comment line `// the routes /__rp/morph/a and /__rp/morph/b (docs/13-testing.md 12.1 item 6, 9.2) are added by M1-T47` (M0-T31 step 4) by the two routes. They exist only when `process.env.RIPPLE_TEST_ROUTES === "1"`; otherwise the paths answer `404` like any other path (12.1 item 6). `GET /` keeps answering 200.
-3. Start-up work (once, before `listen`, only when `RIPPLE_TEST_ROUTES` is `1`). The spec prints no example source (M0-T31 step 2), so the mechanism below is a plan reading; it reuses the Remix conformance adapter instead of writing a second renderer:
+3. Start-up work (once, before `listen`, only when `RIPPLE_TEST_ROUTES` is `1`). The mechanism below is the one of doc 13 section 12.1 item 6 (ledger D-149 item 8); it reuses the Remix conformance adapter instead of writing a second renderer:
    - Work directory `examples/remix/.ripple-morph/` (not `.ripple-conformance/`, which tier 2 recreates on every run, doc 13 X-1). Resolve the repository root from `import.meta.url` and `process.chdir` to it, because the adapter functions read `components/` relative to the working directory.
    - Bundle the adapter helpers with esbuild (a root dev dependency) through the `stdin` option (`resolveDir` the repository root, `loader: "ts"`, `bundle: true`, `platform: "node"`, `format: "esm"`, `external: ["esbuild"]`, `outfile` `.ripple-morph/support.mjs`), with the contents `export { loadFixtures, restoreChildren } from "./src/testing/index"; export { writeTsxWorkDir } from "./test/support/hosts/react"; export { caseJsx, caseModuleSource } from "./test/support/hosts/tsx";`, and import the output file.
    - Take the cases of `loadFixtures()` whose `hosts` include `remix` and whose id ends in `/default`. Call `writeTsxWorkDir("examples/remix/.ripple-morph", "remix", cases)`, write `entry.tsx` with the Remix `entry.tsx` text of the doc 13 section 7.4 differences table, and bundle it with the Q-13 options of that table (`jsx: "automatic"`, `jsxImportSource: "remix/component"`, `external: ["remix", "remix/*"]`) to `.ripple-morph/entry.mjs`. Import its `render`.

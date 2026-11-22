@@ -45,21 +45,21 @@ Sizes are approximate. "Owns" follows ledger section 12.
 
 | File | Size | Owns |
 |---|---|---|
-| `00-decisions.md` | 350 kB | The decision ledger: decisions D-001 to D-148 (section 13.4: review decisions D-114 to D-133; section 13.5: plan review decisions D-134 to D-148), risks, spikes, naming, directory layout, prop vocabulary, component template, component list, open questions, non-goals, document ownership. LAW |
-| `01-architecture.md` | 107 kB | Hosts, backends, layers and import rules, page lifecycle, repository layout, root `package.json` and `tsconfig.json`, the published package, build pipeline, pinned versions |
-| `02-html-contract.md` | 156 kB | Contract rules, ids, prop-to-attribute mapping, responsive grammar, upgrade allow-lists, fixtures and masks, the canonicalisation algorithm and its reference code |
-| `03-styling-and-tokens.md` | 145 kB | Cascade layers, tokens, dials, schemes, `base.css`, `theme.css`, `props.css` generation, component CSS rules, the CSS linter, browser floor for CSS |
-| `04-elements.md` | 189 kB | Runtime, rules for writing an `rp-*` element, `rp-quantity`, `rp-dialog`, `rp-carousel`, `rp-navigation-menu`, UI SDK usage, lazy loading, browser bundles, Invoker Commands polyfill |
-| `05-commerce.md` | 150 kB | Commerce adapter, `CommerceOptions`, cart store per backend, form dialects, commerce elements, regions and refresh strategies, resource types, money, images, analytics |
-| `06-bindings.md` | 147 kB | React rules and hooks, Remix rules, TSX conventions, Liquid tiers and rules, generated versus hand-written files, the `html` host, per-host conformance rules |
-| `07-manifest-registry-cli.md` | 321 kB | Manifest schema, contract template language, generator, registry, provenance trailers, project configuration, CLI commands, upgrade merge, the checker and its rule list, release policy |
+| `00-decisions.md` | 359 kB | The decision ledger: decisions D-001 to D-149 (section 13.4: review decisions D-114 to D-133; section 13.5: plan review decisions D-134 to D-148; section 13.6: closing decisions D-149), risks, spikes, naming, directory layout, prop vocabulary, component template, component list, open questions, non-goals, document ownership. LAW |
+| `01-architecture.md` | 108 kB | Hosts, backends, layers and import rules, page lifecycle, repository layout, root `package.json` and `tsconfig.json`, the published package, build pipeline, pinned versions |
+| `02-html-contract.md` | 157 kB | Contract rules, ids, prop-to-attribute mapping, responsive grammar, upgrade allow-lists, fixtures and masks, the canonicalisation algorithm and its reference code |
+| `03-styling-and-tokens.md` | 156 kB | Cascade layers, tokens, dials, schemes, `base.css`, `theme.css`, `props.css` generation, component CSS rules, the CSS linter, browser floor for CSS |
+| `04-elements.md` | 196 kB | Runtime, rules for writing an `rp-*` element, `rp-quantity`, `rp-dialog`, `rp-carousel`, `rp-navigation-menu`, UI SDK usage, lazy loading, browser bundles, Invoker Commands polyfill |
+| `05-commerce.md` | 186 kB | Commerce adapter, `CommerceOptions`, cart store per backend, form dialects, commerce elements, regions and refresh strategies, resource types, money, images, analytics |
+| `06-bindings.md` | 148 kB | React rules and hooks, Remix rules, TSX conventions, Liquid tiers and rules, generated versus hand-written files, the `html` host, per-host conformance rules |
+| `07-manifest-registry-cli.md` | 324 kB | Manifest schema, contract template language, generator, registry, provenance trailers, project configuration, CLI commands, upgrade merge, the checker and its rule list, release policy |
 | `08-agent-kit-and-evals.md` | 187 kB | Package docs, the `AGENTS.md` section, 14 skills, checker rule text, development warnings, in-page agent surface, eval suite and gates |
 | `09-components-foundation.md` | 25 kB | Rules shared by the 37 foundation components; icon path data; pointers to the specs |
 | `10-components-interactive.md` | 13 kB | Rules shared by the 9 interactive components; pointers to the specs |
-| `11-components-commerce.md` | 43 kB | Rules shared by the 26 commerce components: index, embedded markup, region parts, backend fixtures, resource fixtures |
-| `12-components-chrome-and-blueprints.md` | 76 kB | Rules shared by the 12 chrome components; blueprint conventions (files, targets, host forms, data loading, routes, shared tests) |
-| `13-testing.md` | 262 kB | Test tiers, runner, `src/testing/` (fixtures, resources, Liquid shim, theme server), browser support code, every tier's test files, size budgets, CI, definition of done for a component |
-| `14-liquid-theme.md` | 115 kB | The Ripple Liquid theme: rules, file tree and build procedure, CSS, settings, JavaScript loading, regions, locales, what replaces each base theme file, acceptance, SPIKE-02 |
+| `11-components-commerce.md` | 45 kB | Rules shared by the 26 commerce components: index, embedded markup, region parts, backend fixtures, resource fixtures |
+| `12-components-chrome-and-blueprints.md` | 77 kB | Rules shared by the 12 chrome components; blueprint conventions (files, targets, host forms, data loading, routes, shared tests) |
+| `13-testing.md` | 271 kB | Test tiers, runner, `src/testing/` (fixtures, resources, Liquid shim, theme server), browser support code, every tier's test files, size budgets, CI, definition of done for a component |
+| `14-liquid-theme.md` | 118 kB | The Ripple Liquid theme: rules, file tree and build procedure, CSS, settings, JavaScript loading, regions, locales, what replaces each base theme file, acceptance, SPIKE-02 |
 
 ## Component specifications (`components/`, 84 files)
 
