@@ -1,0 +1,109 @@
+/* popover.css
+   Component: Popover (id `popover`). Contract: 10-components-interactive.md, "Popover".
+   Root:      <div popover>, class rp-popover
+   Parts:     rp-popover-title (<p>)
+   Props:     data-side  = top | bottom | start | end   (default bottom)
+              data-align = start | center | end         (default start)
+   States:    :popover-open
+   Public:    --rp-popover-width, --rp-popover-padding, --rp-popover-offset, --rp-popover-radius */
+@layer rp.components {
+  /* 1. ROOT */
+  .rp-popover {
+    /* 1a. public custom properties */
+    --rp-popover-width: calc(var(--spacing) * 80);
+    --rp-popover-padding: calc(var(--spacing) * 4);
+    --rp-popover-offset: calc(var(--spacing) * 1);
+    --rp-popover-radius: var(--radius-surface);
+    /* 1b. colour slots */
+    --_bg: var(--color-popover);
+    --_fg: var(--color-popover-foreground);
+    --_border: var(--color-border);
+    /* 1c. other private custom properties */
+    --_align-on-block-side: span-inline-end;
+    --_align-on-inline-side: span-block-end;
+    --_area: block-end var(--_align-on-block-side);
+    --_offset-block: var(--rp-popover-offset);
+    --_offset-inline: 0;
+    /* 1d. declarations */
+    box-sizing: border-box;
+    inline-size: max-content;
+    max-inline-size: min(var(--rp-popover-width), calc(100% - var(--spacing) * 4));
+    padding: var(--rp-popover-padding);
+    border: 1px solid var(--_border);
+    border-radius: var(--rp-popover-radius);
+    background-color: var(--_bg);
+    color: var(--_fg);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* 2. PARTS */
+  .rp-popover-title {
+    margin: 0;
+    margin-block-end: calc(var(--spacing) * 2);
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  /* 3. MODIFIERS */
+  .rp-popover[data-align="center"] {
+    --_align-on-block-side: span-all;
+    --_align-on-inline-side: span-all;
+  }
+  .rp-popover[data-align="end"] {
+    --_align-on-block-side: span-inline-start;
+    --_align-on-inline-side: span-block-start;
+  }
+  .rp-popover[data-side="top"] {
+    --_area: block-start var(--_align-on-block-side);
+  }
+  .rp-popover[data-side="start"] {
+    --_area: inline-start var(--_align-on-inline-side);
+    --_offset-block: 0;
+    --_offset-inline: var(--rp-popover-offset);
+  }
+  .rp-popover[data-side="end"] {
+    --_area: inline-end var(--_align-on-inline-side);
+    --_offset-block: 0;
+    --_offset-inline: var(--rp-popover-offset);
+  }
+
+  /* 4. STATES */
+
+  /* 5. MOTION */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports selector(:popover-open) {
+      .rp-popover {
+        opacity: 0;
+        transition-property: opacity, display, overlay;
+        transition-duration: var(--rp-duration-base);
+        transition-timing-function: var(--ease-out);
+        transition-behavior: allow-discrete;
+      }
+      .rp-popover:popover-open {
+        opacity: 1;
+      }
+      @starting-style {
+        .rp-popover:popover-open {
+          opacity: 0;
+        }
+      }
+    }
+  }
+
+  /* 6. ENVIRONMENT */
+  @supports (anchor-name: --a) {
+    .rp-popover {
+      inset: auto;
+      margin-block: var(--_offset-block);
+      margin-inline: var(--_offset-inline);
+      position-area: var(--_area);
+      position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+    }
+  }
+  @media (forced-colors: active) {
+    .rp-popover {
+      border-color: CanvasText;
+    }
+  }
+}

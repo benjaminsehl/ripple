@@ -1,0 +1,872 @@
+
+## c-button
+  /section/ui-button
+      added: -
+      layout: display inline->contents; box 46x17->0x0
+  /section/ui-button/button
+      added: data-slot="button" type="button"
+  /section/ui-button
+      added: -
+      layout: display inline->contents; box 33x17->0x0
+  /section/ui-button/a
+      added: data-slot="button"
+  /section/form/ui-button
+      added: -
+      layout: display inline->contents; box 57x17->0x0
+  /section/form/ui-button/button[value=1]
+      added: data-slot="button"
+
+## c-dialog
+  /section/ui-dialog/ui-dialog-trigger
+      added: -
+      layout: display inline->contents; box 49x17->0x0
+  /section/ui-dialog/ui-dialog-trigger/button
+      added: aria-haspopup="dialog" data-closed data-slot="dialog-trigger" id="ui-sdk-dialog-48-trigger" type="button"
+  /section/ui-dialog/ui-dialog-backdrop
+      added: data-slot="dialog-backdrop"
+  /section/ui-dialog/ui-dialog-content
+      added: data-slot="dialog-content"
+  /section/ui-dialog/ui-dialog-content/ui-dialog-title
+      added: aria-level="2" data-slot="dialog-title" id="ui-sdk-dialog-48-title" role="heading"
+      layout: display inline->block
+  /section/ui-dialog/ui-dialog-content/ui-dialog-description
+      added: data-slot="dialog-description" id="ui-sdk-dialog-48-description" role="paragraph"
+      layout: display inline->block
+  /section/ui-dialog/ui-dialog-content/ui-dialog-close
+      added: -
+      layout: display inline->contents
+  /section/ui-dialog/ui-dialog-content/ui-dialog-close/button
+      added: data-slot="dialog-close" type="button"
+
+## c-drawer
+  /section/ui-drawer CHILDREN CHANGED: [ui-drawer-trigger,ui-drawer-backdrop,ui-drawer-content] -> [ui-drawer-trigger,ui-drawer-backdrop,ui-drawer-viewport]
+  /section/ui-drawer/ui-drawer-trigger
+      added: -
+      layout: display inline->contents; box 52x17->0x0
+  /section/ui-drawer/ui-drawer-trigger/button
+      added: aria-haspopup="dialog" data-closed data-slot="drawer-trigger" id="ui-sdk-drawer-39-trigger" type="button"
+  /section/ui-drawer/ui-drawer-backdrop
+      added: data-slot="drawer-backdrop"
+  + NEW /section/ui-drawer/ui-drawer-viewport <ui-drawer-viewport data-slot="drawer-viewport" hidden> text="" display=none
+  + NEW /section/ui-drawer/ui-drawer-viewport/ui-drawer-content <ui-drawer-content data-slot="drawer-content" hidden> text="" display=none
+  + NEW /section/ui-drawer/ui-drawer-viewport/ui-drawer-content/ui-drawer-title <ui-drawer-title aria-level="2" data-slot="drawer-title" id="ui-sdk-drawer-39-title" role="heading"> text="Filters" display=block
+  + NEW /section/ui-drawer/ui-drawer-viewport/ui-drawer-content/ui-drawer-description <ui-drawer-description data-slot="drawer-description" id="ui-sdk-drawer-39-description" role="paragraph"> text="Narrow down the results." display=block
+  + NEW /section/ui-drawer/ui-drawer-viewport/ui-drawer-content/ui-drawer-close <ui-drawer-close > text="" display=contents
+  + NEW /section/ui-drawer/ui-drawer-viewport/ui-drawer-content/ui-drawer-close/button <button data-slot="drawer-close" type="button"> text="Done" display=inline-block
+
+## c-popover
+  /section/ui-popover
+      added: -
+      layout: box 455x17->52x17
+  /section/ui-popover/ui-popover-trigger
+      added: -
+      layout: display inline->contents; box 52x17->0x0
+  /section/ui-popover/ui-popover-trigger/button
+      added: aria-expanded="false" aria-haspopup="dialog" data-closed data-slot="popover-trigger" id="ui-sdk-popover-23-trigger" type="button"
+  /section/ui-popover/ui-popover-content
+      added: data-slot="popover-content" hidden
+      layout: display inline->none; box 399x17->0x0
+  /section/ui-popover/ui-popover-content/ui-popover-title
+      added: aria-level="2" data-slot="popover-title" id="ui-sdk-popover-23-title" role="heading"
+      layout: display inline->block; box 131x17->0x0
+  /section/ui-popover/ui-popover-content/ui-popover-description
+      added: data-slot="popover-description" id="ui-sdk-popover-23-description" role="paragraph"
+      layout: display inline->block; box 214x17->0x0
+  /section/ui-popover/ui-popover-content/ui-popover-close
+      added: -
+      layout: display inline->contents; box 48x17->0x0
+  /section/ui-popover/ui-popover-content/ui-popover-close/button
+      added: data-slot="popover-close" type="button"
+      layout: box 48x21->0x0
+
+## c-tooltip
+  /section/ui-tooltip
+      added: -
+      layout: box 252x17->52x17
+  /section/ui-tooltip/ui-tooltip-trigger
+      added: -
+      layout: display inline->contents; box 52x17->0x0
+  /section/ui-tooltip/ui-tooltip-trigger/button
+      added: aria-describedby="ui-sdk-tooltip-70-content" data-slot="tooltip-trigger" type="button"
+  /section/ui-tooltip/ui-tooltip-content
+      added: data-closed data-slot="tooltip-content" hidden id="ui-sdk-tooltip-70-content" role="tooltip"
+      layout: display inline->none; box 197x17->0x0
+
+## c-menu
+  /section/ui-menu
+      added: role="none"
+      layout: box 172x17->60x17
+  /section/ui-menu/ui-menu-trigger
+      added: role="none"
+      layout: display inline->contents; box 60x17->0x0
+  /section/ui-menu/ui-menu-trigger/button
+      added: aria-expanded="false" aria-haspopup="menu" data-closed data-slot="menu-trigger" id="ui-sdk-menu-17-trigger" type="button"
+  /section/ui-menu/ui-menu-content
+      added: data-slot="menu-content" hidden
+      layout: display inline->none; box 108x17->0x0
+  /section/ui-menu/ui-menu-content/ui-menu-item[value=rename]
+      added: data-slot="menu-item" id="ui-sdk-menu-17-item-auto-20" role="menuitem" tabindex="-1"
+      layout: display inline->block; box 52x17->0x0
+  /section/ui-menu/ui-menu-content/ui-menu-item
+      added: -
+      layout: display inline->contents; box 52x17->0x0
+  /section/ui-menu/ui-menu-content/ui-menu-item/a
+      added: data-slot="menu-item" id="ui-sdk-menu-17-item-auto-21" role="menuitem" tabindex="-1"
+      layout: box 52x17->0x0
+
+## c-toast
+  /section/ui-toast-region
+      added: data-align="end" data-side="bottom" data-slot="toast-region" popover="manual" style="--keyboard-inset: 0px; --visual-viewport-height: 720px; --toast-front-height: 0px; --toast-stack-height: 0px; --toast-count: 0;"
+      layout: display inline->flex
+  /section/ui-toast-region CHILDREN CHANGED: [template] -> [template,ol]
+  + NEW /section/ui-toast-region/ol <ol data-slot="toast-list"> text="" display=block
+
+## c-tabs
+  /section
+      added: -
+      layout: box 1264x21->1264x39
+  /section/ui-tabs
+      added: data-activation-direction="none" data-orientation="horizontal" data-slot="tabs"
+      layout: display inline->block; box 444x17->1264x39
+  /section/ui-tabs/ui-tabs-list
+      added: data-activation-direction="none" data-orientation="horizontal" data-slot="tabs-list" role="tablist"
+      layout: display inline->block; box 147x17->1264x21
+  /section/ui-tabs/ui-tabs-list/ui-tabs-tab[value=account]
+      added: role="none"
+      layout: display inline->contents; box 64x17->0x0
+  /section/ui-tabs/ui-tabs-list/ui-tabs-tab/button
+      added: aria-controls="ui-sdk-tabs-14-panel-account" aria-selected="true" data-activation-direction="none" data-orientation="horizontal" data-selected data-slot="tabs-tab" id="ui-sdk-tabs-14-tab-account" role="tab" tabindex="0"
+  /section/ui-tabs/ui-tabs-list/ui-tabs-tab[value=password]
+      added: role="none"
+      layout: display inline->contents; box 75x17->0x0
+  /section/ui-tabs/ui-tabs-list/ui-tabs-tab/button
+      added: aria-selected="false" data-activation-direction="none" data-orientation="horizontal" data-slot="tabs-tab" id="ui-sdk-tabs-14-tab-password" role="tab" tabindex="-1"
+  /section/ui-tabs/ui-tabs-panel[value=account]
+      added: aria-labelledby="ui-sdk-tabs-14-tab-account" data-activation-direction="none" data-orientation="horizontal" data-selected data-slot="tabs-panel" id="ui-sdk-tabs-14-panel-account" role="tabpanel" tabindex="0"
+      layout: display inline->block; box 136x17->1264x18
+  /section/ui-tabs/ui-tabs-panel[value=password]
+      added: data-slot="tabs-panel" hidden
+      layout: display inline->none; box 158x17->0x0
+
+## c-accordion
+  /section/ui-accordion
+      added: data-slot="accordion"
+      layout: display inline->block
+  /section/ui-accordion/ui-accordion-item[value=shipping]
+      added: data-index="0" data-open data-slot="accordion-item"
+      layout: display inline->block; box 1264x59->1264x60
+  /section/ui-accordion/ui-accordion-item/ui-accordion-header
+      added: -
+      layout: display inline->block
+  /section/ui-accordion/ui-accordion-item/ui-accordion-header/h3
+      added: data-open data-slot="accordion-header"
+  /section/ui-accordion/ui-accordion-item/ui-accordion-header/h3/ui-accordion-trigger
+      added: -
+      layout: display inline->contents; box 68x21->0x0
+  /section/ui-accordion/ui-accordion-item/ui-accordion-header/h3/ui-accordion-trigger/button
+      added: aria-controls="ui-sdk-accordion-90-panel-shipping" aria-expanded="true" data-open data-slot="accordion-trigger" id="ui-sdk-accordion-90-trigger-shipping" type="button"
+  /section/ui-accordion/ui-accordion-item/ui-accordion-panel
+      added: aria-labelledby="ui-sdk-accordion-90-trigger-shipping" data-open data-slot="accordion-panel" id="ui-sdk-accordion-90-panel-shipping" role="region" style="--accordion-panel-height: auto; --accordion-panel-width: auto;"
+      layout: display inline->block; box 224x17->1264x18
+  /section/ui-accordion/ui-accordion-item[value=returns]
+      added: data-closed data-index="1" data-slot="accordion-item"
+      layout: display inline->block
+  /section/ui-accordion/ui-accordion-item/ui-accordion-header
+      added: -
+      layout: display inline->block
+  /section/ui-accordion/ui-accordion-item/ui-accordion-header/h3
+      added: data-closed data-slot="accordion-header"
+  /section/ui-accordion/ui-accordion-item/ui-accordion-header/h3/ui-accordion-trigger
+      added: -
+      layout: display inline->contents; box 63x21->0x0
+  /section/ui-accordion/ui-accordion-item/ui-accordion-header/h3/ui-accordion-trigger/button
+      added: aria-expanded="false" data-closed data-slot="accordion-trigger" id="ui-sdk-accordion-90-trigger-returns" type="button"
+  /section/ui-accordion/ui-accordion-item/ui-accordion-panel
+      added: data-slot="accordion-panel"
+
+## c-collapsible
+  /section/ui-collapsible
+      added: data-closed data-slot="collapsible"
+      layout: display inline->block; box 92x17->1264x21
+  /section/ui-collapsible/ui-collapsible-trigger
+      added: -
+      layout: display inline->contents; box 92x17->0x0
+  /section/ui-collapsible/ui-collapsible-trigger/button
+      added: aria-expanded="false" data-closed data-slot="collapsible-trigger" id="ui-sdk-collapsible-86-trigger" type="button"
+  /section/ui-collapsible/ui-collapsible-panel
+      added: data-slot="collapsible-panel"
+
+## c-carousel
+  /section
+      added: -
+      layout: box 1264x21->1264x39
+  /section/ui-carousel
+      added: aria-roledescription="carousel" data-orientation="horizontal" data-slot="carousel" role="region" style="--carousel-interval: 5000ms; --carousel-progress: 0.0000;"
+      layout: display inline->block; box 268x17->1264x39
+  /section/ui-carousel/ui-carousel-viewport
+      added: data-orientation="horizontal" data-slot="carousel-viewport" style="position: relative; overflow: auto hidden; scroll-snap-type: x mandatory; overscroll-behavior-x: contain;" tabindex="0"
+      layout: display inline->block; box 153x17->1264x18
+  /section/ui-carousel/ui-carousel-viewport/ui-carousel-content
+      added: aria-atomic="false" aria-live="polite" data-orientation="horizontal" data-slot="carousel-content" id="ui-sdk-carousel-62-content" style="display: flex;"
+      layout: display inline->flex; box 153x17->1264x18
+  /section/ui-carousel/ui-carousel-viewport/ui-carousel-content/ui-carousel-item
+      added: aria-label="1 of 2" aria-roledescription="slide" data-active data-in-view data-orientation="horizontal" data-slot="carousel-item" id="ui-sdk-carousel-62-slide-auto-65" role="group" style="flex-shrink: 0; scroll-snap-align: start; scroll-snap-stop: always;"
+      layout: display inline->block; box 64x17->64x18
+  /section/ui-carousel/ui-carousel-viewport/ui-carousel-content/ui-carousel-item
+      added: aria-label="2 of 2" aria-roledescription="slide" data-active data-in-view data-orientation="horizontal" data-slot="carousel-item" id="ui-sdk-carousel-62-slide-auto-66" role="group" style="flex-shrink: 0; scroll-snap-align: start; scroll-snap-stop: always;"
+      layout: display inline->block; box 81x17->81x18
+  /section/ui-carousel/ui-carousel-previous
+      added: -
+      layout: display inline->contents; box 68x17->0x0
+  /section/ui-carousel/ui-carousel-previous/button
+      added: aria-controls="ui-sdk-carousel-62-content" aria-disabled="true" data-disabled data-slot="carousel-previous" type="button"
+  /section/ui-carousel/ui-carousel-next
+      added: -
+      layout: display inline->contents; box 43x17->0x0
+  /section/ui-carousel/ui-carousel-next/button
+      added: aria-controls="ui-sdk-carousel-62-content" aria-disabled="true" data-disabled data-slot="carousel-next" type="button"
+
+## c-select
+  /section
+      added: -
+      layout: box 1264x21->1264x39
+  /section/form
+      added: -
+      layout: box 1264x21->1264x39
+  /section/form/ui-select
+      added: data-closed data-slot="select"
+      layout: display inline->contents; box 148x17->0x0
+  /section/form/ui-select/ui-select-label
+      added: data-slot="select-label" id="ui-sdk-select-80-label"
+      layout: display inline->block; box 30x17->1264x18
+  /section/form/ui-select/ui-select-trigger
+      added: -
+      layout: display inline->contents; box 16x17->0x0
+  /section/form/ui-select/ui-select-trigger/button
+      added: aria-expanded="false" aria-haspopup="listbox" aria-labelledby="ui-sdk-select-80-label" data-closed data-slot="select-trigger" id="ui-sdk-select-80-trigger" role="combobox" type="button"
+      layout: box 16x6->51x21
+  /section/form/ui-select/ui-select-trigger/button/ui-select-value
+      added: data-slot="select-value" id="ui-sdk-select-80-value"
+      layout: box 0x0->35x15; text ""->"Editor"
+  /section/form/ui-select/ui-select-content
+      added: data-slot="select-content" hidden
+      layout: display inline->none; box 94x17->0x0
+  /section/form/ui-select/ui-select-content/ui-select-item[value=viewer]
+      added: aria-selected="false" data-slot="select-item" id="ui-sdk-select-80-option-viewer" role="option" tabindex="-1"
+      layout: display inline->block; box 46x17->0x0
+  /section/form/ui-select/ui-select-content/ui-select-item[value=editor]
+      added: aria-selected="true" data-selected data-slot="select-item" id="ui-sdk-select-80-option-editor" role="option" tabindex="-1"
+      layout: display inline->block; box 40x17->0x0
+
+## c-combobox
+  /section
+      added: -
+      layout: box 1264x21->1264x39
+  /section/ui-combobox
+      added: data-closed data-slot="combobox"
+      layout: display inline->contents; box 220x17->0x0
+  /section/ui-combobox/ui-combobox-label
+      added: data-slot="combobox-label" for="ui-sdk-combobox-74-input" id="ui-sdk-combobox-74-label"
+      layout: display inline->block; box 31x17->1264x18
+  /section/ui-combobox/ui-combobox-input
+      added: -
+      layout: display inline->contents; box 185x17->0x0
+  /section/ui-combobox/ui-combobox-input/input
+      added: aria-autocomplete="list" aria-expanded="false" aria-labelledby="ui-sdk-combobox-74-label" autocapitalize="none" autocomplete="off" data-closed data-slot="combobox-input" id="ui-sdk-combobox-74-input" role="combobox" spellcheck="false" type="text" value
+  /section/ui-combobox/ui-combobox-content
+      added: data-slot="combobox-content"
+  /section/ui-combobox/ui-combobox-content/ui-combobox-list
+      added: aria-labelledby="ui-sdk-combobox-74-label" data-slot="combobox-list" id="ui-sdk-combobox-74-list" role="listbox"
+      layout: display inline->block
+  /section/ui-combobox/ui-combobox-content/ui-combobox-list/ui-combobox-item[value=apple]
+      added: aria-selected="false" data-slot="combobox-item" id="ui-sdk-combobox-74-option-apple" role="option"
+      layout: display inline->block
+  /section/ui-combobox/ui-combobox-content/ui-combobox-list/ui-combobox-item[value=banana]
+      added: aria-selected="false" data-slot="combobox-item" id="ui-sdk-combobox-74-option-banana" role="option"
+      layout: display inline->block
+
+## c-checkbox
+  /section/form/label
+      added: id="ui-sdk-label-2"
+  /section/form/label/ui-checkbox[value=yes]
+      added: aria-checked="true" aria-labelledby="ui-sdk-label-2" data-checked data-slot="checkbox" role="checkbox" tabindex="0" type="button"
+  /section/form/label/ui-checkbox/ui-checkbox-indicator
+      added: data-checked data-slot="checkbox-indicator"
+
+## c-radio
+  /section/ui-radio-group
+      added: data-slot="radio-group" role="radiogroup"
+      layout: display inline->block; box 112x17->1264x18
+  /section/ui-radio-group/label
+      added: id="ui-sdk-label-3"
+  /section/ui-radio-group/label/ui-radio[value=standard]
+      added: aria-checked="true" aria-labelledby="ui-sdk-label-3" data-checked data-slot="radio" role="radio" tabindex="0" type="button"
+  /section/ui-radio-group/label/ui-radio/ui-radio-indicator
+      added: data-checked data-slot="radio-indicator"
+  /section/ui-radio-group/label
+      added: id="ui-sdk-label-4"
+  /section/ui-radio-group/label/ui-radio[value=express]
+      added: aria-checked="false" aria-labelledby="ui-sdk-label-4" data-slot="radio" data-unchecked role="radio" tabindex="-1" type="button"
+  /section/ui-radio-group/label/ui-radio/ui-radio-indicator
+      added: data-slot="radio-indicator" hidden
+      layout: display inline->none; box 0x17->0x0
+
+## c-switch
+  /section/label
+      added: id="ui-sdk-label-1"
+  /section/label/ui-switch
+      added: aria-checked="false" aria-labelledby="ui-sdk-label-1" data-slot="switch" data-unchecked role="switch" tabindex="0" type="button"
+      layout: box 0x17->0x0
+  /section/label/ui-switch/ui-switch-thumb
+      added: data-slot="switch-thumb" data-unchecked
+      layout: display inline->block; box 0x17->1264x0
+
+## c-slider
+  /section
+      added: -
+      layout: box 1264x0->1264x18
+  /section/ui-slider
+      added: data-orientation="horizontal" data-slot="slider" role="group"
+      layout: display inline->block; box 0x0->1264x18
+  /section/ui-slider/ui-slider-value
+      added: aria-live="off" data-orientation="horizontal" data-slot="slider-value" data-text for="ui-sdk-slider-56-thumb-0" role="status"
+      layout: display inline->block; box 0x0->1264x18; text ""->"50"
+  /section/ui-slider/ui-slider-control
+      added: data-orientation="horizontal" data-slot="slider-control" style="touch-action: none;"
+      layout: display inline->block; box 0x0->1264x0
+  /section/ui-slider/ui-slider-control/ui-slider-track
+      added: data-orientation="horizontal" data-slot="slider-track" style="position: relative;"
+      layout: display inline->block; box 0x0->1264x0
+  /section/ui-slider/ui-slider-control/ui-slider-track/ui-slider-indicator
+      added: data-orientation="horizontal" data-slot="slider-indicator" style="position: absolute; inset-inline-start: 0%; width: 50%; top: 0px; bottom: 0px; --slider-indicator-start: 0%; --slider-indicator-size: 50%;"
+      layout: display inline->block; box 0x0->632x0
+  /section/ui-slider/ui-slider-control/ui-slider-track/ui-slider-thumb
+      added: data-index="0" data-orientation="horizontal" data-slot="slider-thumb" style="position: absolute; inset-inline: calc(0%); margin-inline: auto; justify-self: center; top: 50%; translate: 0px -50%; --slider-thumb-position: 50%;"
+      removed: aria-label
+      layout: display inline->block
+  /section/ui-slider/ui-slider-control/ui-slider-track/ui-slider-thumb CHILDREN CHANGED: [] -> [ui-slider-thumb-input]
+  + NEW /section/ui-slider/ui-slider-control/ui-slider-track/ui-slider-thumb/ui-slider-thumb-input <ui-slider-thumb-input > text="" display=contents
+  + NEW /section/ui-slider/ui-slider-control/ui-slider-track/ui-slider-thumb/ui-slider-thumb-input/input <input aria-label="Volume" aria-orientation="horizontal" aria-valuetext="50" data-slot="slider-thumb-input" id="ui-sdk-slider-56-thumb-0" max="100" min="0" role="slider" step="1" style="position: absolute; inset: 0px; width: 100%; height: 100%; margin: 0px; padding: 0px; border: 0px; opacity: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; pointer-events: none;" type="range" value="50"> text="" display=block
+
+## c-number-input
+  /section
+      added: -
+      layout: box 1264x21->1264x42
+  /section/form
+      added: -
+      layout: box 1264x21->1264x42
+  /section/form/ui-number-input
+      added: data-slot="number-input"
+      layout: display inline->block; box 241x17->1264x21
+  /section/form/ui-number-input/ui-number-input-group
+      added: data-slot="number-input-group" role="group"
+      layout: display inline->block; box 241x17->1264x21
+  /section/form/ui-number-input/ui-number-input-group/ui-number-input-decrement
+      added: -
+      layout: display inline->contents; box 20x17->0x0
+  /section/form/ui-number-input/ui-number-input-group/ui-number-input-decrement/button
+      added: aria-controls="ui-sdk-number-input-92-control" data-slot="number-input-decrement" style="user-select: none; touch-action: manipulation; --hold-delay: 400ms;" tabindex="-1" type="button"
+  /section/form/ui-number-input/ui-number-input-group/ui-number-input-control
+      added: -
+      layout: display inline->contents; box 185x17->0x0
+  /section/form/ui-number-input/ui-number-input-group/ui-number-input-control/input
+      added: autocomplete="off" autocorrect="off" data-slot="number-input-control" id="ui-sdk-number-input-92-control" inputmode="numeric" spellcheck="false" type="text" value="1"
+  /section/form/ui-number-input/ui-number-input-group/ui-number-input-increment
+      added: -
+      layout: display inline->contents; box 24x17->0x0
+  /section/form/ui-number-input/ui-number-input-group/ui-number-input-increment/button
+      added: aria-controls="ui-sdk-number-input-92-control" data-slot="number-input-increment" style="user-select: none; touch-action: manipulation; --hold-delay: 400ms;" tabindex="-1" type="button"
+
+## c-navigation-menu
+  /section
+      added: -
+      layout: box 1264x21->1264x39
+  /section/ui-navigation-menu
+      added: data-orientation="horizontal" data-slot="navigation-menu" role="navigation"
+      layout: display inline->block; box 184x17->1264x39
+  /section/ui-navigation-menu/ui-navigation-menu-list
+      added: data-orientation="horizontal" data-slot="navigation-menu-list" role="list"
+      layout: display inline->block; box 184x17->1264x39
+  /section/ui-navigation-menu/ui-navigation-menu-list/ui-navigation-menu-item[value=guides]
+      added: data-closed data-slot="navigation-menu-item" role="listitem"
+      layout: display inline->block; box 144x17->1264x21
+  /section/ui-navigation-menu/ui-navigation-menu-list/ui-navigation-menu-item/ui-navigation-menu-trigger
+      added: -
+      layout: display inline->contents; box 58x17->0x0
+  /section/ui-navigation-menu/ui-navigation-menu-list/ui-navigation-menu-item/ui-navigation-menu-trigger/button
+      added: aria-expanded="false" data-closed data-slot="navigation-menu-trigger" id="ui-sdk-navigation-menu-30-trigger-guides" type="button"
+  /section/ui-navigation-menu/ui-navigation-menu-list/ui-navigation-menu-item/ui-navigation-menu-content
+      added: data-slot="navigation-menu-content" hidden
+      layout: display inline->none; box 82x17->0x0
+  /section/ui-navigation-menu/ui-navigation-menu-list/ui-navigation-menu-item/ui-navigation-menu-content/ui-navigation-menu-link
+      added: -
+      layout: display inline->contents; box 79x17->0x0
+  /section/ui-navigation-menu/ui-navigation-menu-list/ui-navigation-menu-item/ui-navigation-menu-content/ui-navigation-menu-link/a
+      added: data-slot="navigation-menu-link"
+      layout: box 79x17->0x0
+  /section/ui-navigation-menu/ui-navigation-menu-list/ui-navigation-menu-item
+      added: data-closed data-slot="navigation-menu-item" role="listitem"
+      layout: display inline->block; box 40x17->1264x18
+  /section/ui-navigation-menu/ui-navigation-menu-list/ui-navigation-menu-item/ui-navigation-menu-link
+      added: -
+      layout: display inline->contents; box 40x17->0x0
+  /section/ui-navigation-menu/ui-navigation-menu-list/ui-navigation-menu-item/ui-navigation-menu-link/a
+      added: data-slot="navigation-menu-link"
+  /section/ui-navigation-menu/ui-navigation-menu-viewport
+      added: data-closed data-orientation="horizontal" data-slot="navigation-menu-viewport" hidden id="ui-sdk-navigation-menu-30-viewport" tabindex="-1"
+      layout: display inline->none; box 0x17->0x0
+
+## c-pagination
+  /section
+      added: -
+      layout: box 1264x21->1264x186
+  /section/ui-pagination
+      added: data-slot="pagination" role="navigation"
+      layout: display inline->block; box 115x17->1264x186
+  /section/ui-pagination/ui-pagination-list
+      added: data-slot="pagination-list" role="list"
+      layout: display inline->block; box 115x17->1264x186
+  /section/ui-pagination/ui-pagination-list CHILDREN CHANGED: [ui-pagination-item,template,ui-pagination-item] -> [ui-pagination-item,template,ui-pagination-item,ui-pagination-item,ui-pagination-item,ui-pagination-item,ui-pagination-item,ui-pagination-item,ui-pagination-item,ui-pagination-item]
+  /section/ui-pagination/ui-pagination-list/ui-pagination-item
+      added: data-slot="pagination-item" role="listitem"
+      layout: display inline->block; box 68x17->1264x21
+  /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-previous
+      added: -
+      layout: display inline->contents; box 68x17->0x0
+  /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-previous/button
+      added: aria-disabled="true" data-disabled data-slot="pagination-previous" type="button"
+  /section/ui-pagination/ui-pagination-list/ui-pagination-item
+      added: data-slot="pagination-item" role="listitem"
+      layout: display inline->block; box 43x17->1264x21
+  /section/ui-pagination/ui-pagination-list/ui-pagination-item CHILDREN CHANGED: [ui-pagination-next] -> [ui-pagination-link]
+  + NEW /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-link <ui-pagination-link page="1"> text="" display=contents
+  + NEW /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-link/button <button aria-current="page" data-current data-slot="pagination-link" type="button"> text="1" display=inline-block
+  + NEW /section/ui-pagination/ui-pagination-list/ui-pagination-item <ui-pagination-item data-slot="pagination-item" role="listitem"> text="" display=block
+  + NEW /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-link <ui-pagination-link page="2"> text="" display=contents
+  + NEW /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-link/button <button data-slot="pagination-link" type="button"> text="2" display=inline-block
+  + NEW /section/ui-pagination/ui-pagination-list/ui-pagination-item <ui-pagination-item data-slot="pagination-item" role="listitem"> text="" display=block
+  + NEW /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-link <ui-pagination-link page="3"> text="" display=contents
+  + NEW /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-link/button <button data-slot="pagination-link" type="button"> text="3" display=inline-block
+  + NEW /section/ui-pagination/ui-pagination-list/ui-pagination-item <ui-pagination-item data-slot="pagination-item" role="listitem"> text="" display=block
+  + NEW /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-link <ui-pagination-link page="4"> text="" display=contents
+  + NEW /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-link/button <button data-slot="pagination-link" type="button"> text="4" display=inline-block
+  + NEW /section/ui-pagination/ui-pagination-list/ui-pagination-item <ui-pagination-item data-slot="pagination-item" role="listitem"> text="" display=block
+  + NEW /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-link <ui-pagination-link page="5"> text="" display=contents
+  + NEW /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-link/button <button data-slot="pagination-link" type="button"> text="5" display=inline-block
+  + NEW /section/ui-pagination/ui-pagination-list/ui-pagination-item <ui-pagination-item data-slot="pagination-item" role="listitem"> text="" display=block
+  + NEW /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-ellipsis <ui-pagination-ellipsis aria-hidden="true" data-slot="pagination-ellipsis"> text="…" display=block
+  + NEW /section/ui-pagination/ui-pagination-list/ui-pagination-item <ui-pagination-item data-slot="pagination-item" role="listitem"> text="" display=block
+  + NEW /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-link <ui-pagination-link page="10"> text="" display=contents
+  + NEW /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-link/button <button data-slot="pagination-link" type="button"> text="10" display=inline-block
+  + NEW /section/ui-pagination/ui-pagination-list/ui-pagination-item <ui-pagination-item data-slot="pagination-item" role="listitem"> text="" display=block
+  + NEW /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-next <ui-pagination-next > text="" display=contents
+  + NEW /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-next/button <button data-slot="pagination-next" type="button"> text="Next" display=inline-block
+
+## c-pagination-links
+  /section
+      added: -
+      layout: box 1264x18->1264x90
+  /section/ui-pagination
+      added: data-slot="pagination" role="navigation"
+      layout: display inline->block; box 127x17->1264x90
+  /section/ui-pagination/ui-pagination-list
+      added: data-slot="pagination-list" role="list"
+      layout: display inline->block; box 127x17->1264x90
+  /section/ui-pagination/ui-pagination-list/ui-pagination-item
+      added: data-slot="pagination-item" role="listitem"
+      layout: display inline->block; box 56x17->1264x18
+  /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-previous
+      added: -
+      layout: display inline->contents; box 56x17->0x0
+  /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-previous/a
+      added: data-slot="pagination-previous" type="button"
+  /section/ui-pagination/ui-pagination-list/ui-pagination-item
+      added: data-slot="pagination-item" role="listitem"
+      layout: display inline->block; box 8x17->1264x18
+  /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-link
+      added: -
+      layout: display inline->contents; box 8x17->0x0
+  /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-link/a
+      added: data-slot="pagination-link" type="button"
+  /section/ui-pagination/ui-pagination-list/ui-pagination-item
+      added: data-slot="pagination-item" role="listitem"
+      layout: display inline->block; box 8x17->1264x18
+  /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-link
+      added: -
+      layout: display inline->contents; box 8x17->0x0
+  /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-link/a
+      added: data-current data-slot="pagination-link" type="button"
+  /section/ui-pagination/ui-pagination-list/ui-pagination-item
+      added: data-slot="pagination-item" role="listitem"
+      layout: display inline->block; box 8x17->1264x18
+  /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-link
+      added: -
+      layout: display inline->contents; box 8x17->0x0
+  /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-link/a
+      added: data-slot="pagination-link" type="button"
+  /section/ui-pagination/ui-pagination-list/ui-pagination-item
+      added: data-slot="pagination-item" role="listitem"
+      layout: display inline->block; box 31x17->1264x18
+  /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-next
+      added: -
+      layout: display inline->contents; box 31x17->0x0
+  /section/ui-pagination/ui-pagination-list/ui-pagination-item/ui-pagination-next/a
+      added: data-slot="pagination-next" type="button"
+
+## c-rating
+  /section
+      added: -
+      layout: box 1264x0->1264x18
+  /section/ui-rating
+      added: data-slot="rating" role="radiogroup"
+      layout: box 0x0->40x17
+  /section/ui-rating CHILDREN CHANGED: [template] -> [template,ui-rating-item,ui-rating-item,ui-rating-item,ui-rating-item,ui-rating-item]
+  + NEW /section/ui-rating/ui-rating-item <ui-rating-item data-filled data-slot="rating-item" index="1" style="position: relative; --rating-fill: 1;"> text="" display=inline
+  + NEW /section/ui-rating/ui-rating-item/span <span aria-hidden="true"> text="*" display=inline
+  + NEW /section/ui-rating/ui-rating-item/ui-rating-radio <ui-rating-radio aria-checked="false" aria-label="1 star" data-slot="rating-radio" data-unchecked role="radio" style="position: absolute; inset-block: 0px; inset-inline-start: 0%; width: 100%; margin: 0px; padding: 0px; border: 0px; background: none;" tabindex="-1" type="button" value="1"> text="" display=block
+  + NEW /section/ui-rating/ui-rating-item <ui-rating-item data-filled data-slot="rating-item" index="2" style="position: relative; --rating-fill: 1;"> text="" display=inline
+  + NEW /section/ui-rating/ui-rating-item/span <span aria-hidden="true"> text="*" display=inline
+  + NEW /section/ui-rating/ui-rating-item/ui-rating-radio <ui-rating-radio aria-checked="false" aria-label="2 stars" data-slot="rating-radio" data-unchecked role="radio" style="position: absolute; inset-block: 0px; inset-inline-start: 0%; width: 100%; margin: 0px; padding: 0px; border: 0px; background: none;" tabindex="-1" type="button" value="2"> text="" display=block
+  + NEW /section/ui-rating/ui-rating-item <ui-rating-item data-checked data-filled data-slot="rating-item" index="3" style="position: relative; --rating-fill: 1;"> text="" display=inline
+  + NEW /section/ui-rating/ui-rating-item/span <span aria-hidden="true"> text="*" display=inline
+  + NEW /section/ui-rating/ui-rating-item/ui-rating-radio <ui-rating-radio aria-checked="true" aria-label="3 stars" data-checked data-slot="rating-radio" role="radio" style="position: absolute; inset-block: 0px; inset-inline-start: 0%; width: 100%; margin: 0px; padding: 0px; border: 0px; background: none;" tabindex="0" type="button" value="3"> text="" display=block
+  + NEW /section/ui-rating/ui-rating-item <ui-rating-item data-slot="rating-item" index="4" style="position: relative; --rating-fill: 0;"> text="" display=inline
+  + NEW /section/ui-rating/ui-rating-item/span <span aria-hidden="true"> text="*" display=inline
+  + NEW /section/ui-rating/ui-rating-item/ui-rating-radio <ui-rating-radio aria-checked="false" aria-label="4 stars" data-slot="rating-radio" data-unchecked role="radio" style="position: absolute; inset-block: 0px; inset-inline-start: 0%; width: 100%; margin: 0px; padding: 0px; border: 0px; background: none;" tabindex="-1" type="button" value="4"> text="" display=block
+  + NEW /section/ui-rating/ui-rating-item <ui-rating-item data-slot="rating-item" index="5" style="position: relative; --rating-fill: 0;"> text="" display=inline
+  + NEW /section/ui-rating/ui-rating-item/span <span aria-hidden="true"> text="*" display=inline
+  + NEW /section/ui-rating/ui-rating-item/ui-rating-radio <ui-rating-radio aria-checked="false" aria-label="5 stars" data-slot="rating-radio" data-unchecked role="radio" style="position: absolute; inset-block: 0px; inset-inline-start: 0%; width: 100%; margin: 0px; padding: 0px; border: 0px; background: none;" tabindex="-1" type="button" value="5"> text="" display=block
+
+## c-progress
+  /section
+      added: -
+      layout: box 1264x0->1264x18
+  /section/ui-progress[value=40]
+      added: aria-labelledby="ui-sdk-progress-98-label" aria-valuemax="100" aria-valuemin="0" aria-valuenow="40" aria-valuetext="40%" data-progressing data-slot="progress" role="progressbar" style="--progress-value: 40%;"
+      layout: display inline->block; box 0x0->1264x18
+  /section/ui-progress/ui-progress-label
+      added: data-progressing data-slot="progress-label" id="ui-sdk-progress-98-label"
+      layout: box 0x0->0x17
+  /section/ui-progress/ui-progress-value
+      added: aria-hidden="true" data-progressing data-slot="progress-value" data-text
+      layout: box 0x0->29x17; text ""->"40%"
+  /section/ui-progress/ui-progress-track
+      added: data-progressing data-slot="progress-track"
+      layout: display inline->block; box 0x0->1264x0
+  /section/ui-progress/ui-progress-track/ui-progress-indicator
+      added: data-progressing data-slot="progress-indicator" style="inset-inline-start: 0px; width: 40%;"
+      layout: display inline->block; box 0x0->506x0
+
+## c-field
+  /section
+      added: -
+      layout: box 1264x21->1264x78
+  /section/form
+      added: -
+      layout: box 1264x21->1264x78
+  /section/form/ui-field
+      added: data-required data-slot="field"
+      layout: display inline->block; box 425x17->1264x57
+  /section/form/ui-field/ui-field-label
+      added: data-required data-slot="field-label" for="ui-sdk-field-9-control" id="auto-10"
+      layout: display inline->block; box 65x17->1264x18
+  /section/form/ui-field/ui-input
+      added: -
+      layout: display inline->contents; box 185x17->0x0
+  /section/form/ui-field/ui-input/input
+      added: aria-describedby="auto-11" aria-labelledby="auto-10" data-required data-slot="input" id="ui-sdk-field-9-control" name="username"
+  /section/form/ui-field/ui-field-description
+      added: data-required data-slot="field-description" id="auto-11"
+      layout: display inline->block; box 163x17->1264x18
+  /section/form/ui-field/ui-field-error
+      added: data-message data-slot="field-error" hidden
+      layout: display inline->none; box 0x17->0x0; text ""->"Please fill out this field."
+
+## c-label
+  /section
+      added: -
+      layout: box 1264x18->1264x36
+  /section/ui-label
+      added: data-slot="label" id="ui-sdk-label-7"
+  /section/ui-radio-group
+      added: aria-labelledby="ui-sdk-label-7" data-slot="radio-group" role="radiogroup"
+      layout: display inline->block; box 55x17->1264x18
+  /section/ui-radio-group/ui-radio[value=free]
+      added: aria-checked="false" data-slot="radio" data-unchecked role="radio" tabindex="-1" type="button"
+  /section/ui-radio-group/ui-radio[value=pro]
+      added: aria-checked="true" data-checked data-slot="radio" role="radio" tabindex="0" type="button"
+
+## injected <style> after upgrade
+<style id="ui-sdk-web-1">
+@layer ui-sdk {
+  :where([data-slot][hidden]:not([hidden="until-found"])) { display: none !important }
+  :where(ui-button:not([hidden]), ui-button[hidden="until-found"]) { display: contents }
+  :where(ui-field:not([hidden]), ui-field[hidden="until-found"]) { display: block }
+  :where(ui-field-label:not([hidden]), ui-field-label[hidden="until-found"]) { display: block }
+  :where(ui-field-description:not([hidden]), ui-field-description[hidden="until-found"]) { display: block }
+  :where(ui-field-error:not([hidden]), ui-field-error[hidden="until-found"]) { display: block }
+  :where(ui-field-set:not([hidden]), ui-field-set[hidden="until-found"]) { display: contents }
+  :where(ui-field-legend:not([hidden]), ui-field-legend[hidden="until-found"]) { display: block }
+  :where(ui-field-group:not([hidden]), ui-field-group[hidden="until-found"]) { display: block }
+  :where(ui-tabs:not([hidden]), ui-tabs[hidden="until-found"]) { display: block }
+  :where(ui-tabs-list:not([hidden]), ui-tabs-list[hidden="until-found"]) { display: block }
+  :where(ui-tabs-tab:not([hidden]), ui-tabs-tab[hidden="until-found"]) { display: contents }
+  :where(ui-tabs-indicator:not([hidden]), ui-tabs-indicator[hidden="until-found"]) { display: block }
+  :where(ui-tabs-panel:not([hidden]), ui-tabs-panel[hidden="until-found"]) { display: block }
+  :where(ui-menu-sub:not([hidden]), ui-menu-sub[hidden="until-found"]) { display: contents }
+  :where(ui-menu-trigger:not([hidden]), ui-menu-trigger[hidden="until-found"]) { display: contents }
+  :where(ui-menu-context-trigger:not([hidden]), ui-menu-context-trigger[hidden="until-found"]) { display: block }
+  :where(ui-menu-sub-trigger:not([hidden]), ui-menu-sub-trigger[hidden="until-found"]) { display: block }
+  :where(ui-menu-item:not([hidden]), ui-menu-item[hidden="until-found"]) { display: block }
+  :where(ui-menu-checkbox-item:not([hidden]), ui-menu-checkbox-item[hidden="until-found"]) { display: block }
+  :where(ui-menu-radio-group:not([hidden]), ui-menu-radio-group[hidden="until-found"]) { display: block }
+  :where(ui-menu-radio-item:not([hidden]), ui-menu-radio-item[hidden="until-found"]) { display: block }
+  :where(ui-menu-group:not([hidden]), ui-menu-group[hidden="until-found"]) { display: block }
+  :where(ui-menu-group-label:not([hidden]), ui-menu-group-label[hidden="until-found"]) { display: block }
+  :where(ui-menu-separator:not([hidden]), ui-menu-separator[hidden="until-found"]) { display: block }
+  :where(ui-popover-trigger:not([hidden]), ui-popover-trigger[hidden="until-found"]) { display: contents }
+  :where(ui-popover-close:not([hidden]), ui-popover-close[hidden="until-found"]) { display: contents }
+  :where(ui-popover-title:not([hidden]), ui-popover-title[hidden="until-found"]) { display: block }
+  :where(ui-popover-description:not([hidden]), ui-popover-description[hidden="until-found"]) { display: block }
+  :where(ui-popover-arrow:not([hidden]), ui-popover-arrow[hidden="until-found"]) { display: block }
+  :where(ui-navigation-menu:not([hidden]), ui-navigation-menu[hidden="until-found"]) { display: block }
+  :where(ui-navigation-menu-list:not([hidden]), ui-navigation-menu-list[hidden="until-found"]) { display: block }
+  :where(ui-navigation-menu-item:not([hidden]), ui-navigation-menu-item[hidden="until-found"]) { display: block }
+  :where(ui-navigation-menu-trigger:not([hidden]), ui-navigation-menu-trigger[hidden="until-found"]) { display: contents }
+  :where(ui-navigation-menu-content:not([hidden]), ui-navigation-menu-content[hidden="until-found"]) { display: block }
+  :where(ui-navigation-menu-link:not([hidden]), ui-navigation-menu-link[hidden="until-found"]) { display: contents }
+  :where(ui-navigation-menu-indicator:not([hidden]), ui-navigation-menu-indicator[hidden="until-found"]) { display: block }
+  :where(ui-toast-region:not([hidden]), ui-toast-region[hidden="until-found"]) { display: block }
+  :where(ui-toast:not([hidden]), ui-toast[hidden="until-found"]) { display: block }
+  :where(ui-toast-title:not([hidden]), ui-toast-title[hidden="until-found"]) { display: block }
+  :where(ui-toast-description:not([hidden]), ui-toast-description[hidden="until-found"]) { display: block }
+  :where(ui-toast-action:not([hidden]), ui-toast-action[hidden="until-found"]) { display: contents }
+  :where(ui-toast-close:not([hidden]), ui-toast-close[hidden="until-found"]) { display: contents }
+  :where(ui-drawer-trigger:not([hidden]), ui-drawer-trigger[hidden="until-found"]) { display: contents }
+  :where(ui-drawer-close:not([hidden]), ui-drawer-close[hidden="until-found"]) { display: contents }
+  :where(ui-drawer-handle:not([hidden]), ui-drawer-handle[hidden="until-found"]) { display: contents }
+  :where(ui-drawer-outlet:not([hidden]), ui-drawer-outlet[hidden="until-found"]) { display: block }
+  :where(ui-drawer-title:not([hidden]), ui-drawer-title[hidden="until-found"]) { display: block }
+  :where(ui-drawer-description:not([hidden]), ui-drawer-description[hidden="until-found"]) { display: block }
+  :where(ui-dialog-trigger:not([hidden]), ui-dialog-trigger[hidden="until-found"]) { display: contents }
+  :where(ui-dialog-close:not([hidden]), ui-dialog-close[hidden="until-found"]) { display: contents }
+  :where(ui-dialog-title:not([hidden]), ui-dialog-title[hidden="until-found"]) { display: block }
+  :where(ui-dialog-description:not([hidden]), ui-dialog-description[hidden="until-found"]) { display: block }
+  :where(ui-slider:not([hidden]), ui-slider[hidden="until-found"]) { display: block }
+  :where(ui-slider-control:not([hidden]), ui-slider-control[hidden="until-found"]) { display: block }
+  :where(ui-slider-track:not([hidden]), ui-slider-track[hidden="until-found"]) { display: block }
+  :where(ui-slider-indicator:not([hidden]), ui-slider-indicator[hidden="until-found"]) { display: block }
+  :where(ui-slider-thumb:not([hidden]), ui-slider-thumb[hidden="until-found"]) { display: block }
+  :where(ui-slider-thumb-input:not([hidden]), ui-slider-thumb-input[hidden="until-found"]) { display: contents }
+  :where(ui-slider-value:not([hidden]), ui-slider-value[hidden="until-found"]) { display: block }
+  :where(ui-carousel:not([hidden]), ui-carousel[hidden="until-found"]) { display: block }
+  :where(ui-carousel-viewport:not([hidden]), ui-carousel-viewport[hidden="until-found"]) { display: block }
+  :where(ui-carousel-content:not([hidden]), ui-carousel-content[hidden="until-found"]) { display: block }
+  :where(ui-carousel-item:not([hidden]), ui-carousel-item[hidden="until-found"]) { display: block }
+  :where(ui-carousel-previous:not([hidden]), ui-carousel-previous[hidden="until-found"]) { display: contents }
+  :where(ui-carousel-next:not([hidden]), ui-carousel-next[hidden="until-found"]) { display: contents }
+  :where(ui-carousel-play-toggle:not([hidden]), ui-carousel-play-toggle[hidden="until-found"]) { display: contents }
+  :where(ui-carousel-indicator-group:not([hidden]), ui-carousel-indicator-group[hidden="until-found"]) { display: block }
+  :where(ui-carousel-indicator:not([hidden]), ui-carousel-indicator[hidden="until-found"]) { display: contents }
+  :where(ui-tooltip-trigger:not([hidden]), ui-tooltip-trigger[hidden="until-found"]) { display: contents }
+  :where(ui-tooltip-arrow:not([hidden]), ui-tooltip-arrow[hidden="until-found"]) { display: block }
+  :where(ui-combobox:not([hidden]), ui-combobox[hidden="until-found"]) { display: contents }
+  :where(ui-combobox-label:not([hidden]), ui-combobox-label[hidden="until-found"]) { display: block }
+  :where(ui-combobox-input:not([hidden]), ui-combobox-input[hidden="until-found"]) { display: contents }
+  :where(ui-combobox-trigger:not([hidden]), ui-combobox-trigger[hidden="until-found"]) { display: contents }
+  :where(ui-combobox-clear:not([hidden]), ui-combobox-clear[hidden="until-found"]) { display: contents }
+  :where(ui-combobox-list:not([hidden]), ui-combobox-list[hidden="until-found"]) { display: block }
+  :where(ui-combobox-item:not([hidden]), ui-combobox-item[hidden="until-found"]) { display: block }
+  :where(ui-combobox-group:not([hidden]), ui-combobox-group[hidden="until-found"]) { display: block }
+  :where(ui-combobox-group-label:not([hidden]), ui-combobox-group-label[hidden="until-found"]) { display: block }
+  :where(ui-combobox-separator:not([hidden]), ui-combobox-separator[hidden="until-found"]) { display: block }
+  :where(ui-combobox-create:not([hidden]), ui-combobox-create[hidden="until-found"]) { display: block }
+  :where(ui-combobox-empty:not([hidden]), ui-combobox-empty[hidden="until-found"]) { display: block }
+  :where(ui-combobox-status:not([hidden]), ui-combobox-status[hidden="until-found"]) { display: block }
+  :where(ui-combobox-chips:not([hidden]), ui-combobox-chips[hidden="until-found"]) { display: block }
+  :where(ui-combobox-chip:not([hidden]), ui-combobox-chip[hidden="until-found"]) { display: block }
+  :where(ui-combobox-select-all:not([hidden]), ui-combobox-select-all[hidden="until-found"]) { display: block }
+  :where(ui-combobox-chip-remove:not([hidden]), ui-combobox-chip-remove[hidden="until-found"]) { display: contents }
+  :where(ui-combobox-arrow:not([hidden]), ui-combobox-arrow[hidden="until-found"]) { display: block }
+  :where(ui-select:not([hidden]), ui-select[hidden="until-found"]) { display: contents }
+  :where(ui-select-label:not([hidden]), ui-select-label[hidden="until-found"]) { display: block }
+  :where(ui-select-trigger:not([hidden]), ui-select-trigger[hidden="until-found"]) { display: contents }
+  :where(ui-select-clear:not([hidden]), ui-select-clear[hidden="until-found"]) { display: contents }
+  :where(ui-select-list:not([hidden]), ui-select-list[hidden="until-found"]) { display: block }
+  :where(ui-select-input:not([hidden]), ui-select-input[hidden="until-found"]) { display: contents }
+  :where(ui-select-empty:not([hidden]), ui-select-empty[hidden="until-found"]) { display: block }
+  :where(ui-select-status:not([hidden]), ui-select-status[hidden="until-found"]) { display: block }
+  :where(ui-select-select-all:not([hidden]), ui-select-select-all[hidden="until-found"]) { display: block }
+  :where(ui-select-item:not([hidden]), ui-select-item[hidden="until-found"]) { display: block }
+  :where(ui-select-group:not([hidden]), ui-select-group[hidden="until-found"]) { display: block }
+  :where(ui-select-group-label:not([hidden]), ui-select-group-label[hidden="until-found"]) { display: block }
+  :where(ui-select-separator:not([hidden]), ui-select-separator[hidden="until-found"]) { display: block }
+  :where(ui-select-arrow:not([hidden]), ui-select-arrow[hidden="until-found"]) { display: block }
+  :where(ui-collapsible:not([hidden]), ui-collapsible[hidden="until-found"]) { display: block }
+  :where(ui-collapsible-trigger:not([hidden]), ui-collapsible-trigger[hidden="until-found"]) { display: contents }
+  :where(ui-collapsible-panel:not([hidden]), ui-collapsible-panel[hidden="until-found"]) { display: block }
+  :where(ui-accordion:not([hidden]), ui-accordion[hidden="until-found"]) { display: block }
+  :where(ui-accordion-item:not([hidden]), ui-accordion-item[hidden="until-found"]) { display: block }
+  :where(ui-accordion-header:not([hidden]), ui-accordion-header[hidden="until-found"]) { display: block }
+  :where(ui-accordion-trigger:not([hidden]), ui-accordion-trigger[hidden="until-found"]) { display: contents }
+  :where(ui-accordion-panel:not([hidden]), ui-accordion-panel[hidden="until-found"]) { display: block }
+  :where(ui-number-input:not([hidden]), ui-number-input[hidden="until-found"]) { display: block }
+  :where(ui-number-input-group:not([hidden]), ui-number-input-group[hidden="until-found"]) { display: block }
+  :where(ui-number-input-control:not([hidden]), ui-number-input-control[hidden="until-found"]) { display: contents }
+  :where(ui-number-input-increment:not([hidden]), ui-number-input-increment[hidden="until-found"]) { display: contents }
+  :where(ui-number-input-decrement:not([hidden]), ui-number-input-decrement[hidden="until-found"]) { display: contents }
+  :where(ui-number-input-scrub-area-cursor:not([hidden]), ui-number-input-scrub-area-cursor[hidden="until-found"]) { display: block }
+  :where(ui-progress:not([hidden]), ui-progress[hidden="until-found"]) { display: block }
+  :where(ui-progress-track:not([hidden]), ui-progress-track[hidden="until-found"]) { display: block }
+  :where(ui-progress-indicator:not([hidden]), ui-progress-indicator[hidden="until-found"]) { display: block }
+  :where(ui-pagination:not([hidden]), ui-pagination[hidden="until-found"]) { display: block }
+  :where(ui-pagination-list:not([hidden]), ui-pagination-list[hidden="until-found"]) { display: block }
+  :where(ui-pagination-item:not([hidden]), ui-pagination-item[hidden="until-found"]) { display: block }
+  :where(ui-pagination-link:not([hidden]), ui-pagination-link[hidden="until-found"]) { display: contents }
+  :where(ui-pagination-previous:not([hidden]), ui-pagination-previous[hidden="until-found"]) { display: contents }
+  :where(ui-pagination-next:not([hidden]), ui-pagination-next[hidden="until-found"]) { display: contents }
+  :where(ui-pagination-first:not([hidden]), ui-pagination-first[hidden="until-found"]) { display: contents }
+  :where(ui-pagination-last:not([hidden]), ui-pagination-last[hidden="until-found"]) { display: contents }
+  :where(ui-pagination-ellipsis:not([hidden]), ui-pagination-ellipsis[hidden="until-found"]) { display: block }
+  :where(ui-switch-thumb:not([hidden]), ui-switch-thumb[hidden="until-found"]) { display: block }
+  :where(ui-checkbox-group:not([hidden]), ui-checkbox-group[hidden="until-found"]) { display: block }
+  :where(ui-input:not([hidden]), ui-input[hidden="until-found"]) { display: contents }
+  :where(ui-textarea:not([hidden]), ui-textarea[hidden="until-found"]) { display: contents }
+  :where(ui-input-group:not([hidden]), ui-input-group[hidden="until-found"]) { display: block }
+  :where(ui-input-clear:not([hidden]), ui-input-clear[hidden="until-found"]) { display: contents }
+  :where(ui-radio-group:not([hidden]), ui-radio-group[hidden="until-found"]) { display: block }
+  :where(ui-menu-content[align]) { text-align: inherit }
+  :where(ui-menu-sub-content[align]) { text-align: inherit }
+  :where(ui-popover-content[align]) { text-align: inherit }
+  :where(ui-navigation-menu-content[align]) { text-align: inherit }
+  :where(ui-navigation-menu-viewport[align]) { text-align: inherit }
+  :where(ui-tooltip-content[align]) { text-align: inherit }
+  :where(ui-combobox-content[align]) { text-align: inherit }
+  :where(ui-select-content[align]) { text-align: inherit }
+  :where([as-child]) { display: contents }
+}
+</style>
+<style id="ui-sdk-hidden">
+@layer ui-sdk { :where([data-slot][hidden]:not([hidden="until-found"])) { display: none !important } }
+</style>
+<style id="ui-sdk-popover-reset">
+@layer ui-sdk { :where([data-slot="navigation-menu-viewport"][popover], [data-slot="navigation-menu-content"][popover], [data-slot="toast-region"][popover], [data-slot="popover-content"][popover], [data-slot="popover-backdrop"][popover], [data-slot="drawer-content"][popover], [data-slot="drawer-backdrop"][popover], [data-slot="dialog-content"][popover], [data-slot="dialog-backdrop"][popover]) { inset: auto; width: auto; height: auto; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; overflow: visible; color: inherit; background: none } }
+</style>
+<style id="ui-sdk-toast-defaults">
+@layer ui-sdk {
+:where([data-slot="toast-region"]) { position: fixed; z-index: 2147483000; display: flex; flex-direction: column; max-width: 100vw }
+:where([data-slot="toast-region"][data-side="bottom"]) { bottom: calc(var(--keyboard-inset, 0px) + env(safe-area-inset-bottom, 0px)) }
+:where([data-slot="toast-region"][data-side="top"]) { top: env(safe-area-inset-top, 0px) }
+:where([data-slot="toast-region"][data-align="start"]) { inset-inline-start: env(safe-area-inset-left, 0px) }
+:where([data-slot="toast-region"][data-align="end"]) { inset-inline-end: env(safe-area-inset-right, 0px) }
+:where([data-slot="toast-region"][data-align="center"]) { left: 50%; translate: -50% 0 }
+:where([data-slot="toast-list"]) { margin: 0; padding: 0; list-style: none }
+}
+</style>
+
+styles before: 0, adoptedStyleSheets after: 0
+body children after: section#c-button, section#c-dialog, section#c-drawer, section#c-popover, section#c-tooltip, section#c-menu, section#c-toast, section#c-tabs, section#c-accordion, section#c-collapsible, section#c-carousel, section#c-select, section#c-combobox, section#c-checkbox, section#c-radio, section#c-switch, section#c-slider, section#c-number-input, section#c-navigation-menu, section#c-pagination, section#c-pagination-links, section#c-rating, section#c-progress, section#c-field, section#c-label, div, div
+undefined ui-* tags after: 
+
+## console
+
+
+## requests (99)
+/all-bare.html
+/web.js
+/web/button.js
+/web/dialog.js
+/web/drawer.js
+/web/popover.js
+/web/tooltip.js
+/web/menu.js
+/web/toast.js
+/web/tabs.js
+/web/accordion.js
+/web/collapsible.js
+/web/carousel.js
+/web/select.js
+/web/combobox.js
+/web/checkbox.js
+/web/radio.js
+/web/switch.js
+/web/slider.js
+/web/number-input.js
+/web/navigation-menu.js
+/web/pagination.js
+/web/rating.js
+/web/progress.js
+/web/field.js
+/web/input.js
+/web/label.js
+/web/chunks/RNPOWNMB.js
+/web/chunks/kkGObSDr.js
+/web/chunks/CBckt1Zn.js
+/web/chunks/w5CP0BlA.js
+/web/chunks/DnrOuQH7.js
+/web/chunks/B7EgSgjQ.js
+/web/chunks/DoCSjBnY.js
+/web/chunks/BSKHQz24.js
+/web/chunks/CCQk1xoB.js
+/web/chunks/jxEsiml_.js
+/web/chunks/Bz5d4qSQ.js
+/web/chunks/C8-AH9V0.js
+/web/chunks/CMg-8UVf.js
+/web/chunks/DdaCLml8.js
+/web/chunks/DRVKoQYp.js
+/web/chunks/asSN9iEp.js
+/web/chunks/DuLMOW0Y.js
+/web/chunks/BiQr7Nls.js
+/web/chunks/BXPnlG4D.js
+/web/chunks/B025ZtTT.js
+/web/chunks/DRvk33fZ.js
+/web/chunks/CsVvVnqd.js
+/web/chunks/bvFh-oIT.js
+/web/chunks/BQhFRlEn.js
+/web/chunks/C_M6fsNE.js
+/web/chunks/DuMa5_Gr.js
+/web/chunks/C7hbAjNc.js
+/web/chunks/CYWI7Gee.js
+/web/chunks/DymDALQ6.js
+/web/chunks/C8w7s5dg.js
+/web/chunks/1VvP54iX.js
+/web/chunks/czZLREgo.js
+/web/chunks/B_ns1YHO.js
+/web/chunks/8BtALw1O.js
+/web/chunks/D5QxA3HQ.js
+/web/chunks/DYBNErD8.js
+/web/chunks/BsN3hG3y.js
+/web/chunks/o9Fy_3fj.js
+/web/chunks/Ct8AidXF.js
+/web/chunks/BJK5QbCp.js
+/web/chunks/PMe0LltN.js
+/web/chunks/BBlpz0SR.js
+/web/chunks/2bIEUO6_.js
+/web/chunks/yv8dTvNI.js
+/web/chunks/B0g0P1Zn.js
+/web/chunks/D355FShC.js
+/web/chunks/BhcWIV-5.js
+/web/chunks/DqlrsGZ6.js
+/web/chunks/D9UgVYvF.js
+/web/chunks/DqjnG-vr.js
+/web/chunks/DSUI3yI-.js
+/web/chunks/DpuudEw0.js
+/web/chunks/CeK2EAbn.js
+/web/chunks/DwDilCo2.js
+/web/chunks/_hMXOCTH.js
+/web/chunks/BtVkQf3z.js
+/web/chunks/C_N8kM4C.js
+/web/chunks/CRS_afhq.js
+/web/chunks/DT3Hb76X.js
+/web/chunks/DDIvQXad.js
+/web/chunks/C_7kocAD.js
+/web/chunks/Dw8niAiz.js
+/web/chunks/D5LiaI5R.js
+/web/chunks/hR4xM0EC.js
+/web/chunks/DsVxP-p-.js
+/web/chunks/DnFXe_lF.js
+/web/chunks/CQoHUjEy.js
+/web/chunks/BaTKqaFx.js
+/web/chunks/CFODo-m2.js
+/web/chunks/BbMcdL-W.js
+/web/chunks/DzhbjxNJ.js

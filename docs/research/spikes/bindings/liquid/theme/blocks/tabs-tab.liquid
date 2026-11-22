@@ -1,0 +1,35 @@
+{% doc %}
+  Ripple Tabs tab. Prints its own initial state from its own params.
+
+  @param {string} tabs - Required. The `id` of the tabs root.
+  @param {string} value - Required. Lowercase letters, digits, '-' and '_' only.
+  @param {boolean} [selected] - Pass the boolean `true` on the tab whose value equals the root's `default_value`.
+  @param {string} [class] - Extra classes appended after `rp-tabs-tab`.
+  @param {string} [attributes] - RAW, unescaped HTML attributes appended to the <button>. Never pass shopper or merchant input.
+  @param {string} content - The tab label. Required.
+
+  @example
+  {% block 'tabs-tab', tabs: 't', value: 'a', selected: true %}A{% endblock %}
+{% enddoc %}
+
+<ui-tabs-tab value="{{ value | escape }}" role="none">
+  <button
+    class="rp-tabs-tab {{ class | escape }}"
+    type="button"
+    role="tab"
+    id="{{ tabs | escape }}-tab-{{ value | escape }}"
+    {% if selected == true %}aria-controls="{{ tabs | escape }}-panel-{{ value | escape }}"{% endif %}
+    aria-selected="{% if selected == true %}true{% else %}false{% endif %}"
+    tabindex="{% if selected == true %}0{% else %}-1{% endif %}"
+    {% if selected == true %}data-selected=""{% endif %}
+    data-activation-direction="none"
+    data-orientation="horizontal"
+    data-slot="tabs-tab"
+    {{ attributes }}
+  >
+    {{- content -}}
+  </button>
+</ui-tabs-tab>
+{% schema %}
+{ "name": "t:ripple.tabs.tab_name", "settings": [] }
+{% endschema %}

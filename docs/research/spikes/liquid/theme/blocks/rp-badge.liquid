@@ -1,0 +1,19 @@
+{% doc %}
+  Ripple Badge. Static component: no JavaScript.
+
+  @param {'neutral' | 'info' | 'success' | 'warning' | 'critical'} [tone] - Default: 'neutral'.
+  @param {string} [class] - Extra classes appended after `rp-badge`.
+  @param {string} content - Badge label. Required.
+
+  @example
+  {% block 'rp-badge', tone: 'success' %}In stock{% endblock %}
+{% enddoc %}
+
+{% render 'rp-badge', tone: tone, class: class, content: content %}
+
+{% schema %}
+{
+  "name": "t:ripple.blocks.badge",
+  "settings": []
+}
+{% endschema %}

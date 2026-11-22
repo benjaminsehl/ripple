@@ -1,0 +1,483 @@
+
+## c-tabs-pre
+  /section
+      added: -
+      layout: box 1264x21->1264x39
+  /section/ui-tabs
+      added: -
+      layout: display inline->block; box 282x17->1264x39
+  /section/ui-tabs/ui-tabs-list
+      added: -
+      layout: display inline->block; box 147x17->1264x21
+  /section/ui-tabs/ui-tabs-list/ui-tabs-tab[value=account]
+      added: -
+      layout: display inline->contents; box 64x17->0x0
+  /section/ui-tabs/ui-tabs-list/ui-tabs-tab[value=password]
+      added: -
+      layout: display inline->contents; box 75x17->0x0
+  /section/ui-tabs/ui-tabs-panel[value=account]
+      added: -
+      layout: display inline->block; box 136x17->1264x18
+
+## c-dialog-pre
+  /section/ui-dialog/ui-dialog-trigger
+      added: -
+      layout: display inline->contents; box 49x17->0x0
+  /section/ui-dialog/ui-dialog-content/ui-dialog-title
+      added: -
+      layout: display inline->block
+  /section/ui-dialog/ui-dialog-content/ui-dialog-description
+      added: -
+      layout: display inline->block
+  /section/ui-dialog/ui-dialog-content/ui-dialog-close
+      added: -
+      layout: display inline->contents
+
+## c-accordion-pre
+  /section/ui-accordion
+      added: -
+      layout: display inline->block
+  /section/ui-accordion/ui-accordion-item[value=shipping]
+      added: -
+      layout: display inline->block; box 1264x59->1264x60
+  /section/ui-accordion/ui-accordion-item/ui-accordion-header
+      added: -
+      layout: display inline->block
+  /section/ui-accordion/ui-accordion-item/ui-accordion-header/h3/ui-accordion-trigger
+      added: -
+      layout: display inline->contents; box 68x21->0x0
+  /section/ui-accordion/ui-accordion-item/ui-accordion-panel
+      added: style="--accordion-panel-height: auto; --accordion-panel-width: auto;"
+      layout: display inline->block; box 224x17->1264x18
+  /section/ui-accordion/ui-accordion-item[value=returns]
+      added: -
+      layout: display inline->block
+  /section/ui-accordion/ui-accordion-item/ui-accordion-header
+      added: -
+      layout: display inline->block
+  /section/ui-accordion/ui-accordion-item/ui-accordion-header/h3/ui-accordion-trigger
+      added: -
+      layout: display inline->contents; box 63x21->0x0
+
+## c-drawer-pre
+  /section/ui-drawer/ui-drawer-trigger
+      added: -
+      layout: display inline->contents; box 28x17->0x0
+  /section/ui-drawer/ui-drawer-trigger/a
+      added: aria-haspopup="dialog" data-closed data-slot="drawer-trigger" type="button"
+  /section/ui-drawer/ui-drawer-backdrop
+      added: data-slot="drawer-backdrop"
+  /section/ui-drawer/ui-drawer-viewport
+      added: data-slot="drawer-viewport"
+  /section/ui-drawer/ui-drawer-viewport/ui-drawer-content
+      added: data-slot="drawer-content"
+  /section/ui-drawer/ui-drawer-viewport/ui-drawer-content/ui-drawer-title
+      added: aria-level="2" data-slot="drawer-title" id="dr-title" role="heading"
+      layout: display inline->block
+  /section/ui-drawer/ui-drawer-viewport/ui-drawer-content/ui-drawer-close
+      added: -
+      layout: display inline->contents
+  /section/ui-drawer/ui-drawer-viewport/ui-drawer-content/ui-drawer-close/button
+      added: data-slot="drawer-close" type="button"
+
+## c-dialog-link
+  /section/ui-dialog/ui-dialog-trigger
+      added: -
+      layout: display inline->contents; box 67x17->0x0
+  /section/ui-dialog/ui-dialog-trigger/a
+      added: aria-haspopup="dialog" data-closed data-slot="dialog-trigger" type="button"
+  /section/ui-dialog/ui-dialog-content
+      added: data-slot="dialog-content"
+  /section/ui-dialog/ui-dialog-content/ui-dialog-title
+      added: aria-level="2" data-slot="dialog-title" id="dl-title" role="heading"
+      layout: display inline->block
+  /section/ui-dialog/ui-dialog-content/ui-dialog-close
+      added: -
+      layout: display inline->contents
+  /section/ui-dialog/ui-dialog-content/ui-dialog-close/button
+      added: data-slot="dialog-close" type="button"
+
+## c-popover-hidden
+  /section/ui-popover/ui-popover-trigger
+      added: -
+      layout: display inline->contents; box 52x17->0x0
+  /section/ui-popover/ui-popover-trigger/button
+      added: aria-expanded="false" aria-haspopup="dialog" data-closed data-slot="popover-trigger" id="p-trigger"
+  /section/ui-popover/ui-popover-content
+      added: data-slot="popover-content"
+  /section/ui-popover/ui-popover-content/ui-popover-title
+      added: aria-level="2" data-slot="popover-title" id="p-title" role="heading"
+      layout: display inline->block
+  /section/ui-popover/ui-popover-content/ui-popover-close
+      added: -
+      layout: display inline->contents
+  /section/ui-popover/ui-popover-content/ui-popover-close/button
+      added: data-slot="popover-close" type="button"
+  /section/ui-menu
+      added: role="none"
+  /section/ui-menu/ui-menu-trigger
+      added: role="none"
+      layout: display inline->contents; box 60x17->0x0
+  /section/ui-menu/ui-menu-trigger/button
+      added: aria-expanded="false" aria-haspopup="menu" data-closed data-slot="menu-trigger" id="m-trigger"
+  /section/ui-menu/ui-menu-content
+      added: data-slot="menu-content"
+  /section/ui-menu/ui-menu-content/ui-menu-item[value=rename]
+      added: data-slot="menu-item" id="m-item-auto-42" role="menuitem" tabindex="-1"
+      layout: display inline->block
+  /section/ui-tooltip/ui-tooltip-trigger
+      added: -
+      layout: display inline->contents; box 38x17->0x0
+  /section/ui-tooltip/ui-tooltip-trigger/button
+      added: aria-describedby="tt-content" data-slot="tooltip-trigger"
+  /section/ui-tooltip/ui-tooltip-content
+      added: data-closed data-slot="tooltip-content" id="tt-content" role="tooltip"
+
+## c-tabs-links
+  /section
+      added: -
+      layout: box 1264x18->1264x36
+  /section/ui-tabs
+      added: data-activation-direction="none" data-orientation="horizontal" data-slot="tabs"
+      layout: display inline->block; box 133x17->1264x36
+  /section/ui-tabs/ui-tabs-list
+      added: data-activation-direction="none" data-orientation="horizontal" data-slot="tabs-list" role="tablist"
+      layout: display inline->block; box 29x17->1264x18
+  /section/ui-tabs/ui-tabs-list/ui-tabs-tab[value=a]
+      added: role="none"
+      layout: display inline->contents; box 11x17->0x0
+  /section/ui-tabs/ui-tabs-list/ui-tabs-tab/a
+      added: aria-controls="tl-panel-a" aria-selected="true" data-activation-direction="none" data-orientation="horizontal" data-selected data-slot="tabs-tab" id="tl-tab-a" role="tab" tabindex="0"
+  /section/ui-tabs/ui-tabs-list/ui-tabs-tab[value=b]
+      added: role="none"
+      layout: display inline->contents; box 11x17->0x0
+  /section/ui-tabs/ui-tabs-list/ui-tabs-tab/a
+      added: aria-selected="false" data-activation-direction="none" data-orientation="horizontal" data-slot="tabs-tab" id="tl-tab-b" role="tab" tabindex="-1"
+  /section/ui-tabs/ui-tabs-panel[value=a]
+      added: aria-labelledby="tl-tab-a" data-activation-direction="none" data-orientation="horizontal" data-selected data-slot="tabs-panel" role="tabpanel" tabindex="0"
+      layout: display inline->block; box 49x17->1264x18
+  /section/ui-tabs/ui-tabs-panel[value=b]
+      added: data-slot="tabs-panel" hidden
+      layout: display inline->none; box 50x17->0x0
+
+## c-forms
+  /section
+      added: -
+      layout: box 1264x148->1264x305
+  /section/form/label
+      added: id="ui-sdk-label-1"
+  /section/form/label/ui-checkbox[value=yes]
+      added: aria-checked="true" aria-labelledby="ui-sdk-label-1" data-checked data-slot="checkbox" role="checkbox" tabindex="0" type="button"
+  /section/form/ui-select
+      added: data-closed data-slot="select"
+      layout: display inline->contents; box 20x17->0x0
+  /section/form/ui-select/ui-select-trigger
+      added: -
+      layout: display inline->contents; box 16x17->0x0
+  /section/form/ui-select/ui-select-trigger/button
+      added: aria-expanded="false" aria-haspopup="listbox" data-closed data-slot="select-trigger" id="ui-sdk-select-66-trigger" role="combobox"
+      layout: box 16x6->51x21
+  /section/form/ui-select/ui-select-trigger/button/ui-select-value
+      added: data-slot="select-value" id="ui-sdk-select-66-value"
+      layout: box 0x0->35x15; text ""->"Editor"
+  /section/form/ui-select/ui-select-content
+      added: data-slot="select-content"
+  /section/form/ui-select/ui-select-content/ui-select-item[value=viewer]
+      added: aria-selected="false" data-slot="select-item" id="ui-sdk-select-66-option-viewer" role="option" tabindex="-1"
+      layout: display inline->block
+  /section/form/ui-select/ui-select-content/ui-select-item[value=editor]
+      added: aria-selected="true" data-selected data-slot="select-item" id="ui-sdk-select-66-option-editor" role="option" tabindex="-1"
+      layout: display inline->block
+  /section/form
+      added: -
+      layout: box 1264x21->1264x42
+  /section/form/ui-number-input
+      added: data-slot="number-input"
+      layout: display inline->block; box 241x17->1264x21
+  /section/form/ui-number-input/ui-number-input-group
+      added: data-slot="number-input-group" role="group"
+      layout: display inline->block; box 241x17->1264x21
+  /section/form/ui-number-input/ui-number-input-group/ui-number-input-decrement
+      added: -
+      layout: display inline->contents; box 20x17->0x0
+  /section/form/ui-number-input/ui-number-input-group/ui-number-input-decrement/button
+      added: aria-controls="ui-sdk-number-input-49-control" data-slot="number-input-decrement" style="user-select: none; touch-action: manipulation; --hold-delay: 400ms;" tabindex="-1"
+  /section/form/ui-number-input/ui-number-input-group/ui-number-input-control
+      added: -
+      layout: display inline->contents; box 185x17->0x0
+  /section/form/ui-number-input/ui-number-input-group/ui-number-input-control/input
+      added: autocomplete="off" autocorrect="off" data-slot="number-input-control" id="ui-sdk-number-input-49-control" inputmode="numeric" spellcheck="false" type="text" value="2"
+  /section/form/ui-number-input/ui-number-input-group/ui-number-input-increment
+      added: -
+      layout: display inline->contents; box 24x17->0x0
+  /section/form/ui-number-input/ui-number-input-group/ui-number-input-increment/button
+      added: aria-controls="ui-sdk-number-input-49-control" data-slot="number-input-increment" style="user-select: none; touch-action: manipulation; --hold-delay: 400ms;" tabindex="-1"
+  /section/form
+      added: -
+      layout: box 1264x21->1264x42
+  /section/form/ui-number-input
+      added: data-slot="number-input"
+      layout: display inline->block; box 241x17->1264x21
+  /section/form/ui-number-input/ui-number-input-group
+      added: data-slot="number-input-group" role="group"
+      layout: display inline->block; box 241x17->1264x21
+  /section/form/ui-number-input/ui-number-input-group/ui-number-input-decrement
+      added: -
+      layout: display inline->contents; box 20x17->0x0
+  /section/form/ui-number-input/ui-number-input-group/ui-number-input-decrement/button
+      added: aria-controls="ui-sdk-number-input-50-control" data-slot="number-input-decrement" style="user-select: none; touch-action: manipulation; --hold-delay: 400ms;" tabindex="-1"
+  /section/form/ui-number-input/ui-number-input-group/ui-number-input-control
+      added: -
+      layout: display inline->contents; box 185x17->0x0
+  /section/form/ui-number-input/ui-number-input-group/ui-number-input-control/input[value=2]
+      added: autocomplete="off" autocorrect="off" data-slot="number-input-control" id="ui-sdk-number-input-50-control" inputmode="numeric" spellcheck="false"
+      changed: type: "number" -> "text"
+  /section/form/ui-number-input/ui-number-input-group/ui-number-input-increment
+      added: -
+      layout: display inline->contents; box 24x17->0x0
+  /section/form/ui-number-input/ui-number-input-group/ui-number-input-increment/button
+      added: aria-controls="ui-sdk-number-input-50-control" data-slot="number-input-increment" style="user-select: none; touch-action: manipulation; --hold-delay: 400ms;" tabindex="-1"
+  /section/form
+      added: -
+      layout: box 1264x21->1264x42
+  /section/form/ui-number-input
+      added: data-slot="number-input"
+      layout: display inline->block; box 217x17->1264x21
+  /section/form/ui-number-input/ui-number-input-group
+      added: data-slot="number-input-group" role="group"
+      layout: display inline->block; box 217x17->1264x21
+  /section/form/ui-number-input/ui-number-input-group/ui-number-input-control
+      added: -
+      layout: display inline->contents; box 185x17->0x0
+  /section/form/ui-number-input/ui-number-input-group/ui-number-input-control/input[value=2]
+      added: autocomplete="off" autocorrect="off" data-slot="number-input-control" id="ui-sdk-number-input-51-control" inputmode="numeric" spellcheck="false"
+      changed: type: "number" -> "text"
+  /section/form/ui-number-input/ui-number-input-group/ui-number-input-increment
+      added: -
+      layout: display inline->contents; box 24x17->0x0
+  /section/form/ui-number-input/ui-number-input-group/ui-number-input-increment/button
+      added: aria-controls="ui-sdk-number-input-51-control" data-slot="number-input-increment" style="user-select: none; touch-action: manipulation; --hold-delay: 400ms;" tabindex="-1"
+  /section/form
+      added: -
+      layout: box 1264x21->1264x115
+  /section/form/ui-field
+      added: data-required data-slot="field"
+      layout: display inline->block; box 350x17->1264x57
+  /section/form/ui-field/ui-field-label
+      added: data-required data-slot="field-label" for="fn-control" id="auto-1"
+      layout: display inline->block; box 38x17->1264x18
+  /section/form/ui-field/input[value=a@b.co]
+      added: aria-describedby="auto-3" aria-labelledby="auto-1" data-required id="fn-control"
+  /section/form/ui-field/ui-field-description
+      added: data-required data-slot="field-description" id="auto-3"
+      layout: display inline->block; box 115x17->1264x18
+  /section/form/ui-field/ui-field-error
+      added: data-message data-slot="field-error" hidden
+      layout: display inline->none; box 0x17->0x0
+  /section/form/ui-field
+      added: data-slot="field"
+      layout: display inline->block; box 129x17->1264x37
+  /section/form/ui-field/ui-field-label
+      added: data-slot="field-label" for="fs-control" id="auto-2"
+      layout: display inline->block; box 52x17->1264x18
+  /section/form/ui-field/select
+      added: aria-labelledby="auto-2" id="fs-control"
+  /section/form/ui-button
+      added: -
+      layout: display inline->contents; box 80x17->0x0
+  /section/form/ui-button/button[value=1]
+      added: data-slot="button"
+
+## c-custom
+  /section/rp-cart-count
+      added: data-empty data-slot="rp-cart-count"
+      changed: data-count: "3" -> "0"
+      layout: display inline->contents; box 50x17->0x0
+  /section/rp-cart-count/a/rp-cart-count-value
+      added: data-slot="rp-cart-count-value"
+      layout: text "3"->"0"
+
+## injected <style> after upgrade
+<style id="ui-sdk-web-1">
+@layer ui-sdk {
+  :where([data-slot][hidden]:not([hidden="until-found"])) { display: none !important }
+  :where(ui-field:not([hidden]), ui-field[hidden="until-found"]) { display: block }
+  :where(ui-field-label:not([hidden]), ui-field-label[hidden="until-found"]) { display: block }
+  :where(ui-field-description:not([hidden]), ui-field-description[hidden="until-found"]) { display: block }
+  :where(ui-field-error:not([hidden]), ui-field-error[hidden="until-found"]) { display: block }
+  :where(ui-field-set:not([hidden]), ui-field-set[hidden="until-found"]) { display: contents }
+  :where(ui-field-legend:not([hidden]), ui-field-legend[hidden="until-found"]) { display: block }
+  :where(ui-field-group:not([hidden]), ui-field-group[hidden="until-found"]) { display: block }
+  :where(ui-button:not([hidden]), ui-button[hidden="until-found"]) { display: contents }
+  :where(ui-accordion:not([hidden]), ui-accordion[hidden="until-found"]) { display: block }
+  :where(ui-accordion-item:not([hidden]), ui-accordion-item[hidden="until-found"]) { display: block }
+  :where(ui-accordion-header:not([hidden]), ui-accordion-header[hidden="until-found"]) { display: block }
+  :where(ui-accordion-trigger:not([hidden]), ui-accordion-trigger[hidden="until-found"]) { display: contents }
+  :where(ui-accordion-panel:not([hidden]), ui-accordion-panel[hidden="until-found"]) { display: block }
+  :where(ui-checkbox-group:not([hidden]), ui-checkbox-group[hidden="until-found"]) { display: block }
+  :where(ui-tabs:not([hidden]), ui-tabs[hidden="until-found"]) { display: block }
+  :where(ui-tabs-list:not([hidden]), ui-tabs-list[hidden="until-found"]) { display: block }
+  :where(ui-tabs-tab:not([hidden]), ui-tabs-tab[hidden="until-found"]) { display: contents }
+  :where(ui-tabs-indicator:not([hidden]), ui-tabs-indicator[hidden="until-found"]) { display: block }
+  :where(ui-tabs-panel:not([hidden]), ui-tabs-panel[hidden="until-found"]) { display: block }
+  :where(rp-cart-count:not([hidden]), rp-cart-count[hidden="until-found"]) { display: contents }
+  :where(ui-tooltip-trigger:not([hidden]), ui-tooltip-trigger[hidden="until-found"]) { display: contents }
+  :where(ui-tooltip-arrow:not([hidden]), ui-tooltip-arrow[hidden="until-found"]) { display: block }
+  :where(ui-drawer-trigger:not([hidden]), ui-drawer-trigger[hidden="until-found"]) { display: contents }
+  :where(ui-drawer-close:not([hidden]), ui-drawer-close[hidden="until-found"]) { display: contents }
+  :where(ui-drawer-handle:not([hidden]), ui-drawer-handle[hidden="until-found"]) { display: contents }
+  :where(ui-drawer-outlet:not([hidden]), ui-drawer-outlet[hidden="until-found"]) { display: block }
+  :where(ui-drawer-title:not([hidden]), ui-drawer-title[hidden="until-found"]) { display: block }
+  :where(ui-drawer-description:not([hidden]), ui-drawer-description[hidden="until-found"]) { display: block }
+  :where(ui-dialog-trigger:not([hidden]), ui-dialog-trigger[hidden="until-found"]) { display: contents }
+  :where(ui-dialog-close:not([hidden]), ui-dialog-close[hidden="until-found"]) { display: contents }
+  :where(ui-dialog-title:not([hidden]), ui-dialog-title[hidden="until-found"]) { display: block }
+  :where(ui-dialog-description:not([hidden]), ui-dialog-description[hidden="until-found"]) { display: block }
+  :where(ui-menu-sub:not([hidden]), ui-menu-sub[hidden="until-found"]) { display: contents }
+  :where(ui-menu-trigger:not([hidden]), ui-menu-trigger[hidden="until-found"]) { display: contents }
+  :where(ui-menu-context-trigger:not([hidden]), ui-menu-context-trigger[hidden="until-found"]) { display: block }
+  :where(ui-menu-sub-trigger:not([hidden]), ui-menu-sub-trigger[hidden="until-found"]) { display: block }
+  :where(ui-menu-item:not([hidden]), ui-menu-item[hidden="until-found"]) { display: block }
+  :where(ui-menu-checkbox-item:not([hidden]), ui-menu-checkbox-item[hidden="until-found"]) { display: block }
+  :where(ui-menu-radio-group:not([hidden]), ui-menu-radio-group[hidden="until-found"]) { display: block }
+  :where(ui-menu-radio-item:not([hidden]), ui-menu-radio-item[hidden="until-found"]) { display: block }
+  :where(ui-menu-group:not([hidden]), ui-menu-group[hidden="until-found"]) { display: block }
+  :where(ui-menu-group-label:not([hidden]), ui-menu-group-label[hidden="until-found"]) { display: block }
+  :where(ui-menu-separator:not([hidden]), ui-menu-separator[hidden="until-found"]) { display: block }
+  :where(ui-popover-trigger:not([hidden]), ui-popover-trigger[hidden="until-found"]) { display: contents }
+  :where(ui-popover-close:not([hidden]), ui-popover-close[hidden="until-found"]) { display: contents }
+  :where(ui-popover-title:not([hidden]), ui-popover-title[hidden="until-found"]) { display: block }
+  :where(ui-popover-description:not([hidden]), ui-popover-description[hidden="until-found"]) { display: block }
+  :where(ui-popover-arrow:not([hidden]), ui-popover-arrow[hidden="until-found"]) { display: block }
+  :where(ui-number-input:not([hidden]), ui-number-input[hidden="until-found"]) { display: block }
+  :where(ui-number-input-group:not([hidden]), ui-number-input-group[hidden="until-found"]) { display: block }
+  :where(ui-number-input-control:not([hidden]), ui-number-input-control[hidden="until-found"]) { display: contents }
+  :where(ui-number-input-increment:not([hidden]), ui-number-input-increment[hidden="until-found"]) { display: contents }
+  :where(ui-number-input-decrement:not([hidden]), ui-number-input-decrement[hidden="until-found"]) { display: contents }
+  :where(ui-number-input-scrub-area-cursor:not([hidden]), ui-number-input-scrub-area-cursor[hidden="until-found"]) { display: block }
+  :where(ui-select:not([hidden]), ui-select[hidden="until-found"]) { display: contents }
+  :where(ui-select-label:not([hidden]), ui-select-label[hidden="until-found"]) { display: block }
+  :where(ui-select-trigger:not([hidden]), ui-select-trigger[hidden="until-found"]) { display: contents }
+  :where(ui-select-clear:not([hidden]), ui-select-clear[hidden="until-found"]) { display: contents }
+  :where(ui-select-list:not([hidden]), ui-select-list[hidden="until-found"]) { display: block }
+  :where(ui-select-input:not([hidden]), ui-select-input[hidden="until-found"]) { display: contents }
+  :where(ui-select-empty:not([hidden]), ui-select-empty[hidden="until-found"]) { display: block }
+  :where(ui-select-status:not([hidden]), ui-select-status[hidden="until-found"]) { display: block }
+  :where(ui-select-select-all:not([hidden]), ui-select-select-all[hidden="until-found"]) { display: block }
+  :where(ui-select-item:not([hidden]), ui-select-item[hidden="until-found"]) { display: block }
+  :where(ui-select-group:not([hidden]), ui-select-group[hidden="until-found"]) { display: block }
+  :where(ui-select-group-label:not([hidden]), ui-select-group-label[hidden="until-found"]) { display: block }
+  :where(ui-select-separator:not([hidden]), ui-select-separator[hidden="until-found"]) { display: block }
+  :where(ui-select-arrow:not([hidden]), ui-select-arrow[hidden="until-found"]) { display: block }
+  :where(ui-tooltip-content[align]) { text-align: inherit }
+  :where(ui-menu-content[align]) { text-align: inherit }
+  :where(ui-menu-sub-content[align]) { text-align: inherit }
+  :where(ui-popover-content[align]) { text-align: inherit }
+  :where(ui-select-content[align]) { text-align: inherit }
+  :where([as-child]) { display: contents }
+}
+</style>
+<style id="ui-sdk-hidden">
+@layer ui-sdk { :where([data-slot][hidden]:not([hidden="until-found"])) { display: none !important } }
+</style>
+<style id="ui-sdk-popover-reset">
+@layer ui-sdk { :where([data-slot="drawer-content"][popover], [data-slot="drawer-backdrop"][popover], [data-slot="dialog-content"][popover], [data-slot="dialog-backdrop"][popover], [data-slot="popover-content"][popover], [data-slot="popover-backdrop"][popover]) { inset: auto; width: auto; height: auto; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; overflow: visible; color: inherit; background: none } }
+</style>
+
+styles before: 0, adoptedStyleSheets after: 0
+body children after: section#c-tabs-pre, section#c-dialog-pre, section#c-accordion-pre, section#c-drawer-pre, section#c-dialog-link, section#c-popover-hidden, section#c-tabs-links, section#c-forms, section#c-custom
+undefined ui-* tags after: 
+
+## console
+
+
+## requests (90)
+/pe-bare.html
+/web.js
+/custom.js
+/web/tabs.js
+/web/dialog.js
+/web/accordion.js
+/web/drawer.js
+/web/popover.js
+/web/menu.js
+/web/checkbox.js
+/web/tooltip.js
+/web/select.js
+/web/number-input.js
+/web/field.js
+/web/button.js
+/web/core.js
+/web/chunks/RNPOWNMB.js
+/web/chunks/CsVvVnqd.js
+/web/chunks/bvFh-oIT.js
+/web/chunks/CeK2EAbn.js
+/web/chunks/B7EgSgjQ.js
+/web/chunks/kkGObSDr.js
+/web/chunks/DwDilCo2.js
+/web/chunks/DpuudEw0.js
+/web/chunks/C7hbAjNc.js
+/web/chunks/w5CP0BlA.js
+/web/chunks/_hMXOCTH.js
+/web/chunks/BtVkQf3z.js
+/web/chunks/C_N8kM4C.js
+/web/chunks/DnrOuQH7.js
+/web/chunks/DnFXe_lF.js
+/web/chunks/BQhFRlEn.js
+/web/chunks/BSKHQz24.js
+/web/chunks/BiQr7Nls.js
+/web/chunks/Bz5d4qSQ.js
+/web/chunks/C8-AH9V0.js
+/web/chunks/BXPnlG4D.js
+/web/chunks/DdaCLml8.js
+/web/chunks/B025ZtTT.js
+/web/chunks/DoCSjBnY.js
+/web/chunks/CCQk1xoB.js
+/web/chunks/jxEsiml_.js
+/web/chunks/CMg-8UVf.js
+/web/chunks/DRVKoQYp.js
+/web/chunks/asSN9iEp.js
+/web/chunks/DuLMOW0Y.js
+/web/chunks/BhcWIV-5.js
+/web/chunks/C_M6fsNE.js
+/web/chunks/DuMa5_Gr.js
+/web/chunks/CYWI7Gee.js
+/web/chunks/DymDALQ6.js
+/web/chunks/C8w7s5dg.js
+/web/chunks/1VvP54iX.js
+/web/chunks/czZLREgo.js
+/web/chunks/B_ns1YHO.js
+/web/chunks/8BtALw1O.js
+/web/chunks/D9UgVYvF.js
+/web/chunks/CBckt1Zn.js
+/web/chunks/D5QxA3HQ.js
+/web/chunks/CRS_afhq.js
+/web/chunks/DT3Hb76X.js
+/web/chunks/DDIvQXad.js
+/web/chunks/C_7kocAD.js
+/web/chunks/Dw8niAiz.js
+/web/chunks/DYBNErD8.js
+/web/chunks/BsN3hG3y.js
+/web/chunks/o9Fy_3fj.js
+/web/chunks/Ct8AidXF.js
+/web/chunks/BJK5QbCp.js
+/web/chunks/PMe0LltN.js
+/web/chunks/BBlpz0SR.js
+/web/chunks/2bIEUO6_.js
+/web/chunks/yv8dTvNI.js
+/web/chunks/B0g0P1Zn.js
+/web/chunks/D355FShC.js
+/web/chunks/BbMcdL-W.js
+/web/chunks/D5LiaI5R.js
+/web/chunks/Cuep_3Vf.js
+/web/chunks/CFODo-m2.js
+/web/chunks/DibDLqmm.js
+/web/chunks/DD_2uvq-.js
+/web/chunks/_DulnfUa.js
+/web/chunks/qkTurcuO.js
+/web/chunks/DYc1BzGE.js
+/web/chunks/B1rux6br.js
+/web/chunks/BQcSd-qI.js
+/web/chunks/DG8YGSvu.js
+/web/chunks/DqjnG-vr.js
+/web/chunks/DSUI3yI-.js

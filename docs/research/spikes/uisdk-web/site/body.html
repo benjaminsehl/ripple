@@ -1,0 +1,227 @@
+<section id="c-button">
+  <ui-button><button>Save</button></ui-button>
+  <ui-button><a href="/docs">Docs</a></ui-button>
+  <form action="/submit" method="get"><ui-button><button type="submit" name="a" value="1">Submit</button></ui-button></form>
+</section>
+<section id="c-dialog">
+  <ui-dialog>
+    <ui-dialog-trigger><button>Open</button></ui-dialog-trigger>
+    <ui-dialog-backdrop hidden></ui-dialog-backdrop>
+    <ui-dialog-content hidden>
+      <ui-dialog-title>Project details</ui-dialog-title>
+      <ui-dialog-description>Review the details before continuing.</ui-dialog-description>
+      <ui-dialog-close><button>Close</button></ui-dialog-close>
+    </ui-dialog-content>
+  </ui-dialog>
+</section>
+<section id="c-drawer">
+  <ui-drawer>
+    <ui-drawer-trigger><button>Filters</button></ui-drawer-trigger>
+    <ui-drawer-backdrop hidden></ui-drawer-backdrop>
+    <ui-drawer-content hidden>
+      <ui-drawer-title>Filters</ui-drawer-title>
+      <ui-drawer-description>Narrow down the results.</ui-drawer-description>
+      <ui-drawer-close><button>Done</button></ui-drawer-close>
+    </ui-drawer-content>
+  </ui-drawer>
+</section>
+<section id="c-popover">
+  <ui-popover>
+    <ui-popover-trigger><button>Share</button></ui-popover-trigger>
+    <ui-popover-content>
+      <ui-popover-title>Share this document</ui-popover-title>
+      <ui-popover-description>Anyone with the link can view it.</ui-popover-description>
+      <ui-popover-close><button>Done</button></ui-popover-close>
+    </ui-popover-content>
+  </ui-popover>
+</section>
+<section id="c-tooltip">
+  <ui-tooltip>
+    <ui-tooltip-trigger><button>Share</button></ui-tooltip-trigger>
+    <ui-tooltip-content>Anyone with the link can view</ui-tooltip-content>
+  </ui-tooltip>
+</section>
+<section id="c-menu">
+  <ui-menu>
+    <ui-menu-trigger><button>Actions</button></ui-menu-trigger>
+    <ui-menu-content>
+      <ui-menu-item value="rename">Rename</ui-menu-item>
+      <ui-menu-item as-child><a href="/settings">Settings</a></ui-menu-item>
+    </ui-menu-content>
+  </ui-menu>
+</section>
+<section id="c-toast">
+  <ui-toast-region>
+    <template>
+      <ui-toast>
+        <ui-toast-title></ui-toast-title>
+        <ui-toast-description></ui-toast-description>
+        <ui-toast-close><button>Dismiss</button></ui-toast-close>
+      </ui-toast>
+    </template>
+  </ui-toast-region>
+</section>
+<section id="c-tabs">
+  <ui-tabs default-value="account">
+    <ui-tabs-list aria-label="Settings">
+      <ui-tabs-tab value="account"><button type="button">Account</button></ui-tabs-tab>
+      <ui-tabs-tab value="password"><button type="button">Password</button></ui-tabs-tab>
+    </ui-tabs-list>
+    <ui-tabs-panel value="account">Manage your profile.</ui-tabs-panel>
+    <ui-tabs-panel value="password">Choose a new password.</ui-tabs-panel>
+  </ui-tabs>
+</section>
+<section id="c-accordion">
+  <ui-accordion default-value="shipping">
+    <ui-accordion-item value="shipping">
+      <ui-accordion-header><h3><ui-accordion-trigger><button>Shipping</button></ui-accordion-trigger></h3></ui-accordion-header>
+      <ui-accordion-panel>Orders arrive in five to seven days.</ui-accordion-panel>
+    </ui-accordion-item>
+    <ui-accordion-item value="returns">
+      <ui-accordion-header><h3><ui-accordion-trigger><button>Returns</button></ui-accordion-trigger></h3></ui-accordion-header>
+      <ui-accordion-panel hidden>Thirty days.</ui-accordion-panel>
+    </ui-accordion-item>
+  </ui-accordion>
+</section>
+<section id="c-collapsible">
+  <ui-collapsible>
+    <ui-collapsible-trigger><button>Order details</button></ui-collapsible-trigger>
+    <ui-collapsible-panel hidden>2 x Linen shirt</ui-collapsible-panel>
+  </ui-collapsible>
+</section>
+<section id="c-carousel">
+  <ui-carousel aria-label="Featured">
+    <ui-carousel-viewport>
+      <ui-carousel-content>
+        <ui-carousel-item>First slide</ui-carousel-item>
+        <ui-carousel-item>Second slide</ui-carousel-item>
+      </ui-carousel-content>
+    </ui-carousel-viewport>
+    <ui-carousel-previous><button>Previous</button></ui-carousel-previous>
+    <ui-carousel-next><button>Next</button></ui-carousel-next>
+  </ui-carousel>
+</section>
+<section id="c-select">
+  <form action="/submit" method="get">
+  <ui-select placeholder="Select a role" name="role" default-value="editor">
+    <ui-select-label>Role</ui-select-label>
+    <ui-select-trigger><button><ui-select-value></ui-select-value></button></ui-select-trigger>
+    <ui-select-content>
+      <ui-select-item value="viewer">Viewer</ui-select-item>
+      <ui-select-item value="editor">Editor</ui-select-item>
+    </ui-select-content>
+  </ui-select>
+  <button type="submit">Go</button>
+  </form>
+</section>
+<section id="c-combobox">
+  <ui-combobox>
+    <ui-combobox-label>Fruit</ui-combobox-label>
+    <ui-combobox-input><input placeholder="Search fruits" /></ui-combobox-input>
+    <ui-combobox-content hidden>
+      <ui-combobox-list>
+        <ui-combobox-item value="apple">Apple</ui-combobox-item>
+        <ui-combobox-item value="banana">Banana</ui-combobox-item>
+      </ui-combobox-list>
+    </ui-combobox-content>
+  </ui-combobox>
+</section>
+<section id="c-checkbox">
+  <form action="/submit" method="get">
+  <label><ui-checkbox name="terms" value="yes" default-checked><ui-checkbox-indicator aria-hidden="true">v</ui-checkbox-indicator></ui-checkbox> Accept terms</label>
+  <button type="submit">Go</button>
+  </form>
+</section>
+<section id="c-radio">
+  <ui-radio-group default-value="standard" name="speed" aria-label="Shipping speed">
+    <label><ui-radio value="standard"><ui-radio-indicator></ui-radio-indicator></ui-radio> Standard</label>
+    <label><ui-radio value="express"><ui-radio-indicator></ui-radio-indicator></ui-radio> Express</label>
+  </ui-radio-group>
+</section>
+<section id="c-switch">
+  <label>Airplane mode <ui-switch name="airplane"><ui-switch-thumb></ui-switch-thumb></ui-switch></label>
+</section>
+<section id="c-slider">
+  <ui-slider default-value="50" name="vol">
+    <ui-slider-value></ui-slider-value>
+    <ui-slider-control><ui-slider-track><ui-slider-indicator></ui-slider-indicator><ui-slider-thumb aria-label="Volume"></ui-slider-thumb></ui-slider-track></ui-slider-control>
+  </ui-slider>
+</section>
+<section id="c-number-input">
+  <form action="/submit" method="get">
+  <ui-number-input default-value="1" min="0" name="quantity">
+    <ui-number-input-group>
+      <ui-number-input-decrement><button aria-label="Decrease">-</button></ui-number-input-decrement>
+      <ui-number-input-control><input aria-label="Quantity" /></ui-number-input-control>
+      <ui-number-input-increment><button aria-label="Increase">+</button></ui-number-input-increment>
+    </ui-number-input-group>
+  </ui-number-input>
+  <button type="submit">Go</button>
+  </form>
+</section>
+<section id="c-navigation-menu">
+  <ui-navigation-menu aria-label="Main">
+    <ui-navigation-menu-list>
+      <ui-navigation-menu-item value="guides">
+        <ui-navigation-menu-trigger><button>Guides</button></ui-navigation-menu-trigger>
+        <ui-navigation-menu-content>
+          <ui-navigation-menu-link><a href="/docs">Introduction</a></ui-navigation-menu-link>
+        </ui-navigation-menu-content>
+      </ui-navigation-menu-item>
+      <ui-navigation-menu-item>
+        <ui-navigation-menu-link><a href="/about">About</a></ui-navigation-menu-link>
+      </ui-navigation-menu-item>
+    </ui-navigation-menu-list>
+    <ui-navigation-menu-viewport></ui-navigation-menu-viewport>
+  </ui-navigation-menu>
+</section>
+<section id="c-pagination">
+  <ui-pagination aria-label="Pagination" page-count="10">
+    <ui-pagination-list>
+      <ui-pagination-item><ui-pagination-previous><button>Previous</button></ui-pagination-previous></ui-pagination-item>
+      <template><ui-pagination-item><ui-pagination-link><button></button></ui-pagination-link></ui-pagination-item></template>
+      <ui-pagination-item><ui-pagination-next><button>Next</button></ui-pagination-next></ui-pagination-item>
+    </ui-pagination-list>
+  </ui-pagination>
+</section>
+<section id="c-pagination-links">
+  <ui-pagination aria-label="Pagination" page-count="3" default-page="2">
+    <ui-pagination-list>
+      <ui-pagination-item><ui-pagination-previous><a href="?page=1">Previous</a></ui-pagination-previous></ui-pagination-item>
+      <ui-pagination-item><ui-pagination-link page="1"><a href="?page=1">1</a></ui-pagination-link></ui-pagination-item>
+      <ui-pagination-item><ui-pagination-link page="2"><a href="?page=2" aria-current="page">2</a></ui-pagination-link></ui-pagination-item>
+      <ui-pagination-item><ui-pagination-link page="3"><a href="?page=3">3</a></ui-pagination-link></ui-pagination-item>
+      <ui-pagination-item><ui-pagination-next><a href="?page=3">Next</a></ui-pagination-next></ui-pagination-item>
+    </ui-pagination-list>
+  </ui-pagination>
+</section>
+<section id="c-rating">
+  <ui-rating aria-label="Rating" default-value="3" name="rating">
+    <template><ui-rating-item><span aria-hidden="true">*</span></ui-rating-item></template>
+  </ui-rating>
+</section>
+<section id="c-progress">
+  <ui-progress value="40" aria-label="Upload">
+    <ui-progress-label></ui-progress-label>
+    <ui-progress-value></ui-progress-value>
+    <ui-progress-track><ui-progress-indicator></ui-progress-indicator></ui-progress-track>
+  </ui-progress>
+</section>
+<section id="c-field">
+  <form action="/submit" method="get">
+  <ui-field name="username">
+    <ui-field-label>Username</ui-field-label>
+    <ui-input><input autocomplete="username" required /></ui-input>
+    <ui-field-description>This is your public name.</ui-field-description>
+    <ui-field-error></ui-field-error>
+  </ui-field>
+  <button type="submit">Go</button>
+  </form>
+</section>
+<section id="c-label">
+  <ui-label for="plan">Plan</ui-label>
+  <ui-radio-group id="plan" default-value="pro">
+    <ui-radio value="free">Free</ui-radio>
+    <ui-radio value="pro">Pro</ui-radio>
+  </ui-radio-group>
+</section>

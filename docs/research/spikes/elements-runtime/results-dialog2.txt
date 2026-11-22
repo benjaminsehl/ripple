@@ -1,0 +1,5 @@
+PASS  data-default-open: dialog opens on connect, openchange reason imperative  [{"id":"welcome","value":true,"reason":"imperative"}]
+PASS  data-default-open: a reconnect does not reopen the dialog
+PASS  nested <details> toggling inside the dialog fires no openchange  [{"id":"menu","value":true,"reason":"trigger-press"}]
+PASS  intercepted link navigation closes the dialog, reason link-press  [{"id":"menu","value":false,"reason":"link-press"}] url=static.html
+PASS  history.pushState does not close the dialog

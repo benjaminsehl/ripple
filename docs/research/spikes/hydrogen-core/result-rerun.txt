@@ -1,0 +1,529 @@
+## 1 liquid-mode connect, empty cart (no endpoint configured)
+{
+ "out": {
+  "before": {
+   "id": null,
+   "qty": 0,
+   "lines": [],
+   "loading": true,
+   "pendingLines": [],
+   "cost": false,
+   "net": [],
+   "keys": [
+    "id",
+    "checkoutUrl",
+    "totalQuantity",
+    "cost",
+    "note",
+    "attributes",
+    "lines",
+    "discountCodes"
+   ]
+  },
+  "after": {
+   "id": null,
+   "qty": 0,
+   "lines": [],
+   "loading": false,
+   "pendingLines": [],
+   "cost": false,
+   "net": [],
+   "keys": [
+    "id",
+    "checkoutUrl",
+    "totalQuantity",
+    "cost",
+    "note",
+    "attributes",
+    "lines",
+    "discountCodes"
+   ]
+  },
+  "log": [
+   [
+    "configure",
+    [
+     "eventTarget",
+     "handler"
+    ]
+   ],
+   [
+    "getCart",
+    null
+   ]
+  ]
+ },
+ "fetches": []
+}
+## 2 native Liquid form (id/quantity, button name=add) passed straight to handleFormSubmit
+{
+ "out": {
+  "err": "Error: Unknown cart form intent: \"\"",
+  "state": {
+   "id": null,
+   "qty": 0,
+   "lines": [],
+   "loading": false,
+   "pendingLines": [],
+   "cost": false,
+   "net": [],
+   "keys": [
+    "id",
+    "checkoutUrl",
+    "totalQuantity",
+    "cost",
+    "note",
+    "attributes",
+    "lines",
+    "discountCodes"
+   ]
+  },
+  "log": [
+   [
+    "configure",
+    [
+     "eventTarget",
+     "handler"
+    ]
+   ]
+  ]
+ },
+ "fetches": []
+}
+## 3 synthetic Hydrogen-dialect form built from Liquid fields
+{
+ "out": {
+  "states": [
+   {
+    "id": null,
+    "qty": 2,
+    "lines": [
+     [
+      "optimistic:gid://shopify/ProductVariant/123",
+      2,
+      "gid://shopify/ProductVariant/123"
+     ]
+    ],
+    "loading": false,
+    "pendingLines": [
+     "optimistic:gid://shopify/ProductVariant/123"
+    ],
+    "cost": true,
+    "net": [],
+    "keys": [
+     "id",
+     "checkoutUrl",
+     "totalQuantity",
+     "cost",
+     "note",
+     "attributes",
+     "lines",
+     "discountCodes"
+    ]
+   },
+   {
+    "id": "gid://shopify/Cart/c1",
+    "qty": 2,
+    "lines": [
+     [
+      "gid://shopify/CartLine/1?cart=c1",
+      2,
+      "gid://shopify/ProductVariant/123"
+     ]
+    ],
+    "loading": false,
+    "pendingLines": [],
+    "cost": false,
+    "net": [],
+    "keys": [
+     "id",
+     "checkoutUrl",
+     "totalQuantity",
+     "cost",
+     "note",
+     "attributes",
+     "lines",
+     "discountCodes",
+     "updatedAt"
+    ]
+   }
+  ],
+  "final": {
+   "id": "gid://shopify/Cart/c1",
+   "qty": 2,
+   "lines": [
+    [
+     "gid://shopify/CartLine/1?cart=c1",
+     2,
+     "gid://shopify/ProductVariant/123"
+    ]
+   ],
+   "loading": false,
+   "pendingLines": [],
+   "cost": false,
+   "net": [],
+   "keys": [
+    "id",
+    "checkoutUrl",
+    "totalQuantity",
+    "cost",
+    "note",
+    "attributes",
+    "lines",
+    "discountCodes",
+    "updatedAt"
+   ]
+  },
+  "log": [
+   [
+    "configure",
+    [
+     "eventTarget",
+     "handler"
+    ]
+   ],
+   [
+    "updateCart",
+    {
+     "lines": [
+      {
+       "merchandiseId": "gid://shopify/ProductVariant/123",
+       "quantity": 2
+      }
+     ]
+    }
+   ],
+   [
+    "defaultHandler"
+   ]
+  ]
+ },
+ "fetches": []
+}
+## 4 same as 3 but WITHOUT products detail (no optimistic line)
+{
+ "out": {
+  "states": [
+   {
+    "id": null,
+    "qty": 2,
+    "lines": [],
+    "loading": false,
+    "pendingLines": [],
+    "cost": true,
+    "net": [],
+    "keys": [
+     "id",
+     "checkoutUrl",
+     "totalQuantity",
+     "cost",
+     "note",
+     "attributes",
+     "lines",
+     "discountCodes"
+    ]
+   },
+   {
+    "id": "gid://shopify/Cart/c1",
+    "qty": 2,
+    "lines": [
+     [
+      "gid://shopify/CartLine/1?cart=c1",
+      2,
+      null
+     ]
+    ],
+    "loading": false,
+    "pendingLines": [],
+    "cost": false,
+    "net": [],
+    "keys": [
+     "id",
+     "checkoutUrl",
+     "totalQuantity",
+     "cost",
+     "note",
+     "attributes",
+     "lines",
+     "discountCodes",
+     "updatedAt"
+    ]
+   }
+  ],
+  "final": {
+   "id": "gid://shopify/Cart/c1",
+   "qty": 2,
+   "lines": [
+    [
+     "gid://shopify/CartLine/1?cart=c1",
+     2,
+     null
+    ]
+   ],
+   "loading": false,
+   "pendingLines": [],
+   "cost": false,
+   "net": [],
+   "keys": [
+    "id",
+    "checkoutUrl",
+    "totalQuantity",
+    "cost",
+    "note",
+    "attributes",
+    "lines",
+    "discountCodes",
+    "updatedAt"
+   ]
+  }
+ },
+ "fetches": []
+}
+## 5 theme/app configured updateCart first (configure returns false)
+{
+ "out": {
+  "err": "Error: Standard Actions updateCart could not be configured.",
+  "state": {
+   "id": null,
+   "qty": 0,
+   "lines": [],
+   "loading": false,
+   "pendingLines": [],
+   "cost": false,
+   "net": [
+    "Standard Actions updateCart could not be configured."
+   ],
+   "keys": [
+    "id",
+    "checkoutUrl",
+    "totalQuantity",
+    "cost",
+    "note",
+    "attributes",
+    "lines",
+    "discountCodes"
+   ]
+  },
+  "log": [
+   [
+    "configure",
+    [
+     "eventTarget",
+     "handler"
+    ]
+   ],
+   [
+    "configure",
+    [
+     "eventTarget",
+     "handler"
+    ]
+   ]
+  ]
+ },
+ "fetches": []
+}
+## 6 code-driven Shopify.actions.updateCart with raw ids observed by store; existing cart from getCart
+{
+ "out": {
+  "loaded": {
+   "id": "gid://shopify/Cart/c1",
+   "qty": 1,
+   "lines": [
+    [
+     "gid://shopify/CartLine/9?cart=c1",
+     1,
+     null
+    ]
+   ],
+   "loading": false,
+   "pendingLines": [],
+   "cost": false,
+   "net": [],
+   "keys": [
+    "id",
+    "totalQuantity",
+    "cost",
+    "lines",
+    "discountCodes",
+    "checkoutUrl",
+    "note",
+    "attributes"
+   ]
+  },
+  "states": [
+   {
+    "id": "gid://shopify/Cart/c1",
+    "qty": 3,
+    "lines": [
+     [
+      "gid://shopify/CartLine/9?cart=c1",
+      3,
+      null
+     ]
+    ],
+    "loading": false,
+    "pendingLines": [
+     "gid://shopify/CartLine/9?cart=c1"
+    ],
+    "cost": true,
+    "net": [],
+    "keys": [
+     "id",
+     "totalQuantity",
+     "cost",
+     "lines",
+     "discountCodes",
+     "checkoutUrl",
+     "note",
+     "attributes"
+    ]
+   },
+   {
+    "id": "gid://shopify/Cart/c1",
+    "qty": 3,
+    "lines": [
+     [
+      "gid://shopify/CartLine/9?cart=c1",
+      3,
+      null
+     ]
+    ],
+    "loading": false,
+    "pendingLines": [],
+    "cost": false,
+    "net": [],
+    "keys": [
+     "id",
+     "totalQuantity",
+     "cost",
+     "lines",
+     "discountCodes",
+     "checkoutUrl",
+     "note",
+     "attributes",
+     "updatedAt"
+    ]
+   }
+  ],
+  "final": {
+   "id": "gid://shopify/Cart/c1",
+   "qty": 3,
+   "lines": [
+    [
+     "gid://shopify/CartLine/9?cart=c1",
+     3,
+     null
+    ]
+   ],
+   "loading": false,
+   "pendingLines": [],
+   "cost": false,
+   "net": [],
+   "keys": [
+    "id",
+    "totalQuantity",
+    "cost",
+    "lines",
+    "discountCodes",
+    "checkoutUrl",
+    "note",
+    "attributes",
+    "updatedAt"
+   ]
+  },
+  "isDefault": false,
+  "log": [
+   [
+    "configure",
+    [
+     "eventTarget",
+     "handler"
+    ]
+   ],
+   [
+    "getCart",
+    null
+   ],
+   [
+    "updateCart",
+    {
+     "lines": [
+      {
+       "id": "gid://shopify/CartLine/9?cart=c1",
+       "quantity": 3
+      }
+     ]
+    }
+   ],
+   [
+    "defaultHandler"
+   ]
+  ]
+ },
+ "fetches": []
+}
+## 7 no Standard Actions on page at all
+{
+ "out": {
+  "err": "Error: Standard Actions not available. Add ShopifyScripts to your document head or include https://cdn.shopify.com/storefront/standard-actions.js before calling cart actions.",
+  "state": {
+   "id": null,
+   "qty": 0,
+   "lines": [],
+   "loading": false,
+   "pendingLines": [],
+   "cost": false,
+   "net": [
+    "Standard Actions not available. Add ShopifyScripts to your document head or include https://cdn.shopify.com/storefront/standard-actions.js before calling cart actions."
+   ],
+   "keys": [
+    "id",
+    "checkoutUrl",
+    "totalQuantity",
+    "cost",
+    "note",
+    "attributes",
+    "lines",
+    "discountCodes"
+   ]
+  }
+ },
+ "fetches": []
+}
+## 8 hydrogen-server mode: configureCartEndpoint then connect
+{
+ "out": {
+  "state": {
+   "id": null,
+   "qty": 0,
+   "lines": [],
+   "loading": false,
+   "pendingLines": [],
+   "cost": false,
+   "net": [],
+   "keys": [
+    "id",
+    "checkoutUrl",
+    "totalQuantity",
+    "cost",
+    "note",
+    "attributes",
+    "lines",
+    "discountCodes"
+   ]
+  },
+  "log": [
+   [
+    "configure",
+    [
+     "eventTarget",
+     "handler"
+    ]
+   ]
+  ]
+ },
+ "fetches": [
+  "GET /api/cart"
+ ]
+}

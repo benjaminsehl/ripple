@@ -1,0 +1,50 @@
+{% doc %}
+  Ripple ProductForm. Commerce component, self-contained (resource tier).
+
+  Server HTML is a native Shopify product form: it posts `id` (the variant id) and every
+  named control in the body to the cart, so add to cart works when JavaScript never loads.
+  When ripple.js loads, <rp-product-form> handles the submit through the cart store.
+
+  With no body, the block renders its default body: one submit Button labelled
+  `ripple.product-form.add_to_cart`. A body replaces the default body.
+  The body is rendered before this block runs and cannot read `form`.
+
+  @param {string} id - Required. Printed on the <form>.
+  @param {product} product - Required. The product to sell.
+  @param {variant} [variant] - Selected variant. Default: product.selected_or_first_available_variant.
+  @param {string} [class] - Extra classes appended after `rp-product-form`.
+  @param {string} [attributes] - RAW, unescaped HTML attributes appended to the root element. Never pass shopper or merchant input.
+  @param {string} [content] - Replaces the default body. Must contain one submit `button` block with `name: 'add'`.
+
+  @example
+  {% block 'product-form', id: 'buy', product: product %}{% endblock %}
+{% enddoc %}
+
+{%- liquid
+  if variant == blank
+    assign variant = product.selected_or_first_available_variant
+  endif
+  assign add_label = 'ripple.product-form.add_to_cart' | t
+-%}
+<rp-product-form
+  class="rp-product-form {{ class | escape }}"
+  data-slot="rp-product-form"
+  {{ attributes }}
+>
+  {% form 'product', product, id: id, class: 'rp-product-form-fields' %}
+    <input type="hidden" name="id" value="{{ variant.id }}" data-rp-field="merchandise-id">
+    {% if content != blank %}
+      {{ content }}
+    {% else %}
+      {% render 'rp-button', type: 'submit', name: 'add', content: add_label %}
+    {% endif %}
+    <p class="rp-form-message" data-rp-part="error" data-tone="destructive" role="alert" hidden></p>
+  {% endform %}
+</rp-product-form>
+
+{% schema %}
+{
+  "name": "t:ripple.product-form.name",
+  "settings": []
+}
+{% endschema %}

@@ -1,0 +1,20 @@
+import { createRequire } from "node:module";
+import fs from "node:fs";
+import { renderToString } from "react-dom/server";
+import { createElement } from "react";
+import { canonicalize } from "../out/canonicalize.mjs";
+const { chromium } = createRequire(import.meta.url)("playwright");
+const { App } = await import("../out/app.mjs");
+const ssr = renderToString(createElement(App, { mode: "uncontrolled" }));
+const browser = await chromium.launch();
+const page = await browser.newPage();
+const errors = [];
+page.on("console", (m) => { if (m.type() === "error" || m.type() === "warning") errors.push(m.text().slice(0, 200)); });
+await page.setContent(`<!doctype html><div id="root"></div>`);
+await page.addScriptTag({ type: "module", content: fs.readFileSync("out/client2.js", "utf8") });
+await page.waitForFunction(() => window.__html);
+const html = await page.evaluate(() => window.__html);
+const same = canonicalize(html) === canonicalize(ssr);
+console.log("client render equals SSR (canonical):", same, "console:", JSON.stringify(errors));
+if (!same) { fs.writeFileSync("out/a.txt", canonicalize(html)); fs.writeFileSync("out/b.txt", canonicalize(ssr)); }
+await browser.close();

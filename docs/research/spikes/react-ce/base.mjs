@@ -1,0 +1,12 @@
+import { createRequire } from 'module'; const require = createRequire('/opt/node-tools/'); const { chromium } = require('playwright');
+import fs from 'fs';
+const b = await chromium.launch(); const p = await b.newPage();
+p.on('console', m => console.log('[console]', m.type(), m.text())); p.on('pageerror', e => console.log('[pageerror]', e.message));
+await p.setContent('<!doctype html><html><body>' + fs.readFileSync('src/minimal.html','utf8') + '</body></html>');
+await p.addScriptTag({ path: 'out/elements.js' });
+await p.waitForTimeout(300);
+const html = await p.evaluate(() => document.getElementById('root').innerHTML);
+fs.writeFileSync('out/upgraded.html', html);
+console.log(html.replace(/></g, '>\n<'));
+console.log('HEAD STYLE:', await p.evaluate(() => [...document.querySelectorAll('style')].map(s => s.textContent).join('\n---\n') + ' adopted:' + document.adoptedStyleSheets.map(s=>[...s.cssRules].map(r=>r.cssText).join('\n')).join('\n')));
+await b.close();

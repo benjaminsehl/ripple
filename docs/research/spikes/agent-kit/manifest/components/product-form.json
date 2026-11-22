@@ -1,0 +1,294 @@
+{
+  "name": "product-form",
+  "title": "ProductForm",
+  "category": "product",
+  "kind": "commerce",
+  "status": "beta",
+  "since": "0.1.0",
+  "summary": "The add-to-cart form for one product. Works as a plain form post; enhanced through the Hydrogen cart store.",
+  "useWhen": [
+    "Selling one product: wraps quantity, selling plan and the submit button"
+  ],
+  "dontUseWhen": [
+    {
+      "case": "Choosing options/variants",
+      "use": "variant-picker (outside the form; option values are links)"
+    },
+    {
+      "case": "Changing a line already in the cart",
+      "use": "cart-line"
+    }
+  ],
+  "root": {
+    "elements": [
+      "rp-product-form"
+    ],
+    "class": "rp-product-form"
+  },
+  "props": [
+    {
+      "name": "product",
+      "type": "object",
+      "objectType": "product | ProductInput",
+      "required": true,
+      "liquid": {
+        "name": "product",
+        "surface": "param"
+      },
+      "description": "The product being sold."
+    },
+    {
+      "name": "variant",
+      "type": "object",
+      "objectType": "variant | ProductVariant",
+      "liquid": {
+        "name": "variant",
+        "surface": "param"
+      },
+      "description": "Selected variant. Default: the selected or first available variant."
+    },
+    {
+      "name": "acceleratedCheckout",
+      "type": "boolean",
+      "default": false,
+      "liquid": {
+        "name": "accelerated_checkout",
+        "surface": "param"
+      },
+      "description": "Print accelerated checkout buttons after the body."
+    },
+    {
+      "name": "id",
+      "type": "id",
+      "attribute": "id",
+      "liquid": {
+        "name": "id",
+        "surface": "param"
+      },
+      "description": "Id of the inner <form>."
+    }
+  ],
+  "content": {
+    "model": "flow",
+    "required": true,
+    "description": "Form controls and exactly one submit Button. In Liquid the submit Button MUST have name: 'add'."
+  },
+  "parts": [
+    {
+      "name": "fields",
+      "elements": [
+        "form"
+      ],
+      "class": "rp-product-form-fields",
+      "required": true,
+      "authoredBy": "component",
+      "parent": "root",
+      "description": "The native form. action, method and hidden inputs are host-owned."
+    },
+    {
+      "name": "error",
+      "elements": [
+        "p"
+      ],
+      "class": "rp-form-message",
+      "required": true,
+      "authoredBy": "component",
+      "parent": "fields",
+      "description": "role=\"alert\", hidden until an add fails."
+    }
+  ],
+  "state": [
+    {
+      "name": "pending",
+      "type": "boolean",
+      "attribute": "data-pending",
+      "reflects": [
+        "data-pending",
+        "aria-busy"
+      ]
+    },
+    {
+      "name": "unavailable",
+      "type": "boolean",
+      "attribute": "data-unavailable",
+      "reflects": [
+        "data-unavailable"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "dom": "add",
+      "react": "onAdd",
+      "detail": "{ merchandiseId: string, quantity: number }",
+      "bubbles": false,
+      "cancelable": true
+    }
+  ],
+  "fixtures": [
+    {
+      "name": "available",
+      "props": {
+        "product": "$fixture:product.snowboard",
+        "id": "pf"
+      },
+      "generated": "hand",
+      "children": "<button class=\"rp-button\" type=\"submit\" name=\"add\" data-variant=\"primary\" data-size=\"md\">Add to cart</button>",
+      "mask": [
+        "form[action]",
+        "form[method]",
+        "form > input[type=hidden]",
+        "[data-product-id]"
+      ],
+      "html": "<rp-product-form class=\"rp-product-form\" data-product-id=\"MASKED\"><form id=\"pf\" class=\"rp-product-form-fields\" action=\"MASKED\" method=\"MASKED\"><input type=\"hidden\" data-rp-field=\"merchandise-id\" name=\"MASKED\" value=\"MASKED\"><button class=\"rp-button\" type=\"submit\" name=\"add\" data-variant=\"primary\" data-size=\"md\">Add to cart</button><p class=\"rp-form-message\" data-rp-part=\"error\" data-tone=\"critical\" role=\"alert\" hidden></p></form></rp-product-form>"
+    }
+  ],
+  "noJs": {
+    "level": "full",
+    "behavior": "The inner form posts to the host cart endpoint (Liquid: /cart/add with id; Hydrogen host: /api/cart with merchandiseId) and the browser navigates. If ripple.js fails to load or the cart store cannot be created, the element MUST NOT call preventDefault()."
+  },
+  "a11y": {
+    "pattern": "native",
+    "checkPattern": null,
+    "name": {
+      "required": "never",
+      "sources": []
+    },
+    "announces": [
+      "\"Added to cart\" via announce() after a confirmed add",
+      "error text in the role=\"alert\" part"
+    ]
+  },
+  "agent": {
+    "surface": "bridge",
+    "component": "rp-product-form",
+    "actions": [
+      {
+        "name": "setQuantity",
+        "args": [
+          {
+            "name": "quantity",
+            "type": "number"
+          }
+        ],
+        "description": "Set the quantity field."
+      },
+      {
+        "name": "add",
+        "description": "Add the selected variant to the cart (same path as submitting the form)."
+      }
+    ],
+    "confirm": [
+      {
+        "part": "accelerated checkout buttons",
+        "sentence": "Buys this product now with accelerated checkout"
+      }
+    ]
+  },
+  "dependencies": {
+    "components": [
+      "button",
+      "form-message"
+    ],
+    "embeds": [
+      "form-message"
+    ],
+    "elements": [
+      "rp-product-form"
+    ],
+    "hydrogen": [
+      "createCartStore",
+      "CartStore.handleFormSubmit"
+    ],
+    "tokens": [],
+    "locale": [
+      "product_form.added",
+      "product_form.error"
+    ]
+  },
+  "liquid": {
+    "block": "product-form",
+    "formDialect": {
+      "variant": "id",
+      "quantity": "quantity",
+      "sellingPlan": "selling_plan",
+      "lineProperty": "properties[<key>]",
+      "submit": "button[name=\"add\"]"
+    },
+    "partials": [
+      {
+        "name": "cart-lines",
+        "refreshedBy": "rp-cart",
+        "on": "cart store confirms a change"
+      }
+    ]
+  },
+  "hydrogenHost": {
+    "formDialect": {
+      "variant": "merchandiseId",
+      "quantity": "quantity",
+      "sellingPlan": "sellingPlanId",
+      "lineProperty": "attributes.<key>",
+      "submit": "button[name=\"intent\"][value=\"add\"] or bare submit"
+    }
+  },
+  "rules": [
+    {
+      "id": "product-form-one-submit",
+      "kind": "requires-descendant",
+      "selector": "rp-product-form",
+      "target": "button[type=submit]",
+      "message": "A ProductForm has no submit button, so nothing can be added to the cart.",
+      "fix": "Put one Button with type submit inside the ProductForm."
+    },
+    {
+      "id": "variant-picker-outside-form",
+      "kind": "forbids-ancestor",
+      "selector": ".rp-variant-picker",
+      "target": "rp-product-form form",
+      "message": "A VariantPicker is inside the ProductForm form. Option values are links and must not submit with the form.",
+      "fix": "Render VariantPicker as a sibling before ProductForm."
+    }
+  ],
+  "files": {
+    "shared": [
+      {
+        "source": "css/components/product-form.css",
+        "target": "@styles/components/product-form.css",
+        "type": "css",
+        "generated": false
+      }
+    ],
+    "react": [
+      {
+        "source": "react/product-form.tsx",
+        "target": "@components/product-form.tsx",
+        "type": "binding",
+        "generated": false
+      }
+    ],
+    "remix": [
+      {
+        "source": "remix/product-form.tsx",
+        "target": "@components/product-form.tsx",
+        "type": "binding",
+        "generated": false
+      }
+    ],
+    "liquid": [
+      {
+        "source": "liquid/blocks/product-form.liquid",
+        "target": "blocks/product-form.liquid",
+        "type": "block",
+        "generated": false
+      },
+      {
+        "source": "liquid/locales/product-form.json",
+        "target": "locales/*.json",
+        "type": "asset",
+        "mode": "patch",
+        "generated": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,85 @@
+/* tabs.css
+   Component: Tabs (id `tabs`). Contract: 10-components-interactive.md, "Tabs".
+   Root:      <ui-tabs>, class rp-tabs
+   Parts:     rp-tabs-list (<ui-tabs-list>)
+              rp-tabs-tab (<button> inside <ui-tabs-tab>)
+              rp-tabs-panel (<ui-tabs-panel>)
+   Props:     none
+   States:    [data-selected], [aria-selected="true"], :hover, :focus-visible
+   Public:    --rp-tabs-gap, --rp-tabs-tab-px, --rp-tabs-indicator-size */
+@layer rp.components {
+  /* 1. ROOT */
+  .rp-tabs {
+    /* 1a. public custom properties */
+    --rp-tabs-gap: calc(var(--spacing) * 4);
+    --rp-tabs-tab-px: calc(var(--spacing) * 4);
+    --rp-tabs-indicator-size: 2px;
+    /* 1b. colour slots */
+    /* 1c. other private custom properties */
+    /* 1d. declarations */
+    display: flex;
+    flex-direction: column;
+    gap: var(--rp-tabs-gap);
+  }
+
+  /* 2. PARTS */
+  .rp-tabs-list {
+    display: flex;
+    flex: none;
+    overflow-x: auto;
+    border-block-end: 1px solid var(--color-border);
+  }
+  .rp-tabs-tab {
+    flex: none;
+    min-block-size: var(--spacing-control-md);
+    margin: 0;
+    padding-block: 0;
+    padding-inline: var(--rp-tabs-tab-px);
+    border: 0;
+    border-block-end: var(--rp-tabs-indicator-size) solid transparent;
+    border-radius: 0;
+    background-color: transparent;
+    color: var(--color-muted-foreground);
+    font-family: inherit;
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+    font-weight: var(--font-weight-medium);
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .rp-tabs-panel {
+    min-inline-size: 0;
+  }
+
+  /* 3. MODIFIERS */
+
+  /* 4. STATES */
+  @media (hover: hover) {
+    .rp-tabs-tab:hover {
+      color: var(--color-foreground);
+    }
+  }
+  .rp-tabs-tab:focus-visible {
+    outline-offset: calc(var(--rp-ring-width) * -1);
+  }
+  .rp-tabs-tab:is([data-selected], [aria-selected="true"]) {
+    border-block-end-color: var(--color-primary);
+    color: var(--color-foreground);
+  }
+
+  /* 5. MOTION */
+  @media (prefers-reduced-motion: no-preference) {
+    .rp-tabs-tab {
+      transition-property: color, border-color;
+      transition-duration: var(--rp-duration-fast);
+      transition-timing-function: var(--ease-out);
+    }
+  }
+
+  /* 6. ENVIRONMENT */
+  @media (scripting: none) {
+    .rp-tabs-panel {
+      padding-block-end: var(--rp-tabs-gap);
+    }
+  }
+}

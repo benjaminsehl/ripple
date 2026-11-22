@@ -1,0 +1,17 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>dialog2</title><link rel="stylesheet" href="/site/pre.css">
+<script type="module" src="/out/browser/ripple.elements.js"></script></head><body>
+<script>window.__d=[];document.addEventListener("openchange",function(e){window.__d.push({id:e.target.querySelector("dialog").id,value:e.detail.value,reason:e.detail.reason})},true)</script>
+<rp-dialog class="rp-dialog" data-slot="rp-dialog">
+  <dialog id="welcome" class="rp-dialog-panel" aria-labelledby="welcome-title" closedby="any" data-default-open="">
+    <h2 id="welcome-title" class="rp-dialog-title">Welcome</h2>
+    <button type="button" commandfor="welcome" command="close">Close</button>
+  </dialog>
+</rp-dialog>
+<button id="open-nav" type="button" commandfor="menu" command="show-modal">Menu</button>
+<rp-dialog class="rp-mobile-nav" data-slot="rp-dialog" data-side="start">
+  <dialog id="menu" class="rp-mobile-nav-panel" aria-labelledby="menu-title" closedby="any">
+    <h2 id="menu-title">Menu</h2>
+    <details id="sub"><summary id="sum">Shop</summary><a id="inner-link" href="/site/static.html">Shirts</a></details>
+  </dialog>
+</rp-dialog>
+</body></html>

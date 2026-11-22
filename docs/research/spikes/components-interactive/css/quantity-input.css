@@ -1,0 +1,106 @@
+/* quantity-input.css
+   Component: QuantityInput (id `quantity-input`). Contract: 10-components-interactive.md, "QuantityInput".
+   Root:      <rp-quantity>, class rp-quantity
+   Parts:     rp-quantity-button (<button>, decrement and increment)
+              rp-quantity-input (<input type="number">)
+   Props:     data-size = sm | md | lg   (default md)
+   States:    :focus-within, :focus-visible, :disabled, :hover
+   Public:    --rp-quantity-height, --rp-quantity-input-width, --rp-quantity-radius */
+@layer rp.components {
+  /* 1. ROOT */
+  .rp-quantity {
+    /* 1a. public custom properties */
+    --rp-quantity-height: var(--spacing-control-md);
+    --rp-quantity-input-width: 3em;
+    --rp-quantity-radius: var(--radius-field);
+    /* 1b. colour slots */
+    --_bg: var(--color-background);
+    --_fg: var(--color-foreground);
+    --_border: var(--color-input);
+    /* 1c. other private custom properties */
+    /* 1d. declarations */
+    display: inline-flex;
+    align-items: stretch;
+    block-size: var(--rp-quantity-height);
+    border: 1px solid var(--_border);
+    border-radius: var(--rp-quantity-radius);
+    background-color: var(--_bg);
+    color: var(--_fg);
+    overflow: hidden;
+  }
+
+  /* 2. PARTS */
+  .rp-quantity-button {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--rp-quantity-height);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+  .rp-quantity-input {
+    box-sizing: border-box;
+    inline-size: var(--rp-quantity-input-width);
+    min-inline-size: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: var(--text-sm);
+    text-align: center;
+    appearance: textfield;
+  }
+
+  /* 3. MODIFIERS */
+  .rp-quantity[data-size="sm"] {
+    --rp-quantity-height: var(--spacing-control-sm);
+  }
+  .rp-quantity[data-size="lg"] {
+    --rp-quantity-height: var(--spacing-control-lg);
+  }
+
+  /* 4. STATES */
+  @media (hover: hover) {
+    .rp-quantity-button:hover {
+      background-color: var(--color-accent);
+    }
+  }
+  .rp-quantity:focus-within {
+    outline: var(--rp-ring-width) solid var(--color-ring);
+    outline-offset: var(--rp-ring-offset);
+  }
+  .rp-quantity-input:focus-visible {
+    outline: none;
+  }
+  .rp-quantity-button:focus-visible {
+    outline-offset: calc(var(--rp-ring-width) * -1);
+  }
+  .rp-quantity-button:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+  .rp-quantity-input:disabled {
+    opacity: 0.5;
+  }
+  .rp-quantity-input::-webkit-inner-spin-button {
+    appearance: none;
+  }
+
+  /* 5. MOTION */
+  @media (prefers-reduced-motion: no-preference) {
+    .rp-quantity-button {
+      transition-property: background-color, opacity;
+      transition-duration: var(--rp-duration-fast);
+      transition-timing-function: var(--ease-out);
+    }
+  }
+
+  /* 6. ENVIRONMENT */
+}

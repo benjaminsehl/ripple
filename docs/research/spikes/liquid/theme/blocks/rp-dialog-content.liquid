@@ -1,0 +1,32 @@
+{% doc %}
+  The panel of a `rp-dialog`. Printed with `hidden`, so it is not shown until
+  ripple.js opens the dialog. Prints the backdrop and the close button.
+
+  @param {string} [class] - Extra classes appended after `rp-dialog-content`.
+  @param {string} content - One `rp-dialog-title` block, then the dialog body. Required.
+
+  @example
+  {% block 'rp-dialog-content' %}
+    {% block 'rp-dialog-title', dialog: 'size-guide' %}Size guide{% endblock %}
+    <p>Measure your chest.</p>
+  {% endblock %}
+{% enddoc %}
+
+{%- liquid
+  assign close_label = 'ripple.dialog.close' | t
+  assign close_attributes = 'data-slot="dialog-close"'
+-%}
+<ui-dialog-backdrop class="rp-dialog-backdrop" hidden data-slot="dialog-backdrop"></ui-dialog-backdrop>
+<ui-dialog-content class="rp-dialog-content {{ class | escape }}" hidden data-slot="dialog-content">
+  {{ content }}
+  <ui-dialog-close>
+    {%- render 'rp-button', variant: 'ghost', size: 'sm', type: 'button', class: 'rp-dialog-close', attributes: close_attributes, content: close_label -%}
+  </ui-dialog-close>
+</ui-dialog-content>
+
+{% schema %}
+{
+  "name": "t:ripple.blocks.dialog_content",
+  "settings": []
+}
+{% endschema %}

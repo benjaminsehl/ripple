@@ -1,0 +1,64 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>t2</title><link rel="stylesheet" href="/pre-upgrade.css"><script type="module" src="/web.js"></script></head><body>
+<section id="c-acc">
+  <ui-accordion id="a" default-value="shipping" data-slot="accordion">
+    <ui-accordion-item value="shipping" data-index="0" data-open data-slot="accordion-item">
+      <ui-accordion-header><h3 data-open data-slot="accordion-header"><ui-accordion-trigger><button type="button" id="a-trigger-shipping" aria-controls="a-panel-shipping" aria-expanded="true" data-open data-slot="accordion-trigger">Shipping</button></ui-accordion-trigger></h3></ui-accordion-header>
+      <ui-accordion-panel id="a-panel-shipping" role="region" aria-labelledby="a-trigger-shipping" data-open data-slot="accordion-panel" style="--accordion-panel-height: auto; --accordion-panel-width: auto;">Orders arrive.</ui-accordion-panel>
+    </ui-accordion-item>
+  </ui-accordion>
+</section>
+<section id="c-field">
+  <form id="f-field" action="/submit" method="get">
+  <ui-field id="fe" data-required data-slot="field">
+    <ui-field-label as-child><label for="fe-control" id="fe-label" data-required data-slot="field-label">Email</label></ui-field-label>
+    <input type="email" name="email" id="fe-control" required aria-labelledby="fe-label" aria-describedby="fe-description" data-required />
+    <ui-field-description id="fe-description" data-required data-slot="field-description">We never share it.</ui-field-description>
+    <ui-field-error hidden data-slot="field-error"></ui-field-error>
+  </ui-field>
+  <button type="submit">Go</button>
+  </form>
+</section>
+<section id="c-number">
+  <form id="f-num" action="/submit" method="get">
+    <ui-number-input id="q" default-value="1234" min="1" data-slot="number-input">
+      <ui-number-input-group role="group" data-slot="number-input-group">
+        <ui-number-input-decrement><button type="button" aria-label="Decrease">-</button></ui-number-input-decrement>
+        <ui-number-input-control><input type="number" name="quantity" value="1234" min="1" aria-label="Quantity" /></ui-number-input-control>
+        <ui-number-input-increment><button type="button" aria-label="Increase" id="inc">+</button></ui-number-input-increment>
+      </ui-number-input-group>
+    </ui-number-input>
+    <button type="submit">Go</button>
+  </form>
+  <form id="f-num2" action="/submit" method="get">
+    <ui-number-input id="q2" name="quantity" default-value="1234" min="1">
+      <ui-number-input-group>
+        <ui-number-input-control><input type="number" value="1234" min="1" aria-label="Quantity" /></ui-number-input-control>
+        <ui-number-input-increment><button type="button" aria-label="Increase" id="inc2">+</button></ui-number-input-increment>
+      </ui-number-input-group>
+    </ui-number-input>
+    <button type="submit">Go</button>
+  </form>
+</section>
+<section id="c-link">
+  <ui-drawer id="dr">
+    <ui-drawer-trigger><a href="/submit?fallback=cart-page" id="drawer-link">Cart</a></ui-drawer-trigger>
+    <ui-drawer-backdrop hidden></ui-drawer-backdrop>
+    <ui-drawer-viewport hidden><ui-drawer-content hidden><ui-drawer-title>Cart</ui-drawer-title><ui-drawer-close><button>Done</button></ui-drawer-close></ui-drawer-content></ui-drawer-viewport>
+  </ui-drawer>
+  <a href="/submit?fallback=cart-page" id="plain-link" data-opens="dr">Cart (external opener)</a>
+</section>
+<section id="c-tabs">
+  <ui-tabs id="t" default-value="account">
+    <ui-tabs-list aria-label="Settings">
+      <ui-tabs-tab value="account"><button type="button">Account</button></ui-tabs-tab>
+      <ui-tabs-tab value="password"><button type="button">Password</button></ui-tabs-tab>
+    </ui-tabs-list>
+    <ui-tabs-panel value="account">Manage your profile.</ui-tabs-panel>
+    <ui-tabs-panel value="password" hidden>Choose a new password.</ui-tabs-panel>
+  </ui-tabs>
+</section>
+<section id="c-details">
+  <details name="faq" open><summary>Shipping</summary><p>Five days</p></details>
+  <details name="faq"><summary>Returns</summary><p>Thirty days</p></details>
+</section>
+</body></html>

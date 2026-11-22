@@ -1,0 +1,26 @@
+{% doc %}
+  Ripple Dialog title. Required inside every `dialog` block.
+
+  @param {string} dialog - Required. The `id` of the dialog this title belongs to.
+  @param {string} [class] - Extra classes appended after `rp-dialog-title`.
+  @param {string} [attributes] - RAW, unescaped HTML attributes appended to the root element. Never pass shopper or merchant input.
+  @param {string} content - The title text. Required.
+
+  @example
+  {% block 'dialog-title', dialog: 'size-guide' %}Size guide{% endblock %}
+{% enddoc %}
+
+<h2
+  class="rp-dialog-title {{ class | escape }}"
+  id="{{ dialog | escape }}-title"
+  {{ attributes }}
+>
+  {{- content -}}
+</h2>
+
+{% schema %}
+{
+  "name": "t:ripple.dialog.title_name",
+  "settings": []
+}
+{% endschema %}

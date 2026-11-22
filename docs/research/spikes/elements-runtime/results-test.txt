@@ -1,0 +1,59 @@
+PASS  upgrade: zero mutations in rp-dialog, rp-quantity, rp-carousel, rp-navigation-menu, ui-tabs, ui-tooltip  {"ui-toast-region":["childList:@ui-toast-region","attributes:style@ui-toast-region","attributes:style@ui-toast-region","attributes:style@ui-toast-region","attributes:style@ui-toast-region","attributes:style@ui-toast-region"]}
+INFO  toast region mutations at upgrade: ["childList:@ui-toast-region","attributes:style@ui-toast-region","attributes:style@ui-toast-region","attributes:style@ui-toast-region","attributes:style@ui-toast-region","attributes:style@ui-toast-region"]
+INFO  mutations outside roots: ["childList:@body+1","characterData:@#text+0","childList:@body+1","childList:@body+1","childList:@head+1","childList:@style#ui-sdk-web-1+1","childList:@style#ui-sdk-web-1+1","childList:@style#ui-sdk-web-1+1","attributes:aria-haspopup@a#cart-link+0","attributes:aria-controls@a#cart-link+0","childList:@style#ui-sdk-web-1+1","childList:@style#ui-sdk-web-1+1","childList:@style#ui-sdk-web-1+1","childList:@style#ui-sdk-web-1+1","childList:@style#ui-sdk-web-1+1","childList:@head+1","childList:@style#ui-sdk-web-1+1","childList:@style#ui-sdk-web-1+1","childList:@style#ui-sdk-web-1+1","childList:@style#ui-sdk-web-1+1","childList:@style#ui-sdk-web-1+1","childList:@style#ui-sdk-web-1+1","childList:@style#ui-sdk-web-1+1","childList:@style#ui-sdk-web-1+1","childList:@style#ui-sdk-web-1+1","childList:@head+1","childList:@head+1"]
+INFO  js requests: ["ripple.elements.js","ripple.elements-tabs.js","ripple.elements-tooltip.js","ripple.elements-toast.js","ripple.elements-shared.js"]
+PASS  loader: tabs, tooltip, toast chunks requested
+PASS  loader: agent chunk not requested
+PASS  opener link got aria-haspopup and aria-controls
+PASS  quantity: increment sets input to 2 and fires valuechange, input, change  [{"t":"valuechange","value":2,"reason":"increment-press","source":"mouse","bubbles":false,"cancelable":true},{"t":"input","value":"2"},{"t":"change","trusted":false,"value":"2"}]
+PASS  quantity: decrement enabled after increment
+PASS  quantity: element.value property reads 2
+PASS  quantity: property write is silent and updates input  []
+PASS  quantity: increment disabled at max 5
+PASS  quantity: typed value commits with reason input-commit  [{"t":"input","value":"3"},{"t":"valuechange","value":3,"reason":"input-commit","source":"keyboard","bubbles":false,"cancelable":true},{"t":"change","trusted":true,"value":"3"}]
+PASS  quantity: typed 99 clamps to 5
+PASS  quantity: canceled valuechange leaves value 5
+PASS  quantity: api exposes only listed methods  ["function","function","function","function","undefined","undefined"]
+PASS  quantity: works after its input and button were replaced
+PASS  quantity: works after disconnect and reconnect
+PASS  quantity: announcer wrote 'Quantity 4'
+PASS  dialog: commandfor button opens, openchange reason trigger-press
+PASS  dialog: Escape closes, reason escape-key, focus returns to opener  [{"id":"dlg","value":false,"reason":"escape-key","cancelable":true}]
+PASS  dialog: close command, reason close-press  [{"id":"dlg","value":true,"reason":"trigger-press","cancelable":true},{"id":"dlg","value":false,"reason":"close-press","cancelable":true}]
+PASS  dialog: backdrop click closes (closedby=any), reason outside-press  [{"id":"dlg","value":true,"reason":"trigger-press","cancelable":true},{"id":"dlg","value":false,"reason":"outside-press","cancelable":true}] closedBy native: true
+PASS  dialog: canceled openchange puts the dialog back to closed
+PASS  dialog: property write opens silently  []
+PASS  dialog: api.close() fires openchange reason imperative  [{"id":"dlg","value":false,"reason":"imperative","cancelable":true}]
+PASS  opener: link opens the drawer without navigating  [{"id":"cart","value":true,"reason":"trigger-press","cancelable":true}]
+PASS  announce: inside an open modal dialog the dialog's status part gets the text
+PASS  opener: Escape closes and focus returns to the link
+PASS  opener: ctrl+click is left to the browser
+PASS  dialog: root has no attribute writes after open/close cycles  <rp-dialog class="rp-dialog" data-slot="rp-dialog">
+  <dialog id="dlg" class="rp
+PASS  carousel: next scrolls one page and fires indexchange next-press  [{"value":1,"reason":"next-press"},{"value":2,"reason":"next-press"},{"value":3,"reason":"next-press"}] scrollLeft=320
+PASS  carousel: prev enabled, next disabled at the end
+PASS  carousel: api.goTo(1) reason imperative, index 1  [{"value":2,"reason":"imperative"},{"value":1,"reason":"imperative"}]
+PASS  carousel: property write is silent  []
+PASS  carousel: user scroll fires indexchange reason scroll  [{"value":1,"reason":"scroll"}]
+PASS  nav: hover opens the popover panel
+PASS  nav: hovering an item without a panel closes the open panel
+PASS  nav: ArrowRight moves focus to the next top-level item
+PASS  nav: End moves focus to the last item
+PASS  nav: ArrowDown opens the panel and focuses its first link
+PASS  nav: Escape closes the panel (native)  focus: nav-shop
+PASS  nav: disclosure button toggles the panel (native popovertarget)
+PASS  tabs: click selects, valuechange fires  [{"value":"shipping","reason":"item-press"}]
+PASS  tooltip: hover shows content  <ui-tooltip-content class="rp-tooltip-content" id="tip-content" role="tooltip" data-slot="tooltip-content" data-open="" popover="manual" style="position: fixed; inset: auto auto round(anchor(top), 1px
+PASS  toast: toast() renders a toast in the region  <ui-toast-region class="rp-toast-region" aria-label="Notifications" data-slot="toast-region" data-side="bottom" data-align="end" popover="manual" style="--keyboard-inset: 0px; --visual-viewport-height: 800px; --toast-front-height: 36px; --toast-stack-height: 36px; --toast-count: 1;" role="region" aria-keyshortcuts="F6"><ol data-slot="toast-list"><ui-toast toast="toast-1" role="listitem" data-slot=
+INFO  agent snapshot: [{"component":"rp-dialog","actions":["open","close","press"]},{"component":"rp-dialog","actions":["open","close","press"]},{"component":"rp-carousel","label":"Featured products","actions":["next","previous","goTo"]},{"component":"rp-navigation-menu","actions":["close"]},{"component":"tabs","label":"Product information","actions":["setValue"],"value":"shipping"},{"component":"tooltip","label":"Sizing information","actions":["setOpen","press"]},{"component":"toast","label":"Added to cart","actions":["pause"]},{"component":"rp-quantity","actions":["setValue","increment","decrement"],"value":4}]
+PASS  agent: bridge lists rp-quantity with its agent.actions
+PASS  agent: bridge lists rp-dialog and rp-carousel
+PASS  agent: act increment changes the quantity  {"before":4,"after":5,"r":"{\"ok\":true,\"steps\":[{\"step\":0,\"ref\":\"c8\",\"changes\":[{\"component\":\"rp-quantity\",\"key\":\"value\",\"value\":5}]}],\"appeared\":[],\"values\":{\"c5 Product information\":\"shipping\",\"c8 rp-quantity\":5}}"}
+PASS  loader: page without ui-* tags loads only the main file  ["ripple.elements.js"]
+PASS  loader: inserting a ui-tooltip later loads the tooltip chunk  ["ripple.elements.js","ripple.elements-tooltip.js","ripple.elements-shared.js"]
+PASS  no-JS: stepper buttons are visibility:hidden, input usable
+PASS  no-JS: commandfor button opens the dialog natively
+PASS  no-JS: popovertarget opens the nav panel
+PASS  no-JS: opener link navigates to the cart page
+
+52 passed, 0 failed

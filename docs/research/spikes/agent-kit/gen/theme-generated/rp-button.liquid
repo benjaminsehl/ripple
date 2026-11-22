@@ -1,0 +1,75 @@
+{% doc %}
+  Ripple Button. A button or a link that looks like a button. Zero JavaScript. Static component: no JavaScript.
+
+  @param {'primary' | 'secondary' | 'outline' | 'ghost' | 'link' | 'destructive'} [variant] - Visual treatment. Default: 'primary'.
+  @param {'sm' | 'md' | 'lg'} [size] - Control height and padding. Default: 'md'.
+  @param {'button' | 'submit' | 'reset'} [type] - Native button type. Ignored when href is set. Default: 'button'.
+  @param {string} [href] - When set, the root element is <a>.
+  @param {boolean} [disabled] - Native disabled on <button>; aria-disabled="true" and tabindex="-1" on <a>. Pass the boolean `true`.
+  @param {boolean} [full_width] - Stretch to the container width. Pass the boolean `true`.
+  @param {string} [name] - Form field name (button only).
+  @param {string} [value] - Form field value (button only).
+  @param {string} [aria_label] - Accessible name. Required when the content has no text.
+  @param {string} [id] - Root element id.
+  @param {string} [class] - Extra classes appended after `rp-button`.
+  @param {string} [attributes] - RAW, unescaped HTML attributes appended to the root element. Never pass shopper or merchant input.
+  @param {string} content - The label. May include an icon.
+
+  @example
+  {% render 'rp-button', content: label %}
+{% enddoc %}
+
+{%- liquid
+  assign allowed_variant = 'primary,secondary,outline,ghost,link,destructive' | split: ','
+  unless allowed_variant contains variant
+    assign variant = 'primary'
+  endunless
+  assign allowed_size = 'sm,md,lg' | split: ','
+  unless allowed_size contains size
+    assign size = 'md'
+  endunless
+  assign allowed_type = 'button,submit,reset' | split: ','
+  unless allowed_type contains type
+    assign type = 'button'
+  endunless
+-%}
+{%- if href != blank -%}
+<a
+  class="rp-button {{ class | escape }}"
+  {% if id != blank %}id="{{ id | escape }}"{% endif %}
+  {% if href != blank %}href="{{ href | escape }}"{% endif %}
+  {% if href == blank %}type="{{ type | escape }}"{% endif %}
+  {% if name != blank and href == blank %}name="{{ name | escape }}"{% endif %}
+  {% if value != blank and href == blank %}value="{{ value | escape }}"{% endif %}
+  {% if disabled == true and href == blank %}disabled{% endif %}
+  {% if disabled == true and href != blank %}aria-disabled="true"{% endif %}
+  {% if disabled == true and href != blank %}tabindex="-1"{% endif %}
+  data-variant="{{ variant | escape }}"
+  data-size="{{ size | escape }}"
+  {% if full_width == true %}data-full-width{% endif %}
+  {% if aria_label != blank %}aria-label="{{ aria_label | escape }}"{% endif %}
+  {{ attributes }}
+>
+  {{ content }}
+</a>
+{%- else -%}
+<button
+  class="rp-button {{ class | escape }}"
+  {% if id != blank %}id="{{ id | escape }}"{% endif %}
+  {% if href != blank %}href="{{ href | escape }}"{% endif %}
+  {% if href == blank %}type="{{ type | escape }}"{% endif %}
+  {% if name != blank and href == blank %}name="{{ name | escape }}"{% endif %}
+  {% if value != blank and href == blank %}value="{{ value | escape }}"{% endif %}
+  {% if disabled == true and href == blank %}disabled{% endif %}
+  {% if disabled == true and href != blank %}aria-disabled="true"{% endif %}
+  {% if disabled == true and href != blank %}tabindex="-1"{% endif %}
+  data-variant="{{ variant | escape }}"
+  data-size="{{ size | escape }}"
+  {% if full_width == true %}data-full-width{% endif %}
+  {% if aria_label != blank %}aria-label="{{ aria_label | escape }}"{% endif %}
+  {{ attributes }}
+>
+  {{ content }}
+</button>
+{%- endif -%}
+{% comment %} ripple button/snippet ripple-kit@0.1.0 sha256:d51e962ccb5a6986838e46cc8c5251327a23d95475953ffb6d45b385aecdbed7 {% endcomment %}

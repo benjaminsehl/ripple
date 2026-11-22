@@ -1,0 +1,81 @@
+/* base.css
+   Sections: 1 hidden rule (layer ui-sdk), 2 reset and scheme painting, 3 focus ring,
+   4 shared keyframes, 5 generated display rules (layer rp.base), 6 generated script-state
+   rules (layer rp.props). Sections 5 and 6 are rewritten by `pnpm gen`. */
+@layer ui-sdk {
+  :where([hidden]:not([hidden="until-found"])) {
+    display: none !important;
+  }
+}
+
+@layer rp.base {
+  *,
+  ::before,
+  ::after {
+    box-sizing: border-box;
+  }
+  :where(html) {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  :where(body) {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+  }
+  :where(body, [data-scheme]) {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+  :where(button, input, select, textarea) {
+    font: inherit;
+    color: inherit;
+  }
+  :where(img, video) {
+    max-inline-size: 100%;
+    block-size: auto;
+  }
+
+  :where(:focus-visible) {
+    outline: var(--rp-ring-width) solid var(--color-ring);
+    outline-offset: var(--rp-ring-offset);
+  }
+  :where(dialog, main):focus-visible {
+    outline: none;
+  }
+
+  @keyframes rp-spin {
+    to {
+      rotate: 1turn;
+    }
+  }
+  @keyframes rp-pulse {
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  /* ripple:start display */
+  :where(rp-dialog, rp-live, rp-product-form, ui-tabs-tab, ui-toast-action, ui-toast-close, ui-tooltip-trigger) {
+    display: contents;
+  }
+  :where(rp-carousel, rp-cart, rp-navigation-menu, rp-predictive-search, rp-quantity, rp-recommendations, ui-tabs, ui-tabs-indicator, ui-tabs-list, ui-tabs-panel, ui-toast, ui-toast-description, ui-toast-region, ui-toast-title, ui-tooltip-arrow) {
+    display: block;
+  }
+  /* ripple:end display */
+}
+
+@layer rp.props {
+  /* ripple:start script-state */
+  :where(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations):not(:defined) [data-rp-js="inflow"] {
+    visibility: hidden;
+  }
+  :where(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations):not(:defined) [data-rp-js="overlay"] {
+    display: none;
+  }
+  :where(rp-carousel, rp-cart, rp-dialog, rp-live, rp-navigation-menu, rp-predictive-search, rp-product-form, rp-quantity, rp-recommendations):defined [data-rp-js="fallback"] {
+    display: none;
+  }
+  /* ripple:end script-state */
+}

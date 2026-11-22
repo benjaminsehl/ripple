@@ -1,0 +1,50 @@
+{% doc %}
+  Ripple Stack. Vertical flex layout with a gap. Zero JavaScript. Static component: no JavaScript.
+
+  @param {'div' | 'section' | 'article' | 'aside' | 'header' | 'footer' | 'nav' | 'main' | 'ul' | 'ol'} [tag] - Root element. Default: 'div'.
+  @param {string} [gap] - Space between children. Token(s) from: 0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24. Responsive: '2 md:6'. Always a quoted string.
+  @param {string} [align] - Cross-axis alignment. Token(s) from: start, center, end, stretch, baseline. Responsive: '2 md:6'. Always a quoted string.
+  @param {string} [justify] - Main-axis distribution. Token(s) from: start, center, end, between. Responsive: '2 md:6'. Always a quoted string.
+  @param {string} [p] - Padding on all sides. Token(s) from: 0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24. Responsive: '2 md:6'. Always a quoted string.
+  @param {string} [id] - Root element id.
+  @param {string} [class] - Extra classes appended after `rp-stack`.
+  @param {string} [attributes] - RAW, unescaped HTML attributes appended to the root element. Never pass shopper or merchant input.
+  @param {string} [content] - Any elements.
+
+  @example
+  {% block 'stack' %}<p>One</p><p>Two</p>{% endblock %}
+{% enddoc %}
+
+{%- liquid
+  assign allowed_tag = 'div,section,article,aside,header,footer,nav,main,ul,ol' | split: ','
+  unless allowed_tag contains tag
+    assign tag = 'div'
+  endunless
+  assign allowed_align = 'start,center,end,stretch,baseline' | split: ','
+  unless allowed_align contains align
+    assign align = 'undefined'
+  endunless
+  assign allowed_justify = 'start,center,end,between' | split: ','
+  unless allowed_justify contains justify
+    assign justify = 'undefined'
+  endunless
+-%}
+<{{ tag }}
+  class="rp-stack {{ class | escape }}"
+  {% if id != blank %}id="{{ id | escape }}"{% endif %}
+  {% if gap != blank %}data-gap="{{ gap | escape }}"{% endif %}
+  {% if align != blank %}data-align="{{ align | escape }}"{% endif %}
+  {% if justify != blank %}data-justify="{{ justify | escape }}"{% endif %}
+  {% if p != blank %}data-p="{{ p | escape }}"{% endif %}
+  {{ attributes }}
+>
+  {{ content }}
+</{{ tag }}>
+
+{% schema %}
+{
+  "name": "t:ripple.blocks.stack",
+  "settings": []
+}
+{% endschema %}
+{% comment %} ripple stack/block ripple-kit@0.1.0 sha256:657b09ec6971bfdcb1dfbda915ff4ab7a7811601d91c7bac9654e004bbe635a1 {% endcomment %}

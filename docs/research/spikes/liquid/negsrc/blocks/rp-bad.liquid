@@ -1,0 +1,10 @@
+{% doc %}
+  @param {string} [content]
+  @param {string} [unused_param]
+  @param {string} [true]
+{% enddoc %}
+<div>{{ block.content }}{% block 'rp-button' %}Nested in block file{% endblock %}</div>
+{% render 'rp-head' %}
+{% assign is_big = 2 > 1 %}
+{{ is_big }}
+{% stylesheet %}.x{color:red}{% endstylesheet %}

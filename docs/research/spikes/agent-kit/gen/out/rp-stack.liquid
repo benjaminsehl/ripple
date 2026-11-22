@@ -1,0 +1,17 @@
+{%- liquid
+  assign allowed_tag = 'div,section,article,aside,header,footer,nav,main,ul,ol' | split: ','
+  unless allowed_tag contains tag
+    assign tag = 'div'
+  endunless
+-%}
+<{{ tag }}
+  class="rp-stack {{ class | escape }}"
+  {% if id != blank %}id="{{ id | escape }}"{% endif %}
+  {% if gap != blank %}data-gap="{{ gap | escape }}"{% endif %}
+  {% if align != blank %}data-align="{{ align | escape }}"{% endif %}
+  {% if justify != blank %}data-justify="{{ justify | escape }}"{% endif %}
+  {% if p != blank %}data-p="{{ p | escape }}"{% endif %}
+  {{ attributes }}
+>
+  {{ content }}
+</{{ tag }}>

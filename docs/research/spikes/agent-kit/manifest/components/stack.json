@@ -1,0 +1,296 @@
+{
+  "name": "stack",
+  "title": "Stack",
+  "category": "layout",
+  "kind": "static",
+  "status": "beta",
+  "since": "0.1.0",
+  "summary": "Vertical flex layout with a gap. Zero JavaScript.",
+  "useWhen": [
+    "Stacking children vertically with consistent spacing"
+  ],
+  "dontUseWhen": [
+    {
+      "case": "Children flow horizontally and wrap",
+      "use": "inline"
+    },
+    {
+      "case": "Columns",
+      "use": "grid"
+    }
+  ],
+  "root": {
+    "elements": [
+      "div",
+      "section",
+      "article",
+      "aside",
+      "header",
+      "footer",
+      "nav",
+      "main",
+      "ul",
+      "ol"
+    ],
+    "class": "rp-stack"
+  },
+  "props": [
+    {
+      "name": "tag",
+      "type": "enum",
+      "values": [
+        "div",
+        "section",
+        "article",
+        "aside",
+        "header",
+        "footer",
+        "nav",
+        "main",
+        "ul",
+        "ol"
+      ],
+      "default": "div",
+      "liquid": {
+        "name": "tag",
+        "surface": "param"
+      },
+      "description": "Root element."
+    },
+    {
+      "name": "gap",
+      "type": "scale",
+      "scale": "space",
+      "responsive": true,
+      "attribute": "data-gap",
+      "liquid": {
+        "name": "gap",
+        "surface": "param"
+      },
+      "description": "Space between children."
+    },
+    {
+      "name": "align",
+      "type": "enum",
+      "values": [
+        "start",
+        "center",
+        "end",
+        "stretch",
+        "baseline"
+      ],
+      "responsive": true,
+      "attribute": "data-align",
+      "liquid": {
+        "name": "align",
+        "surface": "param"
+      },
+      "description": "Cross-axis alignment."
+    },
+    {
+      "name": "justify",
+      "type": "enum",
+      "values": [
+        "start",
+        "center",
+        "end",
+        "between"
+      ],
+      "responsive": true,
+      "attribute": "data-justify",
+      "liquid": {
+        "name": "justify",
+        "surface": "param"
+      },
+      "description": "Main-axis distribution."
+    },
+    {
+      "name": "p",
+      "type": "scale",
+      "scale": "space",
+      "responsive": true,
+      "attribute": "data-p",
+      "liquid": {
+        "name": "p",
+        "surface": "param"
+      },
+      "description": "Padding on all sides."
+    },
+    {
+      "name": "id",
+      "type": "id",
+      "attribute": "id",
+      "liquid": {
+        "name": "id",
+        "surface": "param"
+      },
+      "description": "Root element id."
+    }
+  ],
+  "content": {
+    "model": "flow",
+    "required": false,
+    "description": "Any elements."
+  },
+  "parts": [],
+  "template": {
+    "tag": {
+      "prop": "tag"
+    },
+    "attrs": [
+      {
+        "name": "class",
+        "value": [
+          "rp-stack",
+          {
+            "prop": "class"
+          }
+        ]
+      },
+      {
+        "name": "id",
+        "value": {
+          "prop": "id"
+        },
+        "when": {
+          "set": "id"
+        }
+      },
+      {
+        "name": "data-gap",
+        "value": {
+          "prop": "gap"
+        },
+        "when": {
+          "set": "gap"
+        }
+      },
+      {
+        "name": "data-align",
+        "value": {
+          "prop": "align"
+        },
+        "when": {
+          "set": "align"
+        }
+      },
+      {
+        "name": "data-justify",
+        "value": {
+          "prop": "justify"
+        },
+        "when": {
+          "set": "justify"
+        }
+      },
+      {
+        "name": "data-p",
+        "value": {
+          "prop": "p"
+        },
+        "when": {
+          "set": "p"
+        }
+      }
+    ],
+    "children": [
+      {
+        "slot": "children"
+      }
+    ]
+  },
+  "noJs": {
+    "level": "full",
+    "behavior": "CSS only."
+  },
+  "a11y": {
+    "pattern": "none",
+    "checkPattern": null,
+    "name": {
+      "required": "never",
+      "sources": []
+    }
+  },
+  "agent": {
+    "surface": "accessibility-tree"
+  },
+  "dependencies": {
+    "components": [],
+    "elements": [],
+    "tokens": [
+      "--spacing"
+    ]
+  },
+  "liquid": {
+    "block": "stack"
+  },
+  "files": {
+    "shared": [
+      {
+        "source": "css/components/stack.css",
+        "target": "@styles/components/stack.css",
+        "type": "css",
+        "generated": false
+      },
+      {
+        "source": "css/props.css",
+        "target": "@styles/props.css",
+        "type": "css",
+        "generated": true
+      }
+    ],
+    "react": [
+      {
+        "source": "react/stack.tsx",
+        "target": "@components/stack.tsx",
+        "type": "binding",
+        "generated": true
+      }
+    ],
+    "remix": [
+      {
+        "source": "remix/stack.tsx",
+        "target": "@components/stack.tsx",
+        "type": "binding",
+        "generated": true
+      }
+    ],
+    "liquid": [
+      {
+        "source": "liquid/blocks/stack.liquid",
+        "target": "blocks/stack.liquid",
+        "type": "block",
+        "generated": true
+      }
+    ]
+  },
+  "fixtures": [
+    {
+      "name": "default",
+      "props": {},
+      "children": "<p>One</p><p>Two</p>",
+      "html": "<div class=\"rp-stack\"><p>One</p><p>Two</p></div>",
+      "generated": "template"
+    },
+    {
+      "name": "responsive-gap",
+      "props": {
+        "gap": "2 md:6",
+        "align": "start"
+      },
+      "children": "<p>One</p><p>Two</p>",
+      "html": "<div class=\"rp-stack\" data-gap=\"2 md:6\" data-align=\"start\"><p>One</p><p>Two</p></div>",
+      "generated": "template"
+    },
+    {
+      "name": "list",
+      "props": {
+        "tag": "ul",
+        "gap": "4"
+      },
+      "children": "<li>One</li>",
+      "html": "<ul class=\"rp-stack\" data-gap=\"4\"><li>One</li></ul>",
+      "generated": "template"
+    }
+  ]
+}

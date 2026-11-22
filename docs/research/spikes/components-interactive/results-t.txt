@@ -1,0 +1,10 @@
+chromium 157.0.8103.78
+js off: p2 block list none x(component-layer important) none
+nojs popover box {"x":300,"y":270,"width":150,"height":50}
+js on: p2 none list block x none
+bottom start {"btn":[300,236,400,266],"pop":[300,270,450,320],"open":true}
+bottom center {"btn":[300,236,400,266],"pop":[275,270,425,320],"open":true}
+bottom end {"btn":[300,236,400,266],"pop":[250,270,400,320],"open":true}
+top start {"btn":[300,236,400,266],"pop":[300,182,450,232],"open":true}
+end start {"btn":[300,236,400,266],"pop":[404,236,554,286],"open":true}
+details exclusive: d1 open false d2 open true

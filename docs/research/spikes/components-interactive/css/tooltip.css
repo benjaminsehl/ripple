@@ -1,0 +1,67 @@
+/* tooltip.css
+   Component: Tooltip (id `tooltip`). Contract: 10-components-interactive.md, "Tooltip".
+   Root:      <ui-tooltip>, class rp-tooltip
+   Parts:     rp-tooltip-content (<ui-tooltip-content>)
+   Props:     none (side and align are UI SDK option attributes, not styled)
+   States:    [data-open], [data-closed], [data-starting-style], [data-ending-style]
+   Public:    --rp-tooltip-max-width, --rp-tooltip-px, --rp-tooltip-py, --rp-tooltip-radius */
+@layer rp.components {
+  /* 1. ROOT */
+  .rp-tooltip {
+    /* 1a. public custom properties */
+    --rp-tooltip-max-width: calc(var(--spacing) * 64);
+    --rp-tooltip-px: calc(var(--spacing) * 2);
+    --rp-tooltip-py: calc(var(--spacing) * 1);
+    --rp-tooltip-radius: var(--radius-sm);
+    /* 1b. colour slots */
+    --_bg: var(--color-foreground);
+    --_fg: var(--color-background);
+    --_border: transparent;
+    /* 1c. other private custom properties */
+    /* 1d. declarations */
+    display: inline-flex;
+  }
+
+  /* 2. PARTS */
+  .rp-tooltip-content {
+    box-sizing: border-box;
+    inline-size: max-content;
+    max-inline-size: var(--rp-tooltip-max-width);
+    margin: 0;
+    padding-block: var(--rp-tooltip-py);
+    padding-inline: var(--rp-tooltip-px);
+    border: 1px solid var(--_border);
+    border-radius: var(--rp-tooltip-radius);
+    background-color: var(--_bg);
+    color: var(--_fg);
+    font-size: var(--text-xs);
+    line-height: var(--text-xs--line-height);
+    pointer-events: none;
+  }
+
+  /* 3. MODIFIERS */
+
+  /* 4. STATES */
+
+  /* 5. MOTION */
+  @media (prefers-reduced-motion: no-preference) {
+    .rp-tooltip-content {
+      transition-property: opacity;
+      transition-duration: var(--rp-duration-fast);
+      transition-timing-function: var(--ease-out);
+    }
+    .rp-tooltip-content[data-starting-style] {
+      opacity: 0;
+    }
+    .rp-tooltip-content[data-ending-style] {
+      opacity: 0;
+    }
+  }
+
+  /* 6. ENVIRONMENT */
+  @media (forced-colors: active) {
+    .rp-tooltip-content {
+      border-color: CanvasText;
+    }
+  }
+}

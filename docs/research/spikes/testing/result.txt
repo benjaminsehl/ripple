@@ -1,0 +1,32 @@
+
+> spike-testing@ test /tmp/claude-0/-home-user/479d4208-eab8-516e-866a-427bc015f063/scratchpad/src/ripple/docs/research/spikes/testing
+> pnpm test:run --tiers=1,2,3,4,5,6,10
+
+
+> spike-testing@ test:run /tmp/claude-0/-home-user/479d4208-eab8-516e-866a-427bc015f063/scratchpad/src/ripple/docs/research/spikes/testing
+> esbuild test/run.ts --bundle --platform=node --format=esm --packages=external --log-level=warning --outfile=node_modules/.cache/ripple/test-run.mjs && node node_modules/.cache/ripple/test-run.mjs --tiers=1,2,3,4,5,6,10
+
+✔ [T1] liquidCaseSource builds the Q-17 template (0.948814ms)
+✔ [T2] liquid adapter output conforms for button and tabs (80.1684ms)
+✔ [T1] tokenizeChildren and restoreChildren round-trip (1.84165ms)
+<Tabs id={"t"} defaultValue={"account"}><TabsList ariaLabel={"Settings"}><TabsTab tabs={"t"} value={"account"} selected={true}>{"__RP_CHILDREN_0__"}</TabsTab><TabsTab tabs={"t"} value={"password"}>{"__RP_CHILDREN_1__"}</TabsTab></TabsList><TabsPanel tabs={"t"} value={"account"} selected={true}>{"__RP_CHILDREN_2__"}</TabsPanel><TabsPanel tabs={"t"} value={"password"}>{"__RP_CHILDREN_3__"}</TabsPanel></Tabs>
+✔ [T2] generated TSX case module renders through React and restores children (71.401199ms)
+good: 0 failures, 2 same-value, 0 undefined tags
+tabs/default: main:nth-child(1) > ui-tabs#t > ui-tabs-list:nth-child(1) > ui-tabs-tab:nth-child(1) > button#t-tab-account: attributes aria-selected: null -> "true"
+tabs/default: main:nth-child(1) > ui-tabs#t > ui-tabs-list:nth-child(1) > ui-tabs-tab:nth-child(1) > button#t-tab-account: attributes aria-controls: null -> "t-panel-account"
+with allow: 0 failures, 2 permitted
+✔ [T3] upgradeDiff: Tabs default fixture has zero failures; a fixture missing an attribute fails (637.448749ms)
+checkPattern message: ""
+✔ [T5] checkPattern injected as an IIFE passes for tabs (448.163924ms)
+axe violations: [] passes: 14
+✔ [T5] axe-core reports zero violations (234.312926ms)
+on defined: true 
+disabled defined: n/a 
+blocked defined: false failed:ripple-tabs.js
+on == disabled: false  on == blocked: false
+ripple-tabs.js raw 60510 gzip 22370
+✔ [T6] scripts disabled and scripts blocked render the same boxes (239.440678ms)
+✔ [T2] children placeholder survives renderToString unescaped after substitution (5.746346ms)
+✔ [T10] gzip level 9 size of a built file is deterministic (4.876294ms)
+test: tiers 1,2,3,4,5,6,10 engine chromium: 22 passed, 0 failed, 0 skipped
+exit=0

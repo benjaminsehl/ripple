@@ -1,0 +1,14 @@
+good dialog (open): ok
+bad dialog (open): ok
+hand-rolled tablist: checkPattern found 9 problems with the tabs pattern:
+- div#fake[role=tablist]: has no accessible name; give it aria-label or aria-labelledby (APG tabs).
+- button[role=tab] "A": has no aria-selected; the active tab has aria-selected="true" and the others "false" (APG tabs).
+- button[role=tab] "B": has no aria-selected; the active tab has aria-selected="true" and the others "false" (APG tabs).
+- div#fake[role=tablist]: has 2 tab stops (button[role=tab] "A", button[role=tab] "B"); a composite has one, and arrows move within it (APG tabs).
+- button[role=tab] "A": ArrowRight should move focus to the next tab, button[role=tab] "B", but focus stayed (APG tabs).
+- button[role=tab] "A": ArrowLeft should move focus to the previous tab, wrapping around, button[role=tab] "B", but focus stayed (APG tabs).
+- button[role=tab] "A": End should move focus to the last tab, button[role=tab] "B", but focus stayed (APG tabs).
+- button[role=tab] "A": Enter should activate the focused tab (APG tabs).
+- button[role=tab] "A": Space should activate the focused tab (APG tabs).
+injected into plain page: checkPattern found 1 problem with the tabs pattern:
+- button[role=tab] "A": is active but names no tabpanel with aria-controls (APG tabs).

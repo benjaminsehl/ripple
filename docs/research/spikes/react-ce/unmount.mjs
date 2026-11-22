@@ -1,0 +1,11 @@
+import { createRequire } from 'module'; const require = createRequire('/opt/node-tools/'); const { chromium } = require('playwright');
+const { ssr } = require(process.cwd() + '/out/drawer.server.cjs');
+const b = await chromium.launch(); const p = await b.newPage(); const cons = []; p.on('console', m => cons.push(m.text().slice(0, 200))); p.on('pageerror', e => cons.push('[pageerror] ' + e.message));
+await p.setContent(`<!doctype html><body><main id="sib">sibling</main><div id="root">${ssr(true)}</div></body>`);
+await p.addScriptTag({ path: 'out/elements2.js' }); await p.addScriptTag({ path: 'out/drawer.client.js' }); await p.evaluate(() => window.__hydrateD(true)); await p.waitForTimeout(300);
+await p.click('#drw-t'); await p.waitForTimeout(400);
+const st = () => p.evaluate(() => JSON.stringify({ htmlStyle: document.documentElement.getAttribute('style'), sibInert: document.getElementById('sib').hasAttribute('inert'), bodyChildren: [...document.body.children].map(e => e.localName + (e.id ? '#' + e.id : '')), root: document.getElementById('root').innerHTML.slice(0, 80) }));
+console.log('open:', await st());
+await p.evaluate(() => window.__setD({ show: false })); await p.waitForTimeout(600);
+console.log('unmounted while open:', await st()); console.log('console:', cons.join(' | ') || '(none)');
+await b.close();

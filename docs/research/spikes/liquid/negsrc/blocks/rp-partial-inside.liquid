@@ -1,0 +1,7 @@
+{% doc %}
+  @param {string} [content] - Body.
+{% enddoc %}
+{% partial 'inside-block-file' %}<div>{{ content }}</div>{% endpartial %}
+{% schema %}
+{ "name": "Partial inside", "settings": [] }
+{% endschema %}

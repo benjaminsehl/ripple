@@ -1,0 +1,149 @@
+/* button.css
+   Component: Button (id `button`). Contract: 09-components-foundation.md, "Button".
+   Root:      <button> or <a>, class rp-button
+   Props:     data-variant = primary | secondary | outline | ghost | link | destructive   (default primary)
+              data-size    = sm | md | lg                                                 (default md)
+              data-full-width (boolean)
+   States:    :hover, :active, :disabled, [aria-disabled="true"], [data-pending], [aria-busy="true"]
+   Public:    --rp-button-height, --rp-button-px, --rp-button-gap, --rp-button-radius,
+              --rp-button-font-size, --rp-button-font-weight */
+@layer rp.components {
+  /* 1. ROOT */
+  .rp-button {
+    /* 1a. public custom properties */
+    --rp-button-height: var(--spacing-control-md);
+    --rp-button-px: calc(var(--spacing) * 5);
+    --rp-button-gap: calc(var(--spacing) * 2);
+    --rp-button-radius: var(--radius-control);
+    --rp-button-font-size: var(--text-sm);
+    --rp-button-font-weight: var(--font-weight-medium);
+    /* 1b. colour slots */
+    --_bg: var(--color-primary);
+    --_fg: var(--color-primary-foreground);
+    --_border: transparent;
+    /* 1c. other private custom properties */
+    --_hover: 88%;
+    --_active: 80%;
+    --_display: inline-flex;
+    --_inline-size: auto;
+    --_decoration: none;
+    /* 1d. declarations */
+    position: relative;
+    display: var(--_display);
+    align-items: center;
+    justify-content: center;
+    gap: var(--rp-button-gap);
+    inline-size: var(--_inline-size);
+    min-block-size: var(--rp-button-height);
+    margin: 0;
+    padding-block: 0;
+    padding-inline: var(--rp-button-px);
+    border: 1px solid var(--_border);
+    border-radius: var(--rp-button-radius);
+    background-color: var(--_bg);
+    color: var(--_fg);
+    font-family: inherit;
+    font-size: var(--rp-button-font-size);
+    font-weight: var(--rp-button-font-weight);
+    line-height: 1.25;
+    text-align: center;
+    text-decoration-line: var(--_decoration);
+    text-underline-offset: 0.2em;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  /* 2. PARTS */
+
+  /* 3. MODIFIERS */
+  .rp-button[data-variant="secondary"] {
+    --_bg: var(--color-secondary);
+    --_fg: var(--color-secondary-foreground);
+  }
+  .rp-button[data-variant="outline"] {
+    --_bg: transparent;
+    --_fg: var(--color-foreground);
+    --_border: var(--color-input);
+  }
+  .rp-button[data-variant="ghost"] {
+    --_bg: transparent;
+    --_fg: var(--color-foreground);
+  }
+  .rp-button[data-variant="link"] {
+    --_bg: transparent;
+    --_fg: var(--color-link);
+    --_hover: 100%;
+    --_active: 100%;
+    --_decoration: underline;
+    --rp-button-height: var(--spacing-target-min);
+    --rp-button-px: 0;
+    --rp-button-radius: var(--radius-xs);
+  }
+  .rp-button[data-variant="destructive"] {
+    --_bg: var(--color-destructive);
+    --_fg: var(--color-destructive-foreground);
+  }
+  .rp-button[data-size="sm"] {
+    --rp-button-height: var(--spacing-control-sm);
+    --rp-button-px: calc(var(--spacing) * 3.5);
+  }
+  .rp-button[data-size="lg"] {
+    --rp-button-height: var(--spacing-control-lg);
+    --rp-button-px: calc(var(--spacing) * 7);
+    --rp-button-font-size: var(--text-base);
+  }
+  .rp-button[data-full-width] {
+    --_display: flex;
+    --_inline-size: 100%;
+  }
+
+  /* 4. STATES */
+  @media (hover: hover) {
+    .rp-button:hover {
+      background-color: color-mix(in oklab, var(--_bg) var(--_hover), var(--_fg));
+    }
+  }
+  .rp-button:active {
+    background-color: color-mix(in oklab, var(--_bg) var(--_active), var(--_fg));
+  }
+  .rp-button:is(:disabled, [aria-disabled="true"]) {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .rp-button:is([data-pending], [aria-busy="true"]) {
+    color: transparent;
+    pointer-events: none;
+  }
+  .rp-button:is([data-pending], [aria-busy="true"])::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    inline-size: 1em;
+    block-size: 1em;
+    border: 2px solid var(--_fg);
+    border-inline-end-color: transparent;
+    border-radius: 50%;
+  }
+
+  /* 5. MOTION */
+  @media (prefers-reduced-motion: no-preference) {
+    .rp-button {
+      transition:
+        background-color var(--rp-duration-fast) var(--ease-out),
+        border-color var(--rp-duration-fast) var(--ease-out),
+        color var(--rp-duration-fast) var(--ease-out),
+        opacity var(--rp-duration-fast) var(--ease-out),
+        scale var(--rp-duration-fast) var(--ease-out);
+    }
+    .rp-button:active {
+      scale: 0.97;
+    }
+    .rp-button:is([data-pending], [aria-busy="true"])::after {
+      animation: rp-spin calc(var(--rp-duration-slow) * 2) linear infinite;
+    }
+  }
+
+  /* 6. ENVIRONMENT */
+}

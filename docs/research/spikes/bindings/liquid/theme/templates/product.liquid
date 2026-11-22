@@ -1,0 +1,7 @@
+{% block 'product-form', id: 'buy', product: product %}{% endblock %}
+{% block 'tabs', id: 't', default_value: 'a' %}
+  {% block 'tabs-list', aria_label: 'Details' %}
+    {% block 'tabs-tab', tabs: 't', value: 'a', selected: true %}A{% endblock %}
+  {% endblock %}
+  {% block 'tabs-panel', tabs: 't', value: 'a', selected: true %}<p>A</p>{% endblock %}
+{% endblock %}

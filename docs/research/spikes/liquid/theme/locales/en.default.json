@@ -1,0 +1,16 @@
+{
+  "ripple": {
+    "cart": { "title": "Cart" },
+    "dialog": { "close": "Close" },
+    "home": { "shop_all": "Shop all" },
+    "product": {
+      "add_to_cart": "Add to cart",
+      "sold_out": "Sold out",
+      "quantity": "Quantity",
+      "in_stock": "In stock",
+      "size_guide": "Size guide",
+      "shipping": "Shipping and returns",
+      "materials": "Materials"
+    }
+  }
+}

@@ -1,0 +1,31 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>polyfill</title>
+<script>delete HTMLButtonElement.prototype.commandForElement; window.__c = [];</script>
+<script>
+(function () {
+  if ("commandForElement" in HTMLButtonElement.prototype || window.rpCommandsPolyfill) return;
+  window.rpCommandsPolyfill = true;
+  document.addEventListener("click", function (event) {
+    if (event.defaultPrevented) return;
+    var origin = event.target instanceof Element ? event.target : null;
+    var button = origin && origin.closest("button[commandfor]");
+    if (!button || button.disabled) return;
+    var target = document.getElementById(button.getAttribute("commandfor") || "");
+    if (!target) return;
+    var command = button.getAttribute("command") || "";
+    var commandEvent = new Event("command", { bubbles: false, cancelable: true });
+    commandEvent.command = command;
+    commandEvent.source = button;
+    if (!target.dispatchEvent(commandEvent)) return;
+    if (command === "show-modal") { if (target.showModal && !target.open) target.showModal(); }
+    else if (command === "close") { if (target.close && target.open) target.close(); }
+    else if (command === "show-popover") { if (target.showPopover && !target.matches(":popover-open")) target.showPopover(); }
+    else if (command === "hide-popover") { if (target.hidePopover && target.matches(":popover-open")) target.hidePopover(); }
+    else if (command === "toggle-popover") { if (target.togglePopover) target.togglePopover(); }
+  });
+})();
+</script>
+<script type="module" src="/out/browser/ripple.elements.js"></script></head><body>
+<button id="o" type="button" commandfor="d" command="show-modal">Open</button>
+<rp-dialog class="rp-dialog" data-slot="rp-dialog"><dialog id="d" class="rp-dialog-panel" aria-labelledby="d-title" closedby="any"><h2 id="d-title">T</h2><button id="c" type="button" commandfor="d" command="close">Close</button></dialog></rp-dialog>
+<script>document.getElementById("d").addEventListener("command", function (e) { window.__c.push({ command: e.command, trusted: e.isTrusted, source: e.source && e.source.id }) })</script>
+</body></html>

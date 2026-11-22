@@ -1,0 +1,18 @@
+import { createRequire } from 'module'; const require = createRequire(import.meta.url);
+const { chromium } = require('playwright'); import http from 'node:http'; import fs from 'node:fs'; import path from 'node:path';
+const root = path.resolve('site'); const types={".html":"text/html",".js":"text/javascript"};
+const s = http.createServer((q,res)=>{const f=path.join(root,new URL(q.url,'http://x').pathname); if(!fs.existsSync(f)||fs.statSync(f).isDirectory()){res.writeHead(404);return res.end()} res.writeHead(200,{"content-type":types[path.extname(f)]||"text/plain"}); fs.createReadStream(f).pipe(res)}).listen(4199);
+const b = await chromium.launch(); const p = await b.newPage({viewport:{width:1000,height:700}});
+p.on('pageerror', e=>console.log('PAGEERROR', e.message));
+await p.goto('http://localhost:4199/t.html');
+await p.waitForFunction(()=>['ui-tooltip','ui-toast-region'].every(t=>customElements.get(t))); await p.waitForTimeout(400);
+const m = await p.evaluate(()=>window.__m);
+console.log('mutations at upgrade:'); for (const x of m) console.log(' ', JSON.stringify(x));
+await p.hover('#t1 button'); await p.waitForTimeout(900);
+console.log('t1 open:', await p.evaluate(()=>{const c=document.getElementById('t1-content'); const r=c.getBoundingClientRect(), b=document.querySelector('#t1 button').getBoundingClientRect(); return {attrs:[...c.attributes].filter(a=>a.name!=='style').map(a=>a.name+'='+a.value).join(' '), below: r.top>=b.bottom, leftAligned: Math.round(r.left)===Math.round(b.left)}}));
+await p.mouse.move(5,5); await p.waitForTimeout(300);
+await p.focus('#t2 a'); await p.keyboard.press('Tab'); await p.keyboard.press('Shift+Tab'); await p.waitForTimeout(900);
+console.log('t2 focus-open:', await p.evaluate(()=>{const c=document.getElementById('t2-content'); const r=c.getBoundingClientRect(), b=document.querySelector('#t2 a').getBoundingClientRect(); return {attrs:[...c.attributes].filter(a=>a.name!=='style').map(a=>a.name+'='+a.value).join(' '), toEnd: r.left>=b.right-1}}));
+await p.keyboard.press('Escape'); await p.waitForTimeout(300);
+console.log('t2 after escape hidden:', await p.evaluate(()=>document.getElementById('t2-content').hidden));
+await b.close(); s.close();

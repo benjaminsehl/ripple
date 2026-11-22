@@ -1,0 +1,41 @@
+{
+ "snap": [
+  {
+   "ref": "c1",
+   "component": "rp-dialog",
+   "actions": [
+    "open",
+    "close",
+    "press"
+   ],
+   "open": true,
+   "buttons": [
+    "Close"
+   ]
+  },
+  {
+   "ref": "c2",
+   "component": "rp-dialog",
+   "actions": [
+    "open",
+    "close",
+    "press"
+   ],
+   "open": false
+  }
+ ],
+ "r": {
+  "ok": false,
+  "error": {
+   "step": 0,
+   "message": "Needs a person: \"Closes the size guide\". Ask them to press \"Close\" themselves."
+  },
+  "steps": [],
+  "appeared": [],
+  "values": {
+   "c4 rp-quantity": 1,
+   "c6 Product information": "details"
+  }
+ },
+ "stillOpen": true
+}

@@ -1,0 +1,14 @@
+{
+  total: 2000,
+  cleanAgree: 1602,
+  cleanDiffer: 0,
+  conflictBoth: 398,
+  weConflictGitClean: 0,
+  gitConflictWeClean: 0
+}
+1 user-only edit    -> {"text":".rp-button {\n  color: blue;\n  padding: 4px;\n}\n","conflicts":0}
+2 upstream-only edit-> {"text":".rp-button {\n  color: red;\n  padding: 8px;\n}\n","conflicts":0}
+3 disjoint edits    -> {"text":".rp-button {\n  color: blue;\n  padding: 4px;\n}\na\nb\nc\nD\n","conflicts":0}
+4 same line conflict-> {"text":".rp-button {\n<<<<<<< yours\n  color: blue;\n||||||| installed\n  color: red;\n=======\n  color: green;\n>>>>>>> upstream\n  padding: 4px;\n}\n","conflicts":1}
+5 identical edits   -> {"text":".rp-button {\n  color: blue;\n  padding: 4px;\n}\n","conflicts":0}
+6 CRLF ours         -> {"text":".rp-button {\n<<<<<<< yours\n  color: blue;\n  padding: 4px;\n||||||| installed\n  color: red;\n  padding: 4px;\n=======\n  color: red;\n  padding: 8px;\n>>>>>>> upstream\n}\n","conflicts":1}

@@ -1,0 +1,13 @@
+import { createRequire } from 'module'; const require = createRequire(import.meta.url);
+const { chromium } = require('playwright'); import http from 'node:http'; import fs from 'node:fs'; import path from 'node:path';
+const root = path.resolve('site'); const types={".html":"text/html",".js":"text/javascript"};
+const s = http.createServer((q,res)=>{const f=path.join(root,new URL(q.url,'http://x').pathname); if(!fs.existsSync(f)||fs.statSync(f).isDirectory()){res.writeHead(404);return res.end()} res.writeHead(200,{"content-type":types[path.extname(f)]||"text/plain"}); fs.createReadStream(f).pipe(res)}).listen(4198);
+const b = await chromium.launch(); const p = await b.newPage({viewport:{width:1000,height:700}});
+p.on('pageerror', e=>console.log('PAGEERROR', e.message));
+await p.goto('http://localhost:4198/toast.html');
+await p.waitForFunction(()=>customElements.get('ui-toast-region') && window.toast); await p.waitForTimeout(300);
+console.log('exports', await p.evaluate(()=>window.__w.join(',')));
+await p.evaluate(()=>{ window.toast('Added to cart', {description:'Linen shirt', type:'success', duration: 60000}); window.toast('Second', {duration: 60000}); });
+await p.waitForTimeout(800);
+console.log((await p.evaluate(()=>document.getElementById('r').outerHTML)).replace(/></g,'>\n<'));
+await b.close(); s.close();

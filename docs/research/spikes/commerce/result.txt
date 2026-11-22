@@ -1,0 +1,36 @@
+## L1 liquid boot
+{"out":{"usable":true,"backend":"liquid","host":"liquid","log":["configure","getCart","openCart.configure"],"count":"<span data-rp-part=\"count\">2</span>","defined":[true,true,true,true,true,true],"dialect":{"merchandiseId":"id","quantity":"quantity","sellingPlanId":"selling_plan","lineId":null,"lineQuantity":"updates[]","note":"note","discountCode":null}},"requests":["NAV"]}
+## L2 liquid add
+{"out":{"calls":[{"lines":[{"merchandiseId":"123","quantity":2,"sellingPlanId":"77","attributes":[{"key":"Engraving","value":"Hi"}]}]}],"seen":["","true",""],"after":[false,false],"action":{"value":"add","reason":"submit","merchandiseId":"123","quantity":2},"open":true,"announced":["AjoutÃ©"],"refreshes":[{"regions":["rp-cart-lines"],"url":null,"reason":"cart"},["done",{"regions":["rp-cart-lines"],"ok":true}]],"pf":[[["rp-cart-lines"],null]],"count":"<span data-rp-part=\"count\">4</span>","error":"<p data-rp-part=\"error\" role=\"alert\" hidden=\"\"></p>"},"requests":["NAV"]}
+## L3 liquid quantity change, remove link, Enter submit, discount
+{"out":{"beforeDebounce":0,"midPending":null,"afterChange":[{"lines":[{"id":"40123:abc","quantity":5}]}],"status":"Cart updated","pf":[[["rp-cart-lines"],null],[["rp-cart-lines"],null],[["rp-cart-lines"],null],[["rp-cart-lines"],null]],"value":"5","afterRemove":[{"lines":[{"id":"40123:abc","quantity":0}]}],"status2":"Item removed","afterUpdateSubmit":[{"lines":[{"id":"40123:abc","quantity":7}]}],"afterDiscount":[{"discountCodes":["SAVE10"]}],"href":"http://localhost/"},"requests":["NAV"]}
+## L4 liquid userErrors on line
+{"out":{"lineErr":"<p data-rp-part=\"error\" role=\"alert\">Only 3 left</p>","cartErr":"<p data-rp-part=\"error\" role=\"alert\" hidden=\"\"></p>","status":"","errs":{"lines":[["40123:abc",["Only 3 left"]]],"cart":[],"last":true}},"requests":["NAV"]}
+## L5 liquid: updateCart configured by another script first
+{"out":{"usable":false,"defined":true,"log":["configure"]},"requests":["NAV","console.error [hydrogen:error:cart] cart initial load failed Error: Standard Actions updateCart could not be configured.\n    at configureUpdateCartOnce (http://localhost/ripp","console.error [ripple] commerce disabled; forms post natively. Error: Standard Actions updateCart could not be configured.\n    at configureUpdateCartOnce (http://localhost/ri"]}
+## L6 liquid: configure fails at runtime (isDefault still true at start): probe rejects, forms native
+{"out":{"usable":false,"defined":true},"requests":["NAV","console.error [hydrogen:error:cart] cart initial load failed Error: Standard Actions updateCart could not be configured.\n    at configureUpdateCartOnce (http://localhost/ripp","console.error [ripple] commerce disabled; forms post natively. Error: Standard Actions updateCart could not be configured.\n    at configureUpdateCartOnce (http://localhost/ri"]}
+## L7 partial refresh failure falls back to reload
+{"out":"THROW page.evaluate: Execution context was destroyed, most likely because of a navigation.","requests":["NAV","console.error [ripple] region refresh failed; falling back to navigation. Error: partial fail\n    at Object.fetch (http://localhost/partials.js:1:239)\n    at async Object.ref"]}
+## D1 add: state sequence
+{"out":[{"lines":[],"cost":true,"qty":4,"n":["40123:abc"]},{"lines":[],"cost":false,"qty":4,"n":["gid://shopify/CartLine/1?cart=c1","40123:abc"]}],"requests":["NAV"]}
+## D2 buy-now submitter is not intercepted
+{"out":"THROW page.evaluate: Execution context was destroyed, most likely because of a navigation.","requests":["NAV","POST /cart/add id=123&quantity=2&selling_plan=77&properties%5BEngraving%5D=Hi&buy="]}
+## D3 checkout submitter is not intercepted
+{"out":"THROW page.evaluate: Execution context was destroyed, most likely because of a navigation.","requests":["NAV","POST /cart updates%5B%5D=2&note=&checkout="]}
+## D4 note change
+{"out":{"calls":[{"note":"hello"}],"log":["configure","getCart","openCart.configure","updateCart","defaultHandler"]},"requests":["NAV"]}
+## H1 hydrogen boot unseeded + add + refresh-html
+{"out":"THROW page.evaluate: Execution context was destroyed, most likely because of a navigation.","requests":["NAV","GET /api/cart","POST /api/cart {\"lines\":[{\"merchandiseId\":\"gid://shopify/ProductVariant/1\",\"quantity\":1}]}","GET /","GET /cart"]}
+## H2 hydrogen quantity change + remove button + focus restore
+{"out":{"q":"4","focus":true,"announced":["Cart updated"],"empty":"Empty","count":"<span data-rp-part=\"count\" hidden=\"\">0</span>","announced2":["Cart updated","Item removed"]},"requests":["NAV","GET /api/cart","POST /api/cart {\"lines\":[{\"id\":\"gid://shopify/CartLine/9?cart=c1\",\"quantity\":4}]}","GET /","POST /api/cart {\"lines\":[{\"id\":\"gid://shopify/CartLine/9?cart=c1\",\"quantity\":0}]}","GET /"]}
+## H3 seeded initialCart: no GET /api/cart
+{"out":{"usable":true,"qty":2,"loading":false},"requests":["NAV"]}
+## H4 rp-live sort change (push), link (push), variant (replace), popstate
+{"out":{"url1":"/collections/all?sort_by=price-ascending","res1":"RESULTS v2","len1":1,"url2":"/products/tee?variant=2","buy":"BUY variant 2","len2":1},"requests":["NAV","GET /api/cart","NAV","GET /collections/all?sort_by=price-ascending","NAV","GET /products/tee?variant=2"]}
+## H5 predictive search
+{"out":{"hidden":false,"announced":["2 results"],"url":"/","focus1":"A","focus2":"B","afterEsc":[true,true]},"requests":["NAV","GET /api/cart","GET /search?q=te&type=product"]}
+## H7 rp-recommendations loads its region once; failure does not navigate
+{"out":{"html":"<div data-rp-region=\"rp-product-recommendations\"><a href=\"/products/x\">X</a></div>","url":"/"},"requests":["NAV","GET /api/cart","GET /recommendations/products?product_id=1&limit=4"]}
+## H6 no Standard Actions script, seeded: unusable
+{"out":{"usable":false},"requests":["NAV","console.error [ripple] commerce disabled; forms post natively. Error: Standard Actions not available. Print the Shopify script tags (renderShopifyScriptTags) before ripple.js"]}

@@ -1,0 +1,12 @@
+@layer ui-sdk, rp;
+@layer ui-sdk { :where([hidden]:not([hidden="until-found"])) { display: none !important } }
+@layer rp {
+  rp-dialog { display: block; position: absolute; inline-size: 0; block-size: 0 }
+  rp-quantity { display: block }
+  .rp-quantity { display: inline-flex }
+  rp-carousel, rp-navigation-menu, ui-tabs, ui-tabs-list, ui-tabs-panel, ui-toast-region { display: block }
+  ui-tabs-tab, ui-tooltip-trigger { display: contents }
+  rp-quantity:not(:defined) [data-rp-js="inflow"], rp-carousel:not(:defined) [data-rp-js="inflow"] { visibility: hidden }
+  .rp-carousel-viewport { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; list-style: none; margin: 0; padding: 0; width: 320px }
+  .rp-carousel-item { flex: 0 0 100px; height: 60px; scroll-snap-align: start; background: #ddd }
+}

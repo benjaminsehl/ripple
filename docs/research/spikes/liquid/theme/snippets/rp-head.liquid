@@ -1,0 +1,22 @@
+{% doc %}
+  Loads Ripple CSS and JavaScript. Render once in layout/theme.liquid,
+  inside <head>, above {{ content_for_header }}.
+
+  @example
+  {% render 'rp-head' %}
+{% enddoc %}
+
+{{ 'ripple.css' | asset_url | stylesheet_tag: preload: true }}
+{% style %}
+  :root {
+    --rp-radius-dial: {{ settings.rp_radius | default: 1 }};
+  }
+{% endstyle %}
+<script type="importmap">
+  {
+    "imports": {
+      "ripple": "{{ 'ripple.js' | asset_url }}"
+    }
+  }
+</script>
+<script src="{{ 'ripple.js' | asset_url }}" type="module"></script>

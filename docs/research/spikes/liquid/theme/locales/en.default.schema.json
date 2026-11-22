@@ -1,0 +1,14 @@
+{
+  "ripple": {
+    "blocks": {
+      "accordion": "Accordion", "accordion_item": "Accordion item", "accordion_summary": "Accordion summary", "accordion_panel": "Accordion panel",
+      "badge": "Badge", "button": "Button", "dialog": "Dialog", "dialog_trigger": "Dialog trigger", "dialog_content": "Dialog content", "dialog_title": "Dialog title",
+      "product_form": "Product form", "stack": "Stack"
+    },
+    "props": {
+      "variant": "Style", "size": "Size",
+      "primary": "Primary", "secondary": "Secondary", "outline": "Outline", "ghost": "Ghost", "link": "Link", "destructive": "Destructive",
+      "sm": "Small", "md": "Medium", "lg": "Large", "default": "Default", "bordered": "Bordered"
+    }
+  }
+}

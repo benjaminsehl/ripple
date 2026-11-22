@@ -1,0 +1,81 @@
+/* accordion.css
+   Component: Accordion (id `accordion`). Contract: 10-components-interactive.md, "Accordion".
+   Root:      <div>, class rp-accordion
+   Parts:     rp-accordion-item (<details>)
+              rp-accordion-trigger (<summary>)
+              rp-accordion-content (<div>)
+   Props:     data-type = single | multiple   (default multiple); not styled
+   States:    [open], :hover, :focus-visible
+   Public:    --rp-accordion-padding, --rp-accordion-font-size */
+@layer rp.components {
+  /* 1. ROOT */
+  .rp-accordion {
+    /* 1a. public custom properties */
+    --rp-accordion-padding: calc(var(--spacing) * 4);
+    --rp-accordion-font-size: var(--text-base);
+    /* 1b. colour slots */
+    /* 1c. other private custom properties */
+    --_chevron-rotate: 45deg;
+    /* 1d. declarations */
+    border-block-start: 1px solid var(--color-border);
+  }
+
+  /* 2. PARTS */
+  .rp-accordion-item {
+    border-block-end: 1px solid var(--color-border);
+  }
+  .rp-accordion-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: calc(var(--spacing) * 4);
+    min-block-size: var(--spacing-control-md);
+    padding-block: var(--rp-accordion-padding);
+    font-size: var(--rp-accordion-font-size);
+    font-weight: var(--font-weight-medium);
+    list-style: none;
+    cursor: pointer;
+  }
+  .rp-accordion-content {
+    padding-block-end: var(--rp-accordion-padding);
+  }
+
+  /* 3. MODIFIERS */
+
+  /* 4. STATES */
+  @media (hover: hover) {
+    .rp-accordion-trigger:hover {
+      text-decoration-line: underline;
+    }
+  }
+  .rp-accordion-trigger:focus-visible {
+    outline-offset: calc(var(--rp-ring-width) * -1);
+  }
+  .rp-accordion-trigger::marker {
+    content: "";
+  }
+  .rp-accordion-trigger::after {
+    content: "";
+    flex: none;
+    inline-size: 0.5em;
+    block-size: 0.5em;
+    margin-inline-end: 0.25em;
+    border-inline-end: 2px solid currentColor;
+    border-block-end: 2px solid currentColor;
+    rotate: var(--_chevron-rotate);
+  }
+  .rp-accordion-item[open] .rp-accordion-trigger::after {
+    rotate: calc(var(--_chevron-rotate) + 180deg);
+  }
+
+  /* 5. MOTION */
+  @media (prefers-reduced-motion: no-preference) {
+    .rp-accordion-trigger::after {
+      transition-property: rotate;
+      transition-duration: var(--rp-duration-base);
+      transition-timing-function: var(--ease-out);
+    }
+  }
+
+  /* 6. ENVIRONMENT */
+}

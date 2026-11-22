@@ -1,0 +1,70 @@
+{% doc %}
+  Ripple Button markup. Single source of the Button HTML contract for Liquid.
+  Templates and layouts call the `rp-button` block. Block and snippet files
+  that need a button render this snippet.
+
+  Root element: <a> when `href` is set, otherwise <button>.
+
+  @param {'primary' | 'secondary' | 'outline' | 'ghost' | 'link' | 'destructive'} [variant] - Visual style. Default: 'primary'.
+  @param {'sm' | 'md' | 'lg'} [size] - Control size. Default: 'md'.
+  @param {'button' | 'submit' | 'reset'} [type] - Native button type. Ignored when `href` is set. Default: 'button'.
+  @param {string} [href] - When set, the root element is a link.
+  @param {boolean} [disabled] - Pass the boolean `true`. Any other value is ignored.
+  @param {boolean} [full_width] - Pass the boolean `true` to stretch to the container width.
+  @param {string} [name] - Form field name (button only).
+  @param {string} [value] - Form field value (button only).
+  @param {string} [aria_label] - Accessible name. Required when the content is only an icon.
+  @param {string} [id] - Root element id.
+  @param {string} [class] - Extra classes appended after `rp-button`.
+  @param {string} [attributes] - RAW, unescaped HTML attributes appended to the root element. Never pass shopper or merchant input.
+  @param {string} content - The label, as HTML. Required.
+
+  @example
+  {% render 'rp-button', type: 'submit', content: label %}
+{% enddoc %}
+
+{%- liquid
+  assign allowed_variants = 'primary,secondary,outline,ghost,link,destructive' | split: ','
+  unless allowed_variants contains variant
+    assign variant = 'primary'
+  endunless
+  assign allowed_sizes = 'sm,md,lg' | split: ','
+  unless allowed_sizes contains size
+    assign size = 'md'
+  endunless
+  assign allowed_types = 'button,submit,reset' | split: ','
+  unless allowed_types contains type
+    assign type = 'button'
+  endunless
+-%}
+{%- if href != blank -%}
+  <a
+    class="rp-button {{ class | escape }}"
+    {% if id != blank %}id="{{ id | escape }}"{% endif %}
+    href="{{ href | escape }}"
+    {% if disabled == true %}aria-disabled="true" tabindex="-1"{% endif %}
+    data-variant="{{ variant }}"
+    data-size="{{ size }}"
+    {% if full_width == true %}data-full-width{% endif %}
+    {% if aria_label != blank %}aria-label="{{ aria_label | escape }}"{% endif %}
+    {{ attributes }}
+  >
+    {{- content -}}
+  </a>
+{%- else -%}
+  <button
+    class="rp-button {{ class | escape }}"
+    {% if id != blank %}id="{{ id | escape }}"{% endif %}
+    type="{{ type }}"
+    {% if name != blank %}name="{{ name | escape }}"{% endif %}
+    {% if value != blank %}value="{{ value | escape }}"{% endif %}
+    {% if disabled == true %}disabled{% endif %}
+    data-variant="{{ variant }}"
+    data-size="{{ size }}"
+    {% if full_width == true %}data-full-width{% endif %}
+    {% if aria_label != blank %}aria-label="{{ aria_label | escape }}"{% endif %}
+    {{ attributes }}
+  >
+    {{- content -}}
+  </button>
+{%- endif -%}

@@ -1,0 +1,44 @@
+{% doc %}
+  Ripple Tabs panel. Prints its own initial state from its own params.
+
+  @param {string} tabs - Required. The `id` of the tabs root.
+  @param {string} value - Required. The `value` of the tab that shows this panel.
+  @param {boolean} [selected] - Pass the boolean `true` on the panel of the selected tab. Every other panel is printed `hidden`.
+  @param {string} [class] - Extra classes appended after `rp-tabs-panel`.
+  @param {string} [attributes] - RAW, unescaped HTML attributes appended to the root element. Never pass shopper or merchant input.
+  @param {string} [content] - The panel content.
+
+  @example
+  {% block 'tabs-panel', tabs: 't', value: 'a', selected: true %}<p>A</p>{% endblock %}
+{% enddoc %}
+
+{%- if selected == true -%}
+  <ui-tabs-panel
+    class="rp-tabs-panel {{ class | escape }}"
+    value="{{ value | escape }}"
+    role="tabpanel"
+    id="{{ tabs | escape }}-panel-{{ value | escape }}"
+    aria-labelledby="{{ tabs | escape }}-tab-{{ value | escape }}"
+    tabindex="0"
+    data-selected=""
+    data-activation-direction="none"
+    data-orientation="horizontal"
+    data-slot="tabs-panel"
+    {{ attributes }}
+  >
+    {{ content }}
+  </ui-tabs-panel>
+{%- else -%}
+  <ui-tabs-panel
+    class="rp-tabs-panel {{ class | escape }}"
+    value="{{ value | escape }}"
+    hidden
+    data-slot="tabs-panel"
+    {{ attributes }}
+  >
+    {{ content }}
+  </ui-tabs-panel>
+{%- endif -%}
+{% schema %}
+{ "name": "t:ripple.tabs.panel_name", "settings": [] }
+{% endschema %}

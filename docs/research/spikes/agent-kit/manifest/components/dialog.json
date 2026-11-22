@@ -1,0 +1,378 @@
+{
+  "name": "dialog",
+  "title": "Dialog",
+  "category": "overlays",
+  "kind": "ui",
+  "status": "beta",
+  "since": "0.1.0",
+  "summary": "A modal window over the page, opened by a trigger button.",
+  "useWhen": [
+    "Short, self-contained content that must interrupt: size guide, confirm, quick view"
+  ],
+  "dontUseWhen": [
+    {
+      "case": "Panel sliding from a screen edge (cart, mobile menu)",
+      "use": "drawer"
+    },
+    {
+      "case": "Content that must be reachable when JavaScript never loads",
+      "use": "a link to a page, or accordion"
+    }
+  ],
+  "root": {
+    "elements": [
+      "ui-dialog"
+    ],
+    "class": "rp-dialog",
+    "requiresId": true
+  },
+  "props": [
+    {
+      "name": "id",
+      "type": "id",
+      "required": true,
+      "attribute": "id",
+      "liquid": {
+        "name": "id",
+        "surface": "param"
+      },
+      "description": "Unique, stable id. Part ids derive from it: <id>-trigger, <id>-title, <id>-description."
+    },
+    {
+      "name": "defaultOpen",
+      "type": "boolean",
+      "default": false,
+      "attribute": "default-open",
+      "hosts": [
+        "html",
+        "react",
+        "remix"
+      ],
+      "description": "Open on first render. Not available in Liquid V1: the server cannot print open-state markup."
+    },
+    {
+      "name": "open",
+      "type": "boolean",
+      "hosts": [
+        "react"
+      ],
+      "description": "Controlled open state (React only). Use with onOpenChange."
+    }
+  ],
+  "content": {
+    "model": "parts",
+    "required": true
+  },
+  "parts": [
+    {
+      "name": "trigger",
+      "component": "dialog-trigger",
+      "elements": [
+        "ui-dialog-trigger"
+      ],
+      "class": "rp-dialog-trigger",
+      "required": true,
+      "multiple": true,
+      "authoredBy": "author",
+      "parent": "root",
+      "description": "Wraps one native <button class=\"rp-button\">."
+    },
+    {
+      "name": "backdrop",
+      "elements": [
+        "ui-dialog-backdrop"
+      ],
+      "class": "rp-dialog-backdrop",
+      "required": true,
+      "authoredBy": "component",
+      "parent": "root"
+    },
+    {
+      "name": "content",
+      "component": "dialog-content",
+      "elements": [
+        "ui-dialog-content"
+      ],
+      "class": "rp-dialog-content",
+      "required": true,
+      "authoredBy": "author",
+      "parent": "root"
+    },
+    {
+      "name": "title",
+      "component": "dialog-title",
+      "elements": [
+        "ui-dialog-title"
+      ],
+      "class": "rp-dialog-title",
+      "required": true,
+      "authoredBy": "author",
+      "parent": "content"
+    },
+    {
+      "name": "description",
+      "component": "dialog-description",
+      "elements": [
+        "ui-dialog-description"
+      ],
+      "class": "rp-dialog-description",
+      "required": false,
+      "authoredBy": "author",
+      "parent": "content"
+    },
+    {
+      "name": "close",
+      "elements": [
+        "ui-dialog-close"
+      ],
+      "class": "rp-dialog-close",
+      "required": true,
+      "authoredBy": "component",
+      "parent": "content",
+      "description": "Icon button printed by dialog-content; label from locale key dialog.close."
+    }
+  ],
+  "template": {
+    "tag": "ui-dialog",
+    "attrs": [
+      {
+        "name": "id",
+        "value": {
+          "prop": "id"
+        }
+      },
+      {
+        "name": "class",
+        "value": [
+          "rp-dialog",
+          {
+            "prop": "class"
+          }
+        ]
+      },
+      {
+        "name": "default-open",
+        "when": {
+          "true": "defaultOpen"
+        }
+      }
+    ],
+    "children": [
+      {
+        "slot": "children"
+      }
+    ]
+  },
+  "state": [
+    {
+      "name": "open",
+      "type": "boolean",
+      "attribute": "default-open",
+      "defaultAttribute": "default-open",
+      "property": "open",
+      "reflects": [
+        "data-open",
+        "data-closed",
+        "hidden"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "dom": "openchange",
+      "react": "onOpenChange",
+      "detail": "{ value: boolean, reason: string, source: string }",
+      "bubbles": false,
+      "cancelable": true
+    }
+  ],
+  "fixtures": [
+    {
+      "name": "closed",
+      "props": {
+        "id": "size-guide"
+      },
+      "generated": "upgrade-snapshot",
+      "parts": {
+        "trigger": "Size guide",
+        "title": "Size guide",
+        "content": "<p>Measure your foot.</p>"
+      },
+      "html": "<ui-dialog id=\"size-guide\" class=\"rp-dialog\"><ui-dialog-trigger class=\"rp-dialog-trigger\"><button type=\"button\" id=\"size-guide-trigger\" class=\"rp-button\" data-variant=\"link\" data-size=\"md\" aria-haspopup=\"dialog\" data-closed data-slot=\"dialog-trigger\">Size guide</button></ui-dialog-trigger><ui-dialog-backdrop class=\"rp-dialog-backdrop\" hidden data-slot=\"dialog-backdrop\"></ui-dialog-backdrop><ui-dialog-content class=\"rp-dialog-content\" hidden data-slot=\"dialog-content\"><ui-dialog-title id=\"size-guide-title\" class=\"rp-dialog-title\" role=\"heading\" aria-level=\"2\" data-slot=\"dialog-title\">Size guide</ui-dialog-title><p>Measure your foot.</p><ui-dialog-close class=\"rp-dialog-close\"><button type=\"button\" class=\"rp-icon-button\" aria-label=\"Close\" data-slot=\"dialog-close\"></button></ui-dialog-close></ui-dialog-content></ui-dialog>"
+    }
+  ],
+  "noJs": {
+    "level": "none",
+    "behavior": "The trigger does nothing and the content stays hidden. Do not put required content only in a Dialog. For an opener with a page equivalent, use a plain link (see drawer / cart-drawer).",
+    "hideUntilDefined": []
+  },
+  "a11y": {
+    "pattern": "dialog (modal)",
+    "checkPattern": "dialog",
+    "name": {
+      "required": "always",
+      "sources": [
+        "dialog-title (aria-labelledby is wired by ui-dialog)"
+      ]
+    },
+    "keyboard": [
+      {
+        "keys": "Escape",
+        "does": "Closes and returns focus to the trigger."
+      },
+      {
+        "keys": "Tab, Shift+Tab",
+        "does": "Cycle inside the dialog; the page behind is inert."
+      }
+    ],
+    "focus": "On open, focus moves into the content. On close, focus returns to the trigger."
+  },
+  "agent": {
+    "surface": "bridge",
+    "component": "dialog",
+    "actions": [
+      {
+        "name": "setOpen",
+        "args": [
+          {
+            "name": "open",
+            "type": "boolean"
+          }
+        ],
+        "description": "Open or close the dialog."
+      },
+      {
+        "name": "press",
+        "args": [
+          {
+            "name": "buttonText",
+            "type": "string"
+          }
+        ],
+        "description": "Press a button inside the dialog by its text; opens the dialog first."
+      }
+    ]
+  },
+  "dependencies": {
+    "components": [
+      "button",
+      "icon-button",
+      "icon"
+    ],
+    "embeds": [
+      "button",
+      "icon-button"
+    ],
+    "elements": [
+      "ui-dialog",
+      "ui-dialog-trigger",
+      "ui-dialog-backdrop",
+      "ui-dialog-content",
+      "ui-dialog-title",
+      "ui-dialog-description",
+      "ui-dialog-close"
+    ],
+    "uiSdk": [
+      "@ui-sdk/web/dialog"
+    ],
+    "tokens": [
+      "--color-overlay",
+      "--radius-card",
+      "--ease-drawer"
+    ],
+    "icons": [
+      "x"
+    ],
+    "locale": [
+      "dialog.close"
+    ]
+  },
+  "liquid": {
+    "block": "dialog"
+  },
+  "rules": [
+    {
+      "id": "dialog-needs-title",
+      "kind": "requires-descendant",
+      "selector": "ui-dialog.rp-dialog",
+      "target": "ui-dialog-title",
+      "message": "A Dialog has no title, so it has no accessible name.",
+      "fix": "Add a dialog-title part inside dialog-content."
+    },
+    {
+      "id": "dialog-not-in-form",
+      "kind": "forbids-ancestor",
+      "selector": "ui-dialog.rp-dialog:has(form)",
+      "target": "form",
+      "message": "A Dialog that contains a form is inside another form.",
+      "fix": "Move the Dialog outside the outer form."
+    },
+    {
+      "id": "dialog-content-hidden",
+      "kind": "requires-attribute",
+      "selector": "ui-dialog:not([default-open]) > ui-dialog-content",
+      "target": "hidden",
+      "message": "Closed dialog content is not hidden in server HTML; it shows until JavaScript loads.",
+      "fix": "Use the dialog-content binding instead of hand-written markup."
+    }
+  ],
+  "files": {
+    "shared": [
+      {
+        "source": "css/components/dialog.css",
+        "target": "@styles/components/dialog.css",
+        "type": "css",
+        "generated": false
+      }
+    ],
+    "react": [
+      {
+        "source": "react/dialog.tsx",
+        "target": "@components/dialog.tsx",
+        "type": "binding",
+        "generated": true
+      }
+    ],
+    "remix": [
+      {
+        "source": "remix/dialog.tsx",
+        "target": "@components/dialog.tsx",
+        "type": "binding",
+        "generated": true
+      }
+    ],
+    "liquid": [
+      {
+        "source": "liquid/blocks/dialog.liquid",
+        "target": "blocks/dialog.liquid",
+        "type": "block",
+        "generated": true
+      },
+      {
+        "source": "liquid/blocks/dialog-trigger.liquid",
+        "target": "blocks/dialog-trigger.liquid",
+        "type": "block",
+        "generated": true
+      },
+      {
+        "source": "liquid/blocks/dialog-content.liquid",
+        "target": "blocks/dialog-content.liquid",
+        "type": "block",
+        "generated": true
+      },
+      {
+        "source": "liquid/blocks/dialog-title.liquid",
+        "target": "blocks/dialog-title.liquid",
+        "type": "block",
+        "generated": true
+      },
+      {
+        "source": "liquid/locales/dialog.json",
+        "target": "locales/*.json",
+        "type": "asset",
+        "mode": "patch",
+        "generated": true
+      }
+    ]
+  }
+}
